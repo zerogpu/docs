@@ -1,0 +1,36 @@
+---
+title: "Next.js"
+description: "Call ZeroGPU from a server route in Next.js."
+---
+
+Use server-side route handlers to keep your API key private.
+
+## Steps
+
+1. Store `ZERO_GPU_API_KEY` and `ZERO_GPU_PROJECT_ID` in environment variables.
+2. Call `https://api.zerogpu.ai/v1/responses` from a server route.
+3. Return the parsed output to the client.
+
+```javascript
+export async function POST(req) {
+  const { text } = await req.json();
+
+  const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": process.env.ZERO_GPU_API_KEY,
+      "x-project-id": process.env.ZERO_GPU_PROJECT_ID,
+    },
+    body: JSON.stringify({
+      model: "zlm-v1-summary-cloud",
+      input: [{ role: "user", content: text }],
+      text: { format: { type: "text" } },
+    }),
+  });
+
+  const data = await res.json();
+  const summary = data.output[0].content[0].text;
+  return Response.json({ summary });
+}
+```

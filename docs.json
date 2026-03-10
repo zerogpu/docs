@@ -1,88 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "ZeroGPU Docs",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#22C55E",
+    "light": "#4ADE80",
+    "dark": "#16A34A"
   },
   "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Guides",
-        "groups": [
-          {
-            "group": "Getting started",
-            "pages": [
-              "index",
-              "quickstart",
-              "development"
-            ]
-          },
-          {
-            "group": "Customization",
-            "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API reference",
-        "groups": [
-          {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
@@ -91,32 +16,162 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:hello@zerogpu.ai"
+      },
+      {
+        "label": "View on GitHub",
+        "href": "https://example.com/TODO_GITHUB_URL"
+      },
+      {
+        "label": "Compare",
+        "href": "/compare"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Join waitlist",
+      "href": "https://zerogpu.ai/"
     }
   },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Get Started",
+        "groups": [
+          {
+            "group": "Start",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "compare"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/authentication",
+              "guides/model-catalog",
+              "guides/openai-compatibility",
+              "guides/response-formats",
+              "guides/iab-signals"
+            ]
+          },
+          {
+            "group": "Models",
+            "pages": [
+              "models/overview",
+              "models/zlm-v1-iab-classify-cloud",
+              "models/zlm-v1-summary-cloud",
+              "models/coming-soon"
+            ]
+          },
+          {
+            "group": "Company",
+            "pages": [
+              "talk-to-us",
+              "blog",
+              "community"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/overview"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api-reference/responses",
+              "api-reference/chat-completions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "integrations/overview"
+            ]
+          },
+          {
+            "group": "SDKs",
+            "pages": [
+              "integrations/sdks/overview",
+              "integrations/sdks/python",
+              "integrations/sdks/node",
+              "integrations/sdks/go",
+              "integrations/sdks/java"
+            ]
+          },
+          {
+            "group": "Platforms",
+            "pages": [
+              "integrations/platform/overview",
+              "integrations/platform/langchain",
+              "integrations/platform/llamaindex",
+              "integrations/platform/vercel-ai-sdk",
+              "integrations/platform/litellm",
+              "integrations/platform/mcp",
+              "integrations/platform/crewai",
+              "integrations/platform/replit",
+              "integrations/platform/nextjs"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Cookbook",
+        "groups": [
+          {
+            "group": "Recipes",
+            "pages": [
+              "cookbook/ad-signals-from-text",
+              "cookbook/summarize-text",
+              "cookbook/route-by-intent"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Blog",
+          "href": "https://example.com/TODO_MEDIUM_BLOG_URL",
+          "icon": "newspaper"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://example.com/TODO_GITHUB_URL",
+          "icon": "users"
+        },
+        {
+          "anchor": "Talk to us",
+          "href": "/talk-to-us",
+          "icon": "message"
+        },
+        {
+          "anchor": "Compare",
+          "href": "/compare",
+          "icon": "scale-balanced"
+        }
+      ]
+    }
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/ZeroGPU_AI",
+      "linkedin": "https://www.linkedin.com/company/zerogpu",
+      "github": "https://example.com/TODO_GITHUB_URL"
     }
   }
 }

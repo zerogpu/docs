@@ -1,0 +1,61 @@
+---
+title: "OpenAI Compatibility"
+description: "Use OpenAI-compatible tooling with ZeroGPU."
+---
+
+ZeroGPU implements OpenAI-style endpoints so you can reuse existing tooling and clients that support base URL overrides.
+
+## Supported endpoints
+
+- `POST /v1/responses`
+- `POST /v1/chat/completions`
+
+## Base URL and headers
+
+- Base URL: `https://api.zerogpu.ai`
+- Required headers: `x-api-key` and `x-project-id`
+
+If your client supports a custom base URL, point it to ZeroGPU and add the two required headers. Model names come from the [Model Catalog](/models/overview).
+
+## Example: Node (fetch)
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-summary-cloud",
+    input: [{ role: "user", content: "Summarize this text." }],
+    text: { format: { type: "text" } },
+  }),
+});
+
+const data = await res.json();
+console.log(data.output[0].content[0].text);
+```
+
+## Example: Python (requests)
+
+```python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+}
+payload = {
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role": "user", "content": "Summarize this text."}],
+    "text": {"format": {"type": "text"}},
+}
+
+resp = requests.post(url, headers=headers, json=payload)
+resp.raise_for_status()
+print(resp.json()["output"][0]["content"][0]["text"])
+```

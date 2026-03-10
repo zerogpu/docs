@@ -1,0 +1,22 @@
+---
+title: "LiteLLM"
+description: "Route OpenAI-compatible requests to ZeroGPU."
+---
+
+LiteLLM can route OpenAI-compatible requests when you provide a custom base URL and headers.
+
+## Steps
+
+1. Set `base_url` to `https://api.zerogpu.ai`.
+2. Add `x-api-key` and `x-project-id` headers.
+3. Use a ZeroGPU model name.
+
+## Conceptual config
+
+```text
+model: "zlm-v1-summary-cloud"
+base_url: "https://api.zerogpu.ai"
+headers:
+  x-api-key: "..."
+  x-project-id: "..."
+```

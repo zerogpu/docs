@@ -1,0 +1,17 @@
+---
+title: "Authentication"
+description: "How to authenticate with ZeroGPU APIs."
+---
+
+All ZeroGPU requests require two headers:
+
+- `x-api-key`: your API key
+- `x-project-id`: your project ID
+
+You can create or rotate both in the ZeroGPU dashboard once your waitlist access is approved.
+
+## Best practices
+
+- Keep keys secret and store them in server-side environment variables.
+- Avoid shipping keys in client-side apps unless your use case explicitly allows it.
+- Rotate keys immediately if you believe they were exposed.

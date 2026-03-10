@@ -1,0 +1,81 @@
+---
+title: "Summarize long text for UI previews"
+description: "Generate concise summaries for previews and dashboards."
+---
+
+## Recipe
+
+1. Send the content you want summarized.
+2. Call `POST /v1/responses` with `zlm-v1-summary-cloud`.
+3. Display the summary with a sensible fallback.
+
+## Request
+
+<Tabs>
+  <Tab title="cURL">
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role":"user","content":"<LONG_TEXT>"}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+  </Tab>
+  <Tab title="Python">
+
+```python
+import requests
+
+resp = requests.post(
+    "https://api.zerogpu.ai/v1/responses",
+    headers={
+        "content-type": "application/json",
+        "x-api-key": "<YOUR_API_KEY>",
+        "x-project-id": "<YOUR_PROJECT_ID>",
+    },
+    json={
+        "model": "zlm-v1-summary-cloud",
+        "input": [{"role": "user", "content": "<LONG_TEXT>"}],
+        "text": {"format": {"type": "text"}},
+    },
+)
+
+summary = resp.json()["output"][0]["content"][0]["text"]
+```
+
+  </Tab>
+  <Tab title="Node">
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-summary-cloud",
+    input: [{ role: "user", content: "<LONG_TEXT>" }],
+    text: { format: { type: "text" } },
+  }),
+});
+
+const data = await res.json();
+const summary = data.output[0].content[0].text;
+```
+
+  </Tab>
+</Tabs>
+
+## Display with fallback
+
+```javascript
+const displayText = summary?.trim() || "Summary unavailable";
+```

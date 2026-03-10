@@ -1,0 +1,69 @@
+---
+title: "Responses"
+description: "OpenAI-compatible Responses API."
+---
+
+## Endpoint
+
+`POST https://api.zerogpu.ai/v1/responses`
+
+## Required headers
+
+- `content-type: application/json`
+- `x-api-key: <YOUR_API_KEY>`
+- `x-project-id: <YOUR_PROJECT_ID>`
+
+## Request body
+
+- `model` (string) required
+- `input` (array) required, objects with `role` and `content`
+- `text.format.type` (string) required, use `"text"`
+
+## Example request (summary)
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role":"user","content":"..."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+## Example request (classification)
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role":"user","content":"..."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+## Example response (trimmed)
+
+```json
+{
+  "output": [
+    {
+      "content": [
+        {
+          "text": "..."
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Parsing guidance
+
+- Summary output: `output[0].content[0].text`
+- Classification output: `output[0].content[0].text` is JSON encoded as a string

@@ -1,80 +1,240 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Make your first ZeroGPU request in minutes."
 ---
 
-## Get started in three steps
+## Steps to get started
 
-Get your documentation site running locally and make your first customization.
+### 1) Join the waitlist
 
-### Step 1: Set up your local environment
+ZeroGPU is in closed beta. Join the waitlist and get dashboard access once approved.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+![Step 1 placeholder](/images/placeholders/step-1.svg)
 
-### Step 2: Deploy your changes
+### 2) Create an API key, project ID, and pick a model
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+In the dashboard, create an API key and a project ID, then choose a model from the catalog.
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+![Step 2 placeholder](/images/placeholders/step-2.svg)
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+### 3) Make your first request
 
-### Step 3: Go live
+Use the `Responses` API with the summarization model to get a plain-text summary.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+![Step 3 placeholder](/images/placeholders/step-3.svg)
+
+## Your first request (summary)
+
+Make a `POST` request to `https://api.zerogpu.ai/v1/responses` with two required headers:
+
+- `x-api-key`: your API key
+- `x-project-id`: your project ID
+
+<Tabs>
+  <Tab title="cURL">
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role":"user","content":"Summarize this article in 3 bullet points."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+  </Tab>
+  <Tab title="Python">
+
+```python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+}
+payload = {
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role": "user", "content": "Summarize this article in 3 bullet points."}],
+    "text": {"format": {"type": "text"}},
+}
+
+resp = requests.post(url, headers=headers, json=payload)
+resp.raise_for_status()
+text = resp.json()["output"][0]["content"][0]["text"]
+print(text)
+```
+
+  </Tab>
+  <Tab title="Node">
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-summary-cloud",
+    input: [{ role: "user", content: "Summarize this article in 3 bullet points." }],
+    text: { format: { type: "text" } },
+  }),
+});
+
+const data = await res.json();
+console.log(data.output[0].content[0].text);
+```
+
+  </Tab>
+  <Tab title="Go">
+
+```go
+package main
+
+import (
+  "bytes"
+  "encoding/json"
+  "net/http"
+)
+
+func main() {
+  body := map[string]any{
+    "model": "zlm-v1-summary-cloud",
+    "input": []map[string]string{{"role": "user", "content": "Summarize this article in 3 bullet points."}},
+    "text": map[string]any{"format": map[string]string{"type": "text"}},
+  }
+
+  payload, _ := json.Marshal(body)
+  req, _ := http.NewRequest("POST", "https://api.zerogpu.ai/v1/responses", bytes.NewBuffer(payload))
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "<YOUR_API_KEY>")
+  req.Header.Set("x-project-id", "<YOUR_PROJECT_ID>")
+
+  client := &http.Client{}
+  resp, _ := client.Do(req)
+  defer resp.Body.Close()
+
+  var out map[string]any
+  json.NewDecoder(resp.Body).Decode(&out)
+}
+```
+
+  </Tab>
+</Tabs>
+
+## Second request (IAB ad signals)
+
+Switch the model to `zlm-v1-iab-classify-cloud` to extract structured ad signals.
+
+<Tabs>
+  <Tab title="cURL">
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role":"user","content":"Classify this article for ad targeting."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+  </Tab>
+  <Tab title="Python">
+
+```python
+import requests
+import json
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+}
+payload = {
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role": "user", "content": "Classify this article for ad targeting."}],
+    "text": {"format": {"type": "text"}},
+}
+
+resp = requests.post(url, headers=headers, json=payload)
+resp.raise_for_status()
+raw = resp.json()["output"][0]["content"][0]["text"]
+classification = json.loads(raw)
+print(classification["content"]["iab_2_2"][:3])
+```
+
+  </Tab>
+  <Tab title="Node">
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-iab-classify-cloud",
+    input: [{ role: "user", content: "Classify this article for ad targeting." }],
+    text: { format: { type: "text" } },
+  }),
+});
+
+const data = await res.json();
+const classification = JSON.parse(data.output[0].content[0].text);
+console.log(classification.content.iab_2_2.slice(0, 3));
+```
+
+  </Tab>
+  <Tab title="Go">
+
+```go
+package main
+
+import (
+  "bytes"
+  "encoding/json"
+  "net/http"
+)
+
+func main() {
+  body := map[string]any{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": []map[string]string{{"role": "user", "content": "Classify this article for ad targeting."}},
+    "text": map[string]any{"format": map[string]string{"type": "text"}},
+  }
+
+  payload, _ := json.Marshal(body)
+  req, _ := http.NewRequest("POST", "https://api.zerogpu.ai/v1/responses", bytes.NewBuffer(payload))
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "<YOUR_API_KEY>")
+  req.Header.Set("x-project-id", "<YOUR_PROJECT_ID>")
+
+  client := &http.Client{}
+  resp, _ := client.Do(req)
+  defer resp.Body.Close()
+
+  var out map[string]any
+  json.NewDecoder(resp.Body).Decode(&out)
+}
+```
+
+  </Tab>
+</Tabs>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+- Browse the [Model Catalog](/models/overview).
+- Read the [API Reference](/api-reference/overview).
+- Try a [Cookbook recipe](/cookbook/ad-signals-from-text).

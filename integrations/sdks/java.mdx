@@ -1,0 +1,33 @@
+---
+title: "Java SDK"
+description: "Use Java 11 HttpClient to call ZeroGPU."
+---
+
+ZeroGPU does not yet ship an official Java SDK. Use Java 11+ `HttpClient` to call the REST API.
+
+```java
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+String payload = """
+{
+  \"model\": \"zlm-v1-summary-cloud\",
+  \"input\": [{\"role\": \"user\", \"content\": \"Summarize this text.\"}],
+  \"text\": {\"format\": {\"type\": \"text\"}}
+}
+""";
+
+HttpRequest request = HttpRequest.newBuilder()
+  .uri(URI.create("https://api.zerogpu.ai/v1/responses"))
+  .header("content-type", "application/json")
+  .header("x-api-key", "<YOUR_API_KEY>")
+  .header("x-project-id", "<YOUR_PROJECT_ID>")
+  .POST(HttpRequest.BodyPublishers.ofString(payload))
+  .build();
+
+HttpClient client = HttpClient.newHttpClient();
+HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+System.out.println(response.body());
+```

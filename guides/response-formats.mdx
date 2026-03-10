@@ -1,0 +1,47 @@
+---
+title: "Response formats"
+description: "Where to find the output text in each response envelope."
+---
+
+ZeroGPU returns output in one of two OpenAI-style envelopes, depending on the endpoint you use.
+
+## Responses API
+
+The final text is at:
+
+- `output[0].content[0].text`
+
+## Chat Completions API
+
+The final text is at:
+
+- `choices[0].message.content`
+
+## Classification vs summary
+
+- `zlm-v1-iab-classify-cloud` returns JSON encoded as a string.
+- `zlm-v1-summary-cloud` returns plain text.
+
+## Copy-paste parsing snippets
+
+```javascript
+// Responses API
+const text = data.output[0].content[0].text;
+
+// Chat Completions API
+const text = data.choices[0].message.content;
+
+// Classification model only
+const classification = JSON.parse(text);
+```
+
+```python
+# Responses API
+text = data["output"][0]["content"][0]["text"]
+
+# Chat Completions API
+text = data["choices"][0]["message"]["content"]
+
+# Classification model only
+classification = json.loads(text)
+```

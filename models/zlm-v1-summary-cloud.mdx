@@ -1,0 +1,38 @@
+---
+title: "zlm-v1-summary-cloud"
+description: "Summarize input text into concise plain text."
+---
+
+This model generates concise summaries from input text. The output is plain text.
+
+## Output
+
+- `Responses` API: `output[0].content[0].text`
+- `Chat Completions` API: `choices[0].message.content`
+
+## Sample request (Responses API)
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role":"user","content":"..."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+## Sample request (Chat Completions API)
+
+```bash
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-summary-cloud",
+    "messages": [{"role":"user","content":"..."}]
+  }'
+```

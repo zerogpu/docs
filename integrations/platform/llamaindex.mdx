@@ -1,0 +1,22 @@
+---
+title: "LlamaIndex"
+description: "Use ZeroGPU with LlamaIndex via OpenAI-compatible settings."
+---
+
+LlamaIndex supports OpenAI-compatible providers when you can override the base URL and inject headers.
+
+## Steps
+
+1. Set the base URL to `https://api.zerogpu.ai`.
+2. Add required headers `x-api-key` and `x-project-id`.
+3. Use a ZeroGPU model from the catalog.
+
+## Pseudocode
+
+```text
+llm = OpenAICompatible(
+  base_url="https://api.zerogpu.ai",
+  headers={"x-api-key": "...", "x-project-id": "..."},
+  model="zlm-v1-summary-cloud"
+)
+```

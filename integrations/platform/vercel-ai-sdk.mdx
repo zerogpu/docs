@@ -1,0 +1,21 @@
+---
+title: "Vercel AI SDK"
+description: "Use ZeroGPU with an OpenAI-compatible provider."
+---
+
+The Vercel AI SDK supports OpenAI-compatible providers. Configure a custom base URL and add the required headers.
+
+## Steps
+
+1. Set the base URL to `https://api.zerogpu.ai`.
+2. Inject `x-api-key` and `x-project-id` headers.
+3. Choose a ZeroGPU model name.
+
+## Conceptual configuration
+
+```text
+provider = OpenAICompatibleProvider(
+  base_url="https://api.zerogpu.ai",
+  headers={"x-api-key": "...", "x-project-id": "..."}
+)
+```

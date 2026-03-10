@@ -1,0 +1,28 @@
+---
+title: "Replit"
+description: "Store ZeroGPU credentials in Replit secrets and call the API."
+---
+
+Use Replit Secrets to store `ZERO_GPU_API_KEY` and `ZERO_GPU_PROJECT_ID`, then call the API from your app.
+
+## Steps
+
+1. Add secrets in your Replit project.
+2. Read them as environment variables.
+3. Call the OpenAI-compatible endpoint.
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": process.env.ZERO_GPU_API_KEY,
+    "x-project-id": process.env.ZERO_GPU_PROJECT_ID,
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-summary-cloud",
+    input: [{ role: "user", content: "Summarize this text." }],
+    text: { format: { type: "text" } },
+  }),
+});
+```

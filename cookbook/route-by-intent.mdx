@@ -1,0 +1,23 @@
+---
+title: "Route content by user intent"
+description: "Use intent signals to drive workflows or routing."
+---
+
+## Recipe
+
+1. Send text to `zlm-v1-iab-classify-cloud`.
+2. Parse the JSON string.
+3. Route content based on `user_intent`.
+
+## Example
+
+```javascript
+const classification = JSON.parse(data.output[0].content[0].text);
+const intent = classification.user_intent;
+
+if (intent.category === "Informational" && intent.score >= 0.6) {
+  // Send to knowledge-base pipeline
+} else {
+  // Send to general review queue
+}
+```

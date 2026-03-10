@@ -1,0 +1,28 @@
+---
+title: "Node.js SDK"
+description: "Call ZeroGPU with fetch while official SDKs are planned."
+---
+
+ZeroGPU does not yet ship an official Node SDK. Use `fetch` with the Chat Completions API.
+
+```javascript
+const BASE_URL = "https://api.zerogpu.ai";
+
+const res = await fetch(`${BASE_URL}/v1/chat/completions`, {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-iab-classify-cloud",
+    messages: [{ role: "user", content: "Classify this article." }],
+  }),
+});
+
+const data = await res.json();
+const raw = data.choices[0].message.content;
+const classification = JSON.parse(raw);
+console.log(classification.content.iab_2_2.slice(0, 3));
+```

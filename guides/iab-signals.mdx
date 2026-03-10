@@ -1,0 +1,29 @@
+---
+title: "IAB ad signals"
+description: "What ad signals mean and how to use them."
+---
+
+Ad signals are structured classifications and keywords that help you label content for ad targeting and analytics. ZeroGPU returns categories, topics, and intent with confidence scores so you can make consistent decisions.
+
+## What you get
+
+- IAB content categories with scores
+- IAB audience segments with scores
+- Topics and keywords
+- User intent with category and score
+
+## Using scores
+
+Scores help you rank or filter signals.
+
+- Sort by score and keep the top N categories.
+- Apply a minimum threshold for reliable tags.
+- Store both the raw score and the selected labels for auditability.
+
+## Example: pick the top 3 categories
+
+```javascript
+const categories = classification.content.iab_2_2
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+```

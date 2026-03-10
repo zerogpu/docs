@@ -1,0 +1,158 @@
+---
+title: "zlm-v1-iab-classify-cloud"
+description: "Extract structured ad signals from text."
+---
+
+This model extracts structured ad signals from input text, including IAB content categories, IAB audience segments, topics, keywords, and user intent.
+
+## Input
+
+- Plain text in the user message content.
+
+## Output
+
+- JSON encoded as a string in the response text field.
+- `Responses` API: `output[0].content[0].text`
+- `Chat Completions` API: `choices[0].message.content`
+
+## IAB coverage
+
+- Content: IAB Content 2.2 plus a compatibility set for IAB Content 1.0.
+- Audience: IAB Audience 1.0.
+
+## Sample request (Responses API)
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role":"user","content":"..."}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+## Sample request (Chat Completions API)
+
+```bash
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "messages": [{"role":"user","content":"..."}]
+  }'
+```
+
+## Sample output (parsed JSON)
+
+```json
+{
+  "audience": [
+    {
+      "id": "A-1",
+      "parent_id": null,
+      "name": "Sports Fans",
+      "tier1_name": "Sports",
+      "tier2_name": "Team Sports",
+      "tier3_name": "Basketball",
+      "score": 0.92
+    }
+  ],
+  "content": {
+    "iab_1_0": [
+      {
+        "code": "IAB17",
+        "parent_code": "IAB17",
+        "name": "Sports",
+        "tier": 1,
+        "score": 0.91
+      }
+    ],
+    "iab_2_2": [
+      {
+        "id": "IAB17-1",
+        "parent_id": "IAB17",
+        "tier1_name": "Sports",
+        "tier2_name": "Basketball",
+        "tier3_name": "NBA",
+        "score": 0.93
+      }
+    ]
+  },
+  "topics": [
+    {"name": "Playoffs", "score": 0.82}
+  ],
+  "keywords": ["basketball", "playoffs", "fans"],
+  "user_intent": {"name": "Research", "category": "Informational", "score": 0.78}
+}
+```
+
+## Field reference
+
+### `audience[]`
+
+- `id`: Audience segment identifier.
+- `parent_id`: Parent segment identifier, if applicable.
+- `name`: Segment name.
+- `tier1_name`, `tier2_name`, `tier3_name`: Hierarchy labels.
+- `score`: Confidence score for the segment.
+
+### `content.iab_1_0[]`
+
+- `code`: IAB 1.0 category code.
+- `parent_code`: Parent category code.
+- `name`: Category name.
+- `tier`: Tier level.
+- `score`: Confidence score.
+
+### `content.iab_2_2[]`
+
+- `id`: IAB 2.2 category id.
+- `parent_id`: Parent category id.
+- `tier1_name`, `tier2_name`, `tier3_name`: Category labels.
+- `score`: Confidence score.
+
+### `topics[]`
+
+- `name`: Topic label.
+- `score`: Confidence score.
+
+### `keywords[]`
+
+- String keywords extracted from the input.
+
+### `user_intent`
+
+- `name`: Intent label.
+- `category`: Intent category label.
+- `score`: Confidence score.
+
+## Parsing the output
+
+The model returns JSON encoded as a string. Parse it before use.
+
+```javascript
+const raw = data.output[0].content[0].text;
+const classification = JSON.parse(raw);
+```
+
+```python
+import json
+raw = data["output"][0]["content"][0]["text"]
+classification = json.loads(raw)
+```
+
+```go
+var payload map[string]any
+raw := textFromResponse // output[0].content[0].text
+_ = json.Unmarshal([]byte(raw), &payload)
+```
+
+```java
+String raw = textFromResponse; // output[0].content[0].text
+Map<String, Object> classification = new ObjectMapper().readValue(raw, Map.class);
+```

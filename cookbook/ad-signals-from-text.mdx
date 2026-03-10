@@ -1,0 +1,87 @@
+---
+title: "Extract IAB ad signals from an article"
+description: "Turn raw text into structured categories, keywords, and intent."
+---
+
+## Recipe
+
+1. Prepare the text you want to classify.
+2. Call `POST /v1/responses` with `zlm-v1-iab-classify-cloud`.
+3. Parse the JSON string from the response.
+4. Select top categories using a threshold or top N.
+5. Persist the results to your system.
+
+## Request
+
+<Tabs>
+  <Tab title="cURL">
+
+```bash
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role":"user","content":"<ARTICLE_TEXT>"}],
+    "text": {"format": {"type": "text"}}
+  }'
+```
+
+  </Tab>
+  <Tab title="Python">
+
+```python
+import requests, json
+
+resp = requests.post(
+    "https://api.zerogpu.ai/v1/responses",
+    headers={
+        "content-type": "application/json",
+        "x-api-key": "<YOUR_API_KEY>",
+        "x-project-id": "<YOUR_PROJECT_ID>",
+    },
+    json={
+        "model": "zlm-v1-iab-classify-cloud",
+        "input": [{"role": "user", "content": "<ARTICLE_TEXT>"}],
+        "text": {"format": {"type": "text"}},
+    },
+)
+
+raw = resp.json()["output"][0]["content"][0]["text"]
+classification = json.loads(raw)
+```
+
+  </Tab>
+  <Tab title="Node">
+
+```javascript
+const res = await fetch("https://api.zerogpu.ai/v1/responses", {
+  method: "POST",
+  headers: {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+  },
+  body: JSON.stringify({
+    model: "zlm-v1-iab-classify-cloud",
+    input: [{ role: "user", content: "<ARTICLE_TEXT>" }],
+    text: { format: { type: "text" } },
+  }),
+});
+
+const data = await res.json();
+const classification = JSON.parse(data.output[0].content[0].text);
+```
+
+  </Tab>
+</Tabs>
+
+## Select top categories
+
+```javascript
+const top = classification.content.iab_2_2
+  .filter((c) => c.score >= 0.5)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+```

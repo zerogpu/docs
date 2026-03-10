@@ -1,0 +1,42 @@
+---
+title: "Python SDK"
+description: "Use requests or httpx with ZeroGPU today."
+---
+
+ZeroGPU does not yet ship an official Python SDK. You can call the OpenAI-compatible REST API directly.
+
+## Example: Responses API
+
+```python
+import requests
+import json
+
+BASE_URL = "https://api.zerogpu.ai"
+HEADERS = {
+    "content-type": "application/json",
+    "x-api-key": "<YOUR_API_KEY>",
+    "x-project-id": "<YOUR_PROJECT_ID>",
+}
+
+def summarize(text: str) -> str:
+    payload = {
+        "model": "zlm-v1-summary-cloud",
+        "input": [{"role": "user", "content": text}],
+        "text": {"format": {"type": "text"}},
+    }
+    resp = requests.post(f"{BASE_URL}/v1/responses", headers=HEADERS, json=payload)
+    resp.raise_for_status()
+    return resp.json()["output"][0]["content"][0]["text"]
+
+
+def classify(text: str) -> dict:
+    payload = {
+        "model": "zlm-v1-iab-classify-cloud",
+        "input": [{"role": "user", "content": text}],
+        "text": {"format": {"type": "text"}},
+    }
+    resp = requests.post(f"{BASE_URL}/v1/responses", headers=HEADERS, json=payload)
+    resp.raise_for_status()
+    raw = resp.json()["output"][0]["content"][0]["text"]
+    return json.loads(raw)
+```

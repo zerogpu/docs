@@ -1,0 +1,39 @@
+---
+title: "Go SDK"
+description: "Use net/http to call ZeroGPU today."
+---
+
+ZeroGPU does not yet ship an official Go SDK. Use `net/http` with the Responses API.
+
+```go
+package main
+
+import (
+  "bytes"
+  "encoding/json"
+  "net/http"
+)
+
+func main() {
+  payload := map[string]any{
+    "model": "zlm-v1-summary-cloud",
+    "input": []map[string]string{{"role": "user", "content": "Summarize this text."}},
+    "text": map[string]any{"format": map[string]string{"type": "text"}},
+  }
+
+  body, _ := json.Marshal(payload)
+  req, _ := http.NewRequest("POST", "https://api.zerogpu.ai/v1/responses", bytes.NewBuffer(body))
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "<YOUR_API_KEY>")
+  req.Header.Set("x-project-id", "<YOUR_PROJECT_ID>")
+
+  client := &http.Client{}
+  resp, _ := client.Do(req)
+  defer resp.Body.Close()
+
+  var out map[string]any
+  json.NewDecoder(resp.Body).Decode(&out)
+
+  // output[0].content[0].text
+}
+```

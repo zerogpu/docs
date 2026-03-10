@@ -1,0 +1,11 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="675" fill="#F8FAFC"/>
+  <rect x="60" y="60" width="1080" height="555" rx="24" fill="#FFFFFF" stroke="#E2E8F0"/>
+  <rect x="100" y="120" width="360" height="40" rx="8" fill="#E2E8F0"/>
+  <rect x="100" y="190" width="500" height="24" rx="6" fill="#E2E8F0"/>
+  <rect x="100" y="230" width="560" height="24" rx="6" fill="#E2E8F0"/>
+  <rect x="100" y="290" width="360" height="24" rx="6" fill="#E2E8F0"/>
+  <rect x="100" y="360" width="300" height="48" rx="10" fill="#22C55E"/>
+  <text x="120" y="392" font-family="Space Grotesk, ui-sans-serif, sans-serif" font-size="20" font-weight="600" fill="#0F172A">Create key</text>
+  <text x="100" y="520" font-family="Space Grotesk, ui-sans-serif, sans-serif" font-size="28" font-weight="600" fill="#0F172A">Step 2: Get API key + project</text>
+</svg>

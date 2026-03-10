@@ -1,0 +1,53 @@
+---
+title: "Chat Completions"
+description: "OpenAI-compatible Chat Completions API."
+---
+
+## Endpoint
+
+`POST https://api.zerogpu.ai/v1/chat/completions`
+
+## Required headers
+
+- `content-type: application/json`
+- `x-api-key: <YOUR_API_KEY>`
+- `x-project-id: <YOUR_PROJECT_ID>`
+
+## Request body
+
+- `model` (string) required
+- `messages` (array) required, objects with `role` and `content`
+
+## Example request (classification)
+
+```bash
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: <YOUR_API_KEY>" \
+  -H "x-project-id: <YOUR_PROJECT_ID>" \
+  -d '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "messages": [{"role":"user","content":"..."}]
+  }'
+```
+
+Summary requests work the same way. Use `zlm-v1-summary-cloud` for the model.
+
+## Example response (trimmed)
+
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "content": "..."
+      }
+    }
+  ]
+}
+```
+
+## Parsing guidance
+
+- Summary output: `choices[0].message.content`
+- Classification output: `choices[0].message.content` is JSON encoded as a string
