@@ -111,8 +111,8 @@
     }
   },
   "logo": {
-    "light": "/logo/zerogpu-icon-light.png",
-    "dark": "/logo/zerogpu-icon-light.png"
+    "light": "/logo/zerogpu-docs-logo-light.png",
+    "dark": "/logo/zerogpu-docs-logo-dark.png"
   },
   "navbar": {
     "links": [
