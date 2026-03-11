@@ -1,0 +1,46 @@
+---
+title: "FAQ"
+description: "Quick answers to common questions."
+---
+
+<AccordionGroup>
+  <Accordion title="What is ZeroGPU?">
+    An API for AI model inference. You send requests, get responses. No GPUs to manage — ZeroGPU handles model hosting, scaling, and routing.
+  </Accordion>
+
+  <Accordion title="How does it reduce costs?">
+    Inference runs on distributed edge devices using Nano Language Models (sub-1B parameters) instead of GPU clusters. You pay per request, not for reserved capacity.
+  </Accordion>
+
+  <Accordion title="What workloads does it support?">
+    Summarization, classification, entity extraction, content moderation, intent routing, sentiment analysis — the high-volume tasks that make up most production AI traffic.
+  </Accordion>
+
+  <Accordion title="What models are available?">
+    Two models: **zlm-v1-summary-cloud** (summarization) and **zlm-v1-iab-classify-cloud** (IAB content classification). Select one in your [dashboard](https://zerogpu.ai) and pass it in the `model` field.
+  </Accordion>
+
+  <Accordion title="How do I integrate it?">
+    One endpoint: `POST https://api.zerogpu.ai/v1/responses`. Add your API key and project ID as headers. SDKs available for Python, JavaScript, Rust, Go, Ruby. See the [Quickstart](/quickstart).
+  </Accordion>
+
+  <Accordion title="What latency should I expect?">
+    Depends on the model and workload. Monitor real-time latency in [Usage Analytics](/platform/usage-analytics).
+  </Accordion>
+
+  <Accordion title="Is it production-ready?">
+    Yes. Project isolation, API key management, request logging, usage analytics, and automatic cloud fallback for availability.
+  </Accordion>
+
+  <Accordion title="I lost my API key.">
+    Keys are shown once at creation. Revoke the lost key in [API Keys](/platform/api-keys) and create a new one.
+  </Accordion>
+
+  <Accordion title="Can I separate dev and production?">
+    Yes. Create separate projects in your organization. Each gets its own keys, logs, and analytics. See [Organizations & Projects](/platform/organizations-and-projects).
+  </Accordion>
+
+  <Accordion title="How do I monitor usage?">
+    [Usage Analytics](/platform/usage-analytics) for trends (tokens, requests, latency). [Logs](/platform/logs) for individual request detail.
+  </Accordion>
+</AccordionGroup>

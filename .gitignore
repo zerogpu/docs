@@ -1,0 +1,25 @@
+# Cursor / IDE
+.cursor/
+.agents/
+
+# Skills and agent config (local only, not for public repo)
+skills-lock.json
+
+# Dependencies
+node_modules/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Mintlify / build
+.mintlify/

@@ -1,0 +1,47 @@
+---
+title: "Organizations & Projects"
+description: "Separate dev from production. Give each team its own keys and logs."
+---
+
+Two levels: **organizations** contain **projects**. Each project gets its own API keys, analytics, and logs.
+
+## Organizations
+
+Your top-level container — one per team or company. Holds multiple projects.
+
+## Projects
+
+Where the work happens. Each project is fully isolated:
+
+- **Own API keys** — revoke dev keys without touching production
+- **Own analytics** — see token usage per environment
+- **Own logs** — debug staging without production noise
+
+## Recommended setup
+
+| Organization | Project | Use |
+|---|---|---|
+| `my-company` | `production` | Live traffic |
+| `my-company` | `staging` | Pre-release testing |
+| `my-company` | `development` | Local experiments |
+
+<Tip>
+  Always separate dev and production. One leaked dev key shouldn't compromise your production environment.
+</Tip>
+
+## Managing projects
+
+From the top navigation dropdown:
+
+- **Switch** between projects
+- **Create** new projects
+- **Create** new organizations
+
+<Columns cols={2}>
+  <Card title="API Keys" icon="key" href="/platform/api-keys">
+    One key per project, per environment.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/platform/authentication">
+    Two headers. No OAuth.
+  </Card>
+</Columns>

@@ -1,0 +1,168 @@
+---
+title: "Responses"
+description: "Send input to an AI model and receive a response."
+---
+
+## `POST /v1/responses`
+
+Send a list of input messages to an AI model and receive a generated response.
+
+### Request headers
+
+| Header | Type | Required | Description |
+|--------|------|----------|-------------|
+| `x-api-key` | string | Yes | Your ZeroGPU API key |
+| `x-project-id` | string | Yes | Your project UUID |
+| `content-type` | string | Yes | Must be `application/json` |
+
+### Request body
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `model` | string | Yes | The model identifier (available from your dashboard) |
+| `input` | array | Yes | Array of input message objects |
+| `text` | object | No | Response format configuration |
+
+#### Input message object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `role` | string | The role of the message author: `user` or `system` |
+| `content` | string | The content of the message |
+
+#### Text format object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text.format.type` | string | Response format type (e.g., `text`) |
+
+### Example request
+
+<CodeGroup>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+    "model": "YOUR_MODEL",
+    "input": [
+      {
+        "role": "user",
+        "content": "Your input text here..."
+      }
+    ],
+    "text": {
+      "format": {
+        "type": "text"
+      }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = {
+    "model": "YOUR_MODEL",
+    "input": [
+        {
+            "role": "user",
+            "content": "Your input text here...",
+        }
+    ],
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+```javascript JavaScript
+const url = 'https://api.zerogpu.ai/v1/responses';
+const headers = {
+  'content-type': 'application/json',
+  'x-api-key': 'YOUR_API_KEY',
+  'x-project-id': 'YOUR_PROJECT_ID'
+};
+const payload = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+};
+
+fetch(url, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify(payload)
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+
+</CodeGroup>
+
+### Example response
+
+```json
+{
+  "id": "resp_abc123",
+  "object": "response",
+  "created": 1710000000,
+  "model": "your-selected-model",
+  "output": [
+    {
+      "type": "message",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "The generated response from the model..."
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 24,
+    "output_tokens": 32,
+    "total_tokens": 56
+  }
+}
+```
+
+### Response fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier for the response |
+| `object` | string | Object type (`response`) |
+| `created` | integer | Unix timestamp of when the response was created |
+| `model` | string | The model used for inference |
+| `output` | array | Array of output message objects |
+| `output[].role` | string | Always `assistant` |
+| `output[].content[].text` | string | The generated text response |
+| `usage` | object | Token usage statistics |
+| `usage.input_tokens` | integer | Number of tokens in the input |
+| `usage.output_tokens` | integer | Number of tokens generated |
+| `usage.total_tokens` | integer | Total tokens consumed |

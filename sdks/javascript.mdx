@@ -1,0 +1,93 @@
+---
+title: "JavaScript"
+description: "Integrate ZeroGPU into your JavaScript or Node.js application."
+---
+
+## Basic usage
+
+```javascript
+const url = 'https://api.zerogpu.ai/v1/responses';
+const headers = {
+  'content-type': 'application/json',
+  'x-api-key': 'YOUR_API_KEY',
+  'x-project-id': 'YOUR_PROJECT_ID'
+};
+const payload = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+};
+
+fetch(url, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify(payload)
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+
+## Using environment variables (Node.js)
+
+```javascript
+const url = 'https://api.zerogpu.ai/v1/responses';
+const headers = {
+  'content-type': 'application/json',
+  'x-api-key': process.env.ZEROGPU_API_KEY,
+  'x-project-id': process.env.ZEROGPU_PROJECT_ID
+};
+const payload = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+};
+
+const response = await fetch(url, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify(payload)
+});
+
+const data = await response.json();
+console.log(data.output[0].content[0].text);
+```
+
+## Error handling
+
+```javascript
+try {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log(data.output[0].content[0].text);
+} catch (error) {
+  console.error('Request failed:', error.message);
+}
+```

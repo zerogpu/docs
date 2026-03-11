@@ -1,0 +1,45 @@
+---
+title: "API Keys"
+description: "Create, rotate, revoke. Keys are shown once — copy immediately."
+---
+
+API keys authenticate your requests. Create them from the dashboard, store them securely, revoke when compromised.
+
+## Lifecycle
+
+```
+Created (shown once) → Active → Revoked (permanent)
+```
+
+**The full key is only displayed at creation.** Copy it immediately. If you lose it, revoke and create a new one.
+
+## Key format
+
+```
+zgpu-xxxx...xxxx
+```
+
+Partially masked in the dashboard after creation.
+
+## Actions
+
+| Action | What happens |
+|--------|-------------|
+| **Create** | New key generated, shown once in full |
+| **View** | See masked keys and creation dates |
+| **Revoke** | Key disabled immediately, cannot be undone |
+
+## Rules of thumb
+
+- **One key per environment** — dev, staging, production each get their own
+- **Rotate on a schedule** — create new key, update your app, revoke old key
+- **Revoke immediately if exposed** — don't wait
+
+```bash
+export ZEROGPU_API_KEY="YOUR_API_KEY"
+export ZEROGPU_PROJECT_ID="YOUR_PROJECT_ID"
+```
+
+<Warning>
+  Lost your key? You can't recover it. Revoke and create a new one.
+</Warning>

@@ -1,0 +1,64 @@
+---
+title: "Ruby"
+description: "Integrate ZeroGPU into your Ruby application."
+---
+
+## Basic usage
+
+```ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse('https://api.zerogpu.ai/v1/responses')
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = (uri.scheme == 'https')
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request['content-type'] = 'application/json'
+request['x-api-key'] = 'YOUR_API_KEY'
+request['x-project-id'] = 'YOUR_PROJECT_ID'
+
+request.body = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+}.to_json
+
+response = http.request(request)
+puts response.body
+```
+
+## Using environment variables
+
+```ruby
+request['x-api-key'] = ENV['ZEROGPU_API_KEY']
+request['x-project-id'] = ENV['ZEROGPU_PROJECT_ID']
+```
+
+## Error handling
+
+```ruby
+response = http.request(request)
+
+case response.code.to_i
+when 200
+  result = JSON.parse(response.body)
+  puts result['output'][0]['content'][0]['text']
+when 401
+  puts 'Invalid API key'
+when 429
+  puts 'Rate limited — slow down'
+else
+  puts "Error #{response.code}: #{response.body}"
+end
+```

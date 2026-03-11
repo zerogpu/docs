@@ -1,0 +1,58 @@
+---
+title: "IAB content classification"
+description: "Classify content into IAB categories with the classification model."
+---
+
+Use the `zlm-v1-iab-classify-cloud` model to classify content into IAB (Interactive Advertising Bureau) categories.
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [
+      {
+        "role": "user",
+        "content": "Article or content to classify..."
+      }
+    ],
+    "text": {
+      "format": { "type": "text" }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = {
+    "model": "zlm-v1-iab-classify-cloud",
+    "input": [{"role": "user", "content": "Article or content to classify..."}],
+    "text": {"format": {"type": "text"}},
+}
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</CodeGroup>
+
+## Response
+
+The API returns the classification result in the standard [Responses API](/api-reference/endpoint/responses) format. Parse the response body to get the IAB category or label for your content.
+
+## Tips
+
+- Best for single-document or single-snippet classification; for many items, call in a loop or use [batch patterns](/cookbook/batch-requests).
+- Store API key and project ID in environment variables; see [Security](/platform/security).

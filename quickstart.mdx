@@ -1,80 +1,253 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "First API call in under 5 minutes."
 ---
 
-## Get started in three steps
+Three things from your [dashboard](https://zerogpu.ai), one API call, done.
 
-Get your documentation site running locally and make your first customization.
+## 1. Grab your credentials
 
-### Step 1: Set up your local environment
+Log into the [ZeroGPU dashboard](https://zerogpu.ai). Copy these three values:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+| Credential | Where to find it |
+|------------|-----------------|
+| **API Key** | Dashboard → API Keys |
+| **Project ID** | Dashboard → Project Settings |
+| **Model** | Dashboard → Model selector |
 
-### Step 2: Deploy your changes
+## 2. Send a request
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+<CodeGroup>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+    "model": "YOUR_MODEL",
+    "input": [
+      {
+        "role": "user",
+        "content": "Your input text here..."
+      }
+    ],
+    "text": {
+      "format": {
+        "type": "text"
+      }
+    }
+  }'
+```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```python Python
+import requests
 
-### Step 3: Go live
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = {
+    "model": "YOUR_MODEL",
+    "input": [
+        {
+            "role": "user",
+            "content": "Your input text here...",
+        }
+    ],
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+}
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+```javascript JavaScript
+const url = 'https://api.zerogpu.ai/v1/responses';
+const headers = {
+  'content-type': 'application/json',
+  'x-api-key': 'YOUR_API_KEY',
+  'x-project-id': 'YOUR_PROJECT_ID'
+};
+const payload = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+};
+
+fetch(url, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify(payload)
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+
+```rust Rust
+use reqwest::Client;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let payload = json!({
+        "model": "YOUR_MODEL",
+        "input": [
+            {
+                "role": "user",
+                "content": "Your input text here..."
+            }
+        ],
+        "text": {
+            "format": {
+                "type": "text"
+            }
+        }
+    });
+
+    let response = client
+        .post("https://api.zerogpu.ai/v1/responses")
+        .header("content-type", "application/json")
+        .header("x-api-key", "YOUR_API_KEY")
+        .header("x-project-id", "YOUR_PROJECT_ID")
+        .json(&payload)
+        .send()
+        .await?;
+
+    let body = response.text().await?;
+    println!("{}", body);
+    Ok(())
+}
+```
+
+```go Go
+package main
+
+import (
+  "bytes"
+  "encoding/json"
+  "fmt"
+  "io"
+  "net/http"
+)
+
+func main() {
+  url := "https://api.zerogpu.ai/v1/responses"
+
+  payload := map[string]any{
+    "model": "YOUR_MODEL",
+    "input": []map[string]string{
+      {
+        "role":    "user",
+        "content": "Your input text here...",
+      },
+    },
+    "text": map[string]any{
+      "format": map[string]string{
+        "type": "text",
+      },
+    },
+  }
+
+  payloadBytes, err := json.Marshal(payload)
+  if err != nil {
+    panic(err)
+  }
+
+  req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+  if err != nil {
+    panic(err)
+  }
+
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "YOUR_API_KEY")
+  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
+
+  client := &http.Client{}
+  res, err := client.Do(req)
+  if err != nil {
+    panic(err)
+  }
+  defer res.Body.Close()
+
+  body, _ := io.ReadAll(res.Body)
+  fmt.Println(string(body))
+}
+```
+
+```ruby Ruby
+require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse('https://api.zerogpu.ai/v1/responses')
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = (uri.scheme == 'https')
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request['content-type'] = 'application/json'
+request['x-api-key'] = 'YOUR_API_KEY'
+request['x-project-id'] = 'YOUR_PROJECT_ID'
+
+request.body = {
+  model: 'YOUR_MODEL',
+  input: [
+    {
+      role: 'user',
+      content: 'Your input text here...'
+    }
+  ],
+  text: {
+    format: {
+      type: 'text'
+    }
+  }
+}.to_json
+
+response = http.request(request)
+puts response.body
+```
+
+</CodeGroup>
+
+<Warning>
+  Store your API key in environment variables. Never commit it to version control or expose it in client-side code.
+</Warning>
+
+## 3. Verify it worked
+
+Check the [dashboard](https://zerogpu.ai):
+
+- **Logs** — your request appears with model, status, and latency
+- **Usage** — token counts update in real time
+
+If you got a `401`, your API key is wrong. `403` means bad project ID. See [Authentication](/platform/authentication) for details.
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+<Columns cols={2}>
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+    Full request/response spec for `/v1/responses`.
+  </Card>
+  <Card title="SDK Examples" icon="code" href="/sdks/python">
+    Error handling, env vars, and production patterns.
+  </Card>
+</Columns>

@@ -1,0 +1,27 @@
+---
+title: "Logs"
+description: "Every API request, searchable: model, status, latency, timestamp."
+---
+
+Full request history for your project. Find failed requests, track latency, audit which models are being called.
+
+## What each entry shows
+
+| Field | Example |
+|-------|---------|
+| **Model** | The model that handled the request |
+| **Status** | `200`, `401`, `429`, `500` |
+| **Latency** | Time from request to response |
+| **Timestamp** | When the request was made |
+
+## Three ways to use logs
+
+**Debug a failure** — Filter by 4xx/5xx status codes. Check the request payload for malformed input or missing headers.
+
+**Investigate latency** — Sort by latency. If slow requests correlate with high volume, you may need to adjust your request patterns.
+
+**Audit usage** — See which models are called, how often, and from which API keys. Useful for cost tracking across teams.
+
+<Tip>
+  Logs show individual requests. [Usage Analytics](/platform/usage-analytics) shows the trends. Use both.
+</Tip>

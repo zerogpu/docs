@@ -1,0 +1,94 @@
+---
+title: "Python"
+description: "Integrate ZeroGPU into your Python application."
+---
+
+## Basic usage
+
+```python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = {
+    "model": "YOUR_MODEL",
+    "input": [
+        {
+            "role": "user",
+            "content": "Your input text here...",
+        }
+    ],
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+## Using environment variables
+
+```python
+import os
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": os.environ["ZEROGPU_API_KEY"],
+    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
+}
+payload = {
+    "model": "YOUR_MODEL",
+    "input": [
+        {
+            "role": "user",
+            "content": "Your input text here...",
+        }
+    ],
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+}
+
+response = requests.post(url, headers=headers, json=payload)
+result = response.json()
+
+print(result["output"][0]["content"][0]["text"])
+```
+
+## Error handling
+
+```python
+import requests
+
+try:
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    result = response.json()
+    print(result["output"][0]["content"][0]["text"])
+except requests.exceptions.HTTPError as e:
+    if e.response.status_code == 401:
+        print("Invalid API key")
+    elif e.response.status_code == 429:
+        print("Rate limited — slow down")
+    else:
+        print(f"Error: {e.response.status_code}")
+except requests.exceptions.RequestException as e:
+    print(f"Request failed: {e}")
+```
+
+## Install dependencies
+
+```bash
+pip install requests
+```

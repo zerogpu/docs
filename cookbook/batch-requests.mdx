@@ -1,0 +1,54 @@
+---
+title: "Batch requests"
+description: "Send multiple API requests efficiently with parallelism and error handling."
+---
+
+When you need to process many items (e.g. summarize 100 articles or classify a list of snippets), send requests in parallel and handle errors so one failure doesn't block the rest.
+
+## Pattern: parallel requests with a pool
+
+<CodeGroup>
+
+```python Python
+import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+
+def one_request(content: str, model: str):
+    payload = {
+        "model": model,
+        "input": [{"role": "user", "content": content}],
+        "text": {"format": {"type": "text"}},
+    }
+    r = requests.post(url, headers=headers, json=payload)
+    r.raise_for_status()
+    return r.json()
+
+texts = ["First text...", "Second text..."]  # your inputs
+model = "zlm-v1-summary-cloud"  # or zlm-v1-iab-classify-cloud
+results = []
+with ThreadPoolExecutor(max_workers=5) as executor:
+    futures = {executor.submit(one_request, t, model): t for t in texts}
+    for future in as_completed(futures):
+        try:
+            results.append(future.result())
+        except requests.RequestException as e:
+            # log and skip or retry
+            print(f"Failed: {e}")
+```
+
+</CodeGroup>
+
+## Tips
+
+- **Concurrency:** Limit `max_workers` to avoid hitting [rate limits](https://zerogpu.ai) (tune based on your plan and dashboard metrics).
+- **Errors:** Check status codes and response body; retry with backoff on 429 or 5xx.
+- **Credentials:** Use env vars for `x-api-key` and `x-project-id`; see [Security](/platform/security).
+
+For a single request shape, see [Summarize text](/cookbook/summarize-text) or [IAB classification](/cookbook/iab-classification).

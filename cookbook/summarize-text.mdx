@@ -1,0 +1,58 @@
+---
+title: "Summarize text"
+description: "Use the summarization model to shorten long content."
+---
+
+Use the `zlm-v1-summary-cloud` model to produce short summaries from longer text.
+
+## Request
+
+<CodeGroup>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+    "model": "zlm-v1-summary-cloud",
+    "input": [
+      {
+        "role": "user",
+        "content": "Your long text to summarize here..."
+      }
+    ],
+    "text": {
+      "format": { "type": "text" }
+    }
+  }'
+```
+
+```python Python
+import requests
+
+url = "https://api.zerogpu.ai/v1/responses"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = {
+    "model": "zlm-v1-summary-cloud",
+    "input": [{"role": "user", "content": "Your long text to summarize here..."}],
+    "text": {"format": {"type": "text"}},
+}
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+</CodeGroup>
+
+## Response
+
+The response body includes the model output in the structure returned by the [Responses API](/api-reference/endpoint/responses). Extract the summary text from the response and handle errors (e.g. 4xx/5xx) and rate limits in your code.
+
+## Tips
+
+- Keep input length within the model's limits; for very long documents, consider chunking and summarizing in steps.
+- Use [Logs](/platform/logs) and [Usage](/platform/usage-analytics) in the dashboard to debug and monitor usage.

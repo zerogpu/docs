@@ -1,0 +1,41 @@
+---
+title: "Authentication"
+description: "Two headers on every request. That's it."
+---
+
+Every API request needs two headers: your API key and your project ID. No OAuth, no tokens to refresh.
+
+## Required headers
+
+| Header | Value |
+|--------|-------|
+| `x-api-key` | Your API key from the dashboard |
+| `x-project-id` | Your project UUID from the dashboard |
+| `content-type` | `application/json` |
+
+## Example
+
+```bash
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{ ... }'
+```
+
+## Where to find credentials
+
+1. Log in at [zerogpu.ai](https://zerogpu.ai)
+2. Select your project
+3. API Key and Project ID are on the dashboard
+
+## When it goes wrong
+
+| Status | Cause | Fix |
+|--------|-------|-----|
+| `401` | Missing or invalid API key | Check `x-api-key` — did you copy the full key? |
+| `403` | Invalid project ID or wrong permissions | Verify `x-project-id` matches the dashboard |
+
+<Warning>
+  API keys go in server-side code only. Never in frontend JavaScript, mobile apps, or git repos. See [Security](/platform/security).
+</Warning>

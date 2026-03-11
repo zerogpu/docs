@@ -1,0 +1,45 @@
+---
+title: "Geo-Aware Routing"
+description: "Every request goes to the nearest capable device. Fallback to cloud if needed."
+---
+
+The router decides which edge device handles each request. It evaluates four signals in milliseconds:
+
+| Signal | What it optimizes |
+|--------|------------------|
+| **Geographic proximity** | Lowest network latency |
+| **Device capability** | Enough compute for the requested model |
+| **Current load** | Avoids overloaded nodes |
+| **Model availability** | Routes to nodes with the NLM already cached |
+
+## Request flow
+
+<Steps>
+  <Step title="Request arrives">
+    API gateway extracts the model identifier, payload size, and origin IP.
+  </Step>
+  <Step title="Node selected">
+    Router queries the network topology. Best node that satisfies all constraints wins.
+  </Step>
+  <Step title="Inference runs">
+    Request forwarded to edge device. NLM processes input, returns result.
+  </Step>
+  <Step title="Fallback if needed">
+    No edge node responds in time? Request goes to cloud infrastructure. Same response format — your app doesn't know the difference.
+  </Step>
+</Steps>
+
+## Cloud fallback
+
+Availability guarantee. If the edge network can't serve a request — capacity, model, or device constraints — cloud-hosted replicas handle it transparently.
+
+**Trade-off:** Cloud fallback may have slightly higher latency than edge, but it ensures 100% availability. Your integration code doesn't change either way.
+
+<Columns cols={2}>
+  <Card title="Distributed Inference" icon="network-wired" href="/concepts/distributed-inference">
+    The full architecture behind edge compute.
+  </Card>
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+    Endpoint spec for `/v1/responses`.
+  </Card>
+</Columns>

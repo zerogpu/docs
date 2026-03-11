@@ -1,0 +1,71 @@
+---
+title: "Rust"
+description: "Integrate ZeroGPU into your Rust application."
+---
+
+## Basic usage
+
+```rust
+use reqwest::Client;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let payload = json!({
+        "model": "YOUR_MODEL",
+        "input": [
+            {
+                "role": "user",
+                "content": "Your input text here..."
+            }
+        ],
+        "text": {
+            "format": {
+                "type": "text"
+            }
+        }
+    });
+
+    let response = client
+        .post("https://api.zerogpu.ai/v1/responses")
+        .header("content-type", "application/json")
+        .header("x-api-key", "YOUR_API_KEY")
+        .header("x-project-id", "YOUR_PROJECT_ID")
+        .json(&payload)
+        .send()
+        .await?;
+
+    let body = response.text().await?;
+    println!("{}", body);
+    Ok(())
+}
+```
+
+## Dependencies (Cargo.toml)
+
+```toml
+[dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+```
+
+## Using environment variables
+
+```rust
+use std::env;
+
+let api_key = env::var("ZEROGPU_API_KEY").expect("ZEROGPU_API_KEY not set");
+let project_id = env::var("ZEROGPU_PROJECT_ID").expect("ZEROGPU_PROJECT_ID not set");
+
+let response = client
+    .post("https://api.zerogpu.ai/v1/responses")
+    .header("content-type", "application/json")
+    .header("x-api-key", &api_key)
+    .header("x-project-id", &project_id)
+    .json(&payload)
+    .send()
+    .await?;
+```

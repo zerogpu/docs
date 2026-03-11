@@ -1,33 +1,62 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: "API Reference"
+description: "ZeroGPU Responses API documentation."
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+ZeroGPU provides a REST API for running AI model inference. Send text inputs to models and receive structured responses.
 
-## Welcome
+## Base URL
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
-
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+```
+https://api.zerogpu.ai/v1
+```
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All requests require two headers:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
-```
+| Header | Description |
+|--------|-------------|
+| `x-api-key` | Your ZeroGPU API key (`zgpu-...`) |
+| `x-project-id` | Your project identifier (UUID) |
+| `content-type` | Must be `application/json` |
+
+See [Authentication](/platform/authentication) for details.
+
+## Available endpoints
+
+<Card title="Responses" icon="message" href="/api-reference/endpoint/responses">
+  `POST /v1/responses` — Send input to an AI model and receive a response.
+</Card>
+
+## Available models
+
+| Model | Use case |
+|-------|----------|
+| `zlm-v1-summary-cloud` | Text summarization |
+| `zlm-v1-iab-classify-cloud` | IAB content classification |
+
+Select the model in your [dashboard](https://zerogpu.ai) and pass its identifier in the `model` field of your request.
+
+## Error codes
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Success |
+| `400` | Bad request — check your request body |
+| `401` | Unauthorized — invalid or missing API key |
+| `403` | Forbidden — invalid project ID or insufficient permissions |
+| `429` | Rate limited — slow down your request rate |
+| `500` | Internal server error — retry with exponential backoff |
+
+## SDK examples
+
+Integration examples are available for multiple languages:
+
+<Columns cols={3}>
+  <Card title="Python" icon="python" href="/sdks/python" />
+  <Card title="JavaScript" icon="js" href="/sdks/javascript" />
+  <Card title="Rust" icon="rust" href="/sdks/rust" />
+  <Card title="Go" icon="golang" href="/sdks/go" />
+  <Card title="Ruby" icon="gem" href="/sdks/ruby" />
+</Columns>

@@ -1,97 +1,62 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Run AI model inference through an API — without managing GPU infrastructure."
 ---
 
-## Setting up
+Send a POST request, get an AI response. No GPUs to provision, no infrastructure to manage.
 
-Get your documentation site up and running in minutes.
+ZeroGPU handles model hosting, scaling, and routing. You get an API key and start building.
 
 <Card
-  title="Start here"
+  title="First API call in 5 minutes"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our three step quickstart guide.
+  Three steps: get credentials, send a request, see the response.
 </Card>
 
-## Make it yours
+## What you get
 
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<Columns cols={3}>
+  <Card title="One API endpoint" icon="bolt">
+    `POST /v1/responses` — send text in, get AI output back. Six SDKs included.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Real-time analytics" icon="chart-line">
+    Track every request: token counts, latency, volume, model distribution.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Project isolation" icon="folder">
+    Separate dev, staging, and production with independent keys, logs, and analytics.
   </Card>
 </Columns>
 
-## Create beautiful pages
+## How it works
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Create a project">
+    One organization, multiple projects. Each gets its own API key and dashboard.
+  </Step>
+  <Step title="Send requests">
+    POST to `/v1/responses` with your key, project ID, and model. Response comes back as structured JSON.
+  </Step>
+  <Step title="Monitor everything">
+    Token usage, request volume, latency, error rates — all visible in the dashboard. Debug individual requests in Logs.
+  </Step>
+</Steps>
+
+## Go deeper
 
 <Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Credentials → first request → response. Under 5 minutes.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+    Full endpoint spec with request/response schemas.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="SDK Examples" icon="code" href="/sdks/python">
+    Copy-paste examples for Python, JavaScript, Rust, Go, Ruby.
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Dashboard" icon="gauge" href="/platform/dashboard">
+    Your API key, project ID, and ready-to-use code snippet.
   </Card>
 </Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>

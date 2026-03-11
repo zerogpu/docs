@@ -1,0 +1,46 @@
+---
+title: "Distributed Inference"
+description: "Run AI on idle devices at the edge instead of GPU data centers."
+---
+
+Traditional inference: every request goes to a GPU data center, regardless of task complexity or user location. You pay for reserved capacity even when it's idle.
+
+ZeroGPU: requests run on a distributed network of edge devices — laptops, phones, servers, browsers — using Nano Language Models that don't need GPUs.
+
+## Why centralized inference is expensive
+
+| Problem | Cost |
+|---------|------|
+| **Traffic spikes** | Over-provision GPUs or accept latency spikes |
+| **Oversized models** | LLMs consume GPU resources for tasks that don't need them |
+| **Regional egress** | Data round-trips to distant data centers add latency and fees |
+| **Idle capacity** | Reserved instances cost money 24/7 |
+
+## How ZeroGPU distributes it
+
+<Frame caption="ZeroGPU distributed inference architecture">
+  <img src="/images/distributed-inference-architecture.png" alt="ZeroGPU distributed inference architecture showing Your App connecting to the ZeroGPU Router, which distributes requests to Edge Devices running NLMs with Cloud Fallback" />
+</Frame>
+
+1. **Your app** sends a request to ZeroGPU
+2. **Router** picks the best edge node by location, capacity, and model availability
+3. **Edge device** runs the NLM and returns the result
+4. **Cloud fallback** catches requests when no edge node is available
+
+## What you get
+
+- **Scale horizontally** — more devices = more capacity, no GPU procurement
+- **Pay for usage** — not reserved instances sitting idle
+- **Lower latency** — inference runs near the user, not across the country
+- **Resilience** — no single point of failure; traffic reroutes automatically
+
+**Trade-off:** Edge inference depends on device availability. ZeroGPU mitigates this with automatic cloud fallback — your app never notices the difference.
+
+<Columns cols={2}>
+  <Card title="Geo-Aware Routing" icon="map-location-dot" href="/concepts/geo-aware-routing">
+    How the router picks the optimal node.
+  </Card>
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Send your first distributed inference request.
+  </Card>
+</Columns>

@@ -1,0 +1,58 @@
+---
+title: "Dashboard"
+description: "Your API key, project ID, and a ready-to-copy code snippet — all in one place."
+---
+
+The dashboard shows everything you need to start making requests: your organization, project, API key, project ID, and a working code snippet.
+
+## At a glance
+
+| Field | What it is |
+|-------|-----------|
+| **Organization** | Top-level container (your team or company) |
+| **Project** | The active workload you're working in |
+| **API Key** | Authentication credential for requests |
+| **Project ID** | UUID that scopes requests to this project |
+| **Code Snippet** | Copy-paste cURL command, ready to run |
+
+## Ready-to-use snippet
+
+The dashboard generates this for you — copy it, replace the content, run it:
+
+```bash
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+    "model": "YOUR_MODEL",
+    "input": [
+      {
+        "role": "user",
+        "content": "Your input text here..."
+      }
+    ],
+    "text": {
+      "format": {
+        "type": "text"
+      }
+    }
+  }'
+```
+
+## From here
+
+<Columns cols={2}>
+  <Card title="Usage Analytics" icon="chart-line" href="/platform/usage-analytics">
+    Token counts, request volume, latency trends.
+  </Card>
+  <Card title="Logs" icon="list" href="/platform/logs">
+    Every request: model, status, latency, timestamp.
+  </Card>
+  <Card title="API Keys" icon="key" href="/platform/api-keys">
+    Create, revoke, rotate credentials.
+  </Card>
+  <Card title="Projects" icon="folder" href="/platform/organizations-and-projects">
+    Switch projects or create new ones.
+  </Card>
+</Columns>

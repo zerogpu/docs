@@ -1,0 +1,51 @@
+---
+title: "Nano Language Models"
+description: "Sub-1B parameter models that run on CPUs and cost a fraction of LLMs."
+---
+
+Most production AI traffic is classification, extraction, routing, and moderation — not creative writing or multi-step reasoning. These tasks don't need 70B parameters. They need something fast, cheap, and predictable.
+
+That's what Nano Language Models (NLMs) are built for.
+
+## NLMs vs LLMs
+
+| | LLMs | NLMs |
+|---|---|---|
+| **Parameters** | 7B – 400B+ | Sub-1B |
+| **Runs on** | GPU clusters | CPU, mobile, browser |
+| **Output** | Variable | Predictable, task-specific |
+| **Cost** | High | Low |
+| **Latency** | 100ms – seconds | Single-digit milliseconds |
+| **Best for** | Open-ended generation | Classification, extraction, routing |
+
+## What NLMs handle well
+
+- **Content classification** — categorize into taxonomies at scale
+- **Intent routing** — map user queries to the right handler
+- **Entity extraction** — pull names, dates, amounts from unstructured text
+- **Content moderation** — flag violations in real time
+- **Summarization** — condense documents and conversations
+- **Sentiment analysis** — positive/negative/neutral at high throughput
+
+## "Why not just use a small LLM?"
+
+Different architecture, different goals:
+
+1. **Single-task fine-tuning** — every parameter optimized for one job
+2. **CPU-native** — quantized and compiled for edge hardware, not adapted from GPU-first designs
+3. **Deterministic output** — consistent results production systems can rely on
+
+**Trade-off:** NLMs can't do open-ended generation or complex reasoning. Use LLMs for that. Use NLMs for the high-volume, well-defined tasks that make up 80%+ of production AI traffic.
+
+## Available models
+
+| Model | Use case |
+|-------|----------|
+| `zlm-v1-summary-cloud` | Text summarization |
+| `zlm-v1-iab-classify-cloud` | IAB content classification |
+
+Choose the model in your [dashboard](https://zerogpu.ai) and use its identifier in the `model` field when calling the API.
+
+<Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+  Send requests to NLMs via `/v1/responses`.
+</Card>

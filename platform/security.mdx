@@ -1,0 +1,34 @@
+---
+title: "Security"
+description: "Five rules for keeping your API credentials safe."
+---
+
+## The rules
+
+1. **Server-side only** — API keys never go in frontend code, mobile apps, or anything the user's browser can access.
+2. **Environment variables** — not hardcoded strings.
+   ```bash
+   export ZEROGPU_API_KEY="YOUR_API_KEY"
+   export ZEROGPU_PROJECT_ID="YOUR_PROJECT_ID"
+   ```
+3. **Separate keys per environment** — dev key leak shouldn't compromise production.
+4. **Rotate regularly** — create a new key, update your app, revoke the old one.
+5. **Revoke idle keys** — if it's not in use, it shouldn't exist.
+
+## If a key is compromised
+
+1. **Revoke** the key from [API Keys](/platform/api-keys) — takes effect immediately
+2. **Create** a new key and deploy it
+3. **Check [Logs](/platform/logs)** for unauthorized requests
+4. **Check [Usage Analytics](/platform/usage-analytics)** for unexpected token consumption
+
+## Checklist
+
+| Practice | Done? |
+|----------|-------|
+| Keys in environment variables | |
+| No keys in client-side code | |
+| No keys in version control | |
+| Separate keys for dev and production | |
+| Unused keys revoked | |
+| Rotation schedule in place | |
