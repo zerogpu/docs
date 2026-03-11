@@ -1,0 +1,78 @@
+---
+title: "Connect AI tools"
+description: "Connect Claude Code or Cursor to ZeroGPU docs via MCP for live, queryable access to documentation."
+icon: "plug"
+---
+
+Give your AI coding tool live access to ZeroGPU documentation. Once connected, it can search the docs in real time instead of using a snapshot or cached file.
+
+## What is MCP?
+
+The **Model Context Protocol (MCP)** is an open standard that lets AI applications connect to external data sources and tools in a consistent way. When you connect to ZeroGPU docs via MCP, your tool gets real-time search over the full documentation — the same content as the site, updated automatically when the docs change.
+
+The MCP server for ZeroGPU docs is hosted at:
+
+```
+https://zerogpu.mintlify.app/mcp
+```
+
+<Tabs>
+  <Tab title="Claude Code">
+    <Steps>
+      <Step title="Add the MCP server">
+        Run in your terminal:
+        ```bash
+        claude mcp add --transport http zerogpu-docs https://zerogpu.mintlify.app/mcp
+        ```
+      </Step>
+      <Step title="Verify the connection">
+        List configured servers:
+        ```bash
+        claude mcp list
+        ```
+        You should see `zerogpu-docs`. In a Claude Code session, ask a question about ZeroGPU (for example: *How do I call the Responses API?*). The answer will be grounded in the docs.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Cursor">
+    <Steps>
+      <Step title="Open MCP settings">
+        Press **Cmd+Shift+P** (macOS) or **Ctrl+Shift+P** (Windows), then run **Open MCP settings**.
+      </Step>
+      <Step title="Add the ZeroGPU docs server">
+        Click **Add custom MCP**. In the opened `mcp.json`, add or merge:
+        ```json
+        {
+          "mcpServers": {
+            "zerogpu-docs": {
+              "url": "https://zerogpu.mintlify.app/mcp"
+            }
+          }
+        }
+        ```
+        Save the file and restart Cursor.
+      </Step>
+      <Step title="Verify the connection">
+        In a Cursor chat, ask something about ZeroGPU (for example: *How do I authenticate API requests?*). Cursor will use the MCP server and return answers from the docs.
+      </Step>
+    </Steps>
+    <Accordion title="One-click install from the docs (if available)">
+      Some Mintlify themes show an AI or connect icon on the docs site. If you see it on [ZeroGPU docs](https://zerogpu.mintlify.app), you can connect to Cursor from there without editing `mcp.json`. Use that path if your theme supports it.
+    </Accordion>
+  </Tab>
+</Tabs>
+
+## Scripts and llms.txt
+
+If you are building a script or pipeline and do not use an MCP client:
+
+| URL | Use |
+|-----|-----|
+| `https://zerogpu.mintlify.app/llms.txt` | Sitemap-style index of pages and descriptions |
+| `https://zerogpu.mintlify.app/llms-full.txt` | Full documentation in one Markdown file |
+
+Mintlify generates both when the site is deployed and keeps them in sync with the live docs.
+
+<Card title="Quickstart" icon="play" href="/quickstart">
+  First API call with your API key and project ID.
+</Card>
