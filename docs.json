@@ -107,6 +107,16 @@
           "anchor": "Join Waitlist",
           "href": "https://zerogpu.ai",
           "icon": "rocket"
+        },
+        {
+          "anchor": "llms.txt",
+          "href": "https://zerogpu.mintlify.app/llms.txt",
+          "icon": "sparkles"
+        },
+        {
+          "anchor": "llms-full.txt",
+          "href": "https://zerogpu.mintlify.app/llms-full.txt",
+          "icon": "brain"
         }
       ]
     }
