@@ -1,8 +1,8 @@
 <div align="center">
   <img
-    src="./logo/zerogpu-docs-logo-light.png"
+    src="./logo/readme-banner.png"
     alt="ZeroGPU Documentation"
-    style="width: 100%; max-width: 320px; height: auto; display: inline-block; margin-bottom: 0.5em; margin-top: 0.5em;"
+    style="width: 100%; max-width: 100%; height: auto; display: inline-block; margin-bottom: 0.5em; margin-top: 0.5em;"
   />
   <div style="display: flex; justify-content: center; gap: 0.5em; flex-wrap: wrap;">
     <a href="https://zerogpu.ai"><strong>Website</strong></a>
