@@ -81,8 +81,6 @@ try:
 except requests.exceptions.HTTPError as e:
     if e.response.status_code == 401:
         print("Invalid API key")
-    elif e.response.status_code == 429:
-        print("Rate limited — slow down")
     else:
         print(f"Error: {e.response.status_code}")
 except requests.exceptions.RequestException as e:

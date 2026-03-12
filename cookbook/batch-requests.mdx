@@ -47,8 +47,8 @@ with ThreadPoolExecutor(max_workers=5) as executor:
 
 ## Tips
 
-- **Concurrency:** Limit `max_workers` to avoid hitting [rate limits](https://zerogpu.ai) (tune based on your plan and dashboard metrics).
-- **Errors:** Check status codes and response body; retry with backoff on 429 or 5xx.
+- **Concurrency:** Tune `max_workers` to match your usage and dashboard metrics.
+- **Errors:** Check status codes and response body; retry with backoff on 5xx.
 - **Credentials:** Use env vars for `x-api-key` and `x-project-id`; see [Security](/platform/security).
 
 For a single request shape, see [Summarize text](/cookbook/summarize-text) or [IAB classification](/cookbook/iab-classification).

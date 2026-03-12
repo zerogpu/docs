@@ -83,6 +83,7 @@
             "group": "Cookbook",
             "pages": [
               "cookbook/index",
+              "cookbook/demos",
               "cookbook/summarize-text",
               "cookbook/iab-classification",
               "cookbook/batch-requests"

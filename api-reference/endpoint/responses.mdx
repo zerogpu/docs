@@ -166,3 +166,12 @@ fetch(url, {
 | `usage.input_tokens` | integer | Number of tokens in the input |
 | `usage.output_tokens` | integer | Number of tokens generated |
 | `usage.total_tokens` | integer | Total tokens consumed |
+
+### Context length
+
+Each model has a maximum input token limit. If your input exceeds it:
+
+- The API may return **`420`** with `error.code` **`context_length_exceeded`** when the model is configured to reject over-length input.
+- Otherwise the input may be truncated to the limit and the response will include usage for the truncated input.
+
+Keep requests within the model's token limit or handle `420` and truncation in your client.

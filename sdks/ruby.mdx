@@ -57,8 +57,6 @@ when 200
   puts result['output'][0]['content'][0]['text']
 when 401
   puts 'Invalid API key'
-when 429
-  puts 'Rate limited — slow down'
 else
   puts "Error #{response.code}: #{response.body}"
 end

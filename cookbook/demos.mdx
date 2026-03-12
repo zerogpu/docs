@@ -1,0 +1,55 @@
+---
+title: "Runnable demos"
+description: "Clone and run full apps that use the ZeroGPU API."
+---
+
+The [zerogpu/cookbook](https://github.com/zerogpu/cookbook) repo contains runnable demos: small apps you can clone, install, and run locally. Each demo lives in a dedicated folder under **`demos/`**.
+
+## Repository structure
+
+```
+cookbook/
+├── README.md              # Overview and how to add demos
+├── .gitignore             # Ignores .env, node_modules, dist
+└── demos/
+    ├── summarize-react/   # React (Vite) summarization app
+    └── ...                # More demos as they’re added
+```
+
+**Naming:** Demos use descriptive folder names (e.g. `summarize-react`, `iab-classification-node`). See the repo [README](https://github.com/zerogpu/cookbook#structure) for the full layout and how to add a new demo.
+
+## Available demos
+
+### Summarize (React)
+
+A minimal React app that summarizes text with the ZeroGPU API using the `zlm-v1-summary-cloud` model.
+
+- **Stack:** React, Vite, TypeScript
+- **Repo path:** [demos/summarize-react](https://github.com/zerogpu/cookbook/tree/main/demos/summarize-react)
+- **Features:** Enter API key and project ID in the UI (stored in the browser only); paste or type text and click **Summarize** to see the result and token usage.
+
+**Run it:**
+
+```bash
+git clone https://github.com/zerogpu/cookbook.git
+cd cookbook/demos/summarize-react
+npm install
+npm run dev
+```
+
+Open the URL shown (e.g. http://localhost:5173), enter your [API key](https://zerogpu.ai) and project ID in the form, then use the app. Optional: copy `.env.example` to `.env` to pre-fill credentials.
+
+For more detail, see the demo’s [README](https://github.com/zerogpu/cookbook/blob/main/demos/summarize-react/README.md) in the repo.
+
+## Security
+
+- Demos never commit `.env` or real API keys; the repo `.gitignore` excludes them.
+- Credentials entered in the browser (e.g. in the React demo) are for local try-it use only. For production, call the ZeroGPU API from a backend so your API key is not exposed in client code.
+
+## More recipes
+
+For copy-paste **code snippets** (cURL, Python, etc.) rather than full apps, see the other cookbook pages:
+
+- [Summarize text](/cookbook/summarize-text) — request/response for summarization
+- [IAB content classification](/cookbook/iab-classification) — classify content into IAB categories
+- [Batch requests](/cookbook/batch-requests) — parallel requests and error handling

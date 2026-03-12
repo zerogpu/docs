@@ -46,7 +46,7 @@ Select the model in your [dashboard](https://zerogpu.ai) and pass its identifier
 | `400` | Bad request — check your request body |
 | `401` | Unauthorized — invalid or missing API key |
 | `403` | Forbidden — invalid project ID or insufficient permissions |
-| `429` | Rate limited — slow down your request rate |
+| `420` | Input exceeds the model's token limit — see [Responses](/api-reference/endpoint/responses#context-length) |
 | `500` | Internal server error — retry with exponential backoff |
 
 ## SDK examples
