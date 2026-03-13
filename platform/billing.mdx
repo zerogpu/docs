@@ -1,0 +1,55 @@
+---
+title: "Billing"
+description: "Pay as you go, credit balance, auto recharge, and billing history."
+---
+
+Manage payment for ZeroGPU from the **Billing** page in the [dashboard](https://zerogpu.ai) (under **MANAGE** in the sidebar).
+
+## Plan
+
+ZeroGPU uses a **pay-as-you-go** plan. You're billed based on usage. Pricing is per input and output token by model; rates are shown in the dashboard and in the [cost calculator](https://zerogpu-calculator.vercel.app).
+
+## Credit balance
+
+The Billing page shows your **credit balance** (e.g. **$5.00**). API usage is paid from this balance.
+
+- **+ Add to credit balance** opens a modal where you add funds.
+
+### Add to credit balance (modal)
+
+- **Amount (USD)** — Enter the amount to add. Preset buttons are available (e.g. $10, $25, $50, $100).
+- **Payment method** — You can add or select a payment method (e.g. **+ Add new payment method** with a dropdown to choose an existing one).
+- **Card details** (when adding a new card):
+  - **Card number**
+  - **Expiration date** (MM / YY)
+  - **Security code** (CVC)
+  - **Country** (billing country dropdown)
+- Checkout is secured (e.g. “Secure, fast checkout with Link” in the UI). Complete the form and confirm to add credit; the amount is then applied to your balance.
+
+## Auto recharge
+
+On the Billing page, **Auto recharge** has a toggle and a short description (e.g. “Enable to automatically top up your credit balance”). When the toggle is **on**, your balance can be topped up automatically according to your account settings. When it is **off**, you add credit manually only.
+
+## Payment methods
+
+The Billing page has a **Payment methods** card (e.g. “Add or change your payment method”). Use it to add, change, or manage the payment methods used for adding credit and for auto recharge. The exact options (add, set default, remove) are shown in the dashboard.
+
+## Billing history
+
+A **Billing history** card on the Billing page (e.g. “View past and current invoices”) opens a **Billing History** view.
+
+- A **Back to Billing** link returns you to the main Billing page.
+- A table lists billing entries with these columns:
+
+| Column | Description |
+|--------|-------------|
+| **Date** | Date and time of the transaction (e.g. 3/11/2026, 3:12:47 PM). |
+| **Description** | Type of entry (e.g. **Credit** for an add-credit transaction). |
+| **Amount** | Amount with sign (e.g. **+$5.00** for credit added). |
+| **Status** | Status of the entry (e.g. **Credit** shown in a pill/badge). |
+
+Use this view to see when credit was added and the status of past transactions. For export, download, or invoice format, use the options provided in the dashboard.
+
+<Tip>
+  Use [Usage Analytics](/platform/usage-analytics) to see token usage over time. Use the [cost calculator](https://zerogpu-calculator.vercel.app) to compare OpenAI vs ZeroGPU for your expected volume.
+</Tip>

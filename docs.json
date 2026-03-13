@@ -29,7 +29,8 @@
               "platform/api-keys",
               "platform/usage-analytics",
               "platform/logs",
-              "platform/security"
+              "platform/security",
+              "platform/billing"
             ]
           },
           {
