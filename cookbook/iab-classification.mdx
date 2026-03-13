@@ -50,9 +50,20 @@ print(response.json())
 
 ## Response
 
-The API returns the classification result in the standard [Responses API](/api-reference/endpoint/responses) format. Parse the response body to get the IAB category or label for your content.
+The API returns the classification in the standard [Responses API](/api-reference/endpoint/responses) format. The model output is **JSON** with:
+
+| Field | Description |
+|-------|--------------|
+| `audience` | Audience segments (name, tier, score). |
+| `content` | Taxonomy mappings, e.g. `iab_1_0`, `iab_2_2` (IAB 1.0 and 2.2 codes with name and score). |
+| `topics` | Topics with scores. |
+| `keywords` | Extracted keywords. |
+| `user_intent` | Intent name, category (e.g. informational), and score. |
+
+Parse the `output[].content[].text` from the response body; that string is the JSON. For a runnable app that formats this output, see the [IAB classification demo](/cookbook/demos#iab-classification-react) in the cookbook.
 
 ## Tips
 
 - Best for single-document or single-snippet classification; for many items, call in a loop or use [batch patterns](/cookbook/batch-requests).
+- Classification works best with a **paragraph or more** of content; very short text often yields generic categories.
 - Store API key and project ID in environment variables; see [Security](/platform/security).

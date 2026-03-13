@@ -12,11 +12,14 @@ cookbook/
 ├── README.md              # Overview and how to add demos
 ├── .gitignore             # Ignores .env, node_modules, dist
 └── demos/
-    ├── summarize-react/   # React (Vite) summarization app
-    └── ...                # More demos as they’re added
+    ├── summarize-react/        # React summarization app
+    ├── iab-classification-react/ # React IAB classification app
+    ├── batch-requests-node/    # Node.js parallel batch requests
+    ├── quickstart-python/      # Python one-shot request
+    └── ...
 ```
 
-**Naming:** Demos use descriptive folder names (e.g. `summarize-react`, `iab-classification-node`). See the repo [README](https://github.com/zerogpu/cookbook#structure) for the full layout and how to add a new demo.
+**Naming:** Demos use descriptive folder names (e.g. `summarize-react`, `batch-requests-node`). See the repo [README](https://github.com/zerogpu/cookbook#structure) for the full layout and how to add a new demo.
 
 ## Available demos
 
@@ -37,9 +40,28 @@ npm install
 npm run dev
 ```
 
-Open the URL shown (e.g. http://localhost:5173), enter your [API key](https://zerogpu.ai) and project ID in the form, then use the app. Optional: copy `.env.example` to `.env` to pre-fill credentials.
+See the demo [README](https://github.com/zerogpu/cookbook/blob/main/demos/summarize-react/README.md).
 
-For more detail, see the demo’s [README](https://github.com/zerogpu/cookbook/blob/main/demos/summarize-react/README.md) in the repo.
+### IAB classification (React)
+
+Classify content into IAB categories with `zlm-v1-iab-classify-cloud`. Same credential-in-UI pattern; paste content and click **Classify**. The app parses the JSON response and shows **Audience**, **Content** (IAB 1.0 / 2.2), **Topics**, **Keywords**, and **User intent** with a **Copy result** button. Works best with a paragraph or more of content.
+
+- **Repo path:** [demos/iab-classification-react](https://github.com/zerogpu/cookbook/tree/main/demos/iab-classification-react)
+- **Run it:** `cd cookbook/demos/iab-classification-react` → `npm install` → `npm run dev`. See the demo [README](https://github.com/zerogpu/cookbook/blob/main/demos/iab-classification-react/README.md).
+
+### Batch requests (Node.js)
+
+Node.js script that sends multiple summarization requests in parallel. Set `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID` in the environment; run `npm start` or `node run.js`.
+
+- **Repo path:** [demos/batch-requests-node](https://github.com/zerogpu/cookbook/tree/main/demos/batch-requests-node)
+- **Run it:** `cd cookbook/demos/batch-requests-node` → set env vars → `npm start`. See the demo [README](https://github.com/zerogpu/cookbook/blob/main/demos/batch-requests-node/README.md).
+
+### Quickstart (Python)
+
+Minimal Python script: one request to the API, print response and token usage. Env vars for credentials.
+
+- **Repo path:** [demos/quickstart-python](https://github.com/zerogpu/cookbook/tree/main/demos/quickstart-python)
+- **Run it:** `cd cookbook/demos/quickstart-python` → `pip install -r requirements.txt` → set env vars → `python run.py`. See the demo [README](https://github.com/zerogpu/cookbook/blob/main/demos/quickstart-python/README.md).
 
 ## Security
 
