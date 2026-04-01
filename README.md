@@ -1,6 +1,6 @@
 <div align="center">
   <img
-    src="./logo/readme-banner.svg"
+    src="./logo/readme-banner.png"
     alt="ZeroGPU Documentation"
     style="width: 100%; max-width: 100%; height: auto; display: inline-block; margin-bottom: 0.5em; margin-top: 0.5em;"
   />
