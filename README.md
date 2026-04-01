@@ -1,13 +1,13 @@
 <div align="center">
   <img
-    src="./logo/readme-banner.png"
+    src="./logo/readme-banner.svg"
     alt="ZeroGPU Documentation"
     style="width: 100%; max-width: 100%; height: auto; display: inline-block; margin-bottom: 0.5em; margin-top: 0.5em;"
   />
   <div style="display: flex; justify-content: center; gap: 0.5em; flex-wrap: wrap;">
     <a href="https://zerogpu.ai"><strong>Website</strong></a>
     <span>•</span>
-    <a href="https://zerogpu.mintlify.app"><strong>Documentation</strong></a>
+    <a href="https://docs.zerogpu.ai"><strong>Documentation</strong></a>
     <span>•</span>
     <a href="https://github.com/zerogpu"><strong>GitHub</strong></a>
   </div>
@@ -15,7 +15,7 @@
 
 <br/>
 
-This is the **official documentation** repository for [ZeroGPU](https://zerogpu.ai). It contains the API reference, platform guides, cookbook recipes, and SDK examples. The docs are hosted at [zerogpu.mintlify.app](https://zerogpu.mintlify.app).
+This is the **official documentation** repository for [ZeroGPU](https://zerogpu.ai). It contains the API reference, platform guides, cookbook recipes, and SDK examples. The docs are hosted at [docs.zerogpu.ai](https://docs.zerogpu.ai).
 
 ## Table of contents
 
@@ -39,7 +39,7 @@ The [Model Context Protocol (MCP)](https://modelcontextprotocol.io) lets AI appl
 ZeroGPU docs hosts an MCP server at:
 
 ```
-https://zerogpu.mintlify.app/mcp
+https://docs.zerogpu.ai/mcp
 ```
 
 ### Connect to Claude Code
@@ -47,7 +47,7 @@ https://zerogpu.mintlify.app/mcp
 **Step 1:** Add the MCP server:
 
 ```bash
-claude mcp add --transport http zerogpu-docs https://zerogpu.mintlify.app/mcp
+claude mcp add --transport http zerogpu-docs https://docs.zerogpu.ai/mcp
 ```
 
 **Step 2:** Verify: run `claude mcp list` and confirm `zerogpu-docs` appears. In a Claude Code session, ask a question about ZeroGPU; answers will be grounded in the docs.
@@ -62,7 +62,7 @@ claude mcp add --transport http zerogpu-docs https://zerogpu.mintlify.app/mcp
 {
   "mcpServers": {
     "zerogpu-docs": {
-      "url": "https://zerogpu.mintlify.app/mcp"
+      "url": "https://docs.zerogpu.ai/mcp"
     }
   }
 }

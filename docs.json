@@ -114,12 +114,12 @@
         },
         {
           "anchor": "llms.txt",
-          "href": "https://zerogpu.mintlify.app/llms.txt",
+          "href": "https://docs.zerogpu.ai/llms.txt",
           "icon": "sparkles"
         },
         {
           "anchor": "llms-full.txt",
-          "href": "https://zerogpu.mintlify.app/llms-full.txt",
+          "href": "https://docs.zerogpu.ai/llms-full.txt",
           "icon": "brain"
         }
       ]

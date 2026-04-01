@@ -13,7 +13,7 @@ The **Model Context Protocol (MCP)** is an open standard that lets AI applicatio
 The MCP server for ZeroGPU docs is hosted at:
 
 ```
-https://zerogpu.mintlify.app/mcp
+https://docs.zerogpu.ai/mcp
 ```
 
 <Tabs>
@@ -22,7 +22,7 @@ https://zerogpu.mintlify.app/mcp
       <Step title="Add the MCP server">
         Run in your terminal:
         ```bash
-        claude mcp add --transport http zerogpu-docs https://zerogpu.mintlify.app/mcp
+        claude mcp add --transport http zerogpu-docs https://docs.zerogpu.ai/mcp
         ```
       </Step>
       <Step title="Verify the connection">
@@ -45,7 +45,7 @@ https://zerogpu.mintlify.app/mcp
         {
           "mcpServers": {
             "zerogpu-docs": {
-              "url": "https://zerogpu.mintlify.app/mcp"
+              "url": "https://docs.zerogpu.ai/mcp"
             }
           }
         }
@@ -57,7 +57,7 @@ https://zerogpu.mintlify.app/mcp
       </Step>
     </Steps>
     <Accordion title="One-click install from the docs (if available)">
-      Some Mintlify themes show an AI or connect icon on the docs site. If you see it on [ZeroGPU docs](https://zerogpu.mintlify.app), you can connect to Cursor from there without editing `mcp.json`. Use that path if your theme supports it.
+      Some docs themes show an AI or connect icon on the docs site. If you see it on [ZeroGPU docs](https://docs.zerogpu.ai), you can connect to Cursor from there without editing `mcp.json`. Use that path if your theme supports it.
     </Accordion>
   </Tab>
 </Tabs>
@@ -68,8 +68,8 @@ If you are building a script or pipeline and do not use an MCP client:
 
 | URL | Use |
 |-----|-----|
-| `https://zerogpu.mintlify.app/llms.txt` | Sitemap-style index of pages and descriptions |
-| `https://zerogpu.mintlify.app/llms-full.txt` | Full documentation in one Markdown file |
+| `https://docs.zerogpu.ai/llms.txt` | Sitemap-style index of pages and descriptions |
+| `https://docs.zerogpu.ai/llms-full.txt` | Full documentation in one Markdown file |
 
 Mintlify generates both when the site is deployed and keeps them in sync with the live docs.
 

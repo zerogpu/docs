@@ -1,0 +1,20 @@
+<svg width="1600" height="420" viewBox="0 0 1600 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F3F4F6"/>
+      <stop offset="1" stop-color="#CDE8D6"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1600" height="420" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="10" flood-color="#0B1A12" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect x="8" y="8" width="1584" height="404" rx="8" fill="url(#bg)" filter="url(#shadow)"/>
+
+  <!-- Brand mark + wordmark -->
+  <image href="./zerogpu-docs-logo-dark.png" x="260" y="110" width="560" height="200" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Divider + DOCS -->
+  <line x1="890" y1="130" x2="890" y2="290" stroke="#99A1A8" stroke-width="4"/>
+  <text x="950" y="248" font-family="Inter, Helvetica, Arial, sans-serif" font-size="96" font-weight="700" fill="#0B1A12">DOCS</text>
+</svg>
