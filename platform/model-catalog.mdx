@@ -13,45 +13,23 @@ Use this quick table to shortlist a model, then jump to the detailed entries bel
 
 | Model ID | Task | Provider | Params | Context | Arch | Input | Output |
 |---|---|---|---:|---:|---|---:|---:|
-| `zlm-v1-iab-classify-edge` | Text Classification | ZeroGPU | 90M | 400 | ONNX | $0.25 / 1M | $0.40 / 1M |
-| `zlm-v1-iab-classify-edge-enriched` | Text Classification | ZeroGPU | 90M | 400 | ONNX | $0.25 / 1M | $0.40 / 1M |
 | `zlm-v1-followup-questions-edge` | Text Generation | ZeroGPU | 120M | 400 | ONNX | $0.25 / 1M | $0.40 / 1M |
+| `zlm-v1-iab-classify-edge` | Text Classification | ZeroGPU | 90M | 400 | ONNX | $0.05 / 1M | $0.40 / 1M |
+| `zlm-v1-iab-classify-edge-enriched` | Text Classification | ZeroGPU | 90M | 400 | ONNX | $0.05 / 1M | $0.40 / 1M |
+| `deberta-v3-small` | Text Classification | Microsoft | 142M | 400 | ONNX | $0.05 / 1M | $0.40 / 1M |
 | `LFM2.5-1.2B-Instruct` | Text Generation | LiquidAI | 1.2B | 800 | GGUF | $0.20 / 1M | $0.40 / 1M |
-| `deberta-v3-small` | Text Classification | Microsoft | 142M | 400 | ONNX | $0.20 / 1M | $0.40 / 1M |
-| `t5-small` | Summarization | Google | 60M | 512 | ONNX | $0.20 / 1M | $0.40 / 1M |
+| `t5-small` | Summarization | Google | 60M | 512 | ONNX | $0.05 / 1M | $0.40 / 1M |
 
 ## Quick picks
 
+- **Need conversational follow-up generation at edge latency:** `zlm-v1-followup-questions-edge`
 - **Need IAB taxonomy labels fast:** `zlm-v1-iab-classify-edge`
 - **Need richer multi-signal IAB output:** `zlm-v1-iab-classify-edge-enriched`
-- **Need conversational follow-up generation at edge latency:** `zlm-v1-followup-questions-edge`
-- **Need stronger general instruction following/tool use:** `LFM2.5-1.2B-Instruct`
 - **Need efficient general text classification:** `deberta-v3-small`
+- **Need stronger general instruction following/tool use:** `LFM2.5-1.2B-Instruct`
 - **Need lightweight summarization:** `t5-small`
 
 ## Detailed model cards
-
-### `zlm-v1-iab-classify-edge`
-
-**Task:** Text Classification  
-**Provider:** ZeroGPU  
-**Best for:** Real-time IAB taxonomy mapping in ad-tech/content pipelines.
-
-ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy, the industry standard used across programmatic advertising, enabling instant low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it is optimized for high-volume, sub-millisecond classification that ad tech and content platforms demand.
-
-**Specs:** `Parameters: 90M` · `Context: 400` · `Architecture: ONNX`  
-**Pricing:** `$0.25 / 1M input` · `$0.40 / 1M output`
-
-### `zlm-v1-iab-classify-edge-enriched`
-
-**Task:** Text Classification  
-**Provider:** ZeroGPU  
-**Best for:** Pipelines that need category + additional content signals.
-
-The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs, giving you richer and more actionable classification data per inference call. You get not just a category, but layered context signals that downstream systems can use for targeting, filtering, and personalization. It uses the same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speed profile.
-
-**Specs:** `Parameters: 90M` · `Context: 400` · `Architecture: ONNX`  
-**Pricing:** `$0.25 / 1M input` · `$0.40 / 1M output`
 
 ### `zlm-v1-followup-questions-edge`
 
@@ -59,21 +37,32 @@ The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy l
 **Provider:** ZeroGPU  
 **Best for:** Engagement nudges, contextual follow-up prompts, conversational depth.
 
-ZeroGPU's follow-up model is fine-tuned to generate contextual responses that keep users engaged. Built for edge deployment on ONNX runtime, it targets low-latency conversational interactions such as smart nudges, re-engagement prompts, and contextual suggestions. Unlike general-purpose generators, it is tuned specifically for follow-up quality.
+ZeroGPU's `zlm-v1-followup-questions-edge` is a 120M-parameter model fine-tuned specifically to generate contextual follow-up responses that drive deeper user engagement. Built for edge deployment on the ONNX runtime, it's optimized for the kind of low-latency, conversational interactions that keep users active—smart nudges, re-engagement prompts, and contextual suggestions. Unlike general-purpose generators, this model is laser-focused on conversational depth, making every response feel intentional rather than generic. Purpose-built for the ZeroGPU distributed inference network.
 
 **Specs:** `Parameters: 120M` · `Context: 400` · `Architecture: ONNX`  
 **Pricing:** `$0.25 / 1M input` · `$0.40 / 1M output`
 
-### `LFM2.5-1.2B-Instruct`
+### `zlm-v1-iab-classify-edge`
 
-**Task:** Text Generation  
-**Provider:** LiquidAI  
-**Best for:** More capable instruction following and multilingual use-cases on device.
+**Task:** Text Classification  
+**Provider:** ZeroGPU  
+**Best for:** Real-time IAB taxonomy mapping in ad-tech/content pipelines.
 
-Liquid AI's LFM2.5-1.2B-Instruct is a hybrid-architecture model designed for on-device deployment and trained with multi-stage reinforcement learning. It offers strong instruction following and native tool-calling at the 1B scale. Its hybrid design is optimized for lower memory and faster inference than transformer-only models of similar size. Supports 8 languages, including English, Chinese, Japanese, and Spanish.
+ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy—the industry standard used across programmatic advertising—enabling instant, low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it's optimized for the kind of high-volume, sub-millisecond classification that ad tech and content platforms demand. Deploy it on edge devices to classify content in-stream, at the point of interaction.
 
-**Specs:** `Parameters: 1.2B` · `Context: 800` · `Architecture: GGUF`  
-**Pricing:** `$0.20 / 1M input` · `$0.40 / 1M output`
+**Specs:** `Parameters: 90M` · `Context: 400` · `Architecture: ONNX`  
+**Pricing:** `$0.05 / 1M input` · `$0.40 / 1M output`
+
+### `zlm-v1-iab-classify-edge-enriched`
+
+**Task:** Text Classification  
+**Provider:** ZeroGPU  
+**Best for:** Pipelines that need category + additional content signals.
+
+The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs—giving you richer, more actionable classification data per inference call. This means you get not just a category, but layered context signals that downstream systems can use for better targeting, filtering, and personalization decisions. Same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speeds. When a single label isn't enough and your pipeline needs deeper content intelligence, this is the model.
+
+**Specs:** `Parameters: 90M` · `Context: 400` · `Architecture: ONNX`  
+**Pricing:** `$0.05 / 1M input` · `$0.40 / 1M output`
 
 ### `deberta-v3-small`
 
@@ -81,9 +70,20 @@ Liquid AI's LFM2.5-1.2B-Instruct is a hybrid-architecture model designed for on-
 **Provider:** Microsoft  
 **Best for:** Efficient high-throughput classification where cost and latency are critical.
 
-Microsoft's DeBERTa-v3-small uses disentangled attention to encode content and position separately, improving context understanding for its size. Combined with ELECTRA-style pretraining and gradient-disentangled embedding sharing, it performs strongly on classification and inference while remaining edge-efficient.
+Microsoft's DeBERTa-v3-small uses a disentangled attention mechanism that separately encodes content and position—giving it a major edge in understanding context compared to models of similar size. With ELECTRA-style pre-training and gradient-disentangled embedding sharing, it punches well above its weight on NLU benchmarks, outperforming many frontier models on classification and inference tasks. It's one of the most efficient classifiers you can run at the edge. Ideal for high-throughput classification workloads where every millisecond and every cent matters.
 
 **Specs:** `Parameters: 142M` · `Context: 400` · `Architecture: ONNX`  
+**Pricing:** `$0.05 / 1M input` · `$0.40 / 1M output`
+
+### `LFM2.5-1.2B-Instruct`
+
+**Task:** Text Generation  
+**Provider:** LiquidAI  
+**Best for:** More capable instruction following and multilingual use-cases on device.
+
+Liquid AI's LFM2.5-1.2B-Instruct is a hybrid architecture model purpose-built for on-device deployment, trained on 28 trillion tokens with multi-stage reinforcement learning. It delivers best-in-class instruction following and native tool-calling at the 1B scale — something very few models this size can do reliably. Its hybrid design gives it significantly faster inference with lower memory usage compared to transformer-only models of the same size. If you need a conversational model that can actually run on real devices without a GPU, this is it. Supports 8 languages including English, Chinese, Japanese, and Spanish.
+
+**Specs:** `Parameters: 1.2B` · `Context: 800` · `Architecture: GGUF`  
 **Pricing:** `$0.20 / 1M input` · `$0.40 / 1M output`
 
 ### `t5-small`
@@ -92,10 +92,10 @@ Microsoft's DeBERTa-v3-small uses disentangled attention to encode content and p
 **Provider:** Google  
 **Best for:** Lightweight summarization and rewrite workflows.
 
-Google's T5-small introduced the text-to-text approach in NLP. At 60M parameters, it remains a practical encoder-decoder workhorse for summarization and rewriting tasks, balancing quality and footprint for edge-aware deployment patterns.
+Google's T5-small introduced the text-to-text paradigm that changed how the industry thinks about NLP. At 60M parameters, it's the most versatile encoder-decoder model in its class, pre-trained on the Colossal Clean Crawled Corpus (C4) and fine-tunable for virtually any text task with minimal data. Its encoder-decoder architecture makes it especially strong at tasks that require both understanding and generation, like summarization and rewriting. A proven workhorse that's been battle-tested across millions of production deployments.
 
 **Specs:** `Parameters: 60M` · `Context: 512` · `Architecture: ONNX`  
-**Pricing:** `$0.20 / 1M input` · `$0.40 / 1M output`
+**Pricing:** `$0.05 / 1M input` · `$0.40 / 1M output`
 
 ## Using a model from the catalog in an API request
 
@@ -108,4 +108,3 @@ Once you’ve picked a model card, copy the **Model ID** and set it in your requ
 ```
 
 The rest of the request (headers and `input`) follows the standard `POST /v1/responses` format.
-
