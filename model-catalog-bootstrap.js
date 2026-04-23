@@ -121,10 +121,24 @@
     function isDarkMode() {
       var root = document.documentElement;
       if (!root) return false;
-      var themeAttr = (root.getAttribute("data-theme") || "").toLowerCase();
-      if (themeAttr === "dark") return true;
-      if (themeAttr === "light") return false;
+      var themeAttr = (
+        root.getAttribute("data-theme") ||
+        root.getAttribute("data-color-theme") ||
+        root.getAttribute("data-color-mode") ||
+        ""
+      ).toLowerCase();
+      if (themeAttr.indexOf("dark") >= 0) return true;
+      if (themeAttr.indexOf("light") >= 0) return false;
       if (root.classList.contains("dark")) return true;
+      if (root.classList.contains("light")) return false;
+      var body = document.body;
+      if (body && body.classList.contains("dark")) return true;
+      if (body && body.classList.contains("light")) return false;
+
+      var computedScheme = (window.getComputedStyle(root).colorScheme || "").toLowerCase();
+      if (computedScheme.indexOf("dark") >= 0) return true;
+      if (computedScheme.indexOf("light") >= 0) return false;
+
       var scheme = (window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches) || false;
       return scheme;
@@ -133,19 +147,25 @@
     function getPalette() {
       if (isDarkMode()) {
         return {
-          bg: "rgba(15, 23, 42, 0.45)",
-          border: "rgba(148, 163, 184, 0.28)",
-          shadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
+          bg: "#080d18",
+          border: "rgba(71, 85, 105, 0.45)",
+          shadow: "0 1px 2px rgba(0, 0, 0, 0.28)",
           hoverBorder: "var(--primary, #22C55E)",
           hoverShadow: "0 10px 24px rgba(0, 0, 0, 0.35)",
+          title: "#f3f4f6",
+          meta: "#a1a1aa",
+          desc: "#a1a1aa",
         };
       }
       return {
         bg: "#ffffff",
-        border: "rgba(148, 163, 184, 0.25)",
+        border: "rgba(203, 213, 225, 0.95)",
         shadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
         hoverBorder: "var(--primary, #22C55E)",
-        hoverShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
+        hoverShadow: "0 8px 20px rgba(15, 23, 42, 0.08)",
+        title: "#1f2937",
+        meta: "#6b7280",
+        desc: "#4b5563",
       };
     }
 
@@ -168,7 +188,7 @@
     title.style.fontSize = "1.05rem";
     title.style.lineHeight = "1.35";
     title.style.fontWeight = "700";
-    title.style.color = "var(--foreground, inherit)";
+    title.style.color = palette.title;
     title.textContent = textOrNA(model.modelDisplayName || model.modelId);
     link.appendChild(title);
 
@@ -181,12 +201,12 @@
     var params = document.createElement("span");
     params.textContent = buildBadgeText(model);
     params.style.fontSize = "0.95rem";
-    params.style.color = "var(--muted, #9ca3af)";
+    params.style.color = palette.meta;
     meta.appendChild(params);
 
     var dot = document.createElement("span");
     dot.textContent = "·";
-    dot.style.color = "var(--muted, #6b7280)";
+    dot.style.color = palette.meta;
     meta.appendChild(dot);
 
     var badge = document.createElement("span");
@@ -213,7 +233,7 @@
     description.style.margin = "0";
     description.style.lineHeight = "1.5";
     description.style.fontSize = "0.97rem";
-    description.style.color = "var(--muted, #6b7280)";
+    description.style.color = palette.desc;
     description.style.fontWeight = "400";
     description.style.display = "-webkit-box";
     description.style.webkitLineClamp = "2";
