@@ -265,33 +265,27 @@
     overview.textContent = textOrNA(pricing.description);
     wrapper.appendChild(overview);
 
-    var linksWrap = document.createElement("div");
-    linksWrap.style.display = "flex";
-    linksWrap.style.gap = "8px";
-    linksWrap.style.flexWrap = "wrap";
-    linksWrap.style.margin = "8px 0 20px 0";
-    function maybeChip(label, href, bg, fg) {
-      if (!href) return;
-      var a = document.createElement("a");
-      a.href = href;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = label;
-      a.style.padding = "4px 10px";
-      a.style.borderRadius = "6px";
-      a.style.fontSize = "0.85rem";
-      a.style.fontWeight = "600";
-      a.style.textDecoration = "none";
-      a.style.background = bg;
-      a.style.color = fg;
-      linksWrap.appendChild(a);
-    }
-    maybeChip("Docs", pricing.model_doc_url, "rgba(59,130,246,0.18)", "#2563eb");
-    maybeChip("Terms", pricing.terms_url, "rgba(245,158,11,0.18)", "#b45309");
-    maybeChip("Privacy", pricing.privacy_service, "rgba(34,197,94,0.18)", "#15803d");
-    if (linksWrap.childElementCount > 0) {
-      wrapper.appendChild(linksWrap);
-    }
+    var links = document.createElement("p");
+    links.innerHTML =
+      "<strong>References:</strong> " +
+      (pricing.model_doc_url
+        ? '<a href="' +
+          pricing.model_doc_url +
+          '" target="_blank" rel="noopener noreferrer">Model docs</a>'
+        : "N/A") +
+      " · " +
+      (pricing.terms_url
+        ? '<a href="' +
+          pricing.terms_url +
+          '" target="_blank" rel="noopener noreferrer">Terms</a>'
+        : "N/A") +
+      " · " +
+      (pricing.privacy_service
+        ? '<a href="' +
+          pricing.privacy_service +
+          '" target="_blank" rel="noopener noreferrer">Privacy</a>'
+        : "N/A");
+    wrapper.appendChild(links);
 
     var specsHeading = document.createElement("h2");
     specsHeading.textContent = "Specifications";
