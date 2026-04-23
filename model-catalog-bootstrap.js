@@ -118,18 +118,50 @@
   }
 
   function createModelCard(model) {
+    function isDarkMode() {
+      var root = document.documentElement;
+      if (!root) return false;
+      var themeAttr = (root.getAttribute("data-theme") || "").toLowerCase();
+      if (themeAttr === "dark") return true;
+      if (themeAttr === "light") return false;
+      if (root.classList.contains("dark")) return true;
+      var scheme = (window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches) || false;
+      return scheme;
+    }
+
+    function getPalette() {
+      if (isDarkMode()) {
+        return {
+          bg: "rgba(15, 23, 42, 0.45)",
+          border: "rgba(148, 163, 184, 0.28)",
+          shadow: "0 1px 2px rgba(0, 0, 0, 0.25)",
+          hoverBorder: "var(--primary, #22C55E)",
+          hoverShadow: "0 10px 24px rgba(0, 0, 0, 0.35)",
+        };
+      }
+      return {
+        bg: "#ffffff",
+        border: "rgba(148, 163, 184, 0.25)",
+        shadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        hoverBorder: "var(--primary, #22C55E)",
+        hoverShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
+      };
+    }
+
+    var palette = getPalette();
     var link = document.createElement("a");
     link.href = buildModelPagePath(model.modelId);
     link.style.display = "block";
-    link.style.border = "1px solid var(--border, rgba(148, 163, 184, 0.25))";
+    link.style.border = "1px solid " + palette.border;
     link.style.borderRadius = "16px";
     link.style.padding = "18px";
     link.style.textDecoration = "none";
     link.style.color = "var(--foreground, inherit)";
-    link.style.background = "var(--background, #ffffff)";
+    link.style.background = palette.bg;
     link.style.fontWeight = "400";
     link.style.transition = "border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease";
-    link.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.04)";
+    link.style.boxShadow = palette.shadow;
 
     var title = document.createElement("h3");
     title.style.margin = "0 0 8px 0";
@@ -195,14 +227,16 @@
     link.appendChild(description);
 
     link.addEventListener("mouseenter", function () {
-      link.style.borderColor = "var(--primary, #22C55E)";
+      var hoverPalette = getPalette();
+      link.style.borderColor = hoverPalette.hoverBorder;
       link.style.transform = "translateY(-1px)";
-      link.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.12)";
+      link.style.boxShadow = hoverPalette.hoverShadow;
     });
     link.addEventListener("mouseleave", function () {
-      link.style.borderColor = "var(--border, rgba(148, 163, 184, 0.25))";
+      var leavePalette = getPalette();
+      link.style.borderColor = leavePalette.border;
       link.style.transform = "translateY(0)";
-      link.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.06)";
+      link.style.boxShadow = leavePalette.shadow;
     });
 
     return link;
