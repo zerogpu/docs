@@ -121,21 +121,22 @@
     var link = document.createElement("a");
     link.href = buildModelPagePath(model.modelId);
     link.style.display = "block";
-    link.style.border = "1px solid rgba(148, 163, 184, 0.25)";
+    link.style.border = "1px solid var(--border, rgba(148, 163, 184, 0.25))";
     link.style.borderRadius = "16px";
     link.style.padding = "18px";
     link.style.textDecoration = "none";
     link.style.color = "var(--foreground, inherit)";
-    link.style.background = "rgba(10, 14, 24, 0.55)";
+    link.style.background = "var(--background, #ffffff)";
+    link.style.fontWeight = "400";
     link.style.transition = "border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease";
-    link.style.boxShadow = "0 0 0 1px rgba(255, 255, 255, 0.02) inset";
+    link.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.04)";
 
     var title = document.createElement("h3");
     title.style.margin = "0 0 8px 0";
     title.style.fontSize = "1.05rem";
     title.style.lineHeight = "1.35";
     title.style.fontWeight = "700";
-    title.style.color = "var(--foreground, #f3f4f6)";
+    title.style.color = "var(--foreground, inherit)";
     title.textContent = textOrNA(model.modelDisplayName || model.modelId);
     link.appendChild(title);
 
@@ -180,7 +181,8 @@
     description.style.margin = "0";
     description.style.lineHeight = "1.5";
     description.style.fontSize = "0.97rem";
-    description.style.color = "var(--muted, #cbd5e1)";
+    description.style.color = "var(--muted, #6b7280)";
+    description.style.fontWeight = "400";
     description.style.display = "-webkit-box";
     description.style.webkitLineClamp = "2";
     description.style.webkitBoxOrient = "vertical";
@@ -193,14 +195,14 @@
     link.appendChild(description);
 
     link.addEventListener("mouseenter", function () {
-      link.style.borderColor = "rgba(74, 222, 128, 0.6)";
+      link.style.borderColor = "var(--primary, #22C55E)";
       link.style.transform = "translateY(-1px)";
-      link.style.boxShadow = "0 12px 24px rgba(0, 0, 0, 0.28)";
+      link.style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.12)";
     });
     link.addEventListener("mouseleave", function () {
-      link.style.borderColor = "rgba(148, 163, 184, 0.25)";
+      link.style.borderColor = "var(--border, rgba(148, 163, 184, 0.25))";
       link.style.transform = "translateY(0)";
-      link.style.boxShadow = "0 0 0 1px rgba(255, 255, 255, 0.02) inset";
+      link.style.boxShadow = "0 1px 2px rgba(0, 0, 0, 0.06)";
     });
 
     return link;
@@ -412,18 +414,13 @@
       });
 
       if (categoryModels.length === 0) {
+        statusEl.style.display = "";
         statusEl.textContent = "No models available in this category right now.";
         return;
       }
 
-      statusEl.textContent =
-        "Loaded " +
-        categoryModels.length +
-        " model" +
-        (categoryModels.length === 1 ? "" : "s") +
-        " for " +
-        category +
-        ".";
+      statusEl.textContent = "";
+      statusEl.style.display = "none";
 
       categoryModels.forEach(function (model) {
         cardsEl.appendChild(createModelCard(model));
@@ -442,6 +439,7 @@
               statusEl.textContent + " (using local fallback snapshot)";
           })
           .catch(function (fallbackError) {
+            statusEl.style.display = "";
             statusEl.textContent =
               "Unable to load models right now. " + fallbackError.message;
           });
