@@ -256,70 +256,104 @@
 
   function createDetailsForModelPage(model) {
     var wrapper = document.createElement("div");
-
-    var subtitle = document.createElement("p");
-    subtitle.innerHTML =
-      "<strong>Task:</strong> " +
-      textOrNA(model.taskDisplayName || model.taskType) +
-      " · <strong>Provider:</strong> " +
-      textOrNA(model.cloudProvider || "N/A");
-    wrapper.appendChild(subtitle);
-
-    var specs = document.createElement("p");
-    specs.innerHTML =
-      "<strong>Specs:</strong> " +
-      "<code>Parameters: " +
-      textOrNA(model.parameters) +
-      "</code> · " +
-      "<code>Version: " +
-      textOrNA(model.modelVersion) +
-      "</code> · " +
-      "<code>Max tokens: " +
-      textOrNA(model.maxTokens) +
-      "</code> · " +
-      "<code>Type: " +
-      textOrNA(model.modelType) +
-      "</code>";
-    wrapper.appendChild(specs);
-
     var pricing = model.pricing || {};
-    var prices = document.createElement("p");
-    prices.innerHTML =
-      "<strong>Pricing:</strong> " +
-      "<code>" +
-      fmtMoney(pricing.input_per_1m_tokens) +
-      " input</code> · " +
-      "<code>" +
-      fmtMoney(pricing.output_per_1m_tokens) +
-      " output</code>";
-    wrapper.appendChild(prices);
+    var useCases = Array.isArray(pricing.use_cases)
+      ? pricing.use_cases.filter(Boolean)
+      : [];
 
-    var description = document.createElement("p");
-    description.innerHTML =
-      "<strong>Description:</strong> " + textOrNA(pricing.description);
-    wrapper.appendChild(description);
+    var overview = document.createElement("blockquote");
+    overview.textContent = textOrNA(pricing.description);
+    wrapper.appendChild(overview);
 
-    var links = document.createElement("p");
-    links.innerHTML =
-      "<strong>References:</strong> " +
-      (pricing.model_doc_url
-        ? '<a href="' +
-          pricing.model_doc_url +
-          '" target="_blank" rel="noopener noreferrer">Model docs</a>'
-        : "N/A") +
-      " · " +
-      (pricing.terms_url
-        ? '<a href="' +
-          pricing.terms_url +
-          '" target="_blank" rel="noopener noreferrer">Terms</a>'
-        : "N/A") +
-      " · " +
-      (pricing.privacy_service
-        ? '<a href="' +
-          pricing.privacy_service +
-          '" target="_blank" rel="noopener noreferrer">Privacy</a>'
-        : "N/A");
-    wrapper.appendChild(links);
+    var linksWrap = document.createElement("div");
+    linksWrap.style.display = "flex";
+    linksWrap.style.gap = "8px";
+    linksWrap.style.flexWrap = "wrap";
+    linksWrap.style.margin = "8px 0 20px 0";
+    function maybeChip(label, href, bg, fg) {
+      if (!href) return;
+      var a = document.createElement("a");
+      a.href = href;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = label;
+      a.style.padding = "4px 10px";
+      a.style.borderRadius = "6px";
+      a.style.fontSize = "0.85rem";
+      a.style.fontWeight = "600";
+      a.style.textDecoration = "none";
+      a.style.background = bg;
+      a.style.color = fg;
+      linksWrap.appendChild(a);
+    }
+    maybeChip("Docs", pricing.model_doc_url, "rgba(59,130,246,0.18)", "#2563eb");
+    maybeChip("Terms", pricing.terms_url, "rgba(245,158,11,0.18)", "#b45309");
+    maybeChip("Privacy", pricing.privacy_service, "rgba(34,197,94,0.18)", "#15803d");
+    if (linksWrap.childElementCount > 0) {
+      wrapper.appendChild(linksWrap);
+    }
+
+    var specsHeading = document.createElement("h2");
+    specsHeading.textContent = "Specifications";
+    wrapper.appendChild(specsHeading);
+
+    var specsTable = document.createElement("table");
+    specsTable.innerHTML =
+      "<thead><tr><th>Property</th><th>Value</th></tr></thead>" +
+      "<tbody>" +
+      "<tr><td>Model ID</td><td><code>" + textOrNA(model.modelId) + "</code></td></tr>" +
+      "<tr><td>Task</td><td>" + textOrNA(model.taskDisplayName || model.taskType) + "</td></tr>" +
+      "<tr><td>Type</td><td><code>" + textOrNA(model.modelType) + "</code></td></tr>" +
+      "<tr><td>Parameters</td><td>" + textOrNA(model.parameters) + "</td></tr>" +
+      "<tr><td>Version</td><td>" + textOrNA(model.modelVersion) + "</td></tr>" +
+      "<tr><td>Max Tokens</td><td>" + textOrNA(model.maxTokens) + "</td></tr>" +
+      "<tr><td>Provider</td><td>" + textOrNA(model.cloudProvider || "N/A") + "</td></tr>" +
+      "<tr><td>Input Price</td><td>" + fmtMoney(pricing.input_per_1m_tokens) + "</td></tr>" +
+      "<tr><td>Output Price</td><td>" + fmtMoney(pricing.output_per_1m_tokens) + "</td></tr>" +
+      "</tbody>";
+    wrapper.appendChild(specsTable);
+
+    if (useCases.length > 0) {
+      var useCasesHeading = document.createElement("h2");
+      useCasesHeading.textContent = "Use Cases";
+      wrapper.appendChild(useCasesHeading);
+      var useCasesList = document.createElement("ul");
+      useCases.forEach(function (uc) {
+        var li = document.createElement("li");
+        li.textContent = uc;
+        useCasesList.appendChild(li);
+      });
+      wrapper.appendChild(useCasesList);
+    }
+
+    var quickstartHeading = document.createElement("h2");
+    quickstartHeading.textContent = "Quick Start";
+    wrapper.appendChild(quickstartHeading);
+
+    var quickstartIntro = document.createElement("p");
+    quickstartIntro.textContent =
+      "Use this model with the ZeroGPU Responses API endpoint:";
+    wrapper.appendChild(quickstartIntro);
+
+    var curlPre = document.createElement("pre");
+    var curlCode = document.createElement("code");
+    curlCode.textContent =
+      "curl --location 'https://api.zerogpu.ai/v1/responses' \\\n" +
+      "  --header 'content-type: application/json' \\\n" +
+      "  --header 'x-api-key: YOUR_API_KEY' \\\n" +
+      "  --header 'x-project-id: YOUR_PROJECT_ID' \\\n" +
+      "  --data '{\n" +
+      '    "model": "' + textOrNA(model.modelId) + '",\n' +
+      '    "input": [\n' +
+      "      {\n" +
+      '        "role": "user",\n' +
+      '        "content": "Your input text here..."\n' +
+      "      }\n" +
+      "    ],\n" +
+      '    "text": { "format": { "type": "text" } }\n' +
+      "  }'";
+    curlPre.appendChild(curlCode);
+    wrapper.appendChild(curlPre);
 
     return wrapper;
   }
@@ -518,7 +552,8 @@
         return;
       }
 
-      statusEl.textContent = "Loaded model details.";
+      statusEl.textContent = "";
+      statusEl.style.display = "none";
       contentEl.appendChild(createDetailsForModelPage(selected));
     }
 
@@ -534,6 +569,7 @@
               statusEl.textContent + " (using local fallback snapshot)";
           })
           .catch(function (fallbackError) {
+            statusEl.style.display = "";
             statusEl.textContent =
               "Unable to load model details right now. " + fallbackError.message;
           });
