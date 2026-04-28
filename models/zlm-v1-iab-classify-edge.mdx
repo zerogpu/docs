@@ -23,9 +23,9 @@ description: "Model details for zlm-v1-iab-classify-edge."
 
 ## Quick Start
 
-Use this model with the ZeroGPU Responses API endpoint:
+### Responses API
 
-### Request Body (JSON)
+#### Request Body (JSON)
 
 ```json
 {
@@ -44,7 +44,7 @@ Use this model with the ZeroGPU Responses API endpoint:
 }
 ```
 
-### Code Snippet
+#### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -66,3 +66,210 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
   "model": "zlm-v1-iab-classify-edge"
 }'
 ```
+
+
+### Chat Completions API
+
+#### Request Body (JSON)
+
+```json
+{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}
+```
+
+#### Code Snippet (cURL)
+
+```bash
+curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}'
+```
+
+#### Code Snippet (Python)
+
+```python
+import requests
+import json
+
+url = "https://api.zerogpu.ai/v1/chat/completions"
+headers = {
+    "content-type": "application/json",
+    "x-api-key": "YOUR_API_KEY",
+    "x-project-id": "YOUR_PROJECT_ID",
+}
+payload = json.loads("""{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}""")
+
+response = requests.post(url, headers=headers, json=payload)
+print(response.json())
+```
+
+#### Code Snippet (JavaScript)
+
+```javascript
+const url = 'https://api.zerogpu.ai/v1/chat/completions';
+const headers = {
+  'content-type': 'application/json',
+  'x-api-key': 'YOUR_API_KEY',
+  'x-project-id': 'YOUR_PROJECT_ID'
+};
+const payload = {
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+};
+
+fetch(url, {
+  method: 'POST',
+  headers,
+  body: JSON.stringify(payload)
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+```
+
+#### Code Snippet (Rust)
+
+```rust
+use reqwest::Client;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let payload: Value = serde_json::from_str(r#"
+{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}
+"#)?;
+
+    let response = client
+        .post("https://api.zerogpu.ai/v1/chat/completions")
+        .header("content-type", "application/json")
+        .header("x-api-key", "YOUR_API_KEY")
+        .header("x-project-id", "YOUR_PROJECT_ID")
+        .json(&payload)
+        .send()
+        .await?;
+
+    let body = response.text().await?;
+    println!("{}", body);
+    Ok(())
+}
+```
+
+#### Code Snippet (Go)
+
+```go
+package main
+
+import (
+  "bytes"
+  "fmt"
+  "io"
+  "net/http"
+)
+
+func main() {
+  url := "https://api.zerogpu.ai/v1/chat/completions"
+
+  payloadBytes := []byte(`{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}`)
+
+  req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+  if err != nil {
+    panic(err)
+  }
+
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "YOUR_API_KEY")
+  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
+
+  client := &http.Client{}
+  res, err := client.Do(req)
+  if err != nil {
+    panic(err)
+  }
+  defer res.Body.Close()
+
+  body, _ := io.ReadAll(res.Body)
+  fmt.Println(string(body))
+}
+```
+
+#### Code Snippet (Ruby)
+
+```ruby
+require 'net/http'
+require 'uri'
+
+uri = URI.parse('https://api.zerogpu.ai/v1/chat/completions')
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = (uri.scheme == 'https')
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request['content-type'] = 'application/json'
+request['x-api-key'] = 'YOUR_API_KEY'
+request['x-project-id'] = 'YOUR_PROJECT_ID'
+
+request.body = <<~'JSON'
+{
+  "model": "zlm-v1-iab-classify-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+    }
+  ]
+}
+JSON
+
+response = http.request(request)
+puts response.body
+```
+
+
+
