@@ -185,25 +185,26 @@ function renderRubySnippet(endpointPath, payload) {
 }
 
 function renderRequestSection(title, endpointPath, payload, includeLanguageSnippets = false) {
-  let out = `### ${title}\n\n`;
-  out += "#### Request Body (JSON)\n\n";
+  let out = `<Accordion title="${title}">\n\n`;
+  out += "### Request Body (JSON)\n\n";
   out += "```json\n" + toPrettyJson(payload) + "\n```\n\n";
-  out += "#### Code Snippet (cURL)\n\n";
+  out += "### Code Snippet (cURL)\n\n";
   out += "```bash\n" + renderCurlSnippet(endpointPath, payload) + "\n```\n\n";
 
   if (includeLanguageSnippets) {
-    out += "#### Code Snippet (Python)\n\n";
+    out += "### Code Snippet (Python)\n\n";
     out += "```python\n" + renderPythonSnippet(endpointPath, payload) + "\n```\n\n";
-    out += "#### Code Snippet (JavaScript)\n\n";
+    out += "### Code Snippet (JavaScript)\n\n";
     out += "```javascript\n" + renderJavaScriptSnippet(endpointPath, payload) + "\n```\n\n";
-    out += "#### Code Snippet (Rust)\n\n";
+    out += "### Code Snippet (Rust)\n\n";
     out += "```rust\n" + renderRustSnippet(endpointPath, payload) + "\n```\n\n";
-    out += "#### Code Snippet (Go)\n\n";
+    out += "### Code Snippet (Go)\n\n";
     out += "```go\n" + renderGoSnippet(endpointPath, payload) + "\n```\n\n";
-    out += "#### Code Snippet (Ruby)\n\n";
+    out += "### Code Snippet (Ruby)\n\n";
     out += "```ruby\n" + renderRubySnippet(endpointPath, payload) + "\n```\n\n";
   }
 
+  out += "</Accordion>\n\n";
   return out;
 }
 
@@ -216,6 +217,7 @@ function renderModelUsecaseSections(model) {
 
   let out = "## Use Case Examples\n\n";
   out += "Select Use Case examples below:\n\n";
+  out += "<AccordionGroup>\n\n";
 
   for (const [, value] of entries) {
     const label = textOrNA(value.usecase_display_name || value.usecase || "Use Case");
@@ -227,16 +229,18 @@ function renderModelUsecaseSections(model) {
     if (!sample) continue;
 
     const normalized = { ...sample, model: textOrNA(model.modelId) };
-    out += `### ${label}\n\n`;
+    out += `<Accordion title="${label}">\n\n`;
     if (description && description !== "N/A") {
       out += description + "\n\n";
     }
-    out += "#### Request Body (JSON)\n\n";
+    out += "### Request Body (JSON)\n\n";
     out += "```json\n" + toPrettyJson(normalized) + "\n```\n\n";
-    out += "#### Code Snippet (cURL)\n\n";
+    out += "### Code Snippet (cURL)\n\n";
     out += "```bash\n" + renderCurlSnippet("/v1/responses", normalized) + "\n```\n\n";
+    out += "</Accordion>\n\n";
   }
 
+  out += "</AccordionGroup>\n";
   return out;
 }
 
@@ -310,8 +314,12 @@ description: "Model details for ${modelId.replace(/"/g, '\\"')}."
 
 ## Quick Start
 
+<AccordionGroup>
+
 ${renderRequestSection("Responses API", "/v1/responses", normalizedSampleBody, false)}
 ${renderRequestSection("Chat Completions API", "/v1/chat/completions", normalizedChatBody, true)}
+</AccordionGroup>
+
 ${renderModelUsecaseSections(model)}
 `;
 }

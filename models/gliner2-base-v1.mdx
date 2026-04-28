@@ -23,9 +23,11 @@ description: "Model details for gliner2-base-v1."
 
 ## Quick Start
 
-### Responses API
+<AccordionGroup>
 
-#### Request Body (JSON)
+<Accordion title="Responses API">
+
+### Request Body (JSON)
 
 ```json
 {
@@ -47,7 +49,7 @@ description: "Model details for gliner2-base-v1."
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -73,10 +75,12 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }'
 ```
 
+</Accordion>
 
-### Chat Completions API
 
-#### Request Body (JSON)
+<Accordion title="Chat Completions API">
+
+### Request Body (JSON)
 
 ```json
 {
@@ -98,7 +102,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
@@ -124,7 +128,7 @@ curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
 }'
 ```
 
-#### Code Snippet (Python)
+### Code Snippet (Python)
 
 ```python
 import requests
@@ -158,7 +162,7 @@ response = requests.post(url, headers=headers, json=payload)
 print(response.json())
 ```
 
-#### Code Snippet (JavaScript)
+### Code Snippet (JavaScript)
 
 ```javascript
 const url = 'https://api.zerogpu.ai/v1/chat/completions';
@@ -195,7 +199,7 @@ fetch(url, {
   .catch(error => console.error('Error:', error));
 ```
 
-#### Code Snippet (Rust)
+### Code Snippet (Rust)
 
 ```rust
 use reqwest::Client;
@@ -240,7 +244,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-#### Code Snippet (Go)
+### Code Snippet (Go)
 
 ```go
 package main
@@ -294,7 +298,7 @@ func main() {
 }
 ```
 
-#### Code Snippet (Ruby)
+### Code Snippet (Ruby)
 
 ```ruby
 require 'net/http'
@@ -333,16 +337,22 @@ response = http.request(request)
 puts response.body
 ```
 
+</Accordion>
+
+
+</AccordionGroup>
 
 ## Use Case Examples
 
 Select Use Case examples below:
 
-### Entity Extraction
+<AccordionGroup>
+
+<Accordion title="Entity Extraction">
 
 Named entity recognition with descriptions and spans
 
-#### Request Body (JSON)
+### Request Body (JSON)
 
 ```json
 {
@@ -364,7 +374,7 @@ Named entity recognition with descriptions and spans
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -390,11 +400,13 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }'
 ```
 
-### Structured Data Extraction
+</Accordion>
+
+<Accordion title="Structured Data Extraction">
 
 Parse complex JSON structures from text
 
-#### Request Body (JSON)
+### Request Body (JSON)
 
 ```json
 {
@@ -419,7 +431,7 @@ Parse complex JSON structures from text
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -448,11 +460,13 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }'
 ```
 
-### Text Classification
+</Accordion>
+
+<Accordion title="Text Classification">
 
 Single and multi-label classification with confidence scores
 
-#### Request Body (JSON)
+### Request Body (JSON)
 
 ```json
 {
@@ -474,7 +488,7 @@ Single and multi-label classification with confidence scores
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -500,4 +514,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }'
 ```
 
+</Accordion>
+
+</AccordionGroup>
 

@@ -23,9 +23,11 @@ description: "Model details for zlm-v1-iab-classify-edge-enriched."
 
 ## Quick Start
 
-### Responses API
+<AccordionGroup>
 
-#### Request Body (JSON)
+<Accordion title="Responses API">
+
+### Request Body (JSON)
 
 ```json
 {
@@ -44,7 +46,7 @@ description: "Model details for zlm-v1-iab-classify-edge-enriched."
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/responses' \
@@ -67,10 +69,12 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }'
 ```
 
+</Accordion>
 
-### Chat Completions API
 
-#### Request Body (JSON)
+<Accordion title="Chat Completions API">
+
+### Request Body (JSON)
 
 ```json
 {
@@ -84,7 +88,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 }
 ```
 
-#### Code Snippet (cURL)
+### Code Snippet (cURL)
 
 ```bash
 curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
@@ -102,7 +106,7 @@ curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
 }'
 ```
 
-#### Code Snippet (Python)
+### Code Snippet (Python)
 
 ```python
 import requests
@@ -128,7 +132,7 @@ response = requests.post(url, headers=headers, json=payload)
 print(response.json())
 ```
 
-#### Code Snippet (JavaScript)
+### Code Snippet (JavaScript)
 
 ```javascript
 const url = 'https://api.zerogpu.ai/v1/chat/completions';
@@ -157,7 +161,7 @@ fetch(url, {
   .catch(error => console.error('Error:', error));
 ```
 
-#### Code Snippet (Rust)
+### Code Snippet (Rust)
 
 ```rust
 use reqwest::Client;
@@ -194,7 +198,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-#### Code Snippet (Go)
+### Code Snippet (Go)
 
 ```go
 package main
@@ -240,7 +244,7 @@ func main() {
 }
 ```
 
-#### Code Snippet (Ruby)
+### Code Snippet (Ruby)
 
 ```ruby
 require 'net/http'
@@ -271,5 +275,9 @@ response = http.request(request)
 puts response.body
 ```
 
+</Accordion>
+
+
+</AccordionGroup>
 
 
