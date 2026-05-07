@@ -383,40 +383,107 @@
   }
 
   function simpleHighlight(code, lang) {
-    var html = escapeHtml(code);
+    var root = document.documentElement;
+    var dark =
+      (root && root.classList.contains("dark")) ||
+      ((root && (root.getAttribute("data-theme") || "").toLowerCase().indexOf("dark") >= 0)) ||
+      (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-    // Strings
-    html = html.replace(/"([^"\\]|\\.)*"/g, '<span style="color:#a5d6ff;">$&</span>');
+    var palette = dark
+      ? {
+          key: "#7dd3fc",
+          string: "#86efac",
+          number: "#fbbf24",
+          bool: "#fda4af",
+          keyword: "#c4b5fd",
+          comment: "#94a3b8",
+          flag: "#fca5a5",
+        }
+      : {
+          key: "#0369a1",
+          string: "#166534",
+          number: "#b45309",
+          bool: "#be123c",
+          keyword: "#6d28d9",
+          comment: "#64748b",
+          flag: "#b91c1c",
+        };
 
-    // Comments
+    function wrap(token, color) {
+      return '<span style="color:' + color + ';">' + token + "</span>";
+    }
+
+    // Protect strings first via placeholders so other regexes don't mangle them.
+    var raw = escapeHtml(code);
+    var strings = [];
+    raw = raw.replace(/"([^"\\]|\\.)*"|'([^'\\]|\\.)*'/g, function (m) {
+      var idx = strings.length;
+      strings.push(m);
+      return "__STR_" + idx + "__";
+    });
+
+    // Comments (line comments)
     if (lang === "javascript" || lang === "go" || lang === "rust") {
-      html = html.replace(/\/\/.*/g, '<span style="color:#7f8c8d;">$&</span>');
+      raw = raw.replace(/\/\/.*/g, function (m) {
+        return wrap(m, palette.comment);
+      });
     } else if (lang === "python" || lang === "ruby" || lang === "bash") {
-      html = html.replace(/#.*/g, '<span style="color:#7f8c8d;">$&</span>');
+      raw = raw.replace(/#.*/g, function (m) {
+        return wrap(m, palette.comment);
+      });
+    }
+
+    // CLI flags
+    if (lang === "bash") {
+      raw = raw.replace(/(^|\s)(--?[a-zA-Z0-9-]+)/g, function (_m, p1, p2) {
+        return p1 + wrap(p2, palette.flag);
+      });
     }
 
     // Numbers
-    html = html.replace(/\b\d+(\.\d+)?\b/g, '<span style="color:#f7c46c;">$&</span>');
+    raw = raw.replace(/\b\d+(\.\d+)?\b/g, function (m) {
+      return wrap(m, palette.number);
+    });
 
-    // Booleans/null
-    html = html.replace(/\b(true|false|null)\b/g, '<span style="color:#d19a66;">$1</span>');
+    // Booleans / null
+    raw = raw.replace(/\b(true|false|null|True|False|None)\b/g, function (m) {
+      return wrap(m, palette.bool);
+    });
 
-    // Language keywords
+    // Keywords
     var keywordsByLang = {
-      json: /\b(true|false|null)\b/g,
       bash: /\b(curl|echo|export|if|then|fi)\b/g,
-      python: /\b(import|from|as|def|class|return|if|else|for|while|in|try|except|with|True|False|None)\b/g,
+      python: /\b(import|from|as|def|class|return|if|else|for|while|in|try|except|with|lambda|yield)\b/g,
       javascript: /\b(const|let|var|function|return|if|else|for|while|try|catch|new|await|async)\b/g,
-      rust: /\b(use|fn|let|mut|async|await|pub|impl|struct|enum|match|if|else|return|Result|Ok)\b/g,
+      rust: /\b(use|fn|let|mut|async|await|pub|impl|struct|enum|match|if|else|return|Result|Ok|Err)\b/g,
       go: /\b(package|import|func|var|const|if|else|for|range|return|type|struct)\b/g,
       ruby: /\b(require|def|end|if|else|elsif|do|class|module|begin|rescue|puts)\b/g,
     };
     var kwRegex = keywordsByLang[lang];
     if (kwRegex) {
-      html = html.replace(kwRegex, '<span style="color:#c792ea;">$&</span>');
+      raw = raw.replace(kwRegex, function (m) {
+        return wrap(m, palette.keyword);
+      });
     }
 
-    return html;
+    // Restore strings with JSON key detection.
+    raw = raw.replace(/__STR_(\d+)__/g, function (_m, idxStr) {
+      var idx = Number(idxStr);
+      var str = strings[idx] || '""';
+      return wrap(str, palette.string);
+    });
+
+    // JSON keys: highlighted differently from string values.
+    if (lang === "json") {
+      raw = raw.replace(
+        /<span style="color:[^"]+;">(&quot;[^&]*&quot;|"(?:[^"\\]|\\.)*")<\/span>(\s*:)/g,
+        function (_m, strToken, colon) {
+          return wrap(strToken, palette.key) + colon;
+        }
+      );
+    }
+
+    return raw;
   }
 
   function setHighlightedCode(codeEl, lang, raw) {
