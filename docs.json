@@ -25,6 +25,7 @@
             "group": "Models",
             "pages": [
               "platform/model-catalog",
+              "models/ad-tech",
               "models/text-classification",
               "models/text-generation",
               "models/pii",
@@ -39,7 +40,6 @@
               "platform/api-keys",
               "platform/usage-analytics",
               "platform/logs",
-              "platform/security",
               "platform/billing"
             ]
           },
@@ -114,6 +114,16 @@
           "anchor": "GitHub",
           "href": "https://github.com/zerogpu",
           "icon": "github"
+        },
+        {
+          "anchor": "Discord",
+          "href": "https://discord.gg/Ad5KZvAyky",
+          "icon": "discord"
+        },
+        {
+          "anchor": "X",
+          "href": "https://x.com/ZeroGPU_AI",
+          "icon": "x-twitter"
         },
         {
           "anchor": "Platform",
