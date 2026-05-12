@@ -1,6 +1,7 @@
 ---
 title: "Chat completions"
 description: "OpenAI-style chat inference for models that use this route."
+sidebarTitle: "Chat completions"
 ---
 
 ## `POST /v1/chat/completions`
@@ -16,7 +17,7 @@ Same as [Responses](/api-reference/endpoint/responses#request-headers): `x-api-k
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `model` | string | Yes | Model identifier from your dashboard |
-| `messages` | array | Yes | List of `{ "role": "system" \| "user" \| "assistant", "content": string }` |
+| `messages` | array | Yes | List of objects with `role` (`system`, `user`, or `assistant`) and string `content` |
 | `metadata` | object | No | Model-specific options (e.g. PII `mask`, `usecase`) when supported |
 
 ### Example
