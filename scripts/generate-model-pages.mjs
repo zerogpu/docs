@@ -17,18 +17,76 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function textOrNA(value) {
-  if (value === null || value === undefined || value === "") return "N/A";
-  return String(value);
+function nonEmptyString(value) {
+  if (value === null || value === undefined) return null;
+  const s = String(value).trim();
+  return s === "" ? null : s;
 }
 
 function fmtMoney(value) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "N/A";
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
   return `$${value.toFixed(2)} / 1M`;
 }
 
+function resolveTotalPer1mTokens(pricing) {
+  const p = pricing || {};
+  if (typeof p.total_per_1m_tokens === "number" && !Number.isNaN(p.total_per_1m_tokens)) {
+    return p.total_per_1m_tokens;
+  }
+  const input = p.input_per_1m_tokens;
+  const output = p.output_per_1m_tokens;
+  if (
+    typeof input === "number" &&
+    typeof output === "number" &&
+    !Number.isNaN(input) &&
+    !Number.isNaN(output)
+  ) {
+    return input + output;
+  }
+  return NaN;
+}
+
+function inferProviderFromModel(model) {
+  const p = model.pricing || {};
+  const urls = [];
+  if (p.model_doc_url) urls.push(String(p.model_doc_url));
+  if (p.terms_url) urls.push(String(p.terms_url));
+  if (p.privacy_service) urls.push(String(p.privacy_service));
+  for (const u of urls) {
+    try {
+      const h = new URL(u).hostname.toLowerCase();
+      if (h.includes("liquid.ai")) return "Liquid AI";
+      if (h.includes("zerogpu")) return "ZeroGPU";
+      if (h.includes("microsoft") || h.includes("azure")) return "Microsoft";
+      if (h.includes("google") || h.includes("vertex")) return "Google";
+      if (h.includes("huggingface")) return "Hugging Face";
+      if (h.includes("openai")) return "OpenAI";
+      if (h.includes("meta.") || h.includes("llama")) return "Meta";
+      if (h.includes("github.com")) {
+        const ghPath = new URL(u).pathname.toLowerCase();
+        if (ghPath.includes("/microsoft/")) return "Microsoft";
+        if (ghPath.includes("/google")) return "Google";
+        if (ghPath.includes("/meta-llama/") || ghPath.includes("/facebookresearch/"))
+          return "Meta";
+        if (ghPath.includes("/openai/")) return "OpenAI";
+      }
+    } catch {
+      /* ignore invalid URL */
+    }
+  }
+  return null;
+}
+
+function resolveProviderDisplay(model) {
+  const direct = model.cloudProvider;
+  if (direct != null && String(direct).trim() !== "") return String(direct);
+  return inferProviderFromModel(model);
+}
+
 function escapeMdxInline(value) {
-  return textOrNA(value).replace(/\|/g, "\\|");
+  const s = nonEmptyString(value);
+  if (!s) return "";
+  return s.replace(/\|/g, "\\|");
 }
 
 function toPrettyJson(value) {
@@ -186,49 +244,62 @@ function renderRubySnippet(endpointPath, payload) {
 
 function buildMdx(model) {
   const pricing = model.pricing || {};
-  const modelId = textOrNA(model.modelId);
-  const title = textOrNA(model.modelDisplayName || modelId);
-  const description = textOrNA(pricing.description);
-  const task = textOrNA(model.taskDisplayName || model.taskType);
-  const modelType = textOrNA(model.modelType);
-  const parameters = textOrNA(model.parameters);
-  const version = textOrNA(model.modelVersion);
-  const maxTokens = textOrNA(model.maxTokens);
-  const provider = textOrNA(model.cloudProvider || "N/A");
+  const modelId = nonEmptyString(model.modelId) || "unknown";
+  const title = nonEmptyString(model.modelDisplayName) || modelId;
+  const description = nonEmptyString(pricing.description);
+  const task = nonEmptyString(model.taskDisplayName || model.taskType);
+  const modelType = nonEmptyString(model.modelType);
+  const parameters = nonEmptyString(model.parameters);
+  const version = nonEmptyString(model.modelVersion);
+  const maxTokens = nonEmptyString(model.maxTokens);
+  const provider = resolveProviderDisplay(model);
   const inputPrice = fmtMoney(pricing.input_per_1m_tokens);
   const outputPrice = fmtMoney(pricing.output_per_1m_tokens);
+  const totalPrice = fmtMoney(resolveTotalPer1mTokens(pricing));
   const references = [];
   if (pricing.model_doc_url) references.push(`[Model docs](${pricing.model_doc_url})`);
   if (pricing.terms_url) references.push(`[Terms](${pricing.terms_url})`);
   if (pricing.privacy_service) references.push(`[Privacy](${pricing.privacy_service})`);
-  const referencesLine = references.length > 0 ? references.join(" • ") : "N/A";
+
+  const lead = [];
+  if (description) lead.push(`> ${escapeMdxInline(description)}`);
+  if (references.length > 0) lead.push(`**References:** ${references.join(" • ")}`);
+
+  const specLines = [
+    "| Property | Value |",
+    "| --- | --- |",
+    `| Model ID | \`${escapeMdxInline(modelId)}\` |`,
+  ];
+  if (task) specLines.push(`| Task | ${escapeMdxInline(task)} |`);
+  if (modelType) specLines.push(`| Type | \`${escapeMdxInline(modelType)}\` |`);
+  if (parameters) specLines.push(`| Parameters | ${escapeMdxInline(parameters)} |`);
+  if (version) specLines.push(`| Version | ${escapeMdxInline(version)} |`);
+  if (maxTokens) specLines.push(`| Max Tokens | ${escapeMdxInline(maxTokens)} |`);
+  if (provider) specLines.push(`| Provider | ${escapeMdxInline(provider)} |`);
+  if (inputPrice) specLines.push(`| Input Price | ${escapeMdxInline(inputPrice)} |`);
+  if (outputPrice) specLines.push(`| Output Price | ${escapeMdxInline(outputPrice)} |`);
+  if (totalPrice) specLines.push(`| Total Price | ${escapeMdxInline(totalPrice)} |`);
+
+  const bodyParts = [];
+  if (lead.length > 0) bodyParts.push(lead.join("\n\n"));
+  if (bodyParts.length > 0) bodyParts.push("");
+  bodyParts.push(
+    "## Specifications",
+    "",
+    specLines.join("\n"),
+    "",
+    "## Quick Start",
+    "",
+    `<div data-zgpu-model-playground="${modelId}"></div>`
+  );
+  const body = bodyParts.join("\n");
 
   return `---
 title: "${title.replace(/"/g, '\\"')}"
 description: "Model details for ${modelId.replace(/"/g, '\\"')}."
 ---
 
-> ${escapeMdxInline(description)}
-
-**References:** ${referencesLine}
-
-## Specifications
-
-| Property | Value |
-| --- | --- |
-| Model ID | \`${escapeMdxInline(modelId)}\` |
-| Task | ${escapeMdxInline(task)} |
-| Type | \`${escapeMdxInline(modelType)}\` |
-| Parameters | ${escapeMdxInline(parameters)} |
-| Version | ${escapeMdxInline(version)} |
-| Max Tokens | ${escapeMdxInline(maxTokens)} |
-| Provider | ${escapeMdxInline(provider)} |
-| Input Price | ${escapeMdxInline(inputPrice)} |
-| Output Price | ${escapeMdxInline(outputPrice)} |
-
-## Quick Start
-
-<div data-zgpu-model-playground="${modelId}"></div>
+${body}
 `;
 }
 

@@ -7,13 +7,78 @@
   const fallbackEndpoint = "/snippets/model-catalog-fallback.json";
 
   function fmtMoney(value) {
-    if (typeof value !== "number" || Number.isNaN(value)) return "N/A";
+    if (typeof value !== "number" || Number.isNaN(value)) return null;
     return "$" + value.toFixed(2) + " / 1M";
   }
 
-  function textOrNA(value) {
-    if (value === null || value === undefined || value === "") return "N/A";
-    return String(value);
+  function nonEmptyString(value) {
+    if (value === null || value === undefined) return null;
+    var s = String(value).trim();
+    return s === "" ? null : s;
+  }
+
+  function resolveTotalPer1mTokens(pricing) {
+    var p = pricing || {};
+    if (
+      typeof p.total_per_1m_tokens === "number" &&
+      !Number.isNaN(p.total_per_1m_tokens)
+    ) {
+      return p.total_per_1m_tokens;
+    }
+    var input = p.input_per_1m_tokens;
+    var output = p.output_per_1m_tokens;
+    if (
+      typeof input === "number" &&
+      typeof output === "number" &&
+      !Number.isNaN(input) &&
+      !Number.isNaN(output)
+    ) {
+      return input + output;
+    }
+    return NaN;
+  }
+
+  function inferProviderFromModel(model) {
+    var p = model.pricing || {};
+    var urls = [];
+    if (p.model_doc_url) urls.push(String(p.model_doc_url));
+    if (p.terms_url) urls.push(String(p.terms_url));
+    if (p.privacy_service) urls.push(String(p.privacy_service));
+    var i;
+    for (i = 0; i < urls.length; i++) {
+      try {
+        var h = new URL(urls[i]).hostname.toLowerCase();
+        if (h.indexOf("liquid.ai") >= 0) return "Liquid AI";
+        if (h.indexOf("zerogpu") >= 0) return "ZeroGPU";
+        if (h.indexOf("microsoft") >= 0 || h.indexOf("azure") >= 0)
+          return "Microsoft";
+        if (h.indexOf("google") >= 0 || h.indexOf("vertex") >= 0)
+          return "Google";
+        if (h.indexOf("huggingface") >= 0) return "Hugging Face";
+        if (h.indexOf("openai") >= 0) return "OpenAI";
+        if (h.indexOf("meta.") >= 0 || h.indexOf("llama") >= 0) return "Meta";
+        if (h.indexOf("github.com") >= 0) {
+          var path = new URL(urls[i]).pathname.toLowerCase();
+          if (path.indexOf("/microsoft/") >= 0) return "Microsoft";
+          if (path.indexOf("/google") >= 0) return "Google";
+          if (
+            path.indexOf("/meta-llama/") >= 0 ||
+            path.indexOf("/facebookresearch/") >= 0
+          )
+            return "Meta";
+          if (path.indexOf("/openai/") >= 0) return "OpenAI";
+        }
+      } catch (e) {}
+    }
+    return null;
+  }
+
+  function resolveProviderDisplay(model) {
+    var direct = model.cloudProvider;
+    if (direct != null && String(direct).trim() !== "") return String(direct);
+    var inferred = inferProviderFromModel(model);
+    if (inferred) return inferred;
+    return null;
   }
 
   function createCell(row, text, code) {
@@ -31,64 +96,64 @@
   function createDetails(model) {
     const wrapper = document.createElement("div");
     const heading = document.createElement("h3");
-    heading.id = textOrNA(model.modelId)
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-");
+    heading.id = slugifyModelId(model.modelId || "model");
 
     const idCode = document.createElement("code");
-    idCode.textContent = textOrNA(model.modelId);
+    idCode.textContent = nonEmptyString(model.modelId) || "";
     heading.appendChild(idCode);
     wrapper.appendChild(heading);
 
-    const task = document.createElement("p");
-    task.innerHTML =
-      "<strong>Task:</strong> " +
-      textOrNA(model.taskDisplayName || model.taskType) +
-      "  ";
-    wrapper.appendChild(task);
+    var taskStr = nonEmptyString(model.taskDisplayName || model.taskType);
+    if (taskStr) {
+      const task = document.createElement("p");
+      task.innerHTML = "<strong>Task:</strong> " + taskStr + "  ";
+      wrapper.appendChild(task);
+    }
 
-    const provider = document.createElement("p");
-    provider.innerHTML =
-      "<strong>Provider:</strong> " + textOrNA(model.cloudProvider) + "  ";
-    wrapper.appendChild(provider);
+    var prov = resolveProviderDisplay(model);
+    if (prov) {
+      const provider = document.createElement("p");
+      provider.innerHTML = "<strong>Provider:</strong> " + prov + "  ";
+      wrapper.appendChild(provider);
+    }
 
     const pricing = model.pricing || {};
-    const pricingDescription = textOrNA(pricing.description);
+    var pricingDescription = nonEmptyString(pricing.description);
+    if (pricingDescription) {
+      const bestFor = document.createElement("p");
+      bestFor.innerHTML = "<strong>Best for:</strong> " + pricingDescription;
+      wrapper.appendChild(bestFor);
+    }
+
     const useCases = Array.isArray(pricing.use_cases)
       ? pricing.use_cases.filter(Boolean)
       : [];
 
-    const bestFor = document.createElement("p");
-    bestFor.innerHTML = "<strong>Best for:</strong> " + pricingDescription;
-    wrapper.appendChild(bestFor);
+    var specParts = [];
+    var ver = nonEmptyString(model.modelVersion);
+    if (ver) specParts.push("<code>Version: " + ver + "</code>");
+    var mx = nonEmptyString(model.maxTokens);
+    if (mx) specParts.push("<code>Max tokens: " + mx + "</code>");
+    var typeStr = nonEmptyString(model.modelType);
+    if (typeStr) specParts.push("<code>Type: " + typeStr + "</code>");
+    if (specParts.length > 0) {
+      const specs = document.createElement("p");
+      specs.innerHTML = "<strong>Specs:</strong> " + specParts.join(" · ");
+      wrapper.appendChild(specs);
+    }
 
-    const specs = document.createElement("p");
-    specs.innerHTML =
-      "<strong>Specs:</strong> " +
-      "<code>Version: " +
-      textOrNA(model.modelVersion) +
-      "</code> · " +
-      "<code>Max tokens: " +
-      textOrNA(model.maxTokens) +
-      "</code> · " +
-      "<code>Type: " +
-      textOrNA(model.modelType) +
-      "</code>";
-    wrapper.appendChild(specs);
-
-    const prices = document.createElement("p");
-    prices.innerHTML =
-      "<strong>Pricing:</strong> " +
-      "<code>" +
-      fmtMoney(pricing.input_per_1m_tokens) +
-      " input</code> · " +
-      "<code>" +
-      fmtMoney(pricing.output_per_1m_tokens) +
-      " output</code> · " +
-      "<code>" +
-      fmtMoney(pricing.total_per_1m_tokens) +
-      " total</code>";
-    wrapper.appendChild(prices);
+    var inP = fmtMoney(pricing.input_per_1m_tokens);
+    var outP = fmtMoney(pricing.output_per_1m_tokens);
+    var totP = fmtMoney(resolveTotalPer1mTokens(pricing));
+    var priceParts = [];
+    if (inP) priceParts.push("<code>" + inP + " input</code>");
+    if (outP) priceParts.push("<code>" + outP + " output</code>");
+    if (totP) priceParts.push("<code>" + totP + " total</code>");
+    if (priceParts.length > 0) {
+      const prices = document.createElement("p");
+      prices.innerHTML = "<strong>Pricing:</strong> " + priceParts.join(" · ");
+      wrapper.appendChild(prices);
+    }
 
     if (useCases.length > 0) {
       const useCasesP = document.createElement("p");
@@ -101,7 +166,7 @@
   }
 
   function slugifyModelId(modelId) {
-    return textOrNA(modelId)
+    return String(modelId || "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
@@ -109,12 +174,6 @@
 
   function buildModelPagePath(modelId) {
     return "/models/" + slugifyModelId(modelId);
-  }
-
-  function buildBadgeText(model) {
-    if (model && model.parameters) return textOrNA(model.parameters);
-    if (model && model.modelType) return textOrNA(model.modelType);
-    return "Model";
   }
 
   function createModelCard(model) {
@@ -189,54 +248,70 @@
     title.style.lineHeight = "1.35";
     title.style.fontWeight = "700";
     title.style.color = palette.title;
-    title.textContent = textOrNA(model.modelDisplayName || model.modelId);
+    title.textContent =
+      nonEmptyString(model.modelDisplayName) ||
+      nonEmptyString(model.modelId) ||
+      "";
     link.appendChild(title);
 
-    var meta = document.createElement("div");
-    meta.style.display = "flex";
-    meta.style.alignItems = "center";
-    meta.style.gap = "8px";
-    meta.style.marginBottom = "12px";
+    var pStr = nonEmptyString(model.parameters);
+    var tStr = nonEmptyString(model.modelType);
+    if (pStr || tStr) {
+      var meta = document.createElement("div");
+      meta.style.display = "flex";
+      meta.style.alignItems = "center";
+      meta.style.gap = "8px";
+      meta.style.marginBottom = "12px";
 
-    var params = document.createElement("span");
-    params.textContent = buildBadgeText(model);
-    params.style.fontSize = "0.95rem";
-    params.style.color = palette.meta;
-    meta.appendChild(params);
+      if (pStr) {
+        var params = document.createElement("span");
+        params.textContent = pStr;
+        params.style.fontSize = "0.95rem";
+        params.style.color = palette.meta;
+        meta.appendChild(params);
+      }
 
-    var dot = document.createElement("span");
-    dot.textContent = "·";
-    dot.style.color = palette.meta;
-    meta.appendChild(dot);
+      if (pStr && tStr) {
+        var dot = document.createElement("span");
+        dot.textContent = "·";
+        dot.style.color = palette.meta;
+        meta.appendChild(dot);
+      }
 
-    var badge = document.createElement("span");
-    badge.textContent = textOrNA(model.modelType).toLowerCase();
-    badge.style.display = "inline-block";
-    badge.style.padding = "3px 10px";
-    badge.style.borderRadius = "999px";
-    badge.style.fontSize = "0.82rem";
-    badge.style.fontWeight = "600";
-    badge.style.background = "rgba(34, 197, 94, 0.18)";
-    badge.style.color = "rgb(74, 222, 128)";
-    meta.appendChild(badge);
-    link.appendChild(meta);
+      if (tStr) {
+        var badge = document.createElement("span");
+        badge.textContent = tStr.toLowerCase();
+        badge.style.display = "inline-block";
+        badge.style.padding = "3px 10px";
+        badge.style.borderRadius = "999px";
+        badge.style.fontSize = "0.82rem";
+        badge.style.fontWeight = "600";
+        badge.style.background = "rgba(34, 197, 94, 0.18)";
+        badge.style.color = "rgb(74, 222, 128)";
+        meta.appendChild(badge);
+      }
 
-    var description = document.createElement("p");
-    description.style.margin = "0";
-    description.style.lineHeight = "1.5";
-    description.style.fontSize = "0.97rem";
-    description.style.color = palette.desc;
-    description.style.fontWeight = "400";
-    description.style.display = "-webkit-box";
-    description.style.webkitLineClamp = "2";
-    description.style.webkitBoxOrient = "vertical";
-    description.style.overflow = "hidden";
-    var rawDescription = textOrNA((model.pricing || {}).description);
-    description.textContent =
-      rawDescription.length > 120
-        ? rawDescription.slice(0, 117).trimEnd() + "..."
-        : rawDescription;
-    link.appendChild(description);
+      link.appendChild(meta);
+    }
+
+    var rawDescription = nonEmptyString((model.pricing || {}).description);
+    if (rawDescription) {
+      var description = document.createElement("p");
+      description.style.margin = "0";
+      description.style.lineHeight = "1.5";
+      description.style.fontSize = "0.97rem";
+      description.style.color = palette.desc;
+      description.style.fontWeight = "400";
+      description.style.display = "-webkit-box";
+      description.style.webkitLineClamp = "2";
+      description.style.webkitBoxOrient = "vertical";
+      description.style.overflow = "hidden";
+      description.textContent =
+        rawDescription.length > 120
+          ? rawDescription.slice(0, 117).trimEnd() + "..."
+          : rawDescription;
+      link.appendChild(description);
+    }
 
     link.addEventListener("mouseenter", function () {
       var hoverPalette = getPalette();
@@ -258,31 +333,74 @@
     var wrapper = document.createElement("div");
     var pricing = model.pricing || {};
 
-    var overview = document.createElement("blockquote");
-    overview.textContent = textOrNA(pricing.description);
-    wrapper.appendChild(overview);
+    var desc = nonEmptyString(pricing.description);
+    if (desc) {
+      var overview = document.createElement("blockquote");
+      overview.textContent = desc;
+      wrapper.appendChild(overview);
+    }
 
-    var links = document.createElement("p");
-    links.innerHTML =
-      "<strong>References:</strong> " +
-      (pricing.model_doc_url
-        ? '<a href="' +
-          pricing.model_doc_url +
+    var refParts = [];
+    var docUrl = nonEmptyString(pricing.model_doc_url);
+    if (docUrl) {
+      refParts.push(
+        '<a href="' +
+          docUrl +
           '" target="_blank" rel="noopener noreferrer">Model docs</a>'
-        : "N/A") +
-      " · " +
-      (pricing.terms_url
-        ? '<a href="' +
-          pricing.terms_url +
+      );
+    }
+    var termsUrl = nonEmptyString(pricing.terms_url);
+    if (termsUrl) {
+      refParts.push(
+        '<a href="' +
+          termsUrl +
           '" target="_blank" rel="noopener noreferrer">Terms</a>'
-        : "N/A") +
-      " · " +
-      (pricing.privacy_service
-        ? '<a href="' +
-          pricing.privacy_service +
+      );
+    }
+    var privacyUrl = nonEmptyString(pricing.privacy_service);
+    if (privacyUrl) {
+      refParts.push(
+        '<a href="' +
+          privacyUrl +
           '" target="_blank" rel="noopener noreferrer">Privacy</a>'
-        : "N/A");
-    wrapper.appendChild(links);
+      );
+    }
+    if (refParts.length > 0) {
+      var links = document.createElement("p");
+      links.innerHTML =
+        "<strong>References:</strong> " + refParts.join(" · ");
+      wrapper.appendChild(links);
+    }
+
+    var rows = [];
+    var mid = nonEmptyString(model.modelId);
+    if (mid) {
+      rows.push(
+        "<tr><td>Model ID</td><td><code>" + mid + "</code></td></tr>"
+      );
+    }
+    var task = nonEmptyString(model.taskDisplayName || model.taskType);
+    if (task) rows.push("<tr><td>Task</td><td>" + task + "</td></tr>");
+    var mtype = nonEmptyString(model.modelType);
+    if (mtype) {
+      rows.push("<tr><td>Type</td><td><code>" + mtype + "</code></td></tr>");
+    }
+    var params = nonEmptyString(model.parameters);
+    if (params) {
+      rows.push("<tr><td>Parameters</td><td>" + params + "</td></tr>");
+    }
+    var ver = nonEmptyString(model.modelVersion);
+    if (ver) rows.push("<tr><td>Version</td><td>" + ver + "</td></tr>");
+    var mx = nonEmptyString(model.maxTokens);
+    if (mx) rows.push("<tr><td>Max Tokens</td><td>" + mx + "</td></tr>");
+    var prov = resolveProviderDisplay(model);
+    if (prov) rows.push("<tr><td>Provider</td><td>" + prov + "</td></tr>");
+    var inP = fmtMoney(pricing.input_per_1m_tokens);
+    if (inP) rows.push("<tr><td>Input Price</td><td>" + inP + "</td></tr>");
+    var outP = fmtMoney(pricing.output_per_1m_tokens);
+    if (outP) rows.push("<tr><td>Output Price</td><td>" + outP + "</td></tr>");
+    var totP = fmtMoney(resolveTotalPer1mTokens(pricing));
+    if (totP) rows.push("<tr><td>Total Price</td><td>" + totP + "</td></tr>");
 
     var specsHeading = document.createElement("h2");
     specsHeading.textContent = "Specifications";
@@ -290,17 +408,8 @@
 
     var specsTable = document.createElement("table");
     specsTable.innerHTML =
-      "<thead><tr><th>Property</th><th>Value</th></tr></thead>" +
-      "<tbody>" +
-      "<tr><td>Model ID</td><td><code>" + textOrNA(model.modelId) + "</code></td></tr>" +
-      "<tr><td>Task</td><td>" + textOrNA(model.taskDisplayName || model.taskType) + "</td></tr>" +
-      "<tr><td>Type</td><td><code>" + textOrNA(model.modelType) + "</code></td></tr>" +
-      "<tr><td>Parameters</td><td>" + textOrNA(model.parameters) + "</td></tr>" +
-      "<tr><td>Version</td><td>" + textOrNA(model.modelVersion) + "</td></tr>" +
-      "<tr><td>Max Tokens</td><td>" + textOrNA(model.maxTokens) + "</td></tr>" +
-      "<tr><td>Provider</td><td>" + textOrNA(model.cloudProvider || "N/A") + "</td></tr>" +
-      "<tr><td>Input Price</td><td>" + fmtMoney(pricing.input_per_1m_tokens) + "</td></tr>" +
-      "<tr><td>Output Price</td><td>" + fmtMoney(pricing.output_per_1m_tokens) + "</td></tr>" +
+      "<thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>" +
+      rows.join("") +
       "</tbody>";
     wrapper.appendChild(specsTable);
 
@@ -315,13 +424,16 @@
 
     var curlPre = document.createElement("pre");
     var curlCode = document.createElement("code");
+    var curlModel = nonEmptyString(model.modelId) || "YOUR_MODEL_ID";
     curlCode.textContent =
       "curl --location 'https://api.zerogpu.ai/v1/responses' \\\n" +
       "  --header 'content-type: application/json' \\\n" +
       "  --header 'x-api-key: YOUR_API_KEY' \\\n" +
       "  --header 'x-project-id: YOUR_PROJECT_ID' \\\n" +
       "  --data '{\n" +
-      '    "model": "' + textOrNA(model.modelId) + '",\n' +
+      '    "model": "' +
+      curlModel +
+      '",\n' +
       '    "input": [\n' +
       "      {\n" +
       '        "role": "user",\n' +
@@ -736,7 +848,7 @@
               var value = entry[1];
               var btn = document.createElement("button");
               btn.type = "button";
-              btn.textContent = textOrNA(value.usecase_display_name || key);
+              btn.textContent = nonEmptyString(value.usecase_display_name) || key;
               btn.setAttribute("data-usecase-key", key);
               btn.style.borderRadius = "999px";
               btn.style.border = "1px solid var(--border, #374151)";
@@ -803,7 +915,9 @@
                 ? model.modelUsecases[selectedUsecaseKey]
                 : null;
             if (usecaseDescription && selectedUsecase) {
-              usecaseDescription.textContent = textOrNA(selectedUsecase.description);
+              var ud = nonEmptyString(selectedUsecase.description);
+              usecaseDescription.textContent = ud || "";
+              usecaseDescription.style.display = ud ? "" : "none";
             }
             var payloadInfo = getPlaygroundPayload(model, format, selectedUsecaseKey);
             setHighlightedCode(bodyCode, "json", prettyJson(payloadInfo.payload));
@@ -853,7 +967,7 @@
   }
 
   function normalizeTaskCategory(model) {
-    var raw = textOrNA(model.taskDisplayName || model.taskType).toLowerCase();
+    var raw = String(model.taskDisplayName || model.taskType || "").toLowerCase();
     if (
       raw.indexOf("classification") >= 0 ||
       raw === "classification" ||
@@ -879,15 +993,15 @@
 
   function isAdTechModel(model) {
     if (!model) return false;
-    var modelId = textOrNA(model.modelId).toLowerCase();
-    var modelType = textOrNA(model.modelType).toLowerCase();
+    var modelId = String(model.modelId || "").toLowerCase();
+    var modelType = String(model.modelType || "").toLowerCase();
     if (modelId.indexOf("iab") >= 0 || modelType.indexOf("iab") >= 0) return true;
 
     var useCases = Array.isArray(model.pricing && model.pricing.use_cases)
       ? model.pricing.use_cases
       : [];
     return useCases.some(function (uc) {
-      return textOrNA(uc).toLowerCase().indexOf("ad tech") >= 0;
+      return String(uc || "").toLowerCase().indexOf("ad tech") >= 0;
     });
   }
 
@@ -1120,15 +1234,15 @@
       var tbody = document.createElement("tbody");
       visibleModels.forEach(function (model) {
         var row = document.createElement("tr");
-        createCell(row, textOrNA(model.modelId), true);
-        createCell(row, textOrNA(model.taskDisplayName || model.taskType));
-        createCell(row, textOrNA(model.modelVersion));
-        createCell(row, textOrNA(model.maxTokens));
-        createCell(row, textOrNA(model.modelType));
+        createCell(row, nonEmptyString(model.modelId) || "", true);
+        createCell(row, nonEmptyString(model.taskDisplayName || model.taskType) || "");
+        createCell(row, nonEmptyString(model.modelVersion) || "");
+        createCell(row, nonEmptyString(model.maxTokens) || "");
+        createCell(row, nonEmptyString(model.modelType) || "");
 
         var p = model.pricing || {};
-        createCell(row, fmtMoney(p.input_per_1m_tokens));
-        createCell(row, fmtMoney(p.output_per_1m_tokens));
+        createCell(row, fmtMoney(p.input_per_1m_tokens) || "");
+        createCell(row, fmtMoney(p.output_per_1m_tokens) || "");
         tbody.appendChild(row);
       });
 
