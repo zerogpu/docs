@@ -1,39 +1,73 @@
-# Data extraction tutorial: launch package
+# Data extraction tutorial assets
 
-Marketing and education assets for the [Data extraction cookbook](/cookbook/data-extraction) recipe. **Text-only** workflows (resumes, LinkedIn-style profile text). No OCR.
+Example data and scripts for the [Resume & profile extraction tutorial](https://docs.zerogpu.ai/cookbook/data-extraction-tutorial) on ZeroGPU docs.
 
-## Contents
+Learn how to turn plain text (resumes, LinkedIn-style profile exports, job posts) into structured JSON using `gliner2-base-v1`. This folder is **text-only**: it does not cover OCR, PDF parsing, or images.
 
-| Asset | File | Purpose |
-| --- | --- | --- |
-| In-docs tutorial | [`../../cookbook/data-extraction-tutorial.mdx`](../../cookbook/data-extraction-tutorial.mdx) | Step-by-step walkthrough on docs.zerogpu.ai |
-| Blog post | [`blog-post.md`](blog-post.md) | Long-form publish (website, Dev.to, etc.) |
-| Example dataset | [`dataset/`](dataset/) | Synthetic resumes and profile snippets |
-| Schemas | [`schemas/`](schemas/) | GLiNER `json` use-case schemas |
-| Batch demo | [`scripts/run_batch_extraction.py`](scripts/run_batch_extraction.py) | Run extraction over the dataset |
+## What is in this folder
 
-## Production checklist
+| Path | Description |
+| --- | --- |
+| [`dataset/`](dataset/) | Synthetic sample text (JSONL). Fictional people and companies only. |
+| [`schemas/`](schemas/) | Example GLiNER `json` schemas for resumes and profiles |
+| [`scripts/run_batch_extraction.py`](scripts/run_batch_extraction.py) | Run extraction over the dataset with your API credentials |
+| [`blog-post.md`](blog-post.md) | Long-form article you can republish or adapt |
 
-- [ ] Record video walkthrough (dashboard + terminal; follow the in-docs tutorial)
-- [ ] Publish blog from [`blog-post.md`](blog-post.md); link to https://docs.zerogpu.ai/cookbook/data-extraction
-- [ ] Post on social with links to the tutorial and dataset
-- [ ] Optional: add `demos/data-extraction-python` to [zerogpu/cookbook](https://github.com/zerogpu/cookbook) repo
+The step-by-step guide lives in the docs site: [cookbook/data-extraction-tutorial](https://docs.zerogpu.ai/cookbook/data-extraction-tutorial). API reference examples: [cookbook/data-extraction](https://docs.zerogpu.ai/cookbook/data-extraction).
 
-## Run the dataset locally
+## Quick start
+
+1. Create a project and API key in the [ZeroGPU dashboard](https://zerogpu.ai).
+2. From this directory:
 
 ```bash
-cd docs/tutorials/data-extraction/scripts
+cd scripts
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-export ZEROGPU_API_KEY="zgpu-..."
+export ZEROGPU_API_KEY="zgpu-your-key"
 export ZEROGPU_PROJECT_ID="your-project-uuid"
-.venv/bin/python run_batch_extraction.py --dataset resumes --limit 3
-.venv/bin/python run_batch_extraction.py --dataset profiles --limit 3
 ```
 
-Outputs land in `outputs/` (gitignored).
+3. Run extraction on sample resumes or profiles:
 
-## Scope (per product review)
+```bash
+.venv/bin/python run_batch_extraction.py --dataset resumes --limit 3
+.venv/bin/python run_batch_extraction.py --dataset profiles --limit 3
+.venv/bin/python run_batch_extraction.py --dataset job_posts
+```
 
-- **In scope:** Unstructured **text** to structured JSON (resumes, scraped profile bios, skills NER).
-- **Out of scope for v1:** OCR, PDF parsing, image/screenshot ingestion.
+Results are written to `outputs/` (not committed to git). Each line in the output JSONL is one record with an `extracted` field.
+
+## Response shape
+
+For `json` use cases, parsed output is usually nested:
+
+```json
+{
+  "data": {
+    "candidate": [
+      {
+        "full_name": "...",
+        "email": "..."
+      }
+    ]
+  }
+}
+```
+
+Access the first row with `parsed["data"]["candidate"][0]` (or `profile` instead of `candidate`). For `ner`, see `extracted.entities` in the batch script output.
+
+## Supported workflows
+
+- Resumes and CVs pasted as plain text
+- Profile text from exports or scrapers (you supply compliant text)
+- Job posts tagged with custom entity labels (`ner`)
+
+Not supported in this tutorial:
+
+- OCR or scanned documents
+- PDF or image ingestion (convert to text in your own pipeline first)
+
+## License
+
+Synthetic dataset and schemas are provided for learning and testing with ZeroGPU. See the main [docs repository](https://github.com/zerogpu/docs) for license terms.

@@ -3,6 +3,6 @@ __pycache__/
 .venv/
 scripts/.venv/
 
-# Internal-only (not published to GitHub)
+# Optional local files (not part of the public tutorial)
 video-script.md
 social-promotion.md
