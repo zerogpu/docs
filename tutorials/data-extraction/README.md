@@ -8,17 +8,15 @@ Marketing and education assets for the [Data extraction cookbook](/cookbook/data
 | --- | --- | --- |
 | In-docs tutorial | [`../../cookbook/data-extraction-tutorial.mdx`](../../cookbook/data-extraction-tutorial.mdx) | Step-by-step walkthrough on docs.zerogpu.ai |
 | Blog post | [`blog-post.md`](blog-post.md) | Long-form publish (website, Dev.to, etc.) |
-| Video script | [`video-script.md`](video-script.md) | ~6 min screen recording + voiceover |
-| Social copy | [`social-promotion.md`](social-promotion.md) | X, LinkedIn, launch thread |
 | Example dataset | [`dataset/`](dataset/) | Synthetic résumés and profile snippets |
 | Schemas | [`schemas/`](schemas/) | GLiNER `json` use-case schemas |
 | Batch demo | [`scripts/run_batch_extraction.py`](scripts/run_batch_extraction.py) | Run extraction over the dataset |
 
 ## Production checklist
 
-- [ ] Record video from [`video-script.md`](video-script.md) (dashboard + terminal)
+- [ ] Record video walkthrough (dashboard + terminal; follow the in-docs tutorial)
 - [ ] Publish blog from [`blog-post.md`](blog-post.md); link to https://docs.zerogpu.ai/cookbook/data-extraction
-- [ ] Post social using [`social-promotion.md`](social-promotion.md)
+- [ ] Post on social with links to the tutorial and dataset
 - [ ] Optional: add `demos/data-extraction-python` to [zerogpu/cookbook](https://github.com/zerogpu/cookbook) repo
 
 ## Run the dataset locally
