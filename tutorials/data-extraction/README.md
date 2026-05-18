@@ -1,6 +1,6 @@
-# Data extraction tutorial — launch package
+# Data extraction tutorial: launch package
 
-Marketing and education assets for the [Data extraction cookbook](/cookbook/data-extraction) recipe. **Text-only** workflows (résumés, LinkedIn-style profile text). No OCR.
+Marketing and education assets for the [Data extraction cookbook](/cookbook/data-extraction) recipe. **Text-only** workflows (resumes, LinkedIn-style profile text). No OCR.
 
 ## Contents
 
@@ -8,7 +8,7 @@ Marketing and education assets for the [Data extraction cookbook](/cookbook/data
 | --- | --- | --- |
 | In-docs tutorial | [`../../cookbook/data-extraction-tutorial.mdx`](../../cookbook/data-extraction-tutorial.mdx) | Step-by-step walkthrough on docs.zerogpu.ai |
 | Blog post | [`blog-post.md`](blog-post.md) | Long-form publish (website, Dev.to, etc.) |
-| Example dataset | [`dataset/`](dataset/) | Synthetic résumés and profile snippets |
+| Example dataset | [`dataset/`](dataset/) | Synthetic resumes and profile snippets |
 | Schemas | [`schemas/`](schemas/) | GLiNER `json` use-case schemas |
 | Batch demo | [`scripts/run_batch_extraction.py`](scripts/run_batch_extraction.py) | Run extraction over the dataset |
 
@@ -23,16 +23,17 @@ Marketing and education assets for the [Data extraction cookbook](/cookbook/data
 
 ```bash
 cd docs/tutorials/data-extraction/scripts
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 export ZEROGPU_API_KEY="zgpu-..."
 export ZEROGPU_PROJECT_ID="your-project-uuid"
-pip install requests
-python run_batch_extraction.py --dataset resumes --limit 3
-python run_batch_extraction.py --dataset profiles --limit 3
+.venv/bin/python run_batch_extraction.py --dataset resumes --limit 3
+.venv/bin/python run_batch_extraction.py --dataset profiles --limit 3
 ```
 
-Outputs land in `outputs/` (gitignored via local `.gitignore` if you add one).
+Outputs land in `outputs/` (gitignored).
 
 ## Scope (per product review)
 
-- **In scope:** Unstructured **text** → structured JSON (résumés, scraped profile bios, skills NER).
+- **In scope:** Unstructured **text** to structured JSON (resumes, scraped profile bios, skills NER).
 - **Out of scope for v1:** OCR, PDF parsing, image/screenshot ingestion.

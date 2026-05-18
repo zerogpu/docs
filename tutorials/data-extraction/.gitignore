@@ -1,6 +1,7 @@
 outputs/
 __pycache__/
 .venv/
+scripts/.venv/
 
 # Internal-only (not published to GitHub)
 video-script.md

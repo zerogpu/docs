@@ -1,9 +1,9 @@
 ---
-title: "Tutorial: Résumé & profile extraction"
-description: "Step-by-step guide with example dataset—text-only extraction, no OCR."
+title: "Tutorial: Resume & profile extraction"
+description: "Step-by-step guide with example dataset. Text-only extraction, no OCR."
 ---
 
-This tutorial walks through **three production-style use cases** for the [Data extraction](/cookbook/data-extraction) recipe. You will use plain text only (résumés, LinkedIn-style exports, job posts)—**not** OCR or PDF parsing.
+This tutorial walks through **three production-style use cases** for the [Data extraction](/cookbook/data-extraction) recipe. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
 
 <Note>
 All sample people and companies in the [example dataset](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset) are **synthetic and fictional**.
@@ -13,11 +13,11 @@ All sample people and companies in the [example dataset](https://github.com/zero
 
 | Step | Input | Output |
 | --- | --- | --- |
-| 1 | Plain-text résumé | `candidate` JSON (name, title, skills, …) |
+| 1 | Plain-text resume | `candidate` JSON (name, title, skills, …) |
 | 2 | Scraped profile text | `profile` JSON (headline, role, location, …) |
 | 3 | Job description | Labeled skill/tool spans (`ner`) |
 
-**Model (steps 1–3):** `gliner2-base-v1`  
+**Model (steps 1-3):** `gliner2-base-v1`  
 **Endpoint:** `POST https://api.zerogpu.ai/v1/responses`
 
 Get your **API key** and **project ID** from the [dashboard](https://zerogpu.ai). See [Authentication](/platform/authentication).
@@ -36,7 +36,7 @@ tutorials/data-extraction/
 
 GitHub: [zerogpu/docs/tutorials/data-extraction](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction)
 
-## Step 1 — Extract a candidate from a résumé
+## Step 1: Extract a candidate from a resume
 
 Open `dataset/resumes.jsonl` and pick `resume-001` (synthetic). Define a schema under `metadata.schema` with use case **`json`**.
 
@@ -99,15 +99,17 @@ payload = {
     },
 }
 body = requests.post(url, headers=headers, json=payload).json()
-candidate = json.loads(body["output"][0]["content"][0]["text"])
+parsed = json.loads(body["output"][0]["content"][0]["text"])
+# GLiNER json responses are usually nested: data.candidate[0]
+candidate = parsed["data"]["candidate"][0]
 print(json.dumps(candidate, indent=2))
 ```
 
 </CodeGroup>
 
-**Check your result:** You should see a `candidate` object with populated strings. If a field is missing from the source text, it may be empty—tighten field descriptions or add a second pass only where needed.
+**Check your result:** You should see a `candidate` object (often under `data.candidate[0]`) with populated strings. If a field is missing from the source text, it may be empty. Tighten field descriptions or add a second pass only where needed.
 
-## Step 2 — Structure LinkedIn-style profile text
+## Step 2: Structure LinkedIn-style profile text
 
 Scrapers often return a single blob: headline, About, Experience. Use a **`profile`** schema (same `json` use case).
 
@@ -129,7 +131,7 @@ Paste text from `profiles.jsonl` (`profile-001`) as `input`. Parse the response 
 This tutorial assumes you already have **compliant text** from your pipeline. ZeroGPU does not scrape LinkedIn for you.
 </Info>
 
-## Step 3 — Tag skills in a job post (NER)
+## Step 3: Tag skills in a job post (NER)
 
 When you need **categories** instead of fixed columns, set `metadata.usecase` to **`ner`** and pass `labels`:
 
@@ -168,32 +170,33 @@ payload = {
 
 Lower `threshold` to recall more spans; raise it when precision matters more.
 
-## Step 4 — Run the full example dataset
+## Step 4: Run the full example dataset
 
-Batch all synthetic résumés or profiles locally:
+Batch all synthetic resumes or profiles locally:
 
 ```bash
 cd tutorials/data-extraction/scripts
-pip install -r requirements.txt
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
 export ZEROGPU_API_KEY="zgpu-..."
 export ZEROGPU_PROJECT_ID="your-project-uuid"
-python run_batch_extraction.py --dataset resumes --limit 3
-python run_batch_extraction.py --dataset profiles --limit 3
-python run_batch_extraction.py --dataset job_posts
+.venv/bin/python run_batch_extraction.py --dataset resumes --limit 3
+.venv/bin/python run_batch_extraction.py --dataset profiles --limit 3
+.venv/bin/python run_batch_extraction.py --dataset job_posts
 ```
 
 Results are written to `tutorials/data-extraction/outputs/*.jsonl`. Inspect them before wiring into production ETL.
 
 For many files at once, combine this with [Batch requests](/cookbook/batch-requests) patterns (parallelism, retries).
 
-## Optional — PII on inbound text
+## Optional: PII on inbound text
 
-Before storing user-submitted résumés, run [PII extraction](/cookbook/data-extraction#pii-extraction) with `gliner-multi-pii-v1` and `extract-pii` or `redact`.
+Before storing user-submitted resumes, run [PII extraction](/cookbook/data-extraction#pii-extraction) with `gliner-multi-pii-v1` and `extract-pii` or `redact`.
 
 ## Production tips
 
-- **Start small:** 5–8 schema fields beat 20 vague ones.
-- **Golden set:** Keep 10–20 labeled examples from your real text shapes; re-run after schema changes.
+- **Start small:** 5-8 schema fields beat 20 vague ones.
+- **Golden set:** Keep 10-20 labeled examples from your real text shapes; re-run after schema changes.
 - **Text only:** PDF and image pipelines are out of scope for this tutorial; convert to text upstream.
 - **Monitor:** Use [Logs](/platform/logs) and [Usage](/platform/usage-analytics) in the dashboard.
 
@@ -204,7 +207,7 @@ Before storing user-submitted résumés, run [PII extraction](/cookbook/data-ext
     API reference-style examples for json, NER, and PII.
   </Card>
   <Card title="Example dataset (GitHub)" icon="github" href="https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset">
-    Synthetic résumés, profiles, and job posts (JSONL).
+    Synthetic resumes, profiles, and job posts (JSONL).
   </Card>
   <Card title="Blog post (markdown)" icon="newspaper" href="https://github.com/zerogpu/docs/blob/main/tutorials/data-extraction/blog-post.md">
     Publish-ready long-form walkthrough.
@@ -213,4 +216,3 @@ Before storing user-submitted résumés, run [PII extraction](/cookbook/data-ext
     Try schemas interactively in the model catalog.
   </Card>
 </CardGroup>
-

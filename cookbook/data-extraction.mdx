@@ -3,7 +3,7 @@ title: "Data extraction"
 description: "Extract structured fields and entities from unstructured text with GLiNER models."
 ---
 
-Use extraction models to turn free-form text into **structured JSON** or **labeled spans**—for example, contact blocks from email signatures, technologies from product descriptions, or PII from user-submitted content.
+Use extraction models to turn free-form text into **structured JSON** or **labeled spans**. For example: contact blocks from email signatures, technologies from product descriptions, or PII from user-submitted content.
 
 ZeroGPU routes these requests through the [Responses API](/api-reference/endpoint/responses). Pass model-specific options in the **`metadata`** object (`usecase`, `schema`, `labels`, and related fields).
 
@@ -86,7 +86,7 @@ print(json.dumps(extracted, indent=2))
 
 ### Response
 
-The model returns JSON in `output[].content[].text`. The shape follows your schema—for example, a `contact` object with the fields you defined. Parse that string with `json.loads` (Python) or `JSON.parse` (JavaScript) before passing it to your app.
+The model returns JSON in `output[].content[].text`. The shape follows your schema. For example, a `contact` object with the fields you defined. Parse that string with `json.loads` (Python) or `JSON.parse` (JavaScript) before passing it to your app.
 
 ## Named entity extraction
 
@@ -189,8 +189,8 @@ To **redact** PII instead of returning spans, use `metadata.usecase` **`redact`*
 
 ## Tips
 
-- **`input` shape:** GLiNER models accept a **plain string** for `input` (as above). Other models may expect a message array—see [Responses](/api-reference/endpoint/responses#input-shape).
+- **`input` shape:** GLiNER models accept a **plain string** for `input` (as above). Other models may expect a message array. See [Responses](/api-reference/endpoint/responses#input-shape).
 - **Schema design:** Use clear field descriptions in `name::type::description`; they guide what the model extracts.
 - **Batch workloads:** Extract many documents with [batch patterns](/cookbook/batch-requests) (parallel requests, per-item error handling).
 - **Try interactively:** Open [gliner2-base-v1](/models/gliner2-base-v1) or [gliner-multi-pii-v1](/models/gliner-multi-pii-v1) in the model catalog and use the playground to switch use cases and edit the request body.
-- **Full walkthrough:** See the [résumé & profile extraction tutorial](/cookbook/data-extraction-tutorial) with a [synthetic dataset](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset) and batch script.
+- **Full walkthrough:** See the [resume & profile extraction tutorial](/cookbook/data-extraction-tutorial) with a [synthetic dataset](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset) and batch script.

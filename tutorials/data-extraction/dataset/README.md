@@ -1,4 +1,4 @@
-# Example dataset — text extraction tutorial
+# Example dataset: text extraction tutorial
 
 Synthetic, fictional text only. Safe to share publicly. No real people or companies.
 
@@ -6,7 +6,7 @@ Synthetic, fictional text only. Safe to share publicly. No real people or compan
 
 | File | Records | Use case |
 | --- | --- | --- |
-| `resumes.jsonl` | 6 | Parse plain-text résumés into a `candidate` schema |
+| `resumes.jsonl` | 6 | Parse plain-text resumes into a `candidate` schema |
 | `profiles.jsonl` | 6 | Parse LinkedIn-style scraped profile text into a `profile` schema |
 | `job_posts.jsonl` | 4 | NER over job posts (`skills`, `tools`, `certification` labels) |
 
