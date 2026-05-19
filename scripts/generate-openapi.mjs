@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Regenerate OpenAPI + playground payloads from the models API.
- * Discriminated schemas tie the model dropdown to each model's request body.
+ * Regenerate openapi/zerogpu.openapi.yaml from the models API.
+ * Adds model enum (dropdown) and per-model request examples for Mintlify playground.
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -11,14 +11,13 @@ import process from "node:process";
 const MODELS_ENDPOINT = "https://api-dashboard.zerogpu.ai/api/models";
 const docsRoot = process.cwd();
 const openapiPath = path.join(docsRoot, "openapi", "zerogpu.openapi.json");
-const payloadsPath = path.join(docsRoot, "openapi", "zerogpu-playground-payloads.json");
 const fallbackPath = path.join(docsRoot, "snippets", "model-catalog-fallback.json");
 
-const USECASE_PREFERENCE = ["json", "extract-pii", "ner", "redact", "classification"];
-
-function schemaName(prefix, modelId) {
-  return `${prefix}_${String(modelId).replace(/[^a-zA-Z0-9]/g, "_")}`;
+function exampleKey(modelId) {
+  return String(modelId).replace(/[^a-zA-Z0-9_-]/g, "_");
 }
+
+const USECASE_PREFERENCE = ["json", "extract-pii", "ner", "redact", "classification"];
 
 function pickFromUsecases(usecases, field) {
   if (!usecases || typeof usecases !== "object") return null;
@@ -56,85 +55,18 @@ function pickChatBody(model) {
   return null;
 }
 
-function inferPropertySchema(value) {
-  if (value === null || value === undefined) {
-    return { nullable: true };
-  }
-  if (Array.isArray(value)) {
-    return {
-      type: "array",
-      items: value.length > 0 ? inferPropertySchema(value[0]) : {},
+function buildExamples(entries) {
+  const examples = {};
+  for (const entry of entries) {
+    const key = exampleKey(entry.modelId);
+    const task = entry.taskDisplayName || entry.taskType || "Model";
+    const suffix = entry.usecaseLabel ? ` (${entry.usecaseLabel})` : "";
+    examples[key] = {
+      summary: `${entry.modelDisplayName || entry.modelId} · ${task}${suffix}`,
+      value: entry.body,
     };
   }
-  if (typeof value === "object") {
-    const properties = {};
-    for (const [key, val] of Object.entries(value)) {
-      properties[key] = inferPropertySchema(val);
-    }
-    return { type: "object", properties, additionalProperties: true };
-  }
-  if (typeof value === "number") {
-    return { type: "number" };
-  }
-  if (typeof value === "boolean") {
-    return { type: "boolean" };
-  }
-  return { type: "string" };
-}
-
-function buildModelBodySchema(name, modelId, body) {
-  const properties = {};
-  for (const [key, value] of Object.entries(body)) {
-    if (key === "model") {
-      properties.model = {
-        type: "string",
-        const: modelId,
-        description: "Model identifier",
-      };
-    } else {
-      properties[key] = inferPropertySchema(value);
-    }
-  }
-  return {
-    [name]: {
-      type: "object",
-      required: Object.keys(body),
-      properties,
-      additionalProperties: false,
-    },
-  };
-}
-
-function buildDiscriminatedRequest(prefix, entries) {
-  const schemas = {};
-  const mapping = {};
-  const oneOf = [];
-
-  for (const entry of entries) {
-    const name = schemaName(prefix, entry.modelId);
-    Object.assign(schemas, buildModelBodySchema(name, entry.modelId, entry.body));
-    mapping[entry.modelId] = `#/components/schemas/${name}`;
-    oneOf.push({ $ref: `#/components/schemas/${name}` });
-  }
-
-  return {
-    requestSchema: {
-      oneOf,
-      discriminator: {
-        propertyName: "model",
-        mapping,
-      },
-    },
-    schemas,
-  };
-}
-
-function buildPayloadMap(entries) {
-  const map = {};
-  for (const entry of entries) {
-    map[entry.modelId] = entry.body;
-  }
-  return map;
+  return examples;
 }
 
 async function fetchModels() {
@@ -169,110 +101,28 @@ function buildOpenApiDocument(models) {
     if (picked) {
       responsesEntries.push({
         modelId: model.modelId,
-        body: { ...picked.body, model: model.modelId },
+        modelDisplayName: model.modelDisplayName,
+        taskDisplayName: model.taskDisplayName,
+        taskType: model.taskType,
+        usecaseLabel: picked.label,
+        body: picked.body,
       });
     }
     const chatPicked = pickChatBody(model);
     if (chatPicked) {
       chatEntries.push({
         modelId: model.modelId,
-        body: { ...chatPicked.body, model: model.modelId },
+        modelDisplayName: model.modelDisplayName,
+        taskDisplayName: model.taskDisplayName,
+        taskType: model.taskType,
+        usecaseLabel: chatPicked.label,
+        body: chatPicked.body,
       });
     }
   }
 
-  const responsesDisc = buildDiscriminatedRequest("ResponsesBody", responsesEntries);
-  const chatDisc = buildDiscriminatedRequest("ChatBody", chatEntries);
-
-  const sharedSchemas = {
-    ChatMessage: {
-      type: "object",
-      required: ["role", "content"],
-      properties: {
-        role: { type: "string", enum: ["system", "user", "assistant"] },
-        content: { type: "string" },
-      },
-    },
-    InputMessage: {
-      type: "object",
-      required: ["role", "content"],
-      properties: {
-        role: { type: "string", enum: ["user", "system"] },
-        content: { type: "string" },
-      },
-    },
-    TextResponseConfig: {
-      type: "object",
-      properties: {
-        format: {
-          type: "object",
-          properties: {
-            type: { type: "string", example: "text" },
-          },
-        },
-      },
-    },
-    Response: {
-      type: "object",
-      required: ["id", "object", "created", "model", "output"],
-      properties: {
-        id: { type: "string", example: "resp_abc123" },
-        object: { type: "string", example: "response" },
-        created: { type: "integer", format: "int64" },
-        model: { type: "string" },
-        output: {
-          type: "array",
-          items: { $ref: "#/components/schemas/OutputMessage" },
-        },
-        usage: { $ref: "#/components/schemas/TokenUsage" },
-      },
-    },
-    ChatCompletionResponse: {
-      type: "object",
-      additionalProperties: true,
-      properties: {
-        id: { type: "string" },
-        object: { type: "string" },
-        created: { type: "integer", format: "int64" },
-        model: { type: "string" },
-        choices: {
-          type: "array",
-          items: { type: "object", additionalProperties: true },
-        },
-        usage: { $ref: "#/components/schemas/TokenUsage" },
-      },
-    },
-    OutputMessage: {
-      type: "object",
-      properties: {
-        type: { type: "string", example: "message" },
-        role: { type: "string", example: "assistant" },
-        content: {
-          type: "array",
-          items: { $ref: "#/components/schemas/OutputContentBlock" },
-        },
-      },
-    },
-    OutputContentBlock: {
-      type: "object",
-      properties: {
-        type: { type: "string", example: "output_text" },
-        text: { type: "string" },
-      },
-    },
-    TokenUsage: {
-      type: "object",
-      properties: {
-        input_tokens: { type: "integer" },
-        output_tokens: { type: "integer" },
-        total_tokens: { type: "integer" },
-      },
-    },
-    ErrorResponse: {
-      type: "object",
-      additionalProperties: true,
-    },
-  };
+  const responsesEnum = responsesEntries.map((e) => e.modelId).sort();
+  const chatEnum = chatEntries.map((e) => e.modelId).sort();
 
   return {
     openapi: "3.1.0",
@@ -284,7 +134,7 @@ function buildOpenApiDocument(models) {
         "Authentication uses `x-api-key` and `x-project-id` headers on every request.",
         "Documentation: https://docs.zerogpu.ai",
         "",
-        "In the API playground, change **model** to load that model's sample request body automatically.",
+        "In the API playground, pick a **model** from the dropdown, then choose a **request example** for that model.",
       ].join("\n"),
     },
     servers: [{ url: "https://api.zerogpu.ai/v1", description: "Production" }],
@@ -306,7 +156,7 @@ function buildOpenApiDocument(models) {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/CreateResponseRequest" },
-                example: responsesEntries[0]?.body,
+                examples: buildExamples(responsesEntries),
               },
             },
           },
@@ -353,7 +203,7 @@ function buildOpenApiDocument(models) {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/CreateChatCompletionRequest" },
-                example: chatEntries[0]?.body,
+                examples: buildExamples(chatEntries),
               },
             },
           },
@@ -398,11 +248,154 @@ function buildOpenApiDocument(models) {
         },
       },
       schemas: {
-        CreateResponseRequest: responsesDisc.requestSchema,
-        CreateChatCompletionRequest: chatDisc.requestSchema,
-        ...responsesDisc.schemas,
-        ...chatDisc.schemas,
-        ...sharedSchemas,
+        CreateResponseRequest: {
+          type: "object",
+          required: ["model", "input"],
+          properties: {
+            model: {
+              type: "string",
+              description:
+                "Model identifier from the [model catalog](https://docs.zerogpu.ai/platform/model-catalog).",
+              enum: responsesEnum,
+              example: responsesEnum[0] || "gliner2-base-v1",
+            },
+            input: {
+              description:
+                "Model-dependent input. Many models accept a plain string. Others accept a message list with role and content.",
+              oneOf: [
+                { type: "string", minLength: 1 },
+                {
+                  type: "array",
+                  minItems: 1,
+                  items: { $ref: "#/components/schemas/InputMessage" },
+                },
+              ],
+            },
+            text: { $ref: "#/components/schemas/TextResponseConfig" },
+            instructions: {
+              type: "string",
+              description: "Optional system-style instructions (some classification models).",
+            },
+            metadata: {
+              type: "object",
+              additionalProperties: true,
+              description:
+                "Optional model-specific parameters (e.g. usecase, schema, labels, mask).",
+            },
+          },
+        },
+        CreateChatCompletionRequest: {
+          type: "object",
+          required: ["model", "messages"],
+          properties: {
+            model: {
+              type: "string",
+              description:
+                "Model identifier from the [model catalog](https://docs.zerogpu.ai/platform/model-catalog).",
+              enum: chatEnum,
+              example: chatEnum[0] || "gliner-multi-pii-v1",
+            },
+            messages: {
+              type: "array",
+              minItems: 1,
+              items: { $ref: "#/components/schemas/ChatMessage" },
+            },
+            metadata: {
+              type: "object",
+              additionalProperties: true,
+            },
+          },
+        },
+        ChatMessage: {
+          type: "object",
+          required: ["role", "content"],
+          properties: {
+            role: {
+              type: "string",
+              enum: ["system", "user", "assistant"],
+            },
+            content: { type: "string" },
+          },
+        },
+        ChatCompletionResponse: {
+          type: "object",
+          additionalProperties: true,
+          properties: {
+            id: { type: "string" },
+            object: { type: "string" },
+            created: { type: "integer", format: "int64" },
+            model: { type: "string" },
+            choices: {
+              type: "array",
+              items: { type: "object", additionalProperties: true },
+            },
+            usage: { $ref: "#/components/schemas/TokenUsage" },
+          },
+        },
+        InputMessage: {
+          type: "object",
+          required: ["role", "content"],
+          properties: {
+            role: { type: "string", enum: ["user", "system"] },
+            content: { type: "string" },
+          },
+        },
+        TextResponseConfig: {
+          type: "object",
+          properties: {
+            format: {
+              type: "object",
+              properties: {
+                type: { type: "string", example: "text" },
+              },
+            },
+          },
+        },
+        Response: {
+          type: "object",
+          required: ["id", "object", "created", "model", "output"],
+          properties: {
+            id: { type: "string", example: "resp_abc123" },
+            object: { type: "string", example: "response" },
+            created: { type: "integer", format: "int64" },
+            model: { type: "string" },
+            output: {
+              type: "array",
+              items: { $ref: "#/components/schemas/OutputMessage" },
+            },
+            usage: { $ref: "#/components/schemas/TokenUsage" },
+          },
+        },
+        OutputMessage: {
+          type: "object",
+          properties: {
+            type: { type: "string", example: "message" },
+            role: { type: "string", example: "assistant" },
+            content: {
+              type: "array",
+              items: { $ref: "#/components/schemas/OutputContentBlock" },
+            },
+          },
+        },
+        OutputContentBlock: {
+          type: "object",
+          properties: {
+            type: { type: "string", example: "output_text" },
+            text: { type: "string" },
+          },
+        },
+        TokenUsage: {
+          type: "object",
+          properties: {
+            input_tokens: { type: "integer" },
+            output_tokens: { type: "integer" },
+            total_tokens: { type: "integer" },
+          },
+        },
+        ErrorResponse: {
+          type: "object",
+          additionalProperties: true,
+        },
       },
     },
   };
@@ -410,40 +403,16 @@ function buildOpenApiDocument(models) {
 
 async function main() {
   const models = await fetchModels();
-  const visible = models.filter((m) => m && m.display !== false);
-
-  const responsesEntries = [];
-  const chatEntries = [];
-  for (const model of visible) {
-    const picked = pickResponsesBody(model);
-    if (picked) {
-      responsesEntries.push({
-        modelId: model.modelId,
-        body: { ...picked.body, model: model.modelId },
-      });
-    }
-    const chatPicked = pickChatBody(model);
-    if (chatPicked) {
-      chatEntries.push({
-        modelId: model.modelId,
-        body: { ...chatPicked.body, model: model.modelId },
-      });
-    }
-  }
-
   const doc = buildOpenApiDocument(models);
-  await writeFile(openapiPath, JSON.stringify(doc, null, 2) + "\n", "utf8");
+  const jsonText = JSON.stringify(doc, null, 2) + "\n";
+  await writeFile(openapiPath, jsonText, "utf8");
 
-  const payloads = {
-    responses: buildPayloadMap(responsesEntries),
-    chat: buildPayloadMap(chatEntries),
-  };
-  await writeFile(payloadsPath, JSON.stringify(payloads, null, 2) + "\n", "utf8");
-
+  const visible = models.filter((m) => m && m.display !== false);
+  const responsesCount = visible.filter((m) => pickResponsesBody(m)).length;
+  const chatCount = visible.filter((m) => pickChatBody(m)).length;
   process.stdout.write(
     `Wrote ${openapiPath}\n` +
-      `Wrote ${payloadsPath}\n` +
-      `  ${responsesEntries.length} Responses model(s), ${chatEntries.length} Chat model(s)\n`
+      `  ${responsesCount} Responses example(s), ${chatCount} Chat Completions example(s)\n`
   );
 }
 

@@ -86,13 +86,13 @@ mint dev
 
 Preview at `http://localhost:3000` (or the port Mintlify reports).
 
-**API playground:** Changing **model** in the playground reloads that model's request body automatically. Regenerate OpenAPI + payload maps from the catalog:
+**API playground:** Endpoint pages use Mintlify's interactive playground with a **model dropdown** and per-model request examples. Regenerate the OpenAPI spec from the catalog:
 
 ```bash
 node scripts/generate-openapi.mjs
 ```
 
-Outputs: `openapi/zerogpu.openapi.json`, `openapi/zerogpu-playground-payloads.json`. Client sync: `api-playground-bootstrap.js`. Validate with `mint validate`.
+See `openapi/zerogpu.openapi.json` and `api` in `docs.json`. Validate with `mint validate`.
 
 ### Submitting changes
 
