@@ -8,6 +8,20 @@
     "dark": "#16A34A"
   },
   "favicon": "/favicon.ico",
+  "api": {
+    "playground": {
+      "display": "interactive",
+      "proxy": false
+    },
+    "examples": {
+      "languages": ["curl", "python", "javascript"],
+      "defaults": "required",
+      "prefill": true
+    },
+    "mdx": {
+      "server": "https://api.zerogpu.ai/v1"
+    }
+  },
   "navigation": {
     "tabs": [
       {

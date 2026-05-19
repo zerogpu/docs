@@ -2,11 +2,10 @@
 title: "Chat completions"
 description: "OpenAI-style chat inference for models that use this route."
 sidebarTitle: "Chat completions"
+openapi: "openapi/zerogpu.openapi.yaml POST /chat/completions"
 ---
 
-## `POST /v1/chat/completions`
-
-Some models are invoked with a **chat-completions** style body (`messages` array) instead of the [Responses](/api-reference/endpoint/responses) `input` field. The dashboard and [model catalog](/platform/model-catalog) indicate which route applies.
+Some models are invoked with a **chat-completions** style body (`messages` array) instead of the [Responses](/api-reference/endpoint/responses) `input` field. The dashboard and [model catalog](/platform/model-catalog) indicate which route applies. Use the **API playground** below to try a live request.
 
 ### Request headers
 

@@ -86,6 +86,8 @@ mint dev
 
 Preview at `http://localhost:3000` (or the port Mintlify reports).
 
+**API playground:** Endpoint pages under `api-reference/endpoint/` use Mintlify's interactive playground (see `openapi/zerogpu.openapi.yaml` and `api` settings in `docs.json`). Validate with `mint validate`.
+
 ### Submitting changes
 
 1. Edit `.mdx` or `.md` files in this repo.

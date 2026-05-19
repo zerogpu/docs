@@ -23,14 +23,26 @@ All requests require two headers:
 
 See [Authentication](/platform/authentication) for details.
 
+## API playground
+
+The [Responses](/api-reference/endpoint/responses) and [Chat completions](/api-reference/endpoint/chat-completions) pages include an **interactive playground**. You can edit the request body, set your API key and project ID in the auth fields, and send a real request to `https://api.zerogpu.ai/v1`.
+
+1. Open an endpoint page from the sidebar.
+2. Enter `x-api-key` and `x-project-id` in the authentication section of the playground.
+3. Choose a request example (or edit the JSON), then click **Send**.
+
+Requests go **directly from your browser** to the ZeroGPU API (`proxy` is disabled so custom headers reach our servers). If the browser blocks the request (CORS), use the cURL snippet or an SDK from your backend instead.
+
+The playground is generated from our [OpenAPI specification](https://github.com/zerogpu/docs/blob/main/openapi/zerogpu.openapi.yaml). See [Mintlify playground docs](https://www.mintlify.com/docs/api-playground/overview) for customization options.
+
 ## Available endpoints
 
 <Columns cols={2}>
   <Card title="Responses" icon="message" href="/api-reference/endpoint/responses">
-    `POST /v1/responses` — Primary inference route; `input` as string or messages.
+    `POST /v1/responses`. Primary inference route; `input` as string or messages.
   </Card>
   <Card title="Chat completions" icon="layers" href="/api-reference/endpoint/chat-completions">
-    `POST /v1/chat/completions` — For models that use `messages` (chat-style).
+    `POST /v1/chat/completions`. For models that use `messages` (chat-style).
   </Card>
 </Columns>
 
@@ -48,11 +60,11 @@ Select the model in your [dashboard](https://zerogpu.ai) and pass its identifier
 | Status | Meaning |
 |--------|---------|
 | `200` | Success |
-| `400` | Bad request — check your request body |
-| `401` | Unauthorized — invalid or missing API key |
-| `403` | Forbidden — invalid project ID or insufficient permissions |
-| `420` | Input exceeds the model's token limit — see [Responses](/api-reference/endpoint/responses#context-length) |
-| `500` | Internal server error — retry with exponential backoff |
+| `400` | Bad request. Check your request body. |
+| `401` | Unauthorized. Invalid or missing API key. |
+| `403` | Forbidden. Invalid project ID or insufficient permissions. |
+| `420` | Input exceeds the model token limit. See [Responses](/api-reference/endpoint/responses#context-length). |
+| `500` | Internal server error. Retry with exponential backoff. |
 
 ## SDK examples
 

@@ -1,0 +1,312 @@
+openapi: 3.1.0
+info:
+  title: ZeroGPU API
+  version: "1.0"
+  description: |
+    REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).
+    Authentication uses `x-api-key` and `x-project-id` headers on every request.
+    Documentation: https://docs.zerogpu.ai
+servers:
+  - url: https://api.zerogpu.ai/v1
+    description: Production
+
+security:
+  - ApiKey: []
+    ProjectId: []
+
+paths:
+  /responses:
+    post:
+      operationId: createResponse
+      summary: Send input to a model and receive a response
+      tags:
+        - Responses
+      x-mint:
+        metadata:
+          title: Responses
+          description: Send input to an AI model and receive a response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateResponseRequest"
+            examples:
+              messageList:
+                summary: Message list input
+                value:
+                  model: gliner2-base-v1
+                  input:
+                    - role: user
+                      content: Your input text here...
+                  text:
+                    format:
+                      type: text
+              plainTextExtraction:
+                summary: Plain text with metadata (extraction)
+                value:
+                  model: gliner2-base-v1
+                  input: "ALEX RIVERA\nSan Francisco, CA | alex.rivera@example-mail.io"
+                  metadata:
+                    usecase: json
+                    schema:
+                      candidate:
+                        - "full_name::str::Candidate full name"
+                        - "email::str::Email address"
+                        - "current_title::str::Most recent job title"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Response"
+        "400":
+          description: Bad request (invalid body)
+        "401":
+          description: Unauthorized (invalid or missing API key)
+        "403":
+          description: Forbidden (invalid project ID or permissions)
+        "420":
+          description: Input exceeds model token limit (context_length_exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+  /chat/completions:
+    post:
+      operationId: createChatCompletion
+      summary: Chat-completions style inference
+      description: OpenAI-compatible chat body for models that use the messages route.
+      tags:
+        - Chat
+      x-mint:
+        metadata:
+          title: Chat completions
+          sidebarTitle: Chat completions
+          description: Chat-style inference for models that use the messages route.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChatCompletionRequest"
+            examples:
+              default:
+                summary: User message
+                value:
+                  model: gliner-multi-pii-v1
+                  messages:
+                    - role: user
+                      content: Contact John Doe at john@example.com or +1-415-555-0134.
+                  metadata:
+                    usecase: extract-pii
+                    threshold: 0.5
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatCompletionResponse"
+        "400":
+          description: Bad request (invalid body)
+        "401":
+          description: Unauthorized (invalid or missing API key)
+        "403":
+          description: Forbidden (invalid project ID or permissions)
+        "420":
+          description: Input exceeds model token limit (context_length_exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: ZeroGPU API key from the dashboard (starts with zgpu-)
+    ProjectId:
+      type: apiKey
+      in: header
+      name: x-project-id
+      description: Project UUID from the dashboard
+
+  schemas:
+    CreateResponseRequest:
+      type: object
+      required:
+        - model
+        - input
+      properties:
+        model:
+          type: string
+          description: Model identifier from the ZeroGPU dashboard.
+          example: gliner2-base-v1
+        input:
+          description: |
+            Model-dependent input. Many models accept a plain string.
+            Others accept a message list with role and content.
+          oneOf:
+            - type: string
+              minLength: 1
+            - type: array
+              minItems: 1
+              items:
+                $ref: "#/components/schemas/InputMessage"
+        text:
+          $ref: "#/components/schemas/TextResponseConfig"
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Optional model-specific parameters (e.g. usecase, schema, labels).
+
+    CreateChatCompletionRequest:
+      type: object
+      required:
+        - model
+        - messages
+      properties:
+        model:
+          type: string
+          example: gliner-multi-pii-v1
+        messages:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ChatMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - system
+            - user
+            - assistant
+        content:
+          type: string
+
+    ChatCompletionResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+          format: int64
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        usage:
+          $ref: "#/components/schemas/TokenUsage"
+
+    InputMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - system
+        content:
+          type: string
+
+    TextResponseConfig:
+      type: object
+      properties:
+        format:
+          type: object
+          properties:
+            type:
+              type: string
+              example: text
+
+    Response:
+      type: object
+      required:
+        - id
+        - object
+        - created
+        - model
+        - output
+      properties:
+        id:
+          type: string
+          example: resp_abc123
+        object:
+          type: string
+          example: response
+        created:
+          type: integer
+          format: int64
+        model:
+          type: string
+        output:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputMessage"
+        usage:
+          $ref: "#/components/schemas/TokenUsage"
+
+    OutputMessage:
+      type: object
+      properties:
+        type:
+          type: string
+          example: message
+        role:
+          type: string
+          example: assistant
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/OutputContentBlock"
+
+    OutputContentBlock:
+      type: object
+      properties:
+        type:
+          type: string
+          example: output_text
+        text:
+          type: string
+
+    TokenUsage:
+      type: object
+      properties:
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      additionalProperties: true
