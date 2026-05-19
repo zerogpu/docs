@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU API",
     "version": "1.0",
-    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\nIn the API playground, pick a **model** from the dropdown, then choose a **request example** for that model."
+    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\nIn the API playground, change **model** to load that model's sample request body automatically."
   },
   "servers": [
     {
@@ -38,92 +38,16 @@
               "schema": {
                 "$ref": "#/components/schemas/CreateResponseRequest"
               },
-              "examples": {
-                "gliner-multi-pii-v1": {
-                  "summary": "gliner-multi-pii-v1 · PII (PII Extraction)",
-                  "value": {
-                    "input": "Contact John Doe at john@example.com or +1-415-555-0134.",
-                    "model": "gliner-multi-pii-v1",
-                    "metadata": {
-                      "usecase": "extract-pii",
-                      "threshold": 0.5,
-                      "categories": [
-                        "identity",
-                        "contact"
-                      ]
-                    }
-                  }
-                },
-                "LFM2_5-1_2B-Instruct": {
-                  "summary": "LFM2.5-1.2B-Instruct · Text Generation",
-                  "value": {
-                    "input": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message.",
-                    "model": "LFM2.5-1.2B-Instruct",
-                    "instructions": "You are a friendly in-app assistant for a fitness app."
-                  }
-                },
-                "LFM2_5-1_2B-Thinking": {
-                  "summary": "LFM2.5-1.2B-Thinking · Text Generation",
-                  "value": {
-                    "input": "What is the capital of Japan",
-                    "model": "LFM2.5-1.2B-Thinking"
-                  }
-                },
-                "gliner2-base-v1": {
-                  "summary": "gliner2-base-v1 · PII (Structured Data Extraction)",
-                  "value": {
-                    "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
-                    "model": "gliner2-base-v1",
-                    "metadata": {
-                      "schema": {
-                        "contact": [
-                          "name::str::Full name",
-                          "title::str::Job title",
-                          "company::str::Company name",
-                          "phone::str::Phone number",
-                          "email::str::Email address",
-                          "address::str::Office address"
-                        ]
-                      },
-                      "usecase": "json"
-                    }
-                  }
-                },
-                "deberta-v3-small": {
-                  "summary": "deberta-v3-small · Text Classification",
-                  "value": {
-                    "input": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks.",
-                    "model": "deberta-v3-small",
-                    "instructions": "[sports, finance, politics]"
-                  }
-                },
-                "t5-small": {
-                  "summary": "t5-small · Summarization",
-                  "value": {
-                    "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
-                    "model": "t5-small"
-                  }
-                },
-                "zlm-v1-iab-classify-edge": {
-                  "summary": "zlm-v1-iab-classify-edge · Text Classification",
-                  "value": {
-                    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-                    "model": "zlm-v1-iab-classify-edge"
-                  }
-                },
-                "zlm-v1-followup-questions-edge": {
-                  "summary": "zlm-v1-followup-questions-edge · Text Generation",
-                  "value": {
-                    "input": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption.",
-                    "model": "zlm-v1-followup-questions-edge"
-                  }
-                },
-                "zlm-v1-iab-classify-edge-enriched": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched · Text Classification",
-                  "value": {
-                    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-                    "model": "zlm-v1-iab-classify-edge-enriched"
-                  }
+              "example": {
+                "input": "Contact John Doe at john@example.com or +1-415-555-0134.",
+                "model": "gliner-multi-pii-v1",
+                "metadata": {
+                  "usecase": "extract-pii",
+                  "threshold": 0.5,
+                  "categories": [
+                    "identity",
+                    "contact"
+                  ]
                 }
               }
             }
@@ -187,143 +111,21 @@
               "schema": {
                 "$ref": "#/components/schemas/CreateChatCompletionRequest"
               },
-              "examples": {
-                "gliner-multi-pii-v1": {
-                  "summary": "gliner-multi-pii-v1 · PII (PII Extraction)",
-                  "value": {
-                    "model": "gliner-multi-pii-v1",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "Contact John Doe at john@example.com or +1-415-555-0134."
-                      }
-                    ],
-                    "metadata": {
-                      "usecase": "extract-pii",
-                      "threshold": 0.5,
-                      "categories": [
-                        "identity",
-                        "contact"
-                      ]
-                    }
+              "example": {
+                "model": "gliner-multi-pii-v1",
+                "messages": [
+                  {
+                    "role": "user",
+                    "content": "Contact John Doe at john@example.com or +1-415-555-0134."
                   }
-                },
-                "LFM2_5-1_2B-Instruct": {
-                  "summary": "LFM2.5-1.2B-Instruct · Text Generation",
-                  "value": {
-                    "model": "LFM2.5-1.2B-Instruct",
-                    "messages": [
-                      {
-                        "role": "system",
-                        "content": "You are a friendly in-app assistant for a fitness app."
-                      },
-                      {
-                        "role": "user",
-                        "content": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message."
-                      }
-                    ]
-                  }
-                },
-                "LFM2_5-1_2B-Thinking": {
-                  "summary": "LFM2.5-1.2B-Thinking · Text Generation",
-                  "value": {
-                    "model": "LFM2.5-1.2B-Thinking",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "What is the capital of Japan"
-                      }
-                    ]
-                  }
-                },
-                "gliner2-base-v1": {
-                  "summary": "gliner2-base-v1 · PII (Structured Data Extraction)",
-                  "value": {
-                    "model": "gliner2-base-v1",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105"
-                      }
-                    ],
-                    "metadata": {
-                      "schema": {
-                        "contact": [
-                          "name::str::Full name",
-                          "title::str::Job title",
-                          "company::str::Company name",
-                          "phone::str::Phone number",
-                          "email::str::Email address",
-                          "address::str::Office address"
-                        ]
-                      },
-                      "usecase": "json"
-                    }
-                  }
-                },
-                "deberta-v3-small": {
-                  "summary": "deberta-v3-small · Text Classification",
-                  "value": {
-                    "model": "deberta-v3-small",
-                    "messages": [
-                      {
-                        "role": "system",
-                        "content": "[Sports,Politics,Technology,Finance,Entertainment]"
-                      },
-                      {
-                        "role": "user",
-                        "content": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks."
-                      }
-                    ]
-                  }
-                },
-                "t5-small": {
-                  "summary": "t5-small · Summarization",
-                  "value": {
-                    "model": "t5-small",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
-                      }
-                    ]
-                  }
-                },
-                "zlm-v1-iab-classify-edge": {
-                  "summary": "zlm-v1-iab-classify-edge · Text Classification",
-                  "value": {
-                    "model": "zlm-v1-iab-classify-edge",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
-                      }
-                    ]
-                  }
-                },
-                "zlm-v1-followup-questions-edge": {
-                  "summary": "zlm-v1-followup-questions-edge · Text Generation",
-                  "value": {
-                    "model": "zlm-v1-followup-questions-edge",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption."
-                      }
-                    ]
-                  }
-                },
-                "zlm-v1-iab-classify-edge-enriched": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched · Text Classification",
-                  "value": {
-                    "model": "zlm-v1-iab-classify-edge-enriched",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
-                      }
-                    ]
-                  }
+                ],
+                "metadata": {
+                  "usecase": "extract-pii",
+                  "threshold": 0.5,
+                  "categories": [
+                    "identity",
+                    "contact"
+                  ]
                 }
               }
             }
@@ -383,59 +185,356 @@
     },
     "schemas": {
       "CreateResponseRequest": {
-        "type": "object",
-        "required": [
-          "model",
-          "input"
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ResponsesBody_gliner_multi_pii_v1"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_LFM2_5_1_2B_Instruct"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_LFM2_5_1_2B_Thinking"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_gliner2_base_v1"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_deberta_v3_small"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_t5_small"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_zlm_v1_iab_classify_edge"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_zlm_v1_followup_questions_edge"
+          },
+          {
+            "$ref": "#/components/schemas/ResponsesBody_zlm_v1_iab_classify_edge_enriched"
+          }
         ],
-        "properties": {
-          "model": {
-            "type": "string",
-            "description": "Model identifier from the [model catalog](https://docs.zerogpu.ai/platform/model-catalog).",
-            "enum": [
-              "LFM2.5-1.2B-Instruct",
-              "LFM2.5-1.2B-Thinking",
-              "deberta-v3-small",
-              "gliner-multi-pii-v1",
-              "gliner2-base-v1",
-              "t5-small",
-              "zlm-v1-followup-questions-edge",
-              "zlm-v1-iab-classify-edge",
-              "zlm-v1-iab-classify-edge-enriched"
-            ],
-            "example": "LFM2.5-1.2B-Instruct"
-          },
-          "input": {
-            "description": "Model-dependent input. Many models accept a plain string. Others accept a message list with role and content.",
-            "oneOf": [
-              {
-                "type": "string",
-                "minLength": 1
-              },
-              {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "$ref": "#/components/schemas/InputMessage"
-                }
-              }
-            ]
-          },
-          "text": {
-            "$ref": "#/components/schemas/TextResponseConfig"
-          },
-          "instructions": {
-            "type": "string",
-            "description": "Optional system-style instructions (some classification models)."
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true,
-            "description": "Optional model-specific parameters (e.g. usecase, schema, labels, mask)."
+        "discriminator": {
+          "propertyName": "model",
+          "mapping": {
+            "gliner-multi-pii-v1": "#/components/schemas/ResponsesBody_gliner_multi_pii_v1",
+            "LFM2.5-1.2B-Instruct": "#/components/schemas/ResponsesBody_LFM2_5_1_2B_Instruct",
+            "LFM2.5-1.2B-Thinking": "#/components/schemas/ResponsesBody_LFM2_5_1_2B_Thinking",
+            "gliner2-base-v1": "#/components/schemas/ResponsesBody_gliner2_base_v1",
+            "deberta-v3-small": "#/components/schemas/ResponsesBody_deberta_v3_small",
+            "t5-small": "#/components/schemas/ResponsesBody_t5_small",
+            "zlm-v1-iab-classify-edge": "#/components/schemas/ResponsesBody_zlm_v1_iab_classify_edge",
+            "zlm-v1-followup-questions-edge": "#/components/schemas/ResponsesBody_zlm_v1_followup_questions_edge",
+            "zlm-v1-iab-classify-edge-enriched": "#/components/schemas/ResponsesBody_zlm_v1_iab_classify_edge_enriched"
           }
         }
       },
       "CreateChatCompletionRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ChatBody_gliner_multi_pii_v1"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_LFM2_5_1_2B_Instruct"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_LFM2_5_1_2B_Thinking"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_gliner2_base_v1"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_deberta_v3_small"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_t5_small"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_zlm_v1_iab_classify_edge"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_zlm_v1_followup_questions_edge"
+          },
+          {
+            "$ref": "#/components/schemas/ChatBody_zlm_v1_iab_classify_edge_enriched"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "model",
+          "mapping": {
+            "gliner-multi-pii-v1": "#/components/schemas/ChatBody_gliner_multi_pii_v1",
+            "LFM2.5-1.2B-Instruct": "#/components/schemas/ChatBody_LFM2_5_1_2B_Instruct",
+            "LFM2.5-1.2B-Thinking": "#/components/schemas/ChatBody_LFM2_5_1_2B_Thinking",
+            "gliner2-base-v1": "#/components/schemas/ChatBody_gliner2_base_v1",
+            "deberta-v3-small": "#/components/schemas/ChatBody_deberta_v3_small",
+            "t5-small": "#/components/schemas/ChatBody_t5_small",
+            "zlm-v1-iab-classify-edge": "#/components/schemas/ChatBody_zlm_v1_iab_classify_edge",
+            "zlm-v1-followup-questions-edge": "#/components/schemas/ChatBody_zlm_v1_followup_questions_edge",
+            "zlm-v1-iab-classify-edge-enriched": "#/components/schemas/ChatBody_zlm_v1_iab_classify_edge_enriched"
+          }
+        }
+      },
+      "ResponsesBody_gliner_multi_pii_v1": {
+        "type": "object",
+        "required": [
+          "input",
+          "model",
+          "metadata"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "gliner-multi-pii-v1",
+            "description": "Model identifier"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "usecase": {
+                "type": "string"
+              },
+              "threshold": {
+                "type": "number"
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_LFM2_5_1_2B_Instruct": {
+        "type": "object",
+        "required": [
+          "input",
+          "model",
+          "instructions"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "LFM2.5-1.2B-Instruct",
+            "description": "Model identifier"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_LFM2_5_1_2B_Thinking": {
+        "type": "object",
+        "required": [
+          "input",
+          "model"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "LFM2.5-1.2B-Thinking",
+            "description": "Model identifier"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_gliner2_base_v1": {
+        "type": "object",
+        "required": [
+          "input",
+          "model",
+          "metadata"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "gliner2-base-v1",
+            "description": "Model identifier"
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contact": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": true
+              },
+              "usecase": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_deberta_v3_small": {
+        "type": "object",
+        "required": [
+          "input",
+          "model",
+          "instructions"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "deberta-v3-small",
+            "description": "Model identifier"
+          },
+          "instructions": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_t5_small": {
+        "type": "object",
+        "required": [
+          "input",
+          "model"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "t5-small",
+            "description": "Model identifier"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_zlm_v1_iab_classify_edge": {
+        "type": "object",
+        "required": [
+          "input",
+          "model"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge",
+            "description": "Model identifier"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_zlm_v1_followup_questions_edge": {
+        "type": "object",
+        "required": [
+          "input",
+          "model"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-followup-questions-edge",
+            "description": "Model identifier"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ResponsesBody_zlm_v1_iab_classify_edge_enriched": {
+        "type": "object",
+        "required": [
+          "input",
+          "model"
+        ],
+        "properties": {
+          "input": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge-enriched",
+            "description": "Model identifier"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_gliner_multi_pii_v1": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages",
+          "metadata"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "gliner-multi-pii-v1",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "usecase": {
+                "type": "string"
+              },
+              "threshold": {
+                "type": "number"
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_LFM2_5_1_2B_Instruct": {
         "type": "object",
         "required": [
           "model",
@@ -444,32 +543,258 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "Model identifier from the [model catalog](https://docs.zerogpu.ai/platform/model-catalog).",
-            "enum": [
-              "LFM2.5-1.2B-Instruct",
-              "LFM2.5-1.2B-Thinking",
-              "deberta-v3-small",
-              "gliner-multi-pii-v1",
-              "gliner2-base-v1",
-              "t5-small",
-              "zlm-v1-followup-questions-edge",
-              "zlm-v1-iab-classify-edge",
-              "zlm-v1-iab-classify-edge-enriched"
-            ],
-            "example": "LFM2.5-1.2B-Instruct"
+            "const": "LFM2.5-1.2B-Instruct",
+            "description": "Model identifier"
           },
           "messages": {
             "type": "array",
-            "minItems": 1,
             "items": {
-              "$ref": "#/components/schemas/ChatMessage"
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_LFM2_5_1_2B_Thinking": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "LFM2.5-1.2B-Thinking",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_gliner2_base_v1": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages",
+          "metadata"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "gliner2-base-v1",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
             }
           },
           "metadata": {
             "type": "object",
+            "properties": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "contact": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": true
+              },
+              "usecase": {
+                "type": "string"
+              }
+            },
             "additionalProperties": true
           }
-        }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_deberta_v3_small": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "deberta-v3-small",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_t5_small": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "t5-small",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_zlm_v1_iab_classify_edge": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_zlm_v1_followup_questions_edge": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-followup-questions-edge",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatBody_zlm_v1_iab_classify_edge_enriched": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge-enriched",
+            "description": "Model identifier"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": false
       },
       "ChatMessage": {
         "type": "object",
@@ -488,35 +813,6 @@
           },
           "content": {
             "type": "string"
-          }
-        }
-      },
-      "ChatCompletionResponse": {
-        "type": "object",
-        "additionalProperties": true,
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "object": {
-            "type": "string"
-          },
-          "created": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "model": {
-            "type": "string"
-          },
-          "choices": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "usage": {
-            "$ref": "#/components/schemas/TokenUsage"
           }
         }
       },
@@ -582,6 +878,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OutputMessage"
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/TokenUsage"
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string"
+          },
+          "created": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "model": {
+            "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
             }
           },
           "usage": {

@@ -1,0 +1,175 @@
+{
+  "responses": {
+    "gliner-multi-pii-v1": {
+      "input": "Contact John Doe at john@example.com or +1-415-555-0134.",
+      "model": "gliner-multi-pii-v1",
+      "metadata": {
+        "usecase": "extract-pii",
+        "threshold": 0.5,
+        "categories": [
+          "identity",
+          "contact"
+        ]
+      }
+    },
+    "LFM2.5-1.2B-Instruct": {
+      "input": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message.",
+      "model": "LFM2.5-1.2B-Instruct",
+      "instructions": "You are a friendly in-app assistant for a fitness app."
+    },
+    "LFM2.5-1.2B-Thinking": {
+      "input": "What is the capital of Japan",
+      "model": "LFM2.5-1.2B-Thinking"
+    },
+    "gliner2-base-v1": {
+      "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
+      "model": "gliner2-base-v1",
+      "metadata": {
+        "schema": {
+          "contact": [
+            "name::str::Full name",
+            "title::str::Job title",
+            "company::str::Company name",
+            "phone::str::Phone number",
+            "email::str::Email address",
+            "address::str::Office address"
+          ]
+        },
+        "usecase": "json"
+      }
+    },
+    "deberta-v3-small": {
+      "input": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks.",
+      "model": "deberta-v3-small",
+      "instructions": "[sports, finance, politics]"
+    },
+    "t5-small": {
+      "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
+      "model": "t5-small"
+    },
+    "zlm-v1-iab-classify-edge": {
+      "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
+      "model": "zlm-v1-iab-classify-edge"
+    },
+    "zlm-v1-followup-questions-edge": {
+      "input": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption.",
+      "model": "zlm-v1-followup-questions-edge"
+    },
+    "zlm-v1-iab-classify-edge-enriched": {
+      "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
+      "model": "zlm-v1-iab-classify-edge-enriched"
+    }
+  },
+  "chat": {
+    "gliner-multi-pii-v1": {
+      "model": "gliner-multi-pii-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Contact John Doe at john@example.com or +1-415-555-0134."
+        }
+      ],
+      "metadata": {
+        "usecase": "extract-pii",
+        "threshold": 0.5,
+        "categories": [
+          "identity",
+          "contact"
+        ]
+      }
+    },
+    "LFM2.5-1.2B-Instruct": {
+      "model": "LFM2.5-1.2B-Instruct",
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a friendly in-app assistant for a fitness app."
+        },
+        {
+          "role": "user",
+          "content": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message."
+        }
+      ]
+    },
+    "LFM2.5-1.2B-Thinking": {
+      "model": "LFM2.5-1.2B-Thinking",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What is the capital of Japan"
+        }
+      ]
+    },
+    "gliner2-base-v1": {
+      "model": "gliner2-base-v1",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105"
+        }
+      ],
+      "metadata": {
+        "schema": {
+          "contact": [
+            "name::str::Full name",
+            "title::str::Job title",
+            "company::str::Company name",
+            "phone::str::Phone number",
+            "email::str::Email address",
+            "address::str::Office address"
+          ]
+        },
+        "usecase": "json"
+      }
+    },
+    "deberta-v3-small": {
+      "model": "deberta-v3-small",
+      "messages": [
+        {
+          "role": "system",
+          "content": "[Sports,Politics,Technology,Finance,Entertainment]"
+        },
+        {
+          "role": "user",
+          "content": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks."
+        }
+      ]
+    },
+    "t5-small": {
+      "model": "t5-small",
+      "messages": [
+        {
+          "role": "user",
+          "content": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
+        }
+      ]
+    },
+    "zlm-v1-iab-classify-edge": {
+      "model": "zlm-v1-iab-classify-edge",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+        }
+      ]
+    },
+    "zlm-v1-followup-questions-edge": {
+      "model": "zlm-v1-followup-questions-edge",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption."
+        }
+      ]
+    },
+    "zlm-v1-iab-classify-edge-enriched": {
+      "model": "zlm-v1-iab-classify-edge-enriched",
+      "messages": [
+        {
+          "role": "user",
+          "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+        }
+      ]
+    }
+  }
+}
