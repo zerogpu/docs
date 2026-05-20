@@ -72,6 +72,13 @@ function pickChatBody(model) {
   return null;
 }
 
+/** Omit optional response-format boilerplate from playground bodies. */
+function stripPlaygroundRequestBody(body) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return body;
+  const { text: _text, ...rest } = body;
+  return rest;
+}
+
 function collectRouteExamples(model, field, fallbackBody) {
   const examples = {};
   const usecases = model.modelUsecases || {};
@@ -79,11 +86,11 @@ function collectRouteExamples(model, field, fallbackBody) {
     if (!value || typeof value !== "object" || !value[field]) continue;
     examples[exampleKey(key)] = {
       summary: value.usecase_display_name || key,
-      value: value[field],
+      value: stripPlaygroundRequestBody(value[field]),
     };
   }
   if (Object.keys(examples).length === 0 && fallbackBody) {
-    examples.default = { summary: "Default", value: fallbackBody };
+    examples.default = { summary: "Default", value: stripPlaygroundRequestBody(fallbackBody) };
   }
   return examples;
 }
@@ -145,7 +152,7 @@ function buildExamples(entries) {
     const suffix = entry.usecaseLabel ? ` (${entry.usecaseLabel})` : "";
     examples[key] = {
       summary: `${entry.modelDisplayName || entry.modelId} · ${task}${suffix}`,
-      value: entry.body,
+      value: stripPlaygroundRequestBody(entry.body),
     };
   }
   return examples;
@@ -209,7 +216,6 @@ function sharedComponents() {
               },
             ],
           },
-          text: { $ref: "#/components/schemas/TextResponseConfig" },
           instructions: { type: "string" },
           metadata: { type: "object", additionalProperties: true },
         },
@@ -242,15 +248,6 @@ function sharedComponents() {
         properties: {
           role: { type: "string", enum: ["user", "system"] },
           content: { ...textareaString, description: "Message text." },
-        },
-      },
-      TextResponseConfig: {
-        type: "object",
-        properties: {
-          format: {
-            type: "object",
-            properties: { type: { type: "string", example: "text" } },
-          },
         },
       },
       Response: { type: "object", additionalProperties: true },
@@ -443,7 +440,7 @@ function buildMainOpenApiDocument(models) {
     ? {
         default: {
           summary: `${firstResponses.modelDisplayName || firstResponses.modelId} (see model pages for more)`,
-          value: firstResponses.body,
+          value: stripPlaygroundRequestBody(firstResponses.body),
         },
       }
     : undefined;

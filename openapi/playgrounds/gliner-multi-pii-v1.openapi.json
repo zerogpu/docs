@@ -251,9 +251,6 @@
             "format": "textarea",
             "description": "Text or document content to send to the model."
           },
-          "text": {
-            "$ref": "#/components/schemas/TextResponseConfig"
-          },
           "instructions": {
             "type": "string"
           },
@@ -332,20 +329,6 @@
             "minLength": 1,
             "format": "textarea",
             "description": "Message text."
-          }
-        }
-      },
-      "TextResponseConfig": {
-        "type": "object",
-        "properties": {
-          "format": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string",
-                "example": "text"
-              }
-            }
           }
         }
       },
