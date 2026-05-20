@@ -94,14 +94,6 @@ node scripts/generate-openapi.mjs
 
 See `openapi/zerogpu.openapi.json` and `api` in `docs.json`. Validate with `mint validate`.
 
-**Batch API docs** are imported from `orchestration-api/docs/batch` (sibling repo):
-
-```bash
-node scripts/import-orchestration-batch-docs.mjs
-```
-
-Edit the source in `orchestration-api`, then re-run the import before publishing.
-
 ### Submitting changes
 
 1. Edit `.mdx` or `.md` files in this repo.

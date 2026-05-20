@@ -3,9 +3,7 @@ title: "Batch requests"
 description: "Send multiple API requests efficiently with parallelism and error handling."
 ---
 
-For **large async jobs** (thousands of requests, 24-hour window, OpenAI-compatible JSONL), use the [Batch & Files API](/api-reference/batch) instead of firing parallel sync calls.
-
-When you need **real-time** results for many items (e.g. summarize 100 articles today), send requests in parallel and handle errors so one failure doesn't block the rest.
+When you need to process many items (e.g. summarize 100 articles or classify a list of snippets), send requests in parallel and handle errors so one failure doesn't block the rest.
 
 ## Pattern: parallel requests with a pool
 
