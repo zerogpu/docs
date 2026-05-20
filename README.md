@@ -104,7 +104,17 @@ node scripts/generate-model-pages.mjs
 ```
 
 3. Run `mint dev` to confirm the site builds.
-4. Open a pull request with a clear description.
+4. Open a pull request targeting `main`.
+
+### Preview before merge (Mintlify)
+
+Each PR to `main` should get a **preview deployment** from the [Mintlify GitHub app](https://www.mintlify.com/docs/settings/github): the bot comments on the PR with a shareable preview URL that updates on every push. Production (`docs.zerogpu.ai`) only changes after merge.
+
+**Requirements:** Mintlify **Pro or Enterprise**, GitHub app installed on `zerogpu/docs`, deployment branch set to `main`. See [preview deployments](https://mintlify.com/docs/deploy/preview-deployments).
+
+**Manual preview:** [Mintlify dashboard](https://dashboard.mintlify.com/) → Previews → Create custom preview → enter your branch name.
+
+CI also runs `mint validate` on every PR (`.github/workflows/mint-validate.yml`).
 
 [Mintlify docs](https://mintlify.com/docs) for configuration and components.
 
