@@ -104,8 +104,8 @@ stateDiagram-v2
 | `finalizing` | All lines have been processed; the service is writing the output and error files. Brief, transient state. |
 | `completed` | Terminal. `output_file_id` (and `error_file_id` if there were failures) are populated. |
 | `expired` | Terminal. The 24-hour window elapsed before all lines completed. Whatever finished is still available via `output_file_id` / `error_file_id`. |
-| `failed` | Reserved for OpenAI compatibility: not produced by this implementation. |
-| `validating` | Reserved for OpenAI compatibility: not produced by this implementation. |
+| `failed` | Reserved for OpenAI compatibility; not produced by this implementation. |
+| `validating` | Reserved for OpenAI compatibility; not produced by this implementation. |
 
 Once a batch reaches `completed` or `expired`, no further state changes occur.
 
@@ -184,7 +184,7 @@ A [Batch object](#the-batch-object) with:
 | `400` | `completion_window must be "24h"` |
 | `400` | `endpoint "X" does not match the url "Y" used by the input file` (when the `endpoint` field disagrees with the `url` in the JSONL) |
 | `400` | JSONL validation failure. The error body includes `line_idx` to point at the offending line. |
-| `404` | `Input file not found: <file_id>`: the input file is missing, deleted, or in another project. |
+| `404` | `Input file not found: <file_id>`. The input file is missing, deleted, or in another project. |
 | `401` / `403` / `420` / `500` | See [errors.md](/api-reference/batch/errors). |
 
 Validation errors look like:
