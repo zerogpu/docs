@@ -1,6 +1,6 @@
 ---
 title: "Batch & Files API"
-description: "Run large workloads of AI inference asynchronously — wire-compatible with OpenAI's `/v1/batches` and `/v1/files`."
+description: "Run large workloads of AI inference asynchronously: wire-compatible with OpenAI's `/v1/batches` and `/v1/files`."
 ---
 
 The Batch API processes hundreds, thousands, or up to 50,000 inference
@@ -10,7 +10,7 @@ rate limits.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/api-reference/batch/getting-started">
-    First batch in under 10 minutes — auth, upload, create, download.
+    First batch in under 10 minutes: auth, upload, create, download.
   </Card>
   <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
     Mandatory input line schema, output schema, error schema, and validation rules.
@@ -66,16 +66,16 @@ Every batch follows the same four-step lifecycle:
 | A single immediate response | The synchronous endpoint directly (e.g. `POST /v1/chat/completions`) |
 | Hundreds-to-thousands of completions, can wait minutes-to-hours | The Batch API |
 | To avoid per-second rate limits during a backfill | The Batch API |
-| Streaming responses | The synchronous endpoint — streaming is **not** supported in batch mode |
+| Streaming responses | The synchronous endpoint: streaming is **not** supported in batch mode |
 
 ## Go deeper
 
 <CardGroup cols={2}>
   <Card title="Files API reference" href="/api-reference/batch/files-api">
-    Upload, list, retrieve, download, delete — every endpoint, every parameter.
+    Upload, list, retrieve, download, delete: every endpoint, every parameter.
   </Card>
   <Card title="Batches API reference" href="/api-reference/batch/batches-api">
-    Create, list, retrieve — including the full Batch object schema and lifecycle.
+    Create, list, retrieve: including the full Batch object schema and lifecycle.
   </Card>
   <Card title="Errors reference" href="/api-reference/batch/errors">
     Every HTTP status, every validation message, every code that can appear in the error JSONL.

@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_t5-small",
-        "summary": "t5-small — Responses",
+        "summary": "t5-small: Responses",
         "tags": [
           "t5-small"
         ],
@@ -100,7 +100,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_t5-small",
-        "summary": "t5-small — Chat completions",
+        "summary": "t5-small: Chat completions",
         "tags": [
           "t5-small"
         ],

@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_LFM2_5-1_2B-Instruct",
-        "summary": "LFM2.5-1.2B-Instruct — Responses",
+        "summary": "LFM2.5-1.2B-Instruct: Responses",
         "tags": [
           "LFM2.5-1.2B-Instruct"
         ],
@@ -101,7 +101,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_LFM2_5-1_2B-Instruct",
-        "summary": "LFM2.5-1.2B-Instruct — Chat completions",
+        "summary": "LFM2.5-1.2B-Instruct: Chat completions",
         "tags": [
           "LFM2.5-1.2B-Instruct"
         ],

@@ -232,14 +232,14 @@ puts response.body
   Store your API key in environment variables. Never commit it to version control or expose it in client-side code.
 </Warning>
 
-Some models expect `input` as a **JSON string** instead of a message array. If you see `400` with `invalid_type` on `input`, switch shapes — see [Responses](/api-reference/endpoint/responses#input-shape).
+Some models expect `input` as a **JSON string** instead of a message array. If you see `400` with `invalid_type` on `input`, switch shapes: see [Responses](/api-reference/endpoint/responses#input-shape).
 
 ## 3. Verify it worked
 
 Check the [dashboard](https://zerogpu.ai):
 
-- **Logs** — your request appears with model, status, and latency
-- **Usage** — token counts update in real time
+- **Logs**: your request appears with model, status, and latency
+- **Usage**: token counts update in real time
 
 If you got a `401`, your API key is wrong. `403` means bad project ID. See [Authentication](/platform/authentication) for details.
 

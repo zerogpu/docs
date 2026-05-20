@@ -43,7 +43,7 @@ with `purpose=batch`, then reference its ID when you call
 The service performs all of the following checks at `POST /v1/batches` time
 (not at upload time). Failure returns `400` with the offending `line_idx`:
 
-- Each line must be valid JSON (not arrays, not primitives — must be an object).
+- Each line must be valid JSON (not arrays, not primitives: must be an object).
 - `custom_id` non-empty string, unique across the whole batch.
 - `method` must equal `"POST"`.
 - `url` must be one of the allowed endpoints and must be the same on every
@@ -62,9 +62,9 @@ The service performs all of the following checks at `POST /v1/batches` time
 - Blank lines are skipped.
 - UTF-8 encoding is required.
 - The `url` value matches the `endpoint` field on the create request
-  **exactly** — no trailing slash, no query string, no protocol/host prefix.
+  **exactly**: no trailing slash, no query string, no protocol/host prefix.
 
-### Example — chat completions
+### Example: chat completions
 
 ```jsonl
 {"custom_id":"req-1","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of France?"}]}}
@@ -72,14 +72,14 @@ The service performs all of the following checks at `POST /v1/batches` time
 {"custom_id":"req-3","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Italy?"}]}}
 ```
 
-### Example — IAB classification
+### Example: IAB classification
 
 ```jsonl
 {"custom_id":"doc-1","method":"POST","url":"/usecase/classify/iab","body":{"text":"Streaming services keep raising prices...","min_confidence_score":0.0001}}
 {"custom_id":"doc-2","method":"POST","url":"/usecase/classify/iab","body":{"text":"The new sedan accelerates from 0 to 60 mph...","min_confidence_score":0.0001}}
 ```
 
-### Example — GLiNER entity extraction
+### Example: GLiNER entity extraction
 
 ```jsonl
 {"custom_id":"ner-1","method":"POST","url":"/gliner","body":{"model":"<gliner-model-id>","input":"John Smith works at Google in Mountain View.","metadata":{"labels":["PERSON","ORG","LOCATION"],"threshold":0.5}}}
@@ -101,7 +101,7 @@ Only lines that received a **2xx** response from the underlying endpoint
 appear in the output file. Failed lines go to the error file (see below).
 
 The order of lines in the output file is **not guaranteed** to match the
-order of lines in the input file — match results to inputs by `custom_id`.
+order of lines in the input file: match results to inputs by `custom_id`.
 
 ### Line schema
 
@@ -120,13 +120,13 @@ order of lines in the input file — match results to inputs by `custom_id`.
 |---|---|---|
 | `custom_id` | string | Echo of the `custom_id` you supplied on the input line. |
 | `response.status_code` | integer | HTTP status from the underlying endpoint (will always be 2xx in this file). |
-| `response.request_id` | null | Reserved for OpenAI compatibility — always `null`. |
+| `response.request_id` | null | Reserved for OpenAI compatibility: always `null`. |
 | `response.body` | object | The same JSON body the synchronous endpoint would have returned for this request. |
 
 See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the exact
 `response.body` shape per endpoint.
 
-### Example — chat completions output
+### Example: chat completions output
 
 ```jsonl
 {"custom_id":"req-1","response":{"status_code":200,"request_id":null,"body":{"id":"chatcmpl-abc","object":"chat.completion","created":1736295000,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Paris."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14}}}}
@@ -189,7 +189,7 @@ disjoint.
 | `dlq_exhausted` | The line failed in a way the queue couldn't even retry (e.g. queue runtime crash on the message). | Retry the line. |
 | `api_key_unavailable` | The API key used to submit the batch was revoked or deactivated while the batch was running. | Issue a new key and rerun remaining lines. |
 
-### Example — error file
+### Example: error file
 
 ```jsonl
 {"custom_id":"req-5","error":{"code":"http_400","message":"request body is invalid","details":{"error":{"message":"messages: missing required field","type":"invalid_request_error"}}}}
@@ -236,7 +236,7 @@ with open("errors.jsonl") as f:
 ```
 
 If a `custom_id` you submitted is missing from both files, the batch is not
-complete yet — re-check `status` and download again.
+complete yet: re-check `status` and download again.
 
 <Tip>
 **✓ Always match by `custom_id`**

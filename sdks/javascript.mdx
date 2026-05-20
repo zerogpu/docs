@@ -21,7 +21,7 @@ const client = new ZerogpuApiClient({
   projectId: process.env.ZEROGPU_PROJECT_ID,
 });
 
-// Many models accept plain string `input`; others accept a message list — see API reference.
+// Many models accept plain string `input`; others accept a message list: see API reference.
 const response = await client.responses.createResponse({
   model: process.env.ZEROGPU_MODEL ?? 'YOUR_MODEL',
   input: 'Your input text here...',

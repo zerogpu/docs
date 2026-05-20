@@ -25,13 +25,13 @@ The router decides which edge device handles each request. It evaluates four sig
     Request forwarded to edge device. NLM processes input, returns result.
   </Step>
   <Step title="Fallback if needed">
-    No edge node responds in time? Request goes to cloud infrastructure. Same response format — your app doesn't know the difference.
+    No edge node responds in time? Request goes to cloud infrastructure. Same response format: your app doesn't know the difference.
   </Step>
 </Steps>
 
 ## Cloud fallback
 
-Availability guarantee. If the edge network can't serve a request — capacity, model, or device constraints — cloud-hosted replicas handle it transparently.
+Availability guarantee. If the edge network can't serve a request: capacity, model, or device constraints: cloud-hosted replicas handle it transparently.
 
 **Trade-off:** Cloud fallback may have slightly higher latency than edge, but it ensures 100% availability. Your integration code doesn't change either way.
 

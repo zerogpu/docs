@@ -7,7 +7,7 @@ ZeroGPU specifics on top of the OpenAI shape:
 
 - `completion_window` must be `"24h"` (the only supported value).
 - The `endpoint` field must be one of the five [supported batch endpoints](/api-reference/batch/supported-endpoints).
-- There is **no cancel endpoint** in this release — batches run to completion
+- There is **no cancel endpoint** in this release: batches run to completion
   or expire after 24 hours.
 - Authentication uses `x-api-key` + `x-project-id` headers.
 
@@ -67,7 +67,7 @@ This is the shape returned by create, retrieve, and inside `data[]` of list.
 | `id` | string | Batch identifier (prefix `batch_`). |
 | `object` | string | Always `"batch"`. |
 | `endpoint` | string | The endpoint URL every line in this batch targets. |
-| `errors` | null | Reserved for OpenAI compatibility — always `null`. |
+| `errors` | null | Reserved for OpenAI compatibility: always `null`. |
 | `input_file_id` | string | The `file-…` ID you supplied at creation. |
 | `completion_window` | string | Always `"24h"`. |
 | `status` | string | Lifecycle state. See [Status lifecycle](#status-lifecycle) below. |
@@ -76,7 +76,7 @@ This is the shape returned by create, retrieve, and inside `data[]` of list.
 | `created_at` | integer | Unix timestamp (seconds) when the batch was created. |
 | `expires_at` | integer | Unix timestamp 24 hours after `created_at`. Anything not finished by this time becomes `expired`. |
 | `completed_at` | integer \| null | Unix timestamp when the batch reached a terminal state, or `null` while in progress. |
-| `failed_at` | integer \| null | Reserved for OpenAI compatibility — currently always `null`. |
+| `failed_at` | integer \| null | Reserved for OpenAI compatibility: currently always `null`. |
 | `request_counts.total` | integer | Total number of lines in the input file. |
 | `request_counts.completed` | integer | Lines that completed with a 2xx response. |
 | `request_counts.failed` | integer | Lines that failed (HTTP non-2xx, retries exhausted, or other system error). |
@@ -104,17 +104,17 @@ stateDiagram-v2
 | `finalizing` | All lines have been processed; the service is writing the output and error files. Brief, transient state. |
 | `completed` | Terminal. `output_file_id` (and `error_file_id` if there were failures) are populated. |
 | `expired` | Terminal. The 24-hour window elapsed before all lines completed. Whatever finished is still available via `output_file_id` / `error_file_id`. |
-| `failed` | Reserved for OpenAI compatibility — not produced by this implementation. |
-| `validating` | Reserved for OpenAI compatibility — not produced by this implementation. |
+| `failed` | Reserved for OpenAI compatibility: not produced by this implementation. |
+| `validating` | Reserved for OpenAI compatibility: not produced by this implementation. |
 
 Once a batch reaches `completed` or `expired`, no further state changes occur.
 
 ---
 
-## POST `/v1/batches` — Create a batch
+## POST `/v1/batches`: Create a batch
 
 Submits a new batch job. The response returns immediately with
-`status: "in_progress"` — actual processing happens asynchronously.
+`status: "in_progress"`: actual processing happens asynchronously.
 
 ### Request
 
@@ -144,7 +144,7 @@ x-project-id: <uuid>
 <Note>
 **ℹ Validation is synchronous; processing is asynchronous**
 
-All input-file and JSONL validation happens before the response returns —
+All input-file and JSONL validation happens before the response returns -
   if it succeeds, the batch is durably committed. Lines are then processed
   asynchronously through an internal queue.
 </Note>
@@ -167,7 +167,7 @@ response:
 Any validation failure returns `400` with the offending `line_idx`. Once the
 response returns, the batch is durably committed and processing has begun.
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 A [Batch object](#the-batch-object) with:
 
@@ -184,7 +184,7 @@ A [Batch object](#the-batch-object) with:
 | `400` | `completion_window must be "24h"` |
 | `400` | `endpoint "X" does not match the url "Y" used by the input file` (when the `endpoint` field disagrees with the `url` in the JSONL) |
 | `400` | JSONL validation failure. The error body includes `line_idx` to point at the offending line. |
-| `404` | `Input file not found: <file_id>` — the input file is missing, deleted, or in another project. |
+| `404` | `Input file not found: <file_id>`: the input file is missing, deleted, or in another project. |
 | `401` / `403` / `420` / `500` | See [errors.md](/api-reference/batch/errors). |
 
 Validation errors look like:
@@ -215,7 +215,7 @@ curl -X POST https://api.zerogpu.ai/v1/batches \
 
 ---
 
-## GET `/v1/batches/{batch_id}` — Retrieve a batch
+## GET `/v1/batches/{batch_id}`: Retrieve a batch
 
 Returns a single batch with **live counters** if the batch is still
 in-progress, or the final snapshot if it has reached a terminal state.
@@ -230,7 +230,7 @@ x-api-key:    <key>
 x-project-id: <uuid>
 ```
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 A [Batch object](#the-batch-object). When `status` is `in_progress` or
 `finalizing`, the `request_counts` reflect the current real-time progress.
@@ -271,13 +271,13 @@ Example after completion:
   small batches.
 - The `Retry-After` header is **not** set; pick your own interval.
 - Once `status` is `completed`, `expired`, or `failed`, no further state
-  changes occur — stop polling.
+  changes occur: stop polling.
 
 <Tip>
 **✓ Use this endpoint for live counts**
 
 Retrieve returns real-time `request_counts` while a batch is
-  running. The list endpoint may lag by a few seconds — for accurate
+  running. The list endpoint may lag by a few seconds: for accurate
   progress, retrieve specific batches.
 </Tip>
 
@@ -299,7 +299,7 @@ curl https://api.zerogpu.ai/v1/batches/batch_01HZX... \
 
 ---
 
-## GET `/v1/batches` — List batches
+## GET `/v1/batches`: List batches
 
 Returns batches in reverse-chronological order (newest first) with
 cursor-based pagination.
@@ -315,9 +315,9 @@ x-project-id: <uuid>
 | Param | Default | Description |
 |---|---|---|
 | `limit` | `20` | Number of batches per page. Clamped to `[1, 100]`. |
-| `after` | — | Cursor: pass `last_id` from the previous response to get the next page. |
+| `after` |: | Cursor: pass `last_id` from the previous response to get the next page. |
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 ```json
 {
@@ -369,7 +369,7 @@ curl "https://api.zerogpu.ai/v1/batches?limit=20&after=batch_01HZW..." \
 is not implemented. Once a batch is created it either runs to completion or
 expires after 24 hours.
 
-If you need to abandon a batch, simply stop polling — the work will finish or
+If you need to abandon a batch, simply stop polling: the work will finish or
 expire on its own.
 
 ## Limits

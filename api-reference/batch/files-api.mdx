@@ -1,6 +1,6 @@
 ---
 title: "Files API"
-description: "Store the JSONL files that drive a batch — input you upload, output and error files the service writes back."
+description: "Store the JSONL files that drive a batch: input you upload, output and error files the service writes back."
 ---
 
 Wire-compatible with OpenAI's `/v1/files`, with these ZeroGPU specifics:
@@ -66,7 +66,7 @@ This is the shape returned by upload, retrieve, and (inside `data[]`) list.
 
 ---
 
-## POST `/v1/files` — Upload a file
+## POST `/v1/files`: Upload a file
 
 Uploads a JSONL file that will be used as the input to a batch.
 
@@ -87,7 +87,7 @@ Multipart form fields:
 | `file` | Yes | The JSONL file. Max **100 MB**. |
 
 <Note>
-**Note — JSONL is validated at batch creation, not upload**
+**Note: JSONL is validated at batch creation, not upload**
 
 The server stores your file as-is. Malformed JSONL will upload
   successfully but fail with a 400 (and a `line_idx`) when you
@@ -101,7 +101,7 @@ Other notes:
 - The filename you upload is preserved in the `filename` field of the File
   object.
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 ```json
 {
@@ -126,7 +126,7 @@ Other notes:
 | `400` | `missing_file` | No `file` field in the multipart body. |
 | `400` | `empty_file` | The uploaded file had zero bytes. |
 | `413` | `file_too_large` | File exceeded 100 MB. |
-| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
 
 ### Example
 
@@ -140,7 +140,7 @@ curl -X POST https://api.zerogpu.ai/v1/files \
 
 ---
 
-## GET `/v1/files` — List files
+## GET `/v1/files`: List files
 
 Returns the project's files in reverse-chronological order by default.
 
@@ -158,10 +158,10 @@ Query parameters (all optional):
 |---|---|---|
 | `purpose` | (all) | Filter by purpose: `batch`, `batch_output`, or `batch_errors`. |
 | `order` | `desc` | Sort order on `created_at`. `desc` = newest first, `asc` = oldest first. |
-| `after` | — | Cursor for pagination. Pass the `id` of the last file from the previous page. |
+| `after` |: | Cursor for pagination. Pass the `id` of the last file from the previous page. |
 | `limit` | `10000` | Maximum number of files to return. Must be a positive integer ≤ `10000`. |
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 ```json
 {
@@ -205,7 +205,7 @@ request, keeping the same `purpose` and `order`.
 | Status | Code | Cause |
 |---|---|---|
 | `400` | `invalid_limit` | `limit` was not a positive integer. |
-| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
 
 ### Example
 
@@ -217,7 +217,7 @@ curl "https://api.zerogpu.ai/v1/files?purpose=batch&limit=20" \
 
 ---
 
-## GET `/v1/files/{file_id}` — Retrieve a file
+## GET `/v1/files/{file_id}`: Retrieve a file
 
 Returns the metadata for a single file. Use this to look up `filename`,
 `bytes`, or `purpose` without downloading the body.
@@ -230,7 +230,7 @@ x-api-key:    <key>
 x-project-id: <uuid>
 ```
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 Same shape as the File object returned by upload.
 
@@ -239,7 +239,7 @@ Same shape as the File object returned by upload.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File does not exist, belongs to another project, or has been deleted. The same `404` is returned in all three cases to avoid leaking file existence across projects. |
-| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
 
 ### Example
 
@@ -251,7 +251,7 @@ curl https://api.zerogpu.ai/v1/files/file-abc123... \
 
 ---
 
-## GET `/v1/files/{file_id}/content` — Download a file's body
+## GET `/v1/files/{file_id}/content`: Download a file's body
 
 Streams the raw JSONL body. This is how you read both the input file you
 uploaded and the output / error files produced by a completed batch.
@@ -264,7 +264,7 @@ x-api-key:    <key>
 x-project-id: <uuid>
 ```
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 ```
 Content-Type:        application/jsonl
@@ -280,7 +280,7 @@ The body is streamed; you do not need to fit it in memory.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, deleted, or belongs to another project. |
-| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
 
 ### Example
 
@@ -293,14 +293,14 @@ curl https://api.zerogpu.ai/v1/files/file-out789.../content \
 
 ---
 
-## DELETE `/v1/files/{file_id}` — Delete a file
+## DELETE `/v1/files/{file_id}`: Delete a file
 
 Soft-deletes the file. The stored object is removed from storage immediately;
 the database row is preserved with a `deleted_at` timestamp for audit
 purposes.
 
 After a successful delete, the file disappears from list, retrieve, and
-content endpoints — all three return `404`. Deletes cannot be undone via the
+content endpoints: all three return `404`. Deletes cannot be undone via the
 API.
 
 ### Request
@@ -311,7 +311,7 @@ x-api-key:    <key>
 x-project-id: <uuid>
 ```
 
-### Response — `200 OK`
+### Response: `200 OK`
 
 ```json
 {
@@ -326,7 +326,7 @@ x-project-id: <uuid>
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, already deleted, or belongs to another project. |
-| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
 
 ### Example
 
@@ -354,7 +354,7 @@ Notes:
   the organization level. A request from an organization with no balance and
   no free credits returns `420 insufficient_quota`.
 - Deleting a file that is the input to an active batch does not stop the
-  batch — the batch reads the input file at creation time, not on demand.
+  batch: the batch reads the input file at creation time, not on demand.
 - The output and error files produced by a batch are written with
   `purpose: batch_output` and `purpose: batch_errors`. You can list them by
   filtering on those purposes.

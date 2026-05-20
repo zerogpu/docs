@@ -5,7 +5,7 @@ description: "Run AI on idle devices at the edge instead of GPU data centers."
 
 Traditional inference: every request goes to a GPU data center, regardless of task complexity or user location. You pay for reserved capacity even when it's idle.
 
-ZeroGPU: requests run on a distributed network of edge devices — laptops, phones, servers, browsers — using Nano Language Models that don't need GPUs.
+ZeroGPU: requests run on a distributed network of edge devices: laptops, phones, servers, browsers: using Nano Language Models that don't need GPUs.
 
 ## Why centralized inference is expensive
 
@@ -29,12 +29,12 @@ ZeroGPU: requests run on a distributed network of edge devices — laptops, phon
 
 ## What you get
 
-- **Scale horizontally** — more devices = more capacity, no GPU procurement
-- **Pay for usage** — not reserved instances sitting idle
-- **Lower latency** — inference runs near the user, not across the country
-- **Resilience** — no single point of failure; traffic reroutes automatically
+- **Scale horizontally**: more devices = more capacity, no GPU procurement
+- **Pay for usage**: not reserved instances sitting idle
+- **Lower latency**: inference runs near the user, not across the country
+- **Resilience**: no single point of failure; traffic reroutes automatically
 
-**Trade-off:** Edge inference depends on device availability. ZeroGPU mitigates this with automatic cloud fallback — your app never notices the difference.
+**Trade-off:** Edge inference depends on device availability. ZeroGPU mitigates this with automatic cloud fallback: your app never notices the difference.
 
 <Columns cols={2}>
   <Card title="Geo-Aware Routing" icon="map-location-dot" href="/concepts/geo-aware-routing">

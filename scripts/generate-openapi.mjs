@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Regenerate OpenAPI specs from the models API.
- * - openapi/zerogpu.openapi.json — generic API reference (no all-model dropdown)
- * - openapi/playgrounds/{model}.openapi.json — one live playground per catalog model
- * - snippets/model-playgrounds.json — manifest for generate-model-pages.mjs
+ * - openapi/zerogpu.openapi.json: generic API reference (no all-model dropdown)
+ * - openapi/playgrounds/{model}.openapi.json: one live playground per catalog model
+ * - snippets/model-playgrounds.json: manifest for generate-model-pages.mjs
  */
 
 import { mkdir, readFile, writeFile, readdir, unlink } from "node:fs/promises";
@@ -307,7 +307,7 @@ function buildModelPlaygroundOpenApi(model) {
     paths["/responses"] = {
       post: {
         operationId: `createResponse_${exampleKey(modelId)}`,
-        summary: `${displayName} — Responses`,
+        summary: `${displayName}: Responses`,
         tags: [displayName],
         requestBody: {
           required: true,
@@ -358,7 +358,7 @@ function buildModelPlaygroundOpenApi(model) {
     paths["/chat/completions"] = {
       post: {
         operationId: `createChatCompletion_${exampleKey(modelId)}`,
-        summary: `${displayName} — Chat completions`,
+        summary: `${displayName}: Chat completions`,
         tags: [displayName],
         requestBody: {
           required: true,

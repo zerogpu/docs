@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_LFM2_5-1_2B-Thinking",
-        "summary": "LFM2.5-1.2B-Thinking — Responses",
+        "summary": "LFM2.5-1.2B-Thinking: Responses",
         "tags": [
           "LFM2.5-1.2B-Thinking"
         ],
@@ -100,7 +100,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_LFM2_5-1_2B-Thinking",
-        "summary": "LFM2.5-1.2B-Thinking — Chat completions",
+        "summary": "LFM2.5-1.2B-Thinking: Chat completions",
         "tags": [
           "LFM2.5-1.2B-Thinking"
         ],

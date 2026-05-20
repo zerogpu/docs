@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_deberta-v3-small",
-        "summary": "deberta-v3-small — Responses",
+        "summary": "deberta-v3-small: Responses",
         "tags": [
           "deberta-v3-small"
         ],
@@ -101,7 +101,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_deberta-v3-small",
-        "summary": "deberta-v3-small — Chat completions",
+        "summary": "deberta-v3-small: Chat completions",
         "tags": [
           "deberta-v3-small"
         ],

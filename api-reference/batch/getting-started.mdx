@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "First batch in under 10 minutes — auth, upload, create, poll, download."
+description: "First batch in under 10 minutes: auth, upload, create, poll, download."
 ---
 
 This page walks through a complete batch from start to finish in both `curl`
@@ -20,7 +20,7 @@ Both headers are required on every request. Missing either returns `401`.
 **⚠ Keep your API key out of source control**
 
 Store it in environment variables, secret managers, or your CI's secret
-  store — never commit it.
+  store: never commit it.
 </Warning>
 
 ```bash
@@ -79,7 +79,7 @@ request:
 | `custom_id` | Yes | Your identifier for the request. Must be **unique within the batch**. Echoed back in the output so you can match results to inputs. |
 | `method` | Yes | Must be `"POST"`. |
 | `url` | Yes | One of the [supported endpoints](/api-reference/batch/supported-endpoints). All lines in a batch must share the same `url`. |
-| `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected — batches are non-streaming. |
+| `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected: batches are non-streaming. |
 
 Full schema and validation rules: [JSONL format](/api-reference/batch/jsonl-format).
 
@@ -172,7 +172,7 @@ Response:
 
 Submit the batch with the file ID, the target endpoint, and a 24-hour
 completion window. The response returns immediately with
-`status: "in_progress"` — actual processing is asynchronous.
+`status: "in_progress"`: actual processing is asynchronous.
 
 <CodeGroup>
 
@@ -221,8 +221,8 @@ Response:
 **ℹ Validation runs at create time**
 
 The server streams the entire input JSONL and validates every line before
-  responding. If anything is wrong — duplicate `custom_id`, line
-  over 1 MB, `stream: true`, mismatched `url` — you'll
+  responding. If anything is wrong: duplicate `custom_id`, line
+  over 1 MB, `stream: true`, mismatched `url`: you'll
   get a 400 with the offending `line_idx`. Once the response
   returns, the batch is durably committed.
 </Note>
@@ -288,7 +288,7 @@ if batch.output_file_id:
 
 </CodeGroup>
 
-Output line shape (one per successful line, order **not preserved** — match
+Output line shape (one per successful line, order **not preserved**: match
 by `custom_id`):
 
 ```json

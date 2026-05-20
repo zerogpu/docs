@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_zlm-v1-iab-classify-edge-enriched",
-        "summary": "zlm-v1-iab-classify-edge-enriched — Responses",
+        "summary": "zlm-v1-iab-classify-edge-enriched: Responses",
         "tags": [
           "zlm-v1-iab-classify-edge-enriched"
         ],
@@ -100,7 +100,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_zlm-v1-iab-classify-edge-enriched",
-        "summary": "zlm-v1-iab-classify-edge-enriched — Chat completions",
+        "summary": "zlm-v1-iab-classify-edge-enriched: Chat completions",
         "tags": [
           "zlm-v1-iab-classify-edge-enriched"
         ],

@@ -22,7 +22,7 @@ client = ZerogpuApi(
     project_id=os.environ["ZEROGPU_PROJECT_ID"],
 )
 
-# Many models accept plain string `input`; others accept a message list — see API reference.
+# Many models accept plain string `input`; others accept a message list: see API reference.
 response = client.responses.create_response(
     model=os.environ.get("ZEROGPU_MODEL", "YOUR_MODEL"),
     input="Your input text here...",

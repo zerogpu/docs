@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_gliner2-base-v1",
-        "summary": "gliner2-base-v1 — Responses",
+        "summary": "gliner2-base-v1: Responses",
         "tags": [
           "gliner2-base-v1"
         ],
@@ -147,7 +147,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_gliner2-base-v1",
-        "summary": "gliner2-base-v1 — Chat completions",
+        "summary": "gliner2-base-v1: Chat completions",
         "tags": [
           "gliner2-base-v1"
         ],

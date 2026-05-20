@@ -1,5 +1,5 @@
 /**
- * Mintlify loads every .js file in the content repo globally — not via <script> in MDX.
+ * Mintlify loads every .js file in the content repo globally, not via <script> in MDX.
  * See: https://www.mintlify.com/docs/customize/custom-scripts
  */
 (function () {

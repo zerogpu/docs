@@ -1,6 +1,6 @@
 ---
 title: "Errors"
-description: "Every HTTP status, every validation message, every JSONL error code — and how to recover."
+description: "Every HTTP status, every validation message, every JSONL error code: and how to recover."
 ---
 
 This page is a catalog of every error code you can encounter when using the
@@ -46,7 +46,7 @@ All errors (other than CORS preflight) return JSON in the same shape:
 | `500` | Internal server error. Retry with exponential backoff; if persistent, contact support. |
 
 <Warning>
-**⚠ `429` is not used — quota errors return `420`**
+**⚠ `429` is not used: quota errors return `420`**
 
 This is intentional, mirroring OpenAI's `insufficient_quota`
   semantics. Don't catch `429` expecting quota errors.
@@ -54,7 +54,7 @@ This is intentional, mirroring OpenAI's `insufficient_quota`
 
 ## Common synchronous errors
 
-### `401 Unauthorized` — missing headers
+### `401 Unauthorized`: missing headers
 
 ```json
 { "error": { "message": "Missing authentication headers" } }
@@ -63,7 +63,7 @@ This is intentional, mirroring OpenAI's `insufficient_quota`
 **Cause:** Either `x-api-key` or `x-project-id` was not sent.
 **Fix:** Send both headers on every request.
 
-### `403 Forbidden` — invalid credentials
+### `403 Forbidden`: invalid credentials
 
 ```json
 { "error": { "message": "Invalid credentials" } }
@@ -93,7 +93,7 @@ project than the one in `x-project-id`.
 > `error.code: "http_420"` in the error file. The batch as a whole still
 > transitions to `completed` once all lines have been accounted for.
 
-### `404 Not Found` — file or batch
+### `404 Not Found`: file or batch
 
 ```json
 { "error": { "message": "File file-xxx not found" } }
@@ -125,7 +125,7 @@ has been soft-deleted. The same `404` is returned in all three cases.
 
 ---
 
-## Batches API — `POST /v1/batches` validation errors
+## Batches API: `POST /v1/batches` validation errors
 
 When you create a batch, the service streams the entire input JSONL and
 validates every line **synchronously** before returning a response. Any
@@ -181,8 +181,8 @@ an `error` object. These are the codes you'll see:
 | `http_404` | A resource referenced in the body (e.g. model ID) doesn't exist. | Verify model IDs. |
 | `http_413`, `http_422` | Body size or schema rejected by the endpoint. | Reduce input or fix the schema. |
 | `http_420` | Organization quota ran out partway through the batch. | Top up balance and re-submit the failed lines. |
-| `http_5xx` | The upstream service returned an unexpected status. Should be rare — `5xx` responses normally trigger retries before reaching the error file. | Retry; if persistent, contact support. |
-| `retries_exhausted` | The upstream service returned 5xx or 429 on every retry attempt. `error.message` contains the last response. | Retry the line — it's a transient failure. |
+| `http_5xx` | The upstream service returned an unexpected status. Should be rare: `5xx` responses normally trigger retries before reaching the error file. | Retry; if persistent, contact support. |
+| `retries_exhausted` | The upstream service returned 5xx or 429 on every retry attempt. `error.message` contains the last response. | Retry the line: it's a transient failure. |
 | `dlq_exhausted` | The line was undeliverable at the queue level (e.g. consumer crashed repeatedly). | Retry the line. |
 | `api_key_unavailable` | The API key used to submit the batch was deactivated while the batch was running. | Issue a new key and re-submit failed lines. |
 
@@ -199,11 +199,11 @@ The pattern for handling this is:
 
 1. Read `output_file_id` and write successful results to your data store.
 2. Read `error_file_id` and partition by `error.code`:
-   - `http_400`, `http_404`, `http_422`: client-side issues — log, fix the
+   - `http_400`, `http_404`, `http_422`: client-side issues: log, fix the
      input lines, and resubmit.
-   - `retries_exhausted`, `dlq_exhausted`, `http_5xx`: transient — resubmit
+   - `retries_exhausted`, `dlq_exhausted`, `http_5xx`: transient: resubmit
      as-is.
-   - `http_420`, `api_key_unavailable`: operational — fix the underlying
+   - `http_420`, `api_key_unavailable`: operational: fix the underlying
      issue first, then resubmit.
 3. Build a smaller JSONL containing only the lines you want to retry, upload,
    and create a new batch.
@@ -230,10 +230,10 @@ Reach out to ZeroGPU support if you see:
     Status lifecycle, limits, full Batch object schema.
   </Card>
   <Card title="Files API reference" href="/api-reference/batch/files-api">
-    Upload, download, delete — every files-API endpoint.
+    Upload, download, delete: every files-API endpoint.
   </Card>
   <Card title="Quickstart" href="/api-reference/batch/getting-started">
-    First batch in under 10 minutes — auth, upload, create, download.
+    First batch in under 10 minutes: auth, upload, create, download.
   </Card>
 </CardGroup>
 

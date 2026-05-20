@@ -21,7 +21,7 @@
     "/responses": {
       "post": {
         "operationId": "createResponse_gliner-multi-pii-v1",
-        "summary": "gliner-multi-pii-v1 — Responses",
+        "summary": "gliner-multi-pii-v1: Responses",
         "tags": [
           "gliner-multi-pii-v1"
         ],
@@ -119,7 +119,7 @@
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_gliner-multi-pii-v1",
-        "summary": "gliner-multi-pii-v1 — Chat completions",
+        "summary": "gliner-multi-pii-v1: Chat completions",
         "tags": [
           "gliner-multi-pii-v1"
         ],

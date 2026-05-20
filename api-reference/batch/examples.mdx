@@ -269,7 +269,7 @@ OK   q-3: Rome.
 - **`base_url`**: Must include the `/v1` suffix because the SDK appends paths
   like `/files` and `/batches` directly to the base URL.
 - **`default_headers`**: This is how the OpenAI SDK lets you attach custom
-  headers to every request — exactly what's needed for `x-api-key` and
+  headers to every request: exactly what's needed for `x-api-key` and
   `x-project-id`.
 - **`client.batches.create(...)`**: The SDK call accepts the same fields as
   the raw API: `input_file_id`, `endpoint`, `completion_window`, `metadata`.
@@ -281,7 +281,7 @@ OK   q-3: Rome.
 
 ---
 
-## Worked example — IAB classification batch
+## Worked example: IAB classification batch
 
 A more realistic example: classify 1,000 documents and write the IAB
 categories to a CSV.
@@ -302,7 +302,7 @@ client = OpenAI(
     },
 )
 
-# Load your data — anything that yields (doc_id, text) tuples
+# Load your data: anything that yields (doc_id, text) tuples
 documents = load_my_dataset()  # 1000 records
 
 # 1. Write JSONL
