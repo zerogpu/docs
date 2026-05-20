@@ -1,0 +1,427 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "gliner2-base-v1 playground",
+    "version": "1.0",
+    "description": "Interactive playground for **gliner2-base-v1**.\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": [],
+      "ProjectId": []
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "operationId": "createResponse_gliner2-base-v1",
+        "summary": "gliner2-base-v1 — Responses",
+        "tags": [
+          "gliner2-base-v1"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "gliner2-base-v1"
+                        ],
+                        "default": "gliner2-base-v1",
+                        "example": "gliner2-base-v1"
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "ner": {
+                  "summary": "Entity Extraction",
+                  "value": {
+                    "input": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC.",
+                    "model": "gliner2-base-v1",
+                    "metadata": {
+                      "labels": [
+                        "programming language",
+                        "database",
+                        "technology",
+                        "protocol"
+                      ],
+                      "usecase": "ner",
+                      "threshold": 0.3
+                    }
+                  }
+                },
+                "json": {
+                  "summary": "Structured Data Extraction",
+                  "value": {
+                    "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
+                    "model": "gliner2-base-v1",
+                    "metadata": {
+                      "schema": {
+                        "contact": [
+                          "name::str::Full name",
+                          "title::str::Job title",
+                          "company::str::Company name",
+                          "phone::str::Phone number",
+                          "email::str::Email address",
+                          "address::str::Office address"
+                        ]
+                      },
+                      "usecase": "json"
+                    }
+                  }
+                },
+                "classification": {
+                  "summary": "Text Classification",
+                  "value": {
+                    "input": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful.",
+                    "model": "gliner2-base-v1",
+                    "metadata": {
+                      "schema": {
+                        "sentiment": [
+                          "positive",
+                          "negative",
+                          "neutral"
+                        ]
+                      },
+                      "usecase": "classification"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Context length exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion_gliner2-base-v1",
+        "summary": "gliner2-base-v1 — Chat completions",
+        "tags": [
+          "gliner2-base-v1"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "gliner2-base-v1"
+                        ],
+                        "default": "gliner2-base-v1",
+                        "example": "gliner2-base-v1"
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "ner": {
+                  "summary": "Entity Extraction",
+                  "value": {
+                    "model": "gliner2-base-v1",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC."
+                      }
+                    ],
+                    "metadata": {
+                      "labels": [
+                        "programming language",
+                        "database",
+                        "technology",
+                        "protocol"
+                      ],
+                      "usecase": "ner",
+                      "threshold": 0.3
+                    }
+                  }
+                },
+                "json": {
+                  "summary": "Structured Data Extraction",
+                  "value": {
+                    "model": "gliner2-base-v1",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105"
+                      }
+                    ],
+                    "metadata": {
+                      "schema": {
+                        "contact": [
+                          "name::str::Full name",
+                          "title::str::Job title",
+                          "company::str::Company name",
+                          "phone::str::Phone number",
+                          "email::str::Email address",
+                          "address::str::Office address"
+                        ]
+                      },
+                      "usecase": "json"
+                    }
+                  }
+                },
+                "classification": {
+                  "summary": "Text Classification",
+                  "value": {
+                    "model": "gliner2-base-v1",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful."
+                      }
+                    ],
+                    "metadata": {
+                      "schema": {
+                        "sentiment": [
+                          "positive",
+                          "negative",
+                          "neutral"
+                        ]
+                      },
+                      "usecase": "classification"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Context length exceeded"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "ZeroGPU API key from the dashboard (starts with zgpu-)"
+      },
+      "ProjectId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-project-id",
+        "description": "Project UUID from the dashboard"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "input": {
+            "description": "Model-dependent input. Plain string or message list with role and content.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/components/schemas/InputMessage"
+                }
+              }
+            ]
+          },
+          "text": {
+            "$ref": "#/components/schemas/TextResponseConfig"
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "InputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "TextResponseConfig": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "example": "text"
+              }
+            }
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

@@ -86,10 +86,11 @@ mint dev
 
 Preview at `http://localhost:3000` (or the port Mintlify reports).
 
-**API playground:** Endpoint pages use Mintlify's interactive playground with a **model dropdown** and per-model request examples. Regenerate the OpenAPI spec from the catalog:
+**API playground:** Each **model page** has its own Mintlify playground (`openapi/playgrounds/*.openapi.json`). API Reference endpoint pages stay generic. Regenerate from the catalog:
 
 ```bash
 node scripts/generate-openapi.mjs
+node scripts/generate-model-pages.mjs
 ```
 
 See `openapi/zerogpu.openapi.json` and `api` in `docs.json`. Validate with `mint validate`.

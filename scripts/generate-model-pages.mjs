@@ -9,6 +9,7 @@ const projectRoot = process.cwd();
 const docsRoot = path.join(projectRoot);
 const modelsDir = path.join(docsRoot, "models");
 const fallbackPath = path.join(docsRoot, "snippets", "model-catalog-fallback.json");
+const playgroundsManifestPath = path.join(docsRoot, "snippets", "model-playgrounds.json");
 
 function slugify(value) {
   return String(value || "")
@@ -242,7 +243,7 @@ function renderRubySnippet(endpointPath, payload) {
   ].join("\n");
 }
 
-function buildMdx(model) {
+function buildMdx(model, playgroundsManifest) {
   const pricing = model.pricing || {};
   const modelId = nonEmptyString(model.modelId) || "unknown";
   const title = nonEmptyString(model.modelDisplayName) || modelId;
@@ -283,24 +284,51 @@ function buildMdx(model) {
   const bodyParts = [];
   if (lead.length > 0) bodyParts.push(lead.join("\n\n"));
   if (bodyParts.length > 0) bodyParts.push("");
-  bodyParts.push(
-    "## Specifications",
-    "",
-    specLines.join("\n"),
-    "",
-    "## Quick Start",
-    "",
-    `<div data-zgpu-model-playground="${modelId}"></div>`
-  );
+  bodyParts.push("## Specifications", "", specLines.join("\n"));
+
+  const playground = playgroundsManifest?.[modelId];
+  if (playground?.spec && playground?.primary) {
+    bodyParts.push(
+      "",
+      "## Try it",
+      "",
+      "Send a live request with your `x-api-key` and `x-project-id`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).",
+      ""
+    );
+  } else {
+    bodyParts.push(
+      "",
+      "## Quick Start",
+      "",
+      "See [API Reference](/api-reference/introduction) and the [model catalog](/platform/model-catalog) for request shapes."
+    );
+  }
+
   const body = bodyParts.join("\n");
 
+  const frontmatter = [
+    `title: "${title.replace(/"/g, '\\"')}"`,
+    `description: "Model details for ${modelId.replace(/"/g, '\\"')}."`,
+  ];
+  if (playground?.spec && playground?.primary) {
+    frontmatter.push(`openapi: "${playground.spec} ${playground.primary}"`);
+  }
+
   return `---
-title: "${title.replace(/"/g, '\\"')}"
-description: "Model details for ${modelId.replace(/"/g, '\\"')}."
+${frontmatter.join("\n")}
 ---
 
 ${body}
 `;
+}
+
+async function loadPlaygroundsManifest() {
+  try {
+    const raw = await readFile(playgroundsManifestPath, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
 }
 
 async function fetchModels() {
@@ -334,14 +362,17 @@ async function fetchModels() {
 
 async function main() {
   await mkdir(modelsDir, { recursive: true });
-  const models = await fetchModels();
+  const [models, playgroundsManifest] = await Promise.all([
+    fetchModels(),
+    loadPlaygroundsManifest(),
+  ]);
   const visibleModels = models.filter((model) => model && model.display !== false);
 
   let written = 0;
   for (const model of visibleModels) {
     const fileName = `${slugify(model.modelId)}.mdx`;
     const targetPath = path.join(modelsDir, fileName);
-    const content = buildMdx(model);
+    const content = buildMdx(model, playgroundsManifest);
     await writeFile(targetPath, content, "utf8");
     written += 1;
   }

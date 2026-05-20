@@ -1,0 +1,74 @@
+{
+  "zlm-v1-iab-classify-edge-enriched": {
+    "spec": "openapi/playgrounds/zlm-v1-iab-classify-edge-enriched.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "zlm-v1-iab-classify-edge": {
+    "spec": "openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "zlm-v1-followup-questions-edge": {
+    "spec": "openapi/playgrounds/zlm-v1-followup-questions-edge.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "gliner-multi-pii-v1": {
+    "spec": "openapi/playgrounds/gliner-multi-pii-v1.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "gliner2-base-v1": {
+    "spec": "openapi/playgrounds/gliner2-base-v1.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "deberta-v3-small": {
+    "spec": "openapi/playgrounds/deberta-v3-small.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "t5-small": {
+    "spec": "openapi/playgrounds/t5-small.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "LFM2.5-1.2B-Thinking": {
+    "spec": "openapi/playgrounds/LFM2_5-1_2B-Thinking.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  },
+  "LFM2.5-1.2B-Instruct": {
+    "spec": "openapi/playgrounds/LFM2_5-1_2B-Instruct.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses"
+  }
+}

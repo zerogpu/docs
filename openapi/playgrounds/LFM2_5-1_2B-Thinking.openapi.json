@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "ZeroGPU API",
+    "title": "LFM2.5-1.2B-Thinking playground",
     "version": "1.0",
-    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** live on each [model catalog](/platform/model-catalog) page with request examples for that model's use cases.\nThese endpoint pages show a generic shape only."
+    "description": "Interactive playground for **LFM2.5-1.2B-Thinking**.\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
   },
   "servers": [
     {
@@ -20,30 +20,41 @@
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse",
-        "summary": "Send input to a model and receive a response",
+        "operationId": "createResponse_LFM2_5-1_2B-Thinking",
+        "summary": "LFM2.5-1.2B-Thinking — Responses",
         "tags": [
-          "Responses"
+          "LFM2.5-1.2B-Thinking"
         ],
-        "x-mint": {
-          "metadata": {
-            "title": "Responses",
-            "description": "Send input to an AI model and receive a response."
-          }
-        },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateResponseRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "LFM2.5-1.2B-Thinking"
+                        ],
+                        "default": "LFM2.5-1.2B-Thinking",
+                        "example": "LFM2.5-1.2B-Thinking"
+                      }
+                    }
+                  }
+                ]
               },
               "examples": {
                 "default": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched (see model pages for more)",
+                  "summary": "Default",
                   "value": {
-                    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-                    "model": "zlm-v1-iab-classify-edge-enriched"
+                    "input": "What is the capital of Japan",
+                    "model": "LFM2.5-1.2B-Thinking"
                   }
                 }
               }
@@ -62,16 +73,16 @@
             }
           },
           "400": {
-            "description": "Bad request (invalid body)"
+            "description": "Bad request"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden"
           },
           "420": {
-            "description": "Input exceeds model token limit (context_length_exceeded)",
+            "description": "Context length exceeded",
             "content": {
               "application/json": {
                 "schema": {
@@ -88,35 +99,44 @@
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion",
-        "summary": "Chat-completions style inference",
-        "description": "OpenAI-compatible chat body for models that use the messages route.",
+        "operationId": "createChatCompletion_LFM2_5-1_2B-Thinking",
+        "summary": "LFM2.5-1.2B-Thinking — Chat completions",
         "tags": [
-          "Chat"
+          "LFM2.5-1.2B-Thinking"
         ],
-        "x-mint": {
-          "metadata": {
-            "title": "Chat completions",
-            "sidebarTitle": "Chat completions",
-            "description": "Chat-style inference for models that use the messages route."
-          }
-        },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "enum": [
+                          "LFM2.5-1.2B-Thinking"
+                        ],
+                        "default": "LFM2.5-1.2B-Thinking",
+                        "example": "LFM2.5-1.2B-Thinking"
+                      }
+                    }
+                  }
+                ]
               },
               "examples": {
                 "default": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched (see model pages for more)",
+                  "summary": "Default",
                   "value": {
-                    "model": "zlm-v1-iab-classify-edge-enriched",
+                    "model": "LFM2.5-1.2B-Thinking",
                     "messages": [
                       {
                         "role": "user",
-                        "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+                        "content": "What is the capital of Japan"
                       }
                     ]
                   }
@@ -137,23 +157,16 @@
             }
           },
           "400": {
-            "description": "Bad request (invalid body)"
+            "description": "Bad request"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden"
           },
           "420": {
-            "description": "Input exceeds model token limit (context_length_exceeded)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "description": "Context length exceeded"
           },
           "500": {
             "description": "Internal server error"
@@ -187,8 +200,7 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "Model identifier. Open a [model page](/platform/model-catalog) for a dedicated playground with the correct body for that model.",
-            "example": "zlm-v1-iab-classify-edge-enriched"
+            "description": "Model identifier (fixed for this playground)."
           },
           "input": {
             "description": "Model-dependent input. Plain string or message list with role and content.",
@@ -226,9 +238,7 @@
         ],
         "properties": {
           "model": {
-            "type": "string",
-            "description": "Model identifier. Open a [model page](/platform/model-catalog) for a dedicated playground.",
-            "example": "zlm-v1-iab-classify-edge-enriched"
+            "type": "string"
           },
           "messages": {
             "type": "array",
