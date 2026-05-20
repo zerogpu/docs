@@ -3,7 +3,7 @@
   "info": {
     "title": "zlm-v1-iab-classify-edge playground",
     "version": "1.0",
-    "description": "Interactive playground for **zlm-v1-iab-classify-edge**.\nModel is always `zlm-v1-iab-classify-edge` (included in each request example; not editable in the form).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **zlm-v1-iab-classify-edge**.\nModel is always `zlm-v1-iab-classify-edge` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
   },
   "servers": [
     {
@@ -30,7 +30,24 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateResponseRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-iab-classify-edge",
+                        "default": "zlm-v1-iab-classify-edge",
+                        "example": "zlm-v1-iab-classify-edge",
+                        "readOnly": true,
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
               },
               "examples": {
                 "default": {
@@ -92,7 +109,24 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-iab-classify-edge",
+                        "default": "zlm-v1-iab-classify-edge",
+                        "example": "zlm-v1-iab-classify-edge",
+                        "readOnly": true,
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
               },
               "examples": {
                 "default": {
@@ -158,9 +192,18 @@
       "CreateResponseRequest": {
         "type": "object",
         "required": [
+          "model",
           "input"
         ],
         "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge",
+            "default": "zlm-v1-iab-classify-edge",
+            "example": "zlm-v1-iab-classify-edge",
+            "readOnly": true,
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
           "input": {
             "type": "string",
             "minLength": 1,
@@ -180,9 +223,18 @@
       "CreateChatCompletionRequest": {
         "type": "object",
         "required": [
+          "model",
           "messages"
         ],
         "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-iab-classify-edge",
+            "default": "zlm-v1-iab-classify-edge",
+            "example": "zlm-v1-iab-classify-edge",
+            "readOnly": true,
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
           "messages": {
             "type": "array",
             "minItems": 1,

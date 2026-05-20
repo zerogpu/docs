@@ -292,7 +292,7 @@ function buildMdx(model, playgroundsManifest) {
       "",
       "## Try it",
       "",
-      `Send a live request with your \`x-api-key\` and \`x-project-id\`. Model is always \`${modelId}\` (in each request example). Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).`,
+      `Send a live request with your \`x-api-key\` and \`x-project-id\`. Model is fixed to \`${modelId}\`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).`,
       ""
     );
   } else {

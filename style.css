@@ -1,0 +1,10 @@
+/* Per-model playground: visible but non-editable `model` field */
+.zgpu-model-field-locked [data-zgpu-model-locked="1"] {
+  opacity: 0.85;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.zgpu-model-field-locked button[data-zgpu-model-delete-hidden="1"] {
+  display: none !important;
+}
