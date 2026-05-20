@@ -1,0 +1,239 @@
+---
+title: "Errors"
+description: "Every HTTP status, every validation message, every JSONL error code — and how to recover."
+---
+
+This page is a catalog of every error code you can encounter when using the
+Batch and Files APIs, what each one means, and what to do about it.
+
+## Error response shape
+
+All errors (other than CORS preflight) return JSON in the same shape:
+
+```json
+{
+  "error": {
+    "message": "Human-readable description.",
+    "type":    "...",
+    "code":    "...",
+    "param":   "...",
+    "details": { ... },
+    "line_idx": 5
+  }
+}
+```
+
+- `message` is always present.
+- `type`, `code`, `param` are present when meaningful (e.g. `420` always
+  has `type: "insufficient_quota"`).
+- `details` is included for some errors (e.g. JSONL validation `details`
+  may carry the raw upstream error body).
+- `line_idx` is included for JSONL validation failures during
+  `POST /v1/batches` to point at the offending line.
+
+## HTTP status codes
+
+| Status | Meaning |
+|---|---|
+| `200` | Success. |
+| `204` | Success with no body (CORS preflight). |
+| `400` | Your request is malformed or fails validation. Fix and retry. |
+| `401` | Missing `x-api-key` or `x-project-id` header. |
+| `403` | Headers were supplied but credentials are invalid, inactive, or don't belong to the supplied project. |
+| `404` | The resource doesn't exist, or doesn't belong to your project. Both cases return `404` to avoid leaking cross-project information. |
+| `413` | Uploaded file is larger than 100 MB. |
+| `420` | Insufficient quota: organization has no balance and no free credits. **This is intentional**, mirroring OpenAI's `insufficient_quota` semantics. |
+| `500` | Internal server error. Retry with exponential backoff; if persistent, contact support. |
+
+<Warning>
+**⚠ `429` is not used — quota errors return `420`**
+
+This is intentional, mirroring OpenAI's `insufficient_quota`
+  semantics. Don't catch `429` expecting quota errors.
+</Warning>
+
+## Common synchronous errors
+
+### `401 Unauthorized` — missing headers
+
+```json
+{ "error": { "message": "Missing authentication headers" } }
+```
+
+**Cause:** Either `x-api-key` or `x-project-id` was not sent.
+**Fix:** Send both headers on every request.
+
+### `403 Forbidden` — invalid credentials
+
+```json
+{ "error": { "message": "Invalid credentials" } }
+```
+
+**Cause:** The API key doesn't exist, is inactive, or belongs to a different
+project than the one in `x-project-id`.
+**Fix:** Verify the key, and verify the project UUID matches.
+
+### `420 Insufficient Quota`
+
+```json
+{
+  "error": {
+    "message": "You exceeded your current quota, please check your plan and billing details.",
+    "type":    "insufficient_quota",
+    "code":    "insufficient_quota"
+  }
+}
+```
+
+**Cause:** Your organization has zero balance and zero free credits.
+**Fix:** Top up your balance.
+
+> **Important:** quota is checked at line-execution time. If your balance
+> drops to zero **during** a batch, the remaining lines fail with
+> `error.code: "http_420"` in the error file. The batch as a whole still
+> transitions to `completed` once all lines have been accounted for.
+
+### `404 Not Found` — file or batch
+
+```json
+{ "error": { "message": "File file-xxx not found" } }
+```
+
+```json
+{ "error": { "message": "Batch not found: batch_xxx" } }
+```
+
+**Cause:** The ID does not exist, or it belongs to another project, or it
+has been soft-deleted. The same `404` is returned in all three cases.
+**Fix:** Verify the ID and the `x-project-id` you're sending.
+
+---
+
+## Files API errors
+
+| Status | Code | When |
+|---|---|---|
+| `400` | `invalid_content_type` | Upload request was not `multipart/form-data`. |
+| `400` | `invalid_multipart` | The multipart body could not be parsed. |
+| `400` | `invalid_purpose` | `purpose` was anything other than `"batch"`. |
+| `400` | `missing_file` | No `file` field in the multipart body. |
+| `400` | `empty_file` | The uploaded file had zero bytes. |
+| `400` | `invalid_limit` | List `limit` query parameter was not a positive integer. |
+| `404` | `file_not_found` | File does not exist or is not accessible. |
+| `413` | `file_too_large` | File exceeded 100 MB. |
+| `500` | `storage_error` | Backing storage error; retry. |
+
+---
+
+## Batches API — `POST /v1/batches` validation errors
+
+When you create a batch, the service streams the entire input JSONL and
+validates every line **synchronously** before returning a response. Any
+failure returns `400` with the offending `line_idx`.
+
+| `message` | Cause |
+|---|---|
+| `input_file_id is required` | Missing or non-string `input_file_id` field. |
+| `endpoint is required` | Missing or non-string `endpoint` field. |
+| `completion_window must be "24h"` | Anything other than `"24h"` was supplied. |
+| `Input file not found: <id>` | `input_file_id` doesn't exist or isn't in this project. (404) |
+| `Input file object missing: <id>` | DB row exists but the stored object is gone. Report to support. (404) |
+| `Input file contains no JSONL lines` | Uploaded file is empty or only whitespace. |
+| `Input file exceeds maximum size of 209715200 bytes` | File total > 200 MB. |
+| `Input file exceeds maximum of 50000 lines` | More than 50,000 lines. |
+| `Line N is not valid JSON` | Line N could not be parsed as JSON. |
+| `Line N must be a JSON object` | Line N parsed as an array or primitive. |
+| `Line N exceeds maximum size of 1048576 bytes` | Line N > 1 MB. |
+| `Line N is missing custom_id` | Missing or non-string `custom_id`. |
+| `Line N duplicates custom_id "X"` | A previous line already used custom_id `X`. |
+| `Line N method must be "POST"` | `method` was not exactly `"POST"`. |
+| `Line N is missing url` | Missing or non-string `url`. |
+| `Line N url "X" is not an allowed batch endpoint` | `url` is not one of the [supported endpoints](/api-reference/batch/supported-endpoints). |
+| `Line N url "X" does not match the batch endpoint "Y"` | Lines in the file disagree on `url`. |
+| `Line N is missing body` | `body` is not a non-empty object. |
+| `Line N has stream=true; streaming is not supported in batch mode` | `body.stream === true`. |
+| `endpoint "X" does not match the url "Y" used by the input file` | The `endpoint` field on the create request disagrees with what's in the file. |
+
+Validation errors carry `line_idx` in the JSON body so you can locate and
+fix the offending line:
+
+```json
+{
+  "error": {
+    "message":  "Line 5 duplicates custom_id \"req-1\"",
+    "line_idx": 5
+  }
+}
+```
+
+---
+
+## Errors that appear in the `error_file_id` JSONL
+
+A line can fail **after** the batch was successfully created. Each failed
+line is recorded in the error file with the line's original `custom_id` and
+an `error` object. These are the codes you'll see:
+
+| `error.code` | Triggered when | Recovery |
+|---|---|---|
+| `http_400` | The underlying endpoint rejected the line's body. `error.details` usually contains the upstream error payload. | Fix the line's `body` and re-submit just that line. |
+| `http_401`, `http_403` | The API key used to submit the batch lost permission mid-flight. | Verify key status. |
+| `http_404` | A resource referenced in the body (e.g. model ID) doesn't exist. | Verify model IDs. |
+| `http_413`, `http_422` | Body size or schema rejected by the endpoint. | Reduce input or fix the schema. |
+| `http_420` | Organization quota ran out partway through the batch. | Top up balance and re-submit the failed lines. |
+| `http_5xx` | The upstream service returned an unexpected status. Should be rare — `5xx` responses normally trigger retries before reaching the error file. | Retry; if persistent, contact support. |
+| `retries_exhausted` | The upstream service returned 5xx or 429 on every retry attempt. `error.message` contains the last response. | Retry the line — it's a transient failure. |
+| `dlq_exhausted` | The line was undeliverable at the queue level (e.g. consumer crashed repeatedly). | Retry the line. |
+| `api_key_unavailable` | The API key used to submit the batch was deactivated while the batch was running. | Issue a new key and re-submit failed lines. |
+
+`error.details` may be `null`, a string, or an object depending on the
+underlying endpoint's response. For `http_400` it's typically the upstream
+JSON error body, useful for diagnostics.
+
+---
+
+## Recovering from failures
+
+A batch that ends with some failures is **still** `status: "completed"`.
+The pattern for handling this is:
+
+1. Read `output_file_id` and write successful results to your data store.
+2. Read `error_file_id` and partition by `error.code`:
+   - `http_400`, `http_404`, `http_422`: client-side issues — log, fix the
+     input lines, and resubmit.
+   - `retries_exhausted`, `dlq_exhausted`, `http_5xx`: transient — resubmit
+     as-is.
+   - `http_420`, `api_key_unavailable`: operational — fix the underlying
+     issue first, then resubmit.
+3. Build a smaller JSONL containing only the lines you want to retry, upload,
+   and create a new batch.
+
+Because `custom_id` is preserved end-to-end, retries are easy to deduplicate
+into your existing data store.
+
+---
+
+## When to contact support
+
+Reach out to ZeroGPU support if you see:
+
+- Persistent `500` responses from any endpoint.
+- `Input file object missing` on a file you just uploaded.
+- A batch stuck in `finalizing` for more than 10 minutes.
+- A batch that completes but is missing both `output_file_id` and
+  `error_file_id` while `request_counts.total` is non-zero.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+    Status lifecycle, limits, full Batch object schema.
+  </Card>
+  <Card title="Files API reference" href="/api-reference/batch/files-api">
+    Upload, download, delete — every files-API endpoint.
+  </Card>
+  <Card title="Quickstart" href="/api-reference/batch/getting-started">
+    First batch in under 10 minutes — auth, upload, create, download.
+  </Card>
+</CardGroup>
+

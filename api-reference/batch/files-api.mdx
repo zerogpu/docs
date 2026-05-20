@@ -1,0 +1,375 @@
+---
+title: "Files API"
+description: "Store the JSONL files that drive a batch — input you upload, output and error files the service writes back."
+---
+
+Wire-compatible with OpenAI's `/v1/files`, with these ZeroGPU specifics:
+
+- Only `purpose=batch` is accepted on upload. (`batch_output` and
+  `batch_errors` files are written by the service itself and surfaced to you
+  through the list and retrieve calls.)
+- Authentication uses `x-api-key` + `x-project-id` headers instead of a Bearer
+  token.
+- Files are soft-deleted (the row is preserved for audit; the object is
+  removed from storage immediately).
+
+## Endpoint summary
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/v1/files` | Upload a JSONL file |
+| GET | `/v1/files` | List your project's files |
+| GET | `/v1/files/{file_id}` | Retrieve metadata for one file |
+| GET | `/v1/files/{file_id}/content` | Download the raw JSONL body |
+| DELETE | `/v1/files/{file_id}` | Soft-delete a file |
+
+## Authentication
+
+Every request (except the unauthenticated `OPTIONS` preflight) must include:
+
+```
+x-api-key:    <your-api-key>
+x-project-id: <your-project-uuid>
+```
+
+Missing or invalid headers return `401`. Inactive keys or keys that don't
+belong to the supplied project return `403`. An organization with no balance
+and no free credits returns `420` with an `insufficient_quota` error.
+
+## The File object
+
+This is the shape returned by upload, retrieve, and (inside `data[]`) list.
+
+```json
+{
+  "id":         "file-abc123...",
+  "object":     "file",
+  "bytes":      12345,
+  "created_at": 1736290000,
+  "filename":   "input.jsonl",
+  "purpose":    "batch",
+  "status":     "processed",
+  "expires_at": 1738882000
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | File identifier. Customer uploads have the `file-` prefix; server-written output and error files have the `file_` prefix. Both are valid in every endpoint. |
+| `object` | string | Always `"file"`. |
+| `bytes` | integer | Size in bytes as measured by the server after upload. |
+| `created_at` | integer | Unix timestamp (seconds). |
+| `filename` | string | Original filename you uploaded, or `{file_id}.jsonl` if none was supplied. |
+| `purpose` | string | `"batch"` for uploads, `"batch_output"` for batch results, `"batch_errors"` for batch errors. |
+| `status` | string | Always `"processed"`. The field exists for OpenAI compatibility; there are no `pending` / `error` states. |
+| `expires_at` | integer \| omitted | Unix timestamp at which the file will be removed. Customer uploads expire 30 days after upload. May be absent for server-written files. |
+
+---
+
+## POST `/v1/files` — Upload a file
+
+Uploads a JSONL file that will be used as the input to a batch.
+
+### Request
+
+```
+POST /v1/files
+Content-Type: multipart/form-data
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+Multipart form fields:
+
+| Field | Required | Value |
+|---|---|---|
+| `purpose` | Yes | Must be exactly `"batch"`. |
+| `file` | Yes | The JSONL file. Max **100 MB**. |
+
+<Note>
+**Note — JSONL is validated at batch creation, not upload**
+
+The server stores your file as-is. Malformed JSONL will upload
+  successfully but fail with a 400 (and a `line_idx`) when you
+  call `POST /v1/batches`. See the
+  [JSONL format](/api-reference/batch/jsonl-format) page for the exact schema.
+</Note>
+
+Other notes:
+
+- The file is retained for 30 days unless you delete it.
+- The filename you upload is preserved in the `filename` field of the File
+  object.
+
+### Response — `200 OK`
+
+```json
+{
+  "id":         "file-0123456789abcdef012345",
+  "object":     "file",
+  "bytes":      5000,
+  "created_at": 1736290000,
+  "filename":   "input.jsonl",
+  "purpose":    "batch",
+  "status":     "processed",
+  "expires_at": 1738882000
+}
+```
+
+### Errors
+
+| Status | Code | Cause |
+|---|---|---|
+| `400` | `invalid_content_type` | `Content-Type` was not `multipart/form-data`. |
+| `400` | `invalid_multipart` | The multipart body could not be parsed. |
+| `400` | `invalid_purpose` | `purpose` was anything other than `"batch"`. |
+| `400` | `missing_file` | No `file` field in the multipart body. |
+| `400` | `empty_file` | The uploaded file had zero bytes. |
+| `413` | `file_too_large` | File exceeded 100 MB. |
+| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl -X POST https://api.zerogpu.ai/v1/files \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID" \
+  -F purpose=batch \
+  -F file=@input.jsonl
+```
+
+---
+
+## GET `/v1/files` — List files
+
+Returns the project's files in reverse-chronological order by default.
+
+### Request
+
+```
+GET /v1/files[?purpose=...&order=...&after=...&limit=...]
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+Query parameters (all optional):
+
+| Param | Default | Description |
+|---|---|---|
+| `purpose` | (all) | Filter by purpose: `batch`, `batch_output`, or `batch_errors`. |
+| `order` | `desc` | Sort order on `created_at`. `desc` = newest first, `asc` = oldest first. |
+| `after` | — | Cursor for pagination. Pass the `id` of the last file from the previous page. |
+| `limit` | `10000` | Maximum number of files to return. Must be a positive integer ≤ `10000`. |
+
+### Response — `200 OK`
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id":         "file-abc...",
+      "object":     "file",
+      "bytes":      5000,
+      "created_at": 1736290000,
+      "filename":   "input.jsonl",
+      "purpose":    "batch",
+      "status":     "processed",
+      "expires_at": 1738882000
+    },
+    {
+      "id":         "file_out_xyz...",
+      "object":     "file",
+      "bytes":      12345,
+      "created_at": 1736289900,
+      "filename":   "file_out_xyz.jsonl",
+      "purpose":    "batch_output",
+      "status":     "processed"
+    }
+  ],
+  "has_more": false
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `object` | string | Always `"list"`. |
+| `data` | array | File objects in the requested order. |
+| `has_more` | boolean | `true` if more files exist beyond `limit`. |
+
+To page forward, take the last item's `id` and pass it as `after` on the next
+request, keeping the same `purpose` and `order`.
+
+### Errors
+
+| Status | Code | Cause |
+|---|---|---|
+| `400` | `invalid_limit` | `limit` was not a positive integer. |
+| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl "https://api.zerogpu.ai/v1/files?purpose=batch&limit=20" \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID"
+```
+
+---
+
+## GET `/v1/files/{file_id}` — Retrieve a file
+
+Returns the metadata for a single file. Use this to look up `filename`,
+`bytes`, or `purpose` without downloading the body.
+
+### Request
+
+```
+GET /v1/files/{file_id}
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+### Response — `200 OK`
+
+Same shape as the File object returned by upload.
+
+### Errors
+
+| Status | Code | Cause |
+|---|---|---|
+| `404` | `file_not_found` | File does not exist, belongs to another project, or has been deleted. The same `404` is returned in all three cases to avoid leaking file existence across projects. |
+| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl https://api.zerogpu.ai/v1/files/file-abc123... \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID"
+```
+
+---
+
+## GET `/v1/files/{file_id}/content` — Download a file's body
+
+Streams the raw JSONL body. This is how you read both the input file you
+uploaded and the output / error files produced by a completed batch.
+
+### Request
+
+```
+GET /v1/files/{file_id}/content
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+### Response — `200 OK`
+
+```
+Content-Type:        application/jsonl
+Content-Disposition: attachment; filename="{original_filename}"
+
+<raw JSONL bytes>
+```
+
+The body is streamed; you do not need to fit it in memory.
+
+### Errors
+
+| Status | Code | Cause |
+|---|---|---|
+| `404` | `file_not_found` | File missing, deleted, or belongs to another project. |
+| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl https://api.zerogpu.ai/v1/files/file-out789.../content \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID" \
+  -o output.jsonl
+```
+
+---
+
+## DELETE `/v1/files/{file_id}` — Delete a file
+
+Soft-deletes the file. The stored object is removed from storage immediately;
+the database row is preserved with a `deleted_at` timestamp for audit
+purposes.
+
+After a successful delete, the file disappears from list, retrieve, and
+content endpoints — all three return `404`. Deletes cannot be undone via the
+API.
+
+### Request
+
+```
+DELETE /v1/files/{file_id}
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+### Response — `200 OK`
+
+```json
+{
+  "id":      "file-abc123...",
+  "object":  "file",
+  "deleted": true
+}
+```
+
+### Errors
+
+| Status | Code | Cause |
+|---|---|---|
+| `404` | `file_not_found` | File missing, already deleted, or belongs to another project. |
+| `401` / `403` / `420` / `500` | — | See [errors.md](/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl -X DELETE https://api.zerogpu.ai/v1/files/file-abc123... \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID"
+```
+
+---
+
+## Quotas, limits, and behavior
+
+| Limit | Value |
+|---|---|
+| Max single upload | 100 MB |
+| Default retention | 30 days |
+| Max list `limit` | 10,000 |
+| Accepted upload `purpose` | `batch` only |
+| Returned `purpose` values | `batch`, `batch_output`, `batch_errors` |
+
+Notes:
+
+- There is no rate-limit envelope returned in headers; quota is enforced at
+  the organization level. A request from an organization with no balance and
+  no free credits returns `420 insufficient_quota`.
+- Deleting a file that is the input to an active batch does not stop the
+  batch — the batch reads the input file at creation time, not on demand.
+- The output and error files produced by a batch are written with
+  `purpose: batch_output` and `purpose: batch_errors`. You can list them by
+  filtering on those purposes.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+    Create, list, retrieve batches; status lifecycle and limits.
+  </Card>
+  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+    What an input line, an output line, and an error line look like.
+  </Card>
+  <Card title="Errors reference" href="/api-reference/batch/errors">
+    Every HTTP status, every validation message, every JSONL error code.
+  </Card>
+</CardGroup>
+

@@ -1,0 +1,262 @@
+---
+title: "JSONL Format"
+description: "Mandatory line schemas for input, output, and error JSONL files."
+---
+
+Every batch is driven by three JSONL files:
+
+| File | Direction | Purpose |
+|---|---|---|
+| **Input** | You upload it | One request per line; describes what the batch should do |
+| **Output** | Service writes it | One result per successful line |
+| **Error** | Service writes it | One record per failed line |
+
+This page is the canonical specification for all three line schemas.
+
+## Input JSONL
+
+The input is a JSONL file (one JSON object per line, separated by `\n`). You
+upload it via [`POST /v1/files`](/api-reference/batch/files-api#post-v1files--upload-a-file)
+with `purpose=batch`, then reference its ID when you call
+[`POST /v1/batches`](/api-reference/batch/batches-api#post-v1batches--create-a-batch).
+
+### Line schema
+
+```json
+{
+  "custom_id": "request-1",
+  "method":    "POST",
+  "url":       "/v1/chat/completions",
+  "body":      { /* endpoint-specific payload */ }
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `custom_id` | string | **Yes** | Your identifier for this request. Must be non-empty and **unique within the batch**. Returned verbatim in the corresponding output or error line so you can match results to inputs. |
+| `method` | string | **Yes** | Must be exactly `"POST"`. Any other value is rejected. |
+| `url` | string | **Yes** | The endpoint this line targets. Must be one of the [supported endpoints](/api-reference/batch/supported-endpoints). **All lines in a single batch must share the same `url`**, and it must match the `endpoint` field on the create call. |
+| `body` | object | **Yes** | The request body that would be sent to the synchronous endpoint. See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the per-endpoint shape. The field `stream: true` is rejected. |
+
+### Validation rules
+
+The service performs all of the following checks at `POST /v1/batches` time
+(not at upload time). Failure returns `400` with the offending `line_idx`:
+
+- Each line must be valid JSON (not arrays, not primitives — must be an object).
+- `custom_id` non-empty string, unique across the whole batch.
+- `method` must equal `"POST"`.
+- `url` must be one of the allowed endpoints and must be the same on every
+  line in the file.
+- `body` must be a non-empty object.
+- `body.stream === true` is rejected (streaming is not supported in batch
+  mode).
+- Per-line size ≤ **1 MB**.
+- Total file size ≤ **200 MB**.
+- Total line count ≤ **50,000**.
+- The file must contain at least one line.
+
+### Format details
+
+- Lines are separated by `\n` (LF). A trailing newline is allowed.
+- Blank lines are skipped.
+- UTF-8 encoding is required.
+- The `url` value matches the `endpoint` field on the create request
+  **exactly** — no trailing slash, no query string, no protocol/host prefix.
+
+### Example — chat completions
+
+```jsonl
+{"custom_id":"req-1","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of France?"}]}}
+{"custom_id":"req-2","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Germany?"}]}}
+{"custom_id":"req-3","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Italy?"}]}}
+```
+
+### Example — IAB classification
+
+```jsonl
+{"custom_id":"doc-1","method":"POST","url":"/usecase/classify/iab","body":{"text":"Streaming services keep raising prices...","min_confidence_score":0.0001}}
+{"custom_id":"doc-2","method":"POST","url":"/usecase/classify/iab","body":{"text":"The new sedan accelerates from 0 to 60 mph...","min_confidence_score":0.0001}}
+```
+
+### Example — GLiNER entity extraction
+
+```jsonl
+{"custom_id":"ner-1","method":"POST","url":"/gliner","body":{"model":"<gliner-model-id>","input":"John Smith works at Google in Mountain View.","metadata":{"labels":["PERSON","ORG","LOCATION"],"threshold":0.5}}}
+```
+
+See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the body schemas of
+every supported endpoint.
+
+---
+
+## Output JSONL
+
+When a batch reaches `status: "completed"`, the service writes the successful
+results to a file referenced by `output_file_id` on the Batch object. You
+download it via
+[`GET /v1/files/{file_id}/content`](/api-reference/batch/files-api#get-v1filesfile_idcontent--download-a-files-body).
+
+Only lines that received a **2xx** response from the underlying endpoint
+appear in the output file. Failed lines go to the error file (see below).
+
+The order of lines in the output file is **not guaranteed** to match the
+order of lines in the input file — match results to inputs by `custom_id`.
+
+### Line schema
+
+```json
+{
+  "custom_id": "request-1",
+  "response": {
+    "status_code": 200,
+    "request_id":  null,
+    "body":        { /* the endpoint's normal response body */ }
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `custom_id` | string | Echo of the `custom_id` you supplied on the input line. |
+| `response.status_code` | integer | HTTP status from the underlying endpoint (will always be 2xx in this file). |
+| `response.request_id` | null | Reserved for OpenAI compatibility — always `null`. |
+| `response.body` | object | The same JSON body the synchronous endpoint would have returned for this request. |
+
+See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the exact
+`response.body` shape per endpoint.
+
+### Example — chat completions output
+
+```jsonl
+{"custom_id":"req-1","response":{"status_code":200,"request_id":null,"body":{"id":"chatcmpl-abc","object":"chat.completion","created":1736295000,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Paris."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14}}}}
+{"custom_id":"req-2","response":{"status_code":200,"request_id":null,"body":{"id":"chatcmpl-def","object":"chat.completion","created":1736295001,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Berlin."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14}}}}
+```
+
+### Reading the output
+
+```python
+import json
+
+with open("output.jsonl") as f:
+    for line in f:
+        record = json.loads(line)
+        custom_id = record["custom_id"]
+        body      = record["response"]["body"]
+        answer    = body["choices"][0]["message"]["content"]
+        print(f"{custom_id}: {answer}")
+```
+
+---
+
+## Error JSONL
+
+When a batch reaches `status: "completed"` (or `expired`) and at least one
+line failed, the service writes the failures to a file referenced by
+`error_file_id`. Successful lines go to the output file; the two are
+disjoint.
+
+### Line schema
+
+```json
+{
+  "custom_id": "request-5",
+  "error": {
+    "code":    "http_400",
+    "message": "request body is invalid",
+    "details": { /* optional, the upstream error body */ }
+  }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `custom_id` | string | Echo of the `custom_id` you supplied on the input line. |
+| `error.code` | string | Machine-readable error code. See the table below. |
+| `error.message` | string | Human-readable description. |
+| `error.details` | object \| null | Optional. For HTTP failures, this is the raw error response body from the underlying endpoint. |
+
+### Error codes you might see
+
+| `error.code` | Meaning | What to do |
+|---|---|---|
+| `http_400` | The line's body was rejected by the endpoint (e.g. invalid `model`, malformed `messages`). `details` contains the upstream error body. | Fix the line's `body` and rerun just that line. |
+| `http_401`, `http_403` | The API key used to submit the batch is no longer valid for this endpoint mid-flight. | Check the key status. |
+| `http_404` | The endpoint or a resource referenced in the body (e.g. model ID) doesn't exist. | Verify model IDs and endpoint URL. |
+| `http_413`, `http_422` | Line body was rejected for size or schema reasons. | Reduce input length or fix schema. |
+| `http_420` | Organization ran out of quota partway through the batch. | Top up balance and rerun remaining lines. |
+| `retries_exhausted` | The underlying endpoint returned 5xx or 429 on every retry attempt. The `message` contains the last upstream response. | Retry the line; it's a transient failure. |
+| `dlq_exhausted` | The line failed in a way the queue couldn't even retry (e.g. queue runtime crash on the message). | Retry the line. |
+| `api_key_unavailable` | The API key used to submit the batch was revoked or deactivated while the batch was running. | Issue a new key and rerun remaining lines. |
+
+### Example — error file
+
+```jsonl
+{"custom_id":"req-5","error":{"code":"http_400","message":"request body is invalid","details":{"error":{"message":"messages: missing required field","type":"invalid_request_error"}}}}
+{"custom_id":"req-9","error":{"code":"retries_exhausted","message":"Line failed after 4 attempts: orchestration-api returned 503: upstream timeout"}}
+{"custom_id":"req-12","error":{"code":"dlq_exhausted","message":"Message exhausted main-queue retries and was routed to the DLQ"}}
+```
+
+### Reading the error file
+
+```python
+import json
+
+with open("errors.jsonl") as f:
+    for line in f:
+        record = json.loads(line)
+        custom_id = record["custom_id"]
+        code      = record["error"]["code"]
+        msg       = record["error"]["message"]
+        print(f"FAIL {custom_id} [{code}]: {msg}")
+```
+
+---
+
+## Matching outputs and errors back to inputs
+
+The output and error files together account for **all** lines in your input
+file, but their order is not preserved and they may be split across the two
+files. To reconstruct results for your dataset:
+
+```python
+import json
+
+results = {}                                # custom_id -> result-or-error
+with open("output.jsonl") as f:
+    for line in f:
+        rec = json.loads(line)
+        results[rec["custom_id"]] = ("ok", rec["response"]["body"])
+with open("errors.jsonl") as f:
+    for line in f:
+        rec = json.loads(line)
+        results[rec["custom_id"]] = ("err", rec["error"])
+
+# now iterate your original inputs and look up by custom_id
+```
+
+If a `custom_id` you submitted is missing from both files, the batch is not
+complete yet — re-check `status` and download again.
+
+<Tip>
+**✓ Always match by `custom_id`**
+
+Output and error lines are <em>not</em> guaranteed to appear in input
+  order. Index your inputs by `custom_id` in your code and look
+  results up by that key.
+</Tip>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
+    Per-endpoint request body and response body for all 5 supported URLs.
+  </Card>
+  <Card title="Examples" href="/api-reference/batch/examples">
+    Full end-to-end walkthrough in curl and Python.
+  </Card>
+  <Card title="Errors reference" href="/api-reference/batch/errors">
+    Every JSONL validation message and error code, with recovery guidance.
+  </Card>
+</CardGroup>
+

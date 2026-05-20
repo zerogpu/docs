@@ -1,0 +1,370 @@
+---
+title: "Examples"
+description: "End-to-end walkthroughs in `curl` and the Python `openai` SDK."
+---
+
+Both examples submit 3 chat-completion requests, wait for completion, and
+parse the results.
+
+The examples assume two environment variables are set:
+
+```bash
+export ZGPU_API_KEY="your-api-key"
+export ZGPU_PROJECT_ID="your-project-uuid"
+```
+
+And that the production base URL is used. Swap in `staging.api.zerogpu.ai` or
+`dev.api.zerogpu.ai` for non-prod work.
+
+---
+
+## curl walkthrough
+
+### 1. Build the input JSONL
+
+```bash
+cat > input.jsonl <<'EOF'
+{"custom_id":"q-1","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of France?"}]}}
+{"custom_id":"q-2","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Germany?"}]}}
+{"custom_id":"q-3","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Italy?"}]}}
+EOF
+```
+
+### 2. Upload it
+
+```bash
+UPLOAD=$(curl -s -X POST https://api.zerogpu.ai/v1/files \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID" \
+  -F purpose=batch \
+  -F file=@input.jsonl)
+
+echo "$UPLOAD"
+# {
+#   "id": "file-Abc123...",
+#   "object": "file",
+#   "bytes": 612,
+#   "filename": "input.jsonl",
+#   "purpose": "batch",
+#   "status": "processed",
+#   ...
+# }
+
+INPUT_FILE_ID=$(echo "$UPLOAD" | jq -r '.id')
+```
+
+### 3. Create the batch
+
+```bash
+BATCH=$(curl -s -X POST https://api.zerogpu.ai/v1/batches \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID" \
+  -H "content-type: application/json" \
+  -d "{
+    \"input_file_id\": \"$INPUT_FILE_ID\",
+    \"endpoint\": \"/v1/chat/completions\",
+    \"completion_window\": \"24h\",
+    \"metadata\": { \"job\": \"capitals-demo\" }
+  }")
+
+echo "$BATCH"
+# {
+#   "id": "batch_01HZX...",
+#   "object": "batch",
+#   "status": "in_progress",
+#   "input_file_id": "file-Abc123...",
+#   "request_counts": { "total": 3, "completed": 0, "failed": 0 },
+#   ...
+# }
+
+BATCH_ID=$(echo "$BATCH" | jq -r '.id')
+```
+
+### 4. Poll until complete
+
+```bash
+while true; do
+  STATUS_JSON=$(curl -s "https://api.zerogpu.ai/v1/batches/$BATCH_ID" \
+    -H "x-api-key: $ZGPU_API_KEY" \
+    -H "x-project-id: $ZGPU_PROJECT_ID")
+  STATUS=$(echo "$STATUS_JSON" | jq -r '.status')
+  echo "$STATUS_JSON" | jq -c '{status, request_counts}'
+  case "$STATUS" in
+    completed|failed|expired) break ;;
+  esac
+  sleep 30
+done
+
+echo "Final status: $STATUS"
+OUTPUT_FILE_ID=$(echo "$STATUS_JSON" | jq -r '.output_file_id')
+ERROR_FILE_ID=$(echo "$STATUS_JSON" | jq -r '.error_file_id')
+```
+
+### 5. Download the results
+
+```bash
+if [ "$OUTPUT_FILE_ID" != "null" ]; then
+  curl -s "https://api.zerogpu.ai/v1/files/$OUTPUT_FILE_ID/content" \
+    -H "x-api-key: $ZGPU_API_KEY" \
+    -H "x-project-id: $ZGPU_PROJECT_ID" \
+    -o output.jsonl
+  echo "--- output.jsonl ---"
+  cat output.jsonl
+fi
+
+if [ "$ERROR_FILE_ID" != "null" ]; then
+  curl -s "https://api.zerogpu.ai/v1/files/$ERROR_FILE_ID/content" \
+    -H "x-api-key: $ZGPU_API_KEY" \
+    -H "x-project-id: $ZGPU_PROJECT_ID" \
+    -o errors.jsonl
+  echo "--- errors.jsonl ---"
+  cat errors.jsonl
+fi
+```
+
+### 6. Extract the answers
+
+```bash
+jq -r '"\(.custom_id): \(.response.body.choices[0].message.content)"' output.jsonl
+# q-1: Paris.
+# q-2: Berlin.
+# q-3: Rome.
+```
+
+---
+
+## Python OpenAI SDK walkthrough
+
+The ZeroGPU Batch API is wire-compatible with OpenAI's API. You can use the
+official `openai` Python SDK by pointing it at the ZeroGPU base URL and
+supplying the ZeroGPU auth headers via `default_headers`.
+
+### Install
+
+```bash
+pip install openai
+```
+
+### Full end-to-end script
+
+```python
+import json
+import os
+import time
+from openai import OpenAI
+
+API_KEY     = os.environ["ZGPU_API_KEY"]
+PROJECT_ID  = os.environ["ZGPU_PROJECT_ID"]
+MODEL_ID    = "<model-id>"
+
+client = OpenAI(
+    # The OpenAI SDK requires `api_key` to be a string. ZeroGPU ignores the
+    # Authorization header and authenticates via x-api-key / x-project-id
+    # below, so this value is effectively unused.
+    api_key="ignored-by-zerogpu",
+    base_url="https://api.zerogpu.ai/v1",
+    default_headers={
+        "x-api-key":    API_KEY,
+        "x-project-id": PROJECT_ID,
+    },
+)
+
+# 1. Build the input JSONL
+questions = [
+    ("q-1", "What is the capital of France?"),
+    ("q-2", "What is the capital of Germany?"),
+    ("q-3", "What is the capital of Italy?"),
+]
+
+with open("input.jsonl", "w") as f:
+    for custom_id, question in questions:
+        line = {
+            "custom_id": custom_id,
+            "method":    "POST",
+            "url":       "/v1/chat/completions",
+            "body": {
+                "model":    MODEL_ID,
+                "messages": [{"role": "user", "content": question}],
+            },
+        }
+        f.write(json.dumps(line) + "\n")
+
+# 2. Upload
+uploaded = client.files.create(
+    file=open("input.jsonl", "rb"),
+    purpose="batch",
+)
+print(f"Uploaded {uploaded.id} ({uploaded.bytes} bytes)")
+
+# 3. Create batch
+batch = client.batches.create(
+    input_file_id=uploaded.id,
+    endpoint="/v1/chat/completions",
+    completion_window="24h",
+    metadata={"job": "capitals-demo"},
+)
+print(f"Created {batch.id}: status={batch.status}, total={batch.request_counts.total}")
+
+# 4. Poll until terminal
+while batch.status not in ("completed", "failed", "expired"):
+    time.sleep(30)
+    batch = client.batches.retrieve(batch.id)
+    print(
+        f"  status={batch.status}, "
+        f"completed={batch.request_counts.completed}/{batch.request_counts.total}, "
+        f"failed={batch.request_counts.failed}"
+    )
+
+print(f"Final status: {batch.status}")
+
+# 5. Download output
+if batch.output_file_id:
+    output = client.files.content(batch.output_file_id)
+    with open("output.jsonl", "wb") as f:
+        f.write(output.read())
+
+if batch.error_file_id:
+    errors = client.files.content(batch.error_file_id)
+    with open("errors.jsonl", "wb") as f:
+        f.write(errors.read())
+
+# 6. Parse and print results
+def load_jsonl(path):
+    with open(path) as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+if batch.output_file_id:
+    for rec in load_jsonl("output.jsonl"):
+        cid    = rec["custom_id"]
+        answer = rec["response"]["body"]["choices"][0]["message"]["content"]
+        print(f"OK   {cid}: {answer}")
+
+if batch.error_file_id:
+    for rec in load_jsonl("errors.jsonl"):
+        cid  = rec["custom_id"]
+        code = rec["error"]["code"]
+        msg  = rec["error"]["message"]
+        print(f"FAIL {cid} [{code}]: {msg}")
+```
+
+### Sample output
+
+```
+Uploaded file-Abc123... (612 bytes)
+Created batch_01HZX...: status=in_progress, total=3
+  status=in_progress, completed=2/3, failed=0
+  status=completed, completed=3/3, failed=0
+Final status: completed
+OK   q-1: Paris.
+OK   q-2: Berlin.
+OK   q-3: Rome.
+```
+
+### SDK notes
+
+- **`api_key`**: The OpenAI SDK requires a non-empty `api_key` string. ZeroGPU
+  ignores the `Authorization` header and reads `x-api-key` instead, so any
+  string works. Use a placeholder like `"ignored-by-zerogpu"` to make the
+  intent obvious.
+- **`base_url`**: Must include the `/v1` suffix because the SDK appends paths
+  like `/files` and `/batches` directly to the base URL.
+- **`default_headers`**: This is how the OpenAI SDK lets you attach custom
+  headers to every request — exactly what's needed for `x-api-key` and
+  `x-project-id`.
+- **`client.batches.create(...)`**: The SDK call accepts the same fields as
+  the raw API: `input_file_id`, `endpoint`, `completion_window`, `metadata`.
+- **`client.files.content(file_id).read()`**: Returns the raw JSONL bytes.
+  Iterate `.iter_lines()` if you prefer to stream rather than load it all.
+- **No cancel**: `client.batches.cancel(batch_id)` will fail because the
+  endpoint is not implemented. Just stop polling if you need to abandon a
+  batch.
+
+---
+
+## Worked example — IAB classification batch
+
+A more realistic example: classify 1,000 documents and write the IAB
+categories to a CSV.
+
+```python
+import csv
+import json
+import os
+import time
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="ignored-by-zerogpu",
+    base_url="https://api.zerogpu.ai/v1",
+    default_headers={
+        "x-api-key":    os.environ["ZGPU_API_KEY"],
+        "x-project-id": os.environ["ZGPU_PROJECT_ID"],
+    },
+)
+
+# Load your data — anything that yields (doc_id, text) tuples
+documents = load_my_dataset()  # 1000 records
+
+# 1. Write JSONL
+with open("classify.jsonl", "w") as f:
+    for doc_id, text in documents:
+        line = {
+            "custom_id": doc_id,
+            "method":    "POST",
+            "url":       "/usecase/classify/iab",
+            "body":      {"text": text, "min_confidence_score": 0.1},
+        }
+        f.write(json.dumps(line) + "\n")
+
+# 2-3. Upload + create
+uploaded = client.files.create(file=open("classify.jsonl", "rb"), purpose="batch")
+batch    = client.batches.create(
+    input_file_id=uploaded.id,
+    endpoint="/usecase/classify/iab",
+    completion_window="24h",
+)
+
+# 4. Poll
+while batch.status not in ("completed", "failed", "expired"):
+    time.sleep(60)
+    batch = client.batches.retrieve(batch.id)
+    print(f"{batch.status}: {batch.request_counts.completed}/{batch.request_counts.total}")
+
+if batch.status != "completed":
+    raise SystemExit(f"Batch ended with status {batch.status}")
+
+# 5. Download and parse
+output_bytes = client.files.content(batch.output_file_id).read()
+results = {}
+for raw in output_bytes.decode().splitlines():
+    rec = json.loads(raw)
+    content = rec["response"]["body"]["choices"][0]["message"]["content"]
+    results[rec["custom_id"]] = content["classification_response"]
+
+# 6. Write CSV
+with open("results.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["doc_id", "top_content_category", "score"])
+    for doc_id, cls in results.items():
+        top = cls["content"][0] if cls["content"] else None
+        writer.writerow([
+            doc_id,
+            top["name"] if top else "",
+            top["score"] if top else "",
+        ])
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+    Exact line schema for input, output, and error files.
+  </Card>
+  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
+    Per-endpoint request body and response body for all 5 supported URLs.
+  </Card>
+  <Card title="Errors reference" href="/api-reference/batch/errors">
+    How to recover from failed lines without re-running the whole batch.
+  </Card>
+</CardGroup>
+
