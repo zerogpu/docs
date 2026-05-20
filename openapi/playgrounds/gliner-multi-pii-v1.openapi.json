@@ -3,7 +3,7 @@
   "info": {
     "title": "gliner-multi-pii-v1 playground",
     "version": "1.0",
-    "description": "Interactive playground for **gliner-multi-pii-v1**.\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **gliner-multi-pii-v1**.\nModel is always `gliner-multi-pii-v1` (included in each request example; not editable in the form).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
   },
   "servers": [
     {
@@ -30,24 +30,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateResponseRequest"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "type": "string",
-                        "const": "gliner-multi-pii-v1",
-                        "default": "gliner-multi-pii-v1",
-                        "example": "gliner-multi-pii-v1",
-                        "readOnly": true,
-                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/CreateResponseRequest"
               },
               "examples": {
                 "redact": {
@@ -128,24 +111,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "type": "string",
-                        "const": "gliner-multi-pii-v1",
-                        "default": "gliner-multi-pii-v1",
-                        "example": "gliner-multi-pii-v1",
-                        "readOnly": true,
-                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/CreateChatCompletionRequest"
               },
               "examples": {
                 "redact": {
@@ -235,18 +201,9 @@
       "CreateResponseRequest": {
         "type": "object",
         "required": [
-          "model",
           "input"
         ],
         "properties": {
-          "model": {
-            "type": "string",
-            "const": "gliner-multi-pii-v1",
-            "default": "gliner-multi-pii-v1",
-            "example": "gliner-multi-pii-v1",
-            "readOnly": true,
-            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
-          },
           "input": {
             "type": "string",
             "minLength": 1,
@@ -266,13 +223,9 @@
       "CreateChatCompletionRequest": {
         "type": "object",
         "required": [
-          "model",
           "messages"
         ],
         "properties": {
-          "model": {
-            "type": "string"
-          },
           "messages": {
             "type": "array",
             "minItems": 1,

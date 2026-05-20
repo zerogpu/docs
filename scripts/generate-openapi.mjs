@@ -288,6 +288,19 @@ function requestBodySchemaWithFixedModel(baseRef, modelId, description) {
   };
 }
 
+/** Per-model playgrounds: omit `model` from the form schema so Mintlify does not show a deletable enum field. */
+function playgroundComponentsForModel(components) {
+  for (const schemaName of ["CreateResponseRequest", "CreateChatCompletionRequest"]) {
+    const schema = components.schemas[schemaName];
+    if (!schema?.properties) continue;
+    delete schema.properties.model;
+    if (Array.isArray(schema.required)) {
+      schema.required = schema.required.filter((key) => key !== "model");
+    }
+  }
+  return components;
+}
+
 function buildModelPlaygroundOpenApi(model) {
   const modelId = model.modelId;
   const displayName = model.modelDisplayName || modelId;
@@ -310,10 +323,7 @@ function buildModelPlaygroundOpenApi(model) {
           required: true,
           content: {
             "application/json": {
-              schema: requestBodySchemaWithFixedModel(
-                "#/components/schemas/CreateResponseRequest",
-                modelId
-              ),
+              schema: { $ref: "#/components/schemas/CreateResponseRequest" },
               examples: responsesExamples,
             },
           },
@@ -360,15 +370,7 @@ function buildModelPlaygroundOpenApi(model) {
           required: true,
           content: {
             "application/json": {
-              schema: {
-                allOf: [
-                  { $ref: "#/components/schemas/CreateChatCompletionRequest" },
-                  {
-                    type: "object",
-                    properties: { model: fixedModelProperty(modelId) },
-                  },
-                ],
-              },
+              schema: { $ref: "#/components/schemas/CreateChatCompletionRequest" },
               examples: chatExamples,
             },
           },
@@ -395,9 +397,8 @@ function buildModelPlaygroundOpenApi(model) {
 
   if (operations.length === 0) return null;
 
-  const components = sharedComponents();
+  const components = playgroundComponentsForModel(sharedComponents());
   if (Object.keys(responsesExamples).length > 0) {
-    components.schemas.CreateResponseRequest.properties.model = fixedModelProperty(modelId);
     components.schemas.CreateResponseRequest.properties.input =
       buildResponsesInputSchema(responsesExamples);
   }
@@ -409,6 +410,7 @@ function buildModelPlaygroundOpenApi(model) {
       version: "1.0",
       description: [
         `Interactive playground for **${modelId}**.`,
+        `Model is always \`${modelId}\` (included in each request example; not editable in the form).`,
         "Use the **request example** selector to switch use cases (JSON, NER, PII, etc.).",
         "Authentication: `x-api-key` and `x-project-id`.",
       ].join("\n"),
