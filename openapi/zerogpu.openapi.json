@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU API",
     "version": "1.0",
-    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** live on each [model catalog](/platform/model-catalog) page with request examples for that model's use cases.\nThese endpoint pages show a generic shape only."
+    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** are listed on [Model playgrounds](/api-reference/models) with request examples for each model's use cases.\nThese endpoint pages show a generic shape only."
   },
   "servers": [
     {
@@ -49,7 +49,7 @@
                         "default": "zlm-v1-iab-classify-edge-enriched",
                         "example": "zlm-v1-iab-classify-edge-enriched",
                         "readOnly": true,
-                        "description": "Model identifier (fixed on this page). Open a [model page](/platform/model-catalog) for a dedicated playground with other models."
+                        "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model."
                       }
                     }
                   }
@@ -206,7 +206,7 @@
             "default": "zlm-v1-iab-classify-edge-enriched",
             "example": "zlm-v1-iab-classify-edge-enriched",
             "readOnly": true,
-            "description": "Model identifier (fixed on this page). Open a [model page](/platform/model-catalog) for a dedicated playground with other models."
+            "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model."
           },
           "input": {
             "description": "Model-dependent input. Plain string or message list with role and content.",
@@ -245,7 +245,7 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "Model identifier. Open a [model page](/platform/model-catalog) for a dedicated playground.",
+            "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "example": "zlm-v1-iab-classify-edge-enriched"
           },
           "messages": {

@@ -4,7 +4,7 @@ description: "Send input to an AI model and receive a response."
 openapi: "openapi/zerogpu.openapi.json POST /responses"
 ---
 
-Send input to an AI model and receive a generated response. For a **live playground** with the correct body for a specific model, open that model in the [model catalog](/platform/model-catalog). The playground below shows a generic request shape only.
+Send input to an AI model and receive a generated response. For a **live playground** with the correct body for a specific model, open a [model page](/api-reference/models). The playground below shows a generic request shape only.
 
 ### `input` shape {#input-shape}
 
@@ -27,7 +27,7 @@ Use the format your model expects; if you get `400` with `invalid_type` on `inpu
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `model` | string | Yes | The model identifier (available from your dashboard) |
+| `model` | string | Yes | Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model. |
 | `input` | string **or** array | Yes | Plain text, or list of input message objects (model-dependent) |
 | `text` | object | No | Response format configuration |
 | `metadata` | object | No | Optional model-specific parameters (e.g. PII `mask`, `usecase`) when the model supports them |

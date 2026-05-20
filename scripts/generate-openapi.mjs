@@ -19,6 +19,12 @@ const modelsIndexPath = path.join(docsRoot, "api-reference", "models", "index.md
 const docsJsonPath = path.join(docsRoot, "docs.json");
 const fallbackPath = path.join(docsRoot, "snippets", "model-catalog-fallback.json");
 
+const MODEL_PLAYGROUNDS_PATH = "/api-reference/models";
+const MODEL_FIELD_DESCRIPTION =
+  "Model identifier. Open a [model page](" +
+  MODEL_PLAYGROUNDS_PATH +
+  ") for a dedicated playground with the correct body for that model.";
+
 function exampleKey(modelId) {
   return String(modelId).replace(/[^a-zA-Z0-9_-]/g, "_");
 }
@@ -468,18 +474,14 @@ function buildMainOpenApiDocument(models) {
     : undefined;
 
   const defaultResponsesModelId = firstResponses?.modelId || "gliner2-base-v1";
-  const responsesModelDescription =
-    "Model identifier (fixed on this page). Open a [model page](/platform/model-catalog) for a dedicated playground with other models.";
-
   const components = sharedComponents();
   components.schemas.CreateResponseRequest.properties.model = fixedModelProperty(
     defaultResponsesModelId,
-    responsesModelDescription
+    MODEL_FIELD_DESCRIPTION
   );
   components.schemas.CreateChatCompletionRequest.properties.model = {
     type: "string",
-    description:
-      "Model identifier. Open a [model page](/platform/model-catalog) for a dedicated playground.",
+    description: MODEL_FIELD_DESCRIPTION,
     example: firstChat?.modelId || "gliner-multi-pii-v1",
   };
 
@@ -493,7 +495,7 @@ function buildMainOpenApiDocument(models) {
         "Authentication uses `x-api-key` and `x-project-id` headers on every request.",
         "Documentation: https://docs.zerogpu.ai",
         "",
-        "**Per-model playgrounds** live on each [model catalog](/platform/model-catalog) page with request examples for that model's use cases.",
+        `**Per-model playgrounds** are listed on [Model playgrounds](${MODEL_PLAYGROUNDS_PATH}) with request examples for each model's use cases.`,
         "These endpoint pages show a generic shape only.",
       ].join("\n"),
     },
@@ -518,7 +520,7 @@ function buildMainOpenApiDocument(models) {
                 schema: requestBodySchemaWithFixedModel(
                   "#/components/schemas/CreateResponseRequest",
                   defaultResponsesModelId,
-                  responsesModelDescription
+                  MODEL_FIELD_DESCRIPTION
                 ),
                 ...(responsesExamples ? { examples: responsesExamples } : {}),
               },
@@ -656,7 +658,7 @@ title: "Model playgrounds"
 description: "Interactive API playgrounds per catalog model, under API Reference."
 ---
 
-Each model has its own playground with a fixed model ID and **request examples** for that model's use cases (JSON extraction, NER, classification, and so on). Open a model below or from the [model catalog](/platform/model-catalog).
+Each model has its own playground with a fixed model ID and **request examples** for that model's use cases (JSON extraction, NER, classification, and so on). Open a model below or from the [model catalog](/platform/model-catalog). For the full list under API Reference, see [Model playgrounds](/api-reference/models).
 
 <CardGroup cols={2}>
 ${cards}
