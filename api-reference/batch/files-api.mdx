@@ -354,7 +354,7 @@ Notes:
   the organization level. A request from an organization with no balance and
   no free credits returns `420 insufficient_quota`.
 - Deleting a file that is the input to an active batch does not stop the
-  batch: the batch reads the input file at creation time, not on demand.
+  batch. The batch reads the input file at creation time, not on demand.
 - The output and error files produced by a batch are written with
   `purpose: batch_output` and `purpose: batch_errors`. You can list them by
   filtering on those purposes.

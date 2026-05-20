@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Replace em dash (U+2014) and en dash (U+2013) with ASCII hyphen/comma across the docs repo.
+ * Replace em dash (U+2014) and en dash (U+2013) with ASCII punctuation across the docs repo.
+ * Em dash + lowercase continuation becomes a comma; other em dashes become a period.
  * Run from docs/: node scripts/normalize-dashes.mjs
  */
 import { readdir, readFile, writeFile } from "node:fs/promises";
@@ -29,8 +30,10 @@ const TEXT_EXT = new Set([
 ]);
 
 function normalizeDashes(text) {
+  // Em dash before a lowercase word was usually a parenthetical, not a title.
   return text
-    .replace(/ \u2014 /g, ", ")
+    .replace(/ \u2014 ([a-z])/g, ", $1")
+    .replace(/ \u2014 /g, ". ")
     .replace(/\u2014/g, "-")
     .replace(/\u2013/g, "-");
 }

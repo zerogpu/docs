@@ -1,6 +1,6 @@
 ---
 title: "Supported Endpoints"
-description: "The five endpoints a batch line can target. Same request body, same response body: only the routing is asynchronous."
+description: "The five endpoints a batch line can target. Same request body, same response body; only the routing is asynchronous."
 ---
 
 Every line in a batch input file targets exactly one of five endpoints, set in
@@ -148,7 +148,7 @@ The model output text is at `output[0].content[0].text`.
 ## `/summary`
 
 Text summarization. The request shape is an OpenAI chat-completions request,
-and the response is an OpenAI chat-completions response: only the routing
+and the response is an OpenAI chat-completions response. Only the routing
 differs.
 
 ### Request body (inside JSONL `body`)
