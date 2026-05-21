@@ -263,13 +263,13 @@ function sharedComponents() {
   };
 }
 
+/** Fixed model for per-model playgrounds. Omit readOnly so Mintlify includes model in the request body. */
 function fixedModelProperty(modelId, description) {
   return {
     type: "string",
     const: modelId,
     default: modelId,
     example: modelId,
-    readOnly: true,
     description:
       description ||
       "Model identifier (fixed for this playground). Use request examples to change use cases.",
@@ -480,10 +480,12 @@ function buildMainOpenApiDocument(models) {
 
   const defaultResponsesModelId = firstResponses?.modelId || "gliner2-base-v1";
   const components = sharedComponents();
-  components.schemas.CreateResponseRequest.properties.model = fixedModelProperty(
-    defaultResponsesModelId,
-    MODEL_FIELD_DESCRIPTION
-  );
+  components.schemas.CreateResponseRequest.properties.model = {
+    type: "string",
+    description: MODEL_FIELD_DESCRIPTION,
+    default: defaultResponsesModelId,
+    example: defaultResponsesModelId,
+  };
   components.schemas.CreateChatCompletionRequest.properties.model = {
     type: "string",
     description: MODEL_FIELD_DESCRIPTION,
@@ -510,23 +512,13 @@ function buildMainOpenApiDocument(models) {
       "/responses": {
         post: {
           operationId: "createResponse",
-          summary: "Send input to a model and receive a response",
+          summary: "Create response",
           tags: ["Responses"],
-          "x-mint": {
-            metadata: {
-              title: "Responses",
-              description: "Send input to an AI model and receive a response.",
-            },
-          },
           requestBody: {
             required: true,
             content: {
               "application/json": {
-                schema: requestBodySchemaWithFixedModel(
-                  "#/components/schemas/CreateResponseRequest",
-                  defaultResponsesModelId,
-                  MODEL_FIELD_DESCRIPTION
-                ),
+                schema: { $ref: "#/components/schemas/CreateResponseRequest" },
                 ...(responsesExamples ? { examples: responsesExamples } : {}),
               },
             },

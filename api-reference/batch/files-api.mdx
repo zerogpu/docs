@@ -3,6 +3,24 @@ title: "Files API"
 description: "Store the JSONL files that drive a batch, input you upload, output and error files the service writes back."
 ---
 
+<CardGroup cols={2}>
+  <Card title="Upload file" href="/api-reference/batch/upload-file">
+    `POST /v1/files` — attach JSONL with `purpose=batch`.
+  </Card>
+  <Card title="List files" href="/api-reference/batch/list-files">
+    `GET /v1/files` — filter by purpose, paginate with `after`.
+  </Card>
+  <Card title="Retrieve file" href="/api-reference/batch/retrieve-file">
+    `GET /v1/files/{file_id}` — metadata only.
+  </Card>
+  <Card title="Download file" href="/api-reference/batch/download-file">
+    `GET /v1/files/{file_id}/content` — raw JSONL body.
+  </Card>
+  <Card title="Delete file" href="/api-reference/batch/delete-file">
+    `DELETE /v1/files/{file_id}` — soft-delete.
+  </Card>
+</CardGroup>
+
 Wire-compatible with OpenAI's `/v1/files`, with these ZeroGPU specifics:
 
 - Only `purpose=batch` is accepted on upload. Server-written output files

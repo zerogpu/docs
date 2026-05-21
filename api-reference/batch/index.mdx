@@ -10,24 +10,32 @@ rate limits.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/api-reference/batch/getting-started">
-    First batch in under 10 minutes, auth, upload, create, download.
+    First batch in under 10 minutes: auth, upload, create, poll, download.
+  </Card>
+  <Card title="Upload file (playground)" href="/api-reference/batch/upload-file">
+    `POST /v1/files` — attach JSONL with `purpose=batch`.
+  </Card>
+  <Card title="Create batch (playground)" href="/api-reference/batch/create-batch">
+    `POST /v1/batches` after you have an input file id.
+  </Card>
+  <Card title="Retrieve batch (playground)" href="/api-reference/batch/retrieve-batch">
+    Poll `GET /v1/batches/{batch_id}` for status and output file ids.
   </Card>
   <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
-    Mandatory input line schema, output schema, error schema, and validation rules.
+    Input line schema, output schema, error schema, validation rules.
   </Card>
-  <Card title="Supported endpoint" href="/api-reference/batch/supported-endpoints">
-    Only `/v1/chat/completions` is batchable. Body and response shape.
+  <Card title="Files API reference" href="/api-reference/batch/files-api">
+    All five `/v1/files` endpoints (prose).
+  </Card>
+  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+    Create, list, retrieve, cancel (prose).
   </Card>
   <Card title="Examples" href="/api-reference/batch/examples">
     End-to-end walkthroughs in `curl` and the Python `openai` SDK.
   </Card>
-  <Card title="Create batch (playground)" href="/api-reference/batch/create-batch">
-    Try `POST /v1/batches` after you have an input file id.
-  </Card>
-  <Card title="Retrieve batch (playground)" href="/api-reference/batch/retrieve-batch">
-    Poll `GET /v1/batches/{batch_id}` for status and file ids.
-  </Card>
 </CardGroup>
+
+
 
 ## Quick facts
 

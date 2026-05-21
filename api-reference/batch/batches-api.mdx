@@ -3,6 +3,21 @@ title: "Batches API"
 description: "Submit, monitor, cancel, and list asynchronous batch jobs. Wire-compatible with OpenAI's `/v1/batches`."
 ---
 
+<CardGroup cols={2}>
+  <Card title="Create batch" href="/api-reference/batch/create-batch">
+    `POST /v1/batches` — after you have an input file id.
+  </Card>
+  <Card title="Retrieve batch" href="/api-reference/batch/retrieve-batch">
+    `GET /v1/batches/{batch_id}` — poll status and file ids.
+  </Card>
+  <Card title="List batches" href="/api-reference/batch/list-batches">
+    `GET /v1/batches` — paginate with `after`.
+  </Card>
+  <Card title="Cancel batch" href="/api-reference/batch/cancel-batch">
+    `POST /v1/batches/{batch_id}/cancel`.
+  </Card>
+</CardGroup>
+
 ZeroGPU specifics on top of the OpenAI shape:
 
 - `completion_window` must be `"24h"` (the only supported value).

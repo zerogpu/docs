@@ -42,7 +42,6 @@
                         "const": "gliner-multi-pii-v1",
                         "default": "gliner-multi-pii-v1",
                         "example": "gliner-multi-pii-v1",
-                        "readOnly": true,
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -140,7 +139,6 @@
                         "const": "gliner-multi-pii-v1",
                         "default": "gliner-multi-pii-v1",
                         "example": "gliner-multi-pii-v1",
-                        "readOnly": true,
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -244,7 +242,6 @@
             "const": "gliner-multi-pii-v1",
             "default": "gliner-multi-pii-v1",
             "example": "gliner-multi-pii-v1",
-            "readOnly": true,
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -275,7 +272,6 @@
             "const": "gliner-multi-pii-v1",
             "default": "gliner-multi-pii-v1",
             "example": "gliner-multi-pii-v1",
-            "readOnly": true,
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {

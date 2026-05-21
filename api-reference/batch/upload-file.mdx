@@ -1,0 +1,13 @@
+---
+title: "Upload file"
+description: "Interactive playground for POST /v1/files (multipart JSONL upload)."
+openapi: "openapi/batch.openapi.json POST /v1/files"
+---
+
+Upload batch input JSONL before [creating a batch](/api-reference/batch/create-batch).
+
+1. Set `purpose` to `batch`.
+2. Attach a `.jsonl` file (max 100 MB). Each line must match the [JSONL format](/api-reference/batch/jsonl-format).
+3. Copy the returned `id` (e.g. `file-…`) into `input_file_id` on the create-batch playground.
+
+Full reference: [Files API](/api-reference/batch/files-api).

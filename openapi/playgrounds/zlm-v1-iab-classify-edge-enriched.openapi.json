@@ -42,7 +42,6 @@
                         "const": "zlm-v1-iab-classify-edge-enriched",
                         "default": "zlm-v1-iab-classify-edge-enriched",
                         "example": "zlm-v1-iab-classify-edge-enriched",
-                        "readOnly": true,
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -121,7 +120,6 @@
                         "const": "zlm-v1-iab-classify-edge-enriched",
                         "default": "zlm-v1-iab-classify-edge-enriched",
                         "example": "zlm-v1-iab-classify-edge-enriched",
-                        "readOnly": true,
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -201,7 +199,6 @@
             "const": "zlm-v1-iab-classify-edge-enriched",
             "default": "zlm-v1-iab-classify-edge-enriched",
             "example": "zlm-v1-iab-classify-edge-enriched",
-            "readOnly": true,
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -232,7 +229,6 @@
             "const": "zlm-v1-iab-classify-edge-enriched",
             "default": "zlm-v1-iab-classify-edge-enriched",
             "example": "zlm-v1-iab-classify-edge-enriched",
-            "readOnly": true,
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {

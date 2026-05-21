@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU Batch & Files API",
     "version": "1.0",
-    "description": "Asynchronous batch inference via `POST /v1/batches` and JSONL file upload via `POST /v1/files`. Wire-compatible with OpenAI's batch and files APIs."
+    "description": "JSONL file storage (`/v1/files`) and asynchronous batch inference (`/v1/batches`). Wire-compatible with OpenAI's files and batch APIs. Auth: `x-api-key` and `x-project-id` on every request."
   },
   "servers": [
     {
@@ -18,6 +18,206 @@
     }
   ],
   "paths": {
+    "/v1/files": {
+      "post": {
+        "operationId": "uploadFile",
+        "summary": "Upload a file",
+        "description": "Upload a JSONL file with `purpose=batch` (max 100 MB). Use the returned `id` as `input_file_id` when creating a batch.",
+        "tags": ["Files"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["purpose", "file"],
+                "properties": {
+                  "purpose": {
+                    "type": "string",
+                    "enum": ["batch"],
+                    "default": "batch",
+                    "description": "Must be `batch` for batch input uploads."
+                  },
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JSONL file (validated when you create the batch, not at upload)."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/File" },
+                "examples": {
+                  "default": {
+                    "value": {
+                      "id": "file-0123456789abcdef012345",
+                      "object": "file",
+                      "bytes": 5000,
+                      "created_at": 1736290000,
+                      "filename": "input.jsonl",
+                      "purpose": "batch",
+                      "status": "processed",
+                      "expires_at": 1738882000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid multipart, purpose, or empty file" },
+          "401": { "description": "Missing authentication headers" },
+          "403": { "description": "Invalid credentials" },
+          "413": { "description": "File exceeds 100 MB" },
+          "429": { "description": "Insufficient quota" },
+          "500": { "description": "Internal server error" }
+        }
+      },
+      "get": {
+        "operationId": "listFiles",
+        "summary": "List files",
+        "description": "List project files, newest first by default. Use `last_id` as `after` to page.",
+        "tags": ["Files"],
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["batch", "batch_output"]
+            },
+            "description": "Filter by purpose. `batch_output` includes success and error output files (`is_error` on each object)."
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["desc", "asc"],
+              "default": "desc"
+            }
+          },
+          {
+            "name": "after",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Cursor: file `id` from the previous page (or `last_id` from the prior response)."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000,
+              "default": 10000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FileList" }
+              }
+            }
+          },
+          "400": { "description": "Invalid limit" },
+          "401": { "description": "Missing authentication headers" },
+          "403": { "description": "Invalid credentials" },
+          "429": { "description": "Insufficient quota" }
+        }
+      }
+    },
+    "/v1/files/{file_id}": {
+      "get": {
+        "operationId": "retrieveFile",
+        "summary": "Retrieve a file",
+        "description": "File metadata without downloading the JSONL body.",
+        "tags": ["Files"],
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "file-abc123..."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File object",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/File" }
+              }
+            }
+          },
+          "404": { "description": "File not found" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteFile",
+        "summary": "Delete a file",
+        "description": "Soft-delete. The file returns 404 on list, retrieve, and content afterward.",
+        "tags": ["Files"],
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "file-abc123..."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FileDeleted" }
+              }
+            }
+          },
+          "404": { "description": "File not found" }
+        }
+      }
+    },
+    "/v1/files/{file_id}/content": {
+      "get": {
+        "operationId": "downloadFileContent",
+        "summary": "Download file content",
+        "description": "Stream the raw JSONL body (`Content-Type: application/jsonl`).",
+        "tags": ["Files"],
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "file-out789..."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JSONL body",
+            "content": {
+              "application/jsonl": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "404": { "description": "File not found" }
+        }
+      }
+    },
     "/v1/batches": {
       "post": {
         "operationId": "createBatch",
@@ -85,7 +285,10 @@
                 "schema": { "$ref": "#/components/schemas/BatchList" }
               }
             }
-          }
+          },
+          "401": { "description": "Missing authentication headers" },
+          "403": { "description": "Invalid credentials" },
+          "429": { "description": "Insufficient quota" }
         }
       }
     },
@@ -121,13 +324,15 @@
       "post": {
         "operationId": "cancelBatch",
         "summary": "Cancel a batch",
+        "description": "Request cancellation while `status` is `in_progress` or `validating`.",
         "tags": ["Batches"],
         "parameters": [
           {
             "name": "batch_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" }
+            "schema": { "type": "string" },
+            "example": "batch_01HZX..."
           }
         ],
         "responses": {
@@ -139,6 +344,7 @@
               }
             }
           },
+          "404": { "description": "Batch not found" },
           "409": { "description": "Batch already terminal" }
         }
       }
@@ -158,6 +364,52 @@
       }
     },
     "schemas": {
+      "File": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Prefixed with `file-`." },
+          "object": { "type": "string", "enum": ["file"] },
+          "bytes": { "type": "integer" },
+          "created_at": { "type": "integer" },
+          "filename": { "type": "string" },
+          "purpose": {
+            "type": "string",
+            "enum": ["batch", "batch_output"],
+            "description": "Uploads use `batch`; batch results use `batch_output`."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["uploaded", "processed", "error"]
+          },
+          "status_details": { "type": "string" },
+          "expires_at": { "type": "integer" },
+          "is_error": {
+            "type": "boolean",
+            "description": "ZeroGPU extension. `true` on batch error output files only."
+          }
+        }
+      },
+      "FileList": {
+        "type": "object",
+        "properties": {
+          "object": { "type": "string", "enum": ["list"] },
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/File" }
+          },
+          "first_id": { "type": "string", "nullable": true },
+          "last_id": { "type": "string", "nullable": true },
+          "has_more": { "type": "boolean" }
+        }
+      },
+      "FileDeleted": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "object": { "type": "string", "enum": ["file"] },
+          "deleted": { "type": "boolean", "enum": [true] }
+        }
+      },
       "CreateBatchRequest": {
         "type": "object",
         "required": ["input_file_id", "endpoint"],

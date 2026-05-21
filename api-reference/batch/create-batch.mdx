@@ -4,9 +4,9 @@ description: "Interactive playground for POST /v1/batches."
 openapi: "openapi/batch.openapi.json POST /v1/batches"
 ---
 
-Create a batch job from a JSONL file you already uploaded with [`POST /v1/files`](/api-reference/batch/files-api).
+Create a batch job from a JSONL file you already uploaded.
 
-1. Upload input JSONL with `purpose=batch` (see [Quickstart](/api-reference/batch/getting-started)).
+1. Upload input JSONL on [Upload file](/api-reference/batch/upload-file) or via [Quickstart](/api-reference/batch/getting-started) (`purpose=batch`).
 2. Paste the returned `file-…` id into `input_file_id` below.
 3. Set `endpoint` to `/v1/chat/completions` (must match every line in your JSONL).
 

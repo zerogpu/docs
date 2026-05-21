@@ -21,39 +21,16 @@
     "/responses": {
       "post": {
         "operationId": "createResponse",
-        "summary": "Send input to a model and receive a response",
+        "summary": "Create response",
         "tags": [
           "Responses"
         ],
-        "x-mint": {
-          "metadata": {
-            "title": "Responses",
-            "description": "Send input to an AI model and receive a response."
-          }
-        },
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateResponseRequest"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "type": "string",
-                        "const": "zlm-v1-iab-classify-edge-enriched",
-                        "default": "zlm-v1-iab-classify-edge-enriched",
-                        "example": "zlm-v1-iab-classify-edge-enriched",
-                        "readOnly": true,
-                        "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model."
-                      }
-                    }
-                  }
-                ]
+                "$ref": "#/components/schemas/CreateResponseRequest"
               },
               "examples": {
                 "default": {
@@ -202,11 +179,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "zlm-v1-iab-classify-edge-enriched",
+            "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "default": "zlm-v1-iab-classify-edge-enriched",
-            "example": "zlm-v1-iab-classify-edge-enriched",
-            "readOnly": true,
-            "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model."
+            "example": "zlm-v1-iab-classify-edge-enriched"
           },
           "input": {
             "description": "Model-dependent input. Plain string or message list with role and content.",

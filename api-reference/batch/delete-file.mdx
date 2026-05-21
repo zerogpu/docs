@@ -1,0 +1,9 @@
+---
+title: "Delete file"
+description: "Interactive playground for DELETE /v1/files/{file_id}."
+openapi: "openapi/batch.openapi.json DELETE /v1/files/{file_id}"
+---
+
+Soft-delete a file. It is removed from storage immediately and returns `404` on list, retrieve, and download afterward. Deleting an input file does not stop an active batch.
+
+Full reference: [Files API](/api-reference/batch/files-api).

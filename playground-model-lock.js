@@ -63,7 +63,15 @@
     control.tabIndex = -1;
   }
 
+  function isPerModelPlaygroundPage() {
+    var path = window.location.pathname || "";
+    return (
+      /\/api-reference\/models\//.test(path) || /^\/models\//.test(path)
+    );
+  }
+
   function lockModelFields() {
+    if (!isPerModelPlaygroundPage()) return;
     var labels = document.querySelectorAll("label, span, p, h4, h5");
     for (var i = 0; i < labels.length; i += 1) {
       if (!isModelLabel(labels[i])) continue;

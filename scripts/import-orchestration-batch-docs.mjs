@@ -28,18 +28,65 @@ const FILE_MAP = [
   ["errors.md", "errors.mdx"],
 ];
 
+/** Mintlify nav order. Playground MDX pages are hand-maintained (not imported). */
 const BATCH_PAGES = [
   "api-reference/batch/index",
   "api-reference/batch/getting-started",
+  "api-reference/batch/upload-file",
+  "api-reference/batch/list-files",
+  "api-reference/batch/retrieve-file",
+  "api-reference/batch/download-file",
+  "api-reference/batch/delete-file",
+  "api-reference/batch/files-api",
   "api-reference/batch/create-batch",
   "api-reference/batch/retrieve-batch",
-  "api-reference/batch/files-api",
+  "api-reference/batch/list-batches",
+  "api-reference/batch/cancel-batch",
   "api-reference/batch/batches-api",
   "api-reference/batch/jsonl-format",
   "api-reference/batch/supported-endpoints",
   "api-reference/batch/examples",
   "api-reference/batch/errors",
 ];
+
+const FILES_API_PLAYGROUND_CALLOUT = `
+<CardGroup cols={2}>
+  <Card title="Upload file" href="/api-reference/batch/upload-file">
+    \`POST /v1/files\` — attach JSONL with \`purpose=batch\`.
+  </Card>
+  <Card title="List files" href="/api-reference/batch/list-files">
+    \`GET /v1/files\` — filter by purpose, paginate with \`after\`.
+  </Card>
+  <Card title="Retrieve file" href="/api-reference/batch/retrieve-file">
+    \`GET /v1/files/{file_id}\` — metadata only.
+  </Card>
+  <Card title="Download file" href="/api-reference/batch/download-file">
+    \`GET /v1/files/{file_id}/content\` — raw JSONL body.
+  </Card>
+  <Card title="Delete file" href="/api-reference/batch/delete-file">
+    \`DELETE /v1/files/{file_id}\` — soft-delete.
+  </Card>
+</CardGroup>
+
+`;
+
+const BATCHES_API_PLAYGROUND_CALLOUT = `
+<CardGroup cols={2}>
+  <Card title="Create batch" href="/api-reference/batch/create-batch">
+    \`POST /v1/batches\` — after you have an input file id.
+  </Card>
+  <Card title="Retrieve batch" href="/api-reference/batch/retrieve-batch">
+    \`GET /v1/batches/{batch_id}\` — poll status and file ids.
+  </Card>
+  <Card title="List batches" href="/api-reference/batch/list-batches">
+    \`GET /v1/batches\` — paginate with \`after\`.
+  </Card>
+  <Card title="Cancel batch" href="/api-reference/batch/cancel-batch">
+    \`POST /v1/batches/{batch_id}/cancel\`.
+  </Card>
+</CardGroup>
+
+`;
 
 function normalizeDashes(text) {
   return text
@@ -230,6 +277,14 @@ function convertMarkdownBody(raw, slug) {
     );
   }
 
+  if (slug === "files-api") {
+    text = FILES_API_PLAYGROUND_CALLOUT + text;
+  }
+
+  if (slug === "batches-api") {
+    text = BATCHES_API_PLAYGROUND_CALLOUT + text;
+  }
+
   if (slug === "index") {
     text = text.replace(/\n## How it works[\s\S]*?(?=\n## Quick facts)/, "\n");
     text = text.replace(
@@ -239,6 +294,35 @@ function convertMarkdownBody(raw, slug) {
     text = text.replace(
       /\| \*\*Supported batch endpoints\*\* \| `\/v1\/chat\/completions`[^\n]*\|/,
       "| **Supported batch endpoint** | `/v1/chat/completions` (only) |"
+    );
+    text = text.replace(
+      /<CardGroup cols=\{2\}>[\s\S]*?<\/CardGroup>/,
+      `<CardGroup cols={2}>
+  <Card title="Quickstart" href="/api-reference/batch/getting-started">
+    First batch in under 10 minutes: auth, upload, create, poll, download.
+  </Card>
+  <Card title="Upload file (playground)" href="/api-reference/batch/upload-file">
+    \`POST /v1/files\` — attach JSONL with \`purpose=batch\`.
+  </Card>
+  <Card title="Create batch (playground)" href="/api-reference/batch/create-batch">
+    \`POST /v1/batches\` after you have an input file id.
+  </Card>
+  <Card title="Retrieve batch (playground)" href="/api-reference/batch/retrieve-batch">
+    Poll \`GET /v1/batches/{batch_id}\` for status and output file ids.
+  </Card>
+  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+    Input line schema, output schema, error schema, validation rules.
+  </Card>
+  <Card title="Files API reference" href="/api-reference/batch/files-api">
+    All five \`/v1/files\` endpoints (prose).
+  </Card>
+  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+    Create, list, retrieve, cancel (prose).
+  </Card>
+  <Card title="Examples" href="/api-reference/batch/examples">
+    End-to-end walkthroughs in \`curl\` and the Python \`openai\` SDK.
+  </Card>
+</CardGroup>`
     );
   }
 
