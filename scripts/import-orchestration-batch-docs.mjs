@@ -266,21 +266,14 @@ async function importFile(sourceName, outName) {
   await writeFile(path.join(outDir, outName), `${lines.join("\n")}\n${body}`, "utf8");
 }
 
+/** Batch pages stay in the repo but are hidden from the sidebar until re-enabled in docs.json. */
 async function updateDocsJson() {
   const raw = await readFile(docsJsonPath, "utf8");
   const config = JSON.parse(raw);
   const apiTab = config.navigation?.tabs?.find((t) => t.tab === "API Reference");
   if (!apiTab) throw new Error("API Reference tab not found in docs.json");
 
-  const withoutBatch = apiTab.groups.filter((g) => g.group !== "Batch API");
-  const endpointsIdx = withoutBatch.findIndex((g) => g.group === "Endpoints");
-  const batchGroup = { group: "Batch API", pages: BATCH_PAGES };
-  if (endpointsIdx >= 0) {
-    withoutBatch.splice(endpointsIdx + 1, 0, batchGroup);
-  } else {
-    withoutBatch.push(batchGroup);
-  }
-  apiTab.groups = withoutBatch;
+  apiTab.groups = apiTab.groups.filter((g) => g.group !== "Batch API");
   await writeFile(docsJsonPath, JSON.stringify(config, null, 2) + "\n", "utf8");
 }
 
@@ -291,7 +284,7 @@ async function main() {
     console.log(`Wrote api-reference/batch/${dest}`);
   }
   await updateDocsJson();
-  console.log("Updated docs.json: API Reference → Batch API");
+  console.log("Ensured Batch API is not listed in docs.json navigation");
 }
 
 main().catch((err) => {
