@@ -91,6 +91,7 @@ Preview at `http://localhost:3000` (or the port Mintlify reports).
 ```bash
 node scripts/generate-openapi.mjs
 node scripts/generate-model-pages.mjs
+node scripts/import-orchestration-batch-docs.mjs   # from ../orchestration-api/docs/batch
 ```
 
 Docs use ASCII hyphens only (no em/en dashes). After editing prose, run `node scripts/normalize-dashes.mjs` to catch any `—` or `–` characters (it avoids turning them into awkward colons).

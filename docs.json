@@ -117,6 +117,19 @@
             ]
           },
           {
+            "group": "Batch API",
+            "pages": [
+              "api-reference/batch/index",
+              "api-reference/batch/getting-started",
+              "api-reference/batch/files-api",
+              "api-reference/batch/batches-api",
+              "api-reference/batch/jsonl-format",
+              "api-reference/batch/supported-endpoints",
+              "api-reference/batch/examples",
+              "api-reference/batch/errors"
+            ]
+          },
+          {
             "group": "SDK Examples",
             "pages": [
               "sdks/python",

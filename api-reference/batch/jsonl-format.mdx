@@ -34,20 +34,20 @@ with `purpose=batch`, then reference its ID when you call
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `custom_id` | string | **Yes** | Your identifier for this request. Must be non-empty and **unique within the batch**. Returned verbatim in the corresponding output or error line so you can match results to inputs. |
-| `method` | string | **Yes** | Must be exactly `"POST"`. Any other value is rejected. |
-| `url` | string | **Yes** | The endpoint this line targets. Must be one of the [supported endpoints](/api-reference/batch/supported-endpoints). **All lines in a single batch must share the same `url`**, and it must match the `endpoint` field on the create call. |
-| `body` | object | **Yes** | The request body that would be sent to the synchronous endpoint. See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the per-endpoint shape. The field `stream: true` is rejected. |
+| `method` | string | **Yes** | HTTP method, case-insensitive. Only `POST` (any case) is accepted today. |
+| `url` | string | **Yes** | Must be `/v1/chat/completions`, the [only batchable endpoint](/api-reference/batch/supported-endpoints). **All lines in a single batch must share the same `url`**, and it must match the `endpoint` field on the create call. |
+| `body` | object | **Yes** | The request body that would be sent to the synchronous endpoint. See [supported endpoints](/api-reference/batch/supported-endpoints)(/api-reference/batch/supported-endpoints) for the shape. The field `stream: true` is rejected. |
 
 ### Validation rules
 
 The service performs all of the following checks at `POST /v1/batches` time
-(not at upload time). Failure returns `400` with the offending `line_idx`:
+(not at upload time). Failure returns `400` with the offending `line`:
 
-- Each line must be valid JSON (not arrays, not primitives: must be an object).
+- Each line must be valid JSON (not arrays, not primitives, must be an object).
 - `custom_id` non-empty string, unique across the whole batch.
-- `method` must equal `"POST"`.
-- `url` must be one of the allowed endpoints and must be the same on every
-  line in the file.
+- `method` is case-insensitive; the upper-cased value must equal `"POST"`.
+- `url` must be exactly `/v1/chat/completions` on every line in the file.
+  Other ZeroGPU sync routes are rejected here.
 - `body` must be a non-empty object.
 - `body.stream === true` is rejected (streaming is not supported in batch
   mode).
@@ -62,9 +62,9 @@ The service performs all of the following checks at `POST /v1/batches` time
 - Blank lines are skipped.
 - UTF-8 encoding is required.
 - The `url` value matches the `endpoint` field on the create request
-  **exactly**: no trailing slash, no query string, no protocol/host prefix.
+  **exactly**, no trailing slash, no query string, no protocol/host prefix.
 
-### Example: chat completions
+### Example, chat completions
 
 ```jsonl
 {"custom_id":"req-1","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of France?"}]}}
@@ -72,21 +72,8 @@ The service performs all of the following checks at `POST /v1/batches` time
 {"custom_id":"req-3","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Italy?"}]}}
 ```
 
-### Example: IAB classification
-
-```jsonl
-{"custom_id":"doc-1","method":"POST","url":"/usecase/classify/iab","body":{"text":"Streaming services keep raising prices...","min_confidence_score":0.0001}}
-{"custom_id":"doc-2","method":"POST","url":"/usecase/classify/iab","body":{"text":"The new sedan accelerates from 0 to 60 mph...","min_confidence_score":0.0001}}
-```
-
-### Example: GLiNER entity extraction
-
-```jsonl
-{"custom_id":"ner-1","method":"POST","url":"/gliner","body":{"model":"<gliner-model-id>","input":"John Smith works at Google in Mountain View.","metadata":{"labels":["PERSON","ORG","LOCATION"],"threshold":0.5}}}
-```
-
-See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the body schemas of
-every supported endpoint.
+See [supported endpoints](/api-reference/batch/supported-endpoints)(/api-reference/batch/supported-endpoints) for the
+`/v1/chat/completions` body schema.
 
 ---
 
@@ -101,16 +88,17 @@ Only lines that received a **2xx** response from the underlying endpoint
 appear in the output file. Failed lines go to the error file (see below).
 
 The order of lines in the output file is **not guaranteed** to match the
-order of lines in the input file: match results to inputs by `custom_id`.
+order of lines in the input file, match results to inputs by `custom_id`.
 
 ### Line schema
 
 ```json
 {
+  "id":        "batch_req_abc123...",
   "custom_id": "request-1",
   "response": {
     "status_code": 200,
-    "request_id":  null,
+    "request_id":  "req_xyz789...",
     "body":        { /* the endpoint's normal response body */ }
   }
 }
@@ -118,19 +106,20 @@ order of lines in the input file: match results to inputs by `custom_id`.
 
 | Field | Type | Description |
 |---|---|---|
+| `id` | string | Line-level identifier (prefix `batch_req_`). Stable across retries. |
 | `custom_id` | string | Echo of the `custom_id` you supplied on the input line. |
 | `response.status_code` | integer | HTTP status from the underlying endpoint (will always be 2xx in this file). |
-| `response.request_id` | null | Reserved for OpenAI compatibility: always `null`. |
+| `response.request_id` | string \| null | The synchronous request id (`req_…`) of the underlying call to the orchestration API. Useful for cross-referencing logs. `null` if the upstream service didn't surface a request id. |
 | `response.body` | object | The same JSON body the synchronous endpoint would have returned for this request. |
 
-See [supported-endpoints.md](/api-reference/batch/supported-endpoints) for the exact
-`response.body` shape per endpoint.
+See [supported endpoints](/api-reference/batch/supported-endpoints)(/api-reference/batch/supported-endpoints) for the exact
+`response.body` shape (OpenAI `chat.completion`).
 
-### Example: chat completions output
+### Example, chat completions output
 
 ```jsonl
-{"custom_id":"req-1","response":{"status_code":200,"request_id":null,"body":{"id":"chatcmpl-abc","object":"chat.completion","created":1736295000,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Paris."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14}}}}
-{"custom_id":"req-2","response":{"status_code":200,"request_id":null,"body":{"id":"chatcmpl-def","object":"chat.completion","created":1736295001,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Berlin."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14}}}}
+{"id":"batch_req_a","custom_id":"req-1","response":{"status_code":200,"request_id":"req_xyz","body":{"id":"chatcmpl-abc","object":"chat.completion","created":1736295000,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Paris."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14},"system_fingerprint":null}}}
+{"id":"batch_req_b","custom_id":"req-2","response":{"status_code":200,"request_id":"req_uvw","body":{"id":"chatcmpl-def","object":"chat.completion","created":1736295001,"model":"<model-id>","choices":[{"index":0,"message":{"role":"assistant","content":"Berlin."},"finish_reason":"stop"}],"usage":{"prompt_tokens":12,"completion_tokens":2,"total_tokens":14},"system_fingerprint":null}}}
 ```
 
 ### Reading the output
@@ -160,41 +149,46 @@ disjoint.
 
 ```json
 {
+  "id":        "batch_req_def456...",
   "custom_id": "request-5",
+  "response":  null,
   "error": {
-    "code":    "http_400",
-    "message": "request body is invalid",
-    "details": { /* optional, the upstream error body */ }
+    "code":    "invalid_request_error",
+    "message": "[legacy:http_400] request body is invalid",
+    "param":   "model"
   }
 }
 ```
 
 | Field | Type | Description |
 |---|---|---|
+| `id` | string | Line-level identifier (prefix `batch_req_`). |
 | `custom_id` | string | Echo of the `custom_id` you supplied on the input line. |
-| `error.code` | string | Machine-readable error code. See the table below. |
-| `error.message` | string | Human-readable description. |
-| `error.details` | object \| null | Optional. For HTTP failures, this is the raw error response body from the underlying endpoint. |
+| `response` | null | Always `null` on error lines. Mirrors OpenAI's `{id, custom_id, response, error}` discriminator so SDK type-guards work unchanged. |
+| `error.code` | string | OpenAI semantic error code. See the table below. |
+| `error.message` | string | Human-readable description. The original ZeroGPU internal code is preserved as a `[legacy:<old>] ` prefix on this string for forensics. |
+| `error.param` | string \| null | Name of the offending parameter when known. |
 
 ### Error codes you might see
 
-| `error.code` | Meaning | What to do |
+| `error.code` | Triggered when | What to do |
 |---|---|---|
-| `http_400` | The line's body was rejected by the endpoint (e.g. invalid `model`, malformed `messages`). `details` contains the upstream error body. | Fix the line's `body` and rerun just that line. |
-| `http_401`, `http_403` | The API key used to submit the batch is no longer valid for this endpoint mid-flight. | Check the key status. |
-| `http_404` | The endpoint or a resource referenced in the body (e.g. model ID) doesn't exist. | Verify model IDs and endpoint URL. |
-| `http_413`, `http_422` | Line body was rejected for size or schema reasons. | Reduce input length or fix schema. |
-| `http_420` | Organization ran out of quota partway through the batch. | Top up balance and rerun remaining lines. |
-| `retries_exhausted` | The underlying endpoint returned 5xx or 429 on every retry attempt. The `message` contains the last upstream response. | Retry the line; it's a transient failure. |
-| `dlq_exhausted` | The line failed in a way the queue couldn't even retry (e.g. queue runtime crash on the message). | Retry the line. |
-| `api_key_unavailable` | The API key used to submit the batch was revoked or deactivated while the batch was running. | Issue a new key and rerun remaining lines. |
+| `invalid_request_error` | The line body was rejected by the endpoint (bad shape, unknown model, missing field). Legacy prefix: `http_400` / `http_422`. | Fix the line's `body` and rerun just that line. |
+| `authentication_error` | The API key used to submit the batch is no longer valid for this endpoint mid-flight. Legacy: `http_401` / `http_403` / `api_key_unavailable`. | Check the key status; issue a new key if needed. |
+| `not_found_error` | The endpoint or a resource referenced in the body (e.g. model ID) doesn't exist. Legacy: `http_404`. | Verify model IDs and endpoint URL. |
+| `request_too_large` | Line body exceeded the per-request size or token limit. Legacy: `http_413`. | Reduce input length. |
+| `insufficient_quota` | Organization ran out of quota partway through the batch. Legacy: `http_420` / `http_429`. | Top up balance and rerun remaining lines. |
+| `rate_limit_exceeded` | The endpoint rate-limited the request (non-quota). | Rerun the line; transient. |
+| `internal_error` | The upstream service returned 5xx on every retry, or the queue exhausted its delivery attempts. Legacy: `http_5xx` / `retries_exhausted` / `dlq_exhausted`. | Rerun the line; transient. |
+| `batch_cancelled` | The parent batch was cancelled via `POST /v1/batches/{id}/cancel` before this line was dispatched. | The line did not run; submit a fresh batch if you still need the result. |
+| `batch_expired` | The 24-hour completion window elapsed before this line was dispatched. | Submit a fresh batch with the remaining lines. |
 
-### Example: error file
+### Example, error file
 
 ```jsonl
-{"custom_id":"req-5","error":{"code":"http_400","message":"request body is invalid","details":{"error":{"message":"messages: missing required field","type":"invalid_request_error"}}}}
-{"custom_id":"req-9","error":{"code":"retries_exhausted","message":"Line failed after 4 attempts: orchestration-api returned 503: upstream timeout"}}
-{"custom_id":"req-12","error":{"code":"dlq_exhausted","message":"Message exhausted main-queue retries and was routed to the DLQ"}}
+{"id":"batch_req_e1","custom_id":"req-5","response":null,"error":{"code":"invalid_request_error","message":"[legacy:http_400] {\"message\":\"messages: missing required field\",\"type\":\"invalid_request_error\"}","param":null}}
+{"id":"batch_req_e2","custom_id":"req-9","response":null,"error":{"code":"internal_error","message":"[legacy:retries_exhausted] Line failed after 4 attempts: orchestration-api returned 503: upstream timeout","param":null}}
+{"id":"batch_req_e3","custom_id":"req-12","response":null,"error":{"code":"internal_error","message":"[legacy:dlq_exhausted] Message exhausted main-queue retries and was routed to the DLQ","param":null}}
 ```
 
 ### Reading the error file
@@ -205,10 +199,11 @@ import json
 with open("errors.jsonl") as f:
     for line in f:
         record = json.loads(line)
+        line_id   = record["id"]            # batch_req_…
         custom_id = record["custom_id"]
-        code      = record["error"]["code"]
+        code      = record["error"]["code"]  # OpenAI semantic code
         msg       = record["error"]["message"]
-        print(f"FAIL {custom_id} [{code}]: {msg}")
+        print(f"FAIL {custom_id} ({line_id}) [{code}]: {msg}")
 ```
 
 ---
@@ -236,27 +231,28 @@ with open("errors.jsonl") as f:
 ```
 
 If a `custom_id` you submitted is missing from both files, the batch is not
-complete yet: re-check `status` and download again.
+complete yet, re-check `status` and download again.
 
 <Tip>
-**✓ Always match by `custom_id`**
+
+**Always match by <code>custom_id</code>**
 
 Output and error lines are <em>not</em> guaranteed to appear in input
-  order. Index your inputs by `custom_id` in your code and look
+  order. Index your inputs by <code>custom_id</code> in your code and look
   results up by that key.
+
 </Tip>
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
-    Per-endpoint request body and response body for all 5 supported URLs.
+  <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
+    Body and response shape for <code>/v1/chat/completions</code>.
   </Card>
-  <Card title="Examples" href="/api-reference/batch/examples">
+  <Card title="Examples →" href="/api-reference/batch/examples">
     Full end-to-end walkthrough in curl and Python.
   </Card>
-  <Card title="Errors reference" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/api-reference/batch/errors">
     Every JSONL validation message and error code, with recovery guidance.
   </Card>
 </CardGroup>
-

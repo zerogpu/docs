@@ -1,24 +1,33 @@
 ---
 title: "Supported Endpoints"
-description: "The five endpoints a batch line can target. Same request body, same response body; only the routing is asynchronous."
+description: "The only endpoint a batch line can target. Same request body, same response body, only the routing is asynchronous."
 ---
 
-Every line in a batch input file targets exactly one of five endpoints, set in
-the `url` field of the line and in the `endpoint` field on the create call.
-All lines in a single batch must target the same endpoint.
+Every line in a batch input file must target `/v1/chat/completions` in the
+`url` field, and the `endpoint` field on the create call must match. This
+matches OpenAI's published batchable surface for this API version.
 
 | `url` | Use case | Sync equivalent |
 |---|---|---|
 | `/v1/chat/completions` | OpenAI-style chat completions | `POST /v1/chat/completions` |
-| `/v1/responses` | OpenAI Responses API (classification, NER, etc.) | `POST /v1/responses` |
-| `/summary` | Text summarization | `POST /summary` |
-| `/usecase/classify/iab` | IAB-taxonomy text classification | `POST /usecase/classify/iab` |
-| `/gliner` | Named entity recognition (GLiNER) | `POST /gliner` |
 
 The request body inside each JSONL line's `body` field is the **same** body
 you would send synchronously. The response in the output JSONL's
 `response.body` is the **same** response the synchronous endpoint would
-return. The sections below summarize each.
+return.
+
+<Note>
+
+**Other ZeroGPU endpoints are sync-only**
+
+Internal routes like <code>/summary</code>, <code>/v1/responses</code>,
+  <code>/usecase/classify/iab</code>, and <code>/gliner</code> remain
+  reachable as synchronous calls but are <strong>not</strong> batchable.
+  Submitting a JSONL line with one of these <code>url</code> values is
+  rejected at create time with
+  <code>"is not an allowed batch endpoint"</code>.
+
+</Note>
 
 ---
 
@@ -43,12 +52,12 @@ chat-completion semantics.
 |---|---|---|
 | `model` | Yes | A model ID enabled for your project. |
 | `messages` | Yes | Array of `{role, content}`. `role` is one of `user`, `assistant`, `system`, `tool`, `developer`. |
-| `stream` |: | **Must not be `true`.** Rejected at batch creation. |
+| `stream` | - | **Must not be `true`.** Rejected at batch creation. |
 
 Per-model token limits apply (configured in model metadata). If input tokens
 exceed the model's `max_tokens` setting, behavior depends on the model's
 `error_on_max_token` flag: either the line fails with
-`code: "context_length_exceeded"` (`http_420`), or the input is silently
+`code: "context_length_exceeded"` (HTTP `400`), or the input is silently
 truncated. Verify with your model's configuration.
 
 ### Response body (inside output JSONL `response.body`)
@@ -75,277 +84,39 @@ truncated. Verify with your model's configuration.
     "prompt_tokens":     12,
     "completion_tokens": 2,
     "total_tokens":      14,
-    "prompt_tokens_details":     { "cached_tokens": 0 },
-    "completion_tokens_details": { "reasoning_tokens": 0 }
-  }
+    "prompt_tokens_details":     { "cached_tokens": 0, "audio_tokens": 0 },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0,
+      "audio_tokens": 0,
+      "accepted_prediction_tokens": 0,
+      "rejected_prediction_tokens": 0
+    }
+  },
+  "service_tier":       "default",
+  "system_fingerprint": null
 }
 ```
+
+`system_fingerprint` is always `null` today. ZeroGPU does not yet expose
+backend-determinism fingerprints. The field is present for SDK
+compatibility (OpenAI's `ChatCompletion` type declares it as optional but
+real OpenAI populates it on every response).
 
 For **classification models** invoked via `/v1/chat/completions`,
 `choices[0].message.content` is a JSON-stringified classification response
 rather than free-form text. Parse it as JSON to extract the structured
 result.
 
----
-
-## `/v1/responses`
-
-OpenAI Responses-style universal endpoint. Routes to the appropriate model
-type (LLM, classifier, GLiNER) based on the `model` ID.
-
-### Request body (inside JSONL `body`)
-
-```json
-{
-  "model":       "<model-id>",
-  "input":       "The quick brown fox jumps over the lazy dog.",
-  "instructions": "Optional system-style instructions"
-}
-```
-
-| Field | Required | Description |
-|---|---|---|
-| `model` | Yes | A model ID enabled for your project. |
-| `input` | Yes | The input text. |
-| `instructions` | No | System-style guidance for the model. |
-| `text.format.type` | No | Currently only `"text"` is accepted; `"json"` is rejected. |
-| `categories` | No | For classification models: list of labels to classify into. Can also be provided through `instructions`. |
-| `metadata` | No | For GLiNER models: object with usecase-specific options such as `usecase`, `schema`, `labels`, `threshold`, `mask`, `replacement_char`. |
-| `max_output_tokens`, `parallel_tool_calls`, `previous_response_id`, `store`, `temperature`, `top_p`, `truncation` | No | Pass-through fields echoed in the response envelope. |
-
-Per-model token limits apply, as described under `/v1/chat/completions`.
-
-### Response body (inside output JSONL `response.body`)
-
-```json
-{
-  "id":   "resp_...",
-  "object": "response",
-  "created_at": 1736295000,
-  "model": "<model-id>",
-  "output": [
-    {
-      "type": "message",
-      "role": "assistant",
-      "content": [
-        { "type": "output_text", "text": "..." }
-      ]
-    }
-  ],
-  "usage": {
-    "input_tokens":  12,
-    "output_tokens": 8,
-    "total_tokens":  20
-  },
-  "metadata": { /* echoed pass-through fields */ }
-}
-```
-
-The model output text is at `output[0].content[0].text`.
-
----
-
-## `/summary`
-
-Text summarization. The request shape is an OpenAI chat-completions request,
-and the response is an OpenAI chat-completions response. Only the routing
-differs.
-
-### Request body (inside JSONL `body`)
-
-```json
-{
-  "model": "<summary-model-id>",
-  "messages": [
-    { "role": "user", "content": "Summarize the following article: ..." }
-  ]
-}
-```
-
-Optional query param `include_metadata=true|false` is **not** supported in
-batch mode (queries do not propagate through batch line bodies). Use the
-`metadata` field on the **batch** itself for tagging.
-
-### Response body (inside output JSONL `response.body`)
-
-```json
-{
-  "id":      "chatcmpl-...",
-  "object":  "chat.completion",
-  "created": 1736295000,
-  "model":   "<summary-model-id>",
-  "choices": [
-    {
-      "index": 0,
-      "message": { "role": "assistant", "content": "Short summary..." },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens":     142,
-    "completion_tokens": 38,
-    "total_tokens":      180
-  }
-}
-```
-
----
-
-## `/usecase/classify/iab`
-
-IAB-taxonomy classification. Given a piece of text, returns ranked content
-and audience categories from the IAB taxonomy.
-
-### Request body (inside JSONL `body`)
-
-```json
-{
-  "text":                 "Streaming services keep raising prices, but the shows...",
-  "min_confidence_score": 0.0001
-}
-```
-
-| Field | Required | Description |
-|---|---|---|
-| `text` | Yes | The text to classify. |
-| `min_confidence_score` | No | Minimum confidence score for returned categories. |
-
-### Response body (inside output JSONL `response.body`)
-
-```json
-{
-  "id":      "chatcmpl-...",
-  "object":  "chat.completion",
-  "created": 1736295000,
-  "model":   "zlm-v1-iab-classify-cloud",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": {
-          "classification_response": {
-            "audience": [
-              {
-                "id":         206,
-                "parent_id":  0,
-                "name":       "Interest",
-                "tier1_name": "Interest",
-                "score":      0.197
-              }
-            ],
-            "content": [
-              {
-                "id":         651,
-                "parent_id":  640,
-                "name":       "Reality TV",
-                "tier1_name": "Television",
-                "tier2_name": "Reality TV",
-                "score":      0.906
-              }
-            ]
-          },
-          "metadata": {
-            "processing_time_ms": 2091
-          }
-        }
-      },
-      "finish_reason": "stop"
-    }
-  ],
-  "usage": {
-    "prompt_tokens":     0,
-    "completion_tokens": 0,
-    "total_tokens":      0
-  }
-}
-```
-
-Note that `choices[0].message.content` is a **structured object**, not a
-JSON-stringified string: unlike when classifiers are invoked via
-`/v1/chat/completions`.
-
----
-
-## `/gliner`
-
-Named entity recognition with the GLiNER model family. Highly configurable
-via the `metadata` object.
-
-### Request body (inside JSONL `body`)
-
-```json
-{
-  "model": "<gliner-model-id>",
-  "input": "John Smith works at Google in Mountain View.",
-  "metadata": {
-    "usecase":   "person_job_company",
-    "labels":    ["PERSON", "ORG", "LOCATION"],
-    "threshold": 0.5
-  }
-}
-```
-
-| Field | Required | Description |
-|---|---|---|
-| `model` | Yes | A GLiNER model ID enabled for your project. |
-| `input` | Yes | The text to extract entities from. |
-| `metadata.usecase` | No | A named usecase that pre-configures labels/schema. |
-| `metadata.labels` | No | List of entity types to extract. |
-| `metadata.threshold` | No | Minimum confidence threshold. |
-| `metadata.schema` | No | Structured schema for entity extraction. |
-| `metadata.mask`, `metadata.replacement_char` | No | PII masking options. |
-
-### Response body (inside output JSONL `response.body`)
-
-```json
-{
-  "id":         "resp_...",
-  "object":     "response",
-  "created_at": 1736295000,
-  "model":      "<gliner-model-id>",
-  "output": [
-    {
-      "type": "message",
-      "role": "assistant",
-      "content": [
-        { "type": "output_text", "text": "[{\"text\":\"John Smith\",\"label\":\"PERSON\",\"score\":0.98}, ...]" }
-      ]
-    }
-  ],
-  "usage": { "input_tokens": 12, "output_tokens": 0, "total_tokens": 12 }
-}
-```
-
-The extracted entities are returned in `output[0].content[0].text` as a JSON
-string. Parse it as JSON to get the structured array.
-
----
-
-## Choosing the right endpoint
-
-| If you want… | Use |
-|---|---|
-| Free-form text generation, chat-style | `/v1/chat/completions` |
-| OpenAI Responses-style structured output | `/v1/responses` |
-| A summary of a long document | `/summary` |
-| IAB-taxonomy content/audience classification | `/usecase/classify/iab` |
-| Named entity recognition or PII extraction | `/gliner` |
-
-If your model isn't visible at one of these endpoints, contact ZeroGPU
-support to enable it for your project.
-
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
     How to wrap each request body in a valid input JSONL line.
   </Card>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
-    Create, list, retrieve batches; status lifecycle and limits.
+  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
+    Create, list, retrieve, cancel; status lifecycle and limits.
   </Card>
-  <Card title="Examples" href="/api-reference/batch/examples">
-    End-to-end walkthroughs in curl and Python, including an IAB-classification batch.
+  <Card title="Examples →" href="/api-reference/batch/examples">
+    End-to-end walkthrough in curl and Python.
   </Card>
 </CardGroup>
-

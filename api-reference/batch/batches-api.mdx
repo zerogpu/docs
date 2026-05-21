@@ -1,14 +1,12 @@
 ---
 title: "Batches API"
-description: "Submit, monitor, and list asynchronous batch jobs. Wire-compatible with OpenAI's `/v1/batches`."
+description: "Submit, monitor, cancel, and list asynchronous batch jobs. Wire-compatible with OpenAI's `/v1/batches`."
 ---
 
 ZeroGPU specifics on top of the OpenAI shape:
 
 - `completion_window` must be `"24h"` (the only supported value).
-- The `endpoint` field must be one of the five [supported batch endpoints](/api-reference/batch/supported-endpoints).
-- There is **no cancel endpoint** in this release: batches run to completion
-  or expire after 24 hours.
+- The `endpoint` field must be `/v1/chat/completions` (the only batchable endpoint, see [supported endpoint](/api-reference/batch/supported-endpoints)).
 - Authentication uses `x-api-key` + `x-project-id` headers.
 
 ## Endpoint summary
@@ -18,6 +16,7 @@ ZeroGPU specifics on top of the OpenAI shape:
 | POST | `/v1/batches` | Create a new batch from an uploaded JSONL file |
 | GET | `/v1/batches` | List batches in this project |
 | GET | `/v1/batches/{batch_id}` | Retrieve a single batch (with live counts) |
+| POST | `/v1/batches/{batch_id}/cancel` | Request cancellation of an in-flight batch |
 
 ## Authentication
 
@@ -28,11 +27,12 @@ x-api-key:    <your-api-key>
 x-project-id: <your-project-uuid>
 ```
 
-See [errors.md](/api-reference/batch/errors) for the auth failure codes (`401`, `403`, `420`).
+See [errors](/api-reference/batch/errors)(/api-reference/batch/errors) for the auth failure codes (`401`, `403`, `429`).
 
 ## The Batch object
 
-This is the shape returned by create, retrieve, and inside `data[]` of list.
+This is the shape returned by create, retrieve, cancel, and inside `data[]`
+of list.
 
 ```json
 {
@@ -46,9 +46,14 @@ This is the shape returned by create, retrieve, and inside `data[]` of list.
   "output_file_id":    null,
   "error_file_id":     null,
   "created_at":        1736290000,
+  "in_progress_at":    1736290001,
   "expires_at":        1736376400,
+  "finalizing_at":     null,
   "completed_at":      null,
   "failed_at":         null,
+  "expired_at":        null,
+  "cancelling_at":     null,
+  "cancelled_at":      null,
   "request_counts": {
     "total":     1500,
     "completed": 0,
@@ -67,20 +72,25 @@ This is the shape returned by create, retrieve, and inside `data[]` of list.
 | `id` | string | Batch identifier (prefix `batch_`). |
 | `object` | string | Always `"batch"`. |
 | `endpoint` | string | The endpoint URL every line in this batch targets. |
-| `errors` | null | Reserved for OpenAI compatibility: always `null`. |
+| `errors` | object \| null | When `status` is `failed`, this contains `{ object: "list", data: [BatchError] }` describing the JSONL validation failure. Each `BatchError` is `{ code, message, line, param }`. `null` for any non-failed batch. |
 | `input_file_id` | string | The `file-…` ID you supplied at creation. |
 | `completion_window` | string | Always `"24h"`. |
 | `status` | string | Lifecycle state. See [Status lifecycle](#status-lifecycle) below. |
 | `output_file_id` | string \| null | The file containing successfully completed lines (populated when `status` is `completed`). Download via `GET /v1/files/{id}/content`. |
-| `error_file_id` | string \| null | The file containing failed lines (populated when `status` is `completed` and at least one line failed). |
+| `error_file_id` | string \| null | The file containing failed lines (populated when `status` is `completed` and at least one line failed). Listed with `purpose: "batch_output"` and `is_error: true`. |
 | `created_at` | integer | Unix timestamp (seconds) when the batch was created. |
+| `in_progress_at` | integer \| null | Unix timestamp when validation finished and processing started. Null while `validating` or `failed`. |
 | `expires_at` | integer | Unix timestamp 24 hours after `created_at`. Anything not finished by this time becomes `expired`. |
-| `completed_at` | integer \| null | Unix timestamp when the batch reached a terminal state, or `null` while in progress. |
-| `failed_at` | integer \| null | Reserved for OpenAI compatibility: currently always `null`. |
+| `finalizing_at` | integer \| null | Unix timestamp when all lines finished and the output files began being written. |
+| `completed_at` | integer \| null | Unix timestamp when the batch reached `completed`. Null otherwise. |
+| `failed_at` | integer \| null | Unix timestamp when JSONL validation rejected the input. Null otherwise. |
+| `expired_at` | integer \| null | Unix timestamp when the 24-hour window elapsed without completion. Null otherwise. |
+| `cancelling_at` | integer \| null | Unix timestamp when cancellation was requested via `POST /v1/batches/{id}/cancel`. |
+| `cancelled_at` | integer \| null | Unix timestamp when cancellation finished draining and the batch became terminal. |
 | `request_counts.total` | integer | Total number of lines in the input file. |
 | `request_counts.completed` | integer | Lines that completed with a 2xx response. |
 | `request_counts.failed` | integer | Lines that failed (HTTP non-2xx, retries exhausted, or other system error). |
-| `metadata` | object \| null | Arbitrary JSON you supplied at creation, echoed back unchanged. |
+| `metadata` | object | Arbitrary JSON you supplied at creation, echoed back unchanged. Empty `{}` when not supplied; never `null`. |
 
 `request_counts.completed + request_counts.failed` equals `total` only when
 the batch is terminal.
@@ -90,31 +100,40 @@ the batch is terminal.
 ```mermaid
 stateDiagram-v2
     direction LR
-    [*] --> in_progress: POST /v1/batches
+    [*] --> validating: POST /v1/batches
+    validating --> in_progress: JSONL OK
+    validating --> failed: JSONL rejected
     in_progress --> finalizing: all lines processed
+    in_progress --> cancelling: POST /cancel
+    cancelling --> cancelled: drained
     finalizing --> completed: outputs written
     in_progress --> expired: 24 h elapsed
     completed --> [*]
     expired --> [*]
+    failed --> [*]
+    cancelled --> [*]
 ```
 
 | Status | Meaning |
 |---|---|
-| `in_progress` | The batch has been accepted; lines are being processed. The initial state every batch enters after `POST /v1/batches`. |
+| `validating` | The row is persisted; the JSONL is being streamed and validated synchronously. Brief, transient state. |
+| `in_progress` | Validation succeeded; lines are being processed. |
 | `finalizing` | All lines have been processed; the service is writing the output and error files. Brief, transient state. |
 | `completed` | Terminal. `output_file_id` (and `error_file_id` if there were failures) are populated. |
+| `failed` | Terminal. JSONL validation rejected the input. `errors` is populated with the offending line(s). The row is still retrievable via `GET /v1/batches/{id}` so SDKs can introspect what went wrong. |
 | `expired` | Terminal. The 24-hour window elapsed before all lines completed. Whatever finished is still available via `output_file_id` / `error_file_id`. |
-| `failed` | Reserved for OpenAI compatibility; not produced by this implementation. |
-| `validating` | Reserved for OpenAI compatibility; not produced by this implementation. |
+| `cancelling` | Cancellation was requested via `POST /v1/batches/{id}/cancel`. Lines already dispatched are allowed to finish; pending lines are short-circuited to the error file with `code: "batch_cancelled"`. |
+| `cancelled` | Terminal. Cancellation finished; output and error files reflect whatever was processed before the cancel request. |
 
-Once a batch reaches `completed` or `expired`, no further state changes occur.
+Once a batch reaches `completed`, `expired`, `failed`, or `cancelled`, no
+further state changes occur.
 
 ---
 
 ## POST `/v1/batches`: Create a batch
 
 Submits a new batch job. The response returns immediately with
-`status: "in_progress"`: actual processing happens asynchronously.
+`status: "in_progress"`, actual processing happens asynchronously.
 
 ### Request
 
@@ -137,16 +156,18 @@ x-project-id: <uuid>
 | Field | Required | Description |
 |---|---|---|
 | `input_file_id` | Yes | The ID of a JSONL file you uploaded with `purpose=batch`. Must exist in this project. |
-| `endpoint` | Yes | One of the [supported endpoints](/api-reference/batch/supported-endpoints). Must match the `url` value used by every line in the JSONL file. |
+| `endpoint` | Yes | Must be `/v1/chat/completions`, the only batchable endpoint. See [supported endpoint](/api-reference/batch/supported-endpoints). Must match the `url` value used by every line in the JSONL file. |
 | `completion_window` | No | Must be `"24h"` if provided. Other values are rejected. Defaults to `"24h"`. |
 | `metadata` | No | Any JSON object. Echoed back unchanged on retrieve. Useful for tagging batches (job ID, dataset version, etc.). |
 
 <Note>
-**ℹ Validation is synchronous; processing is asynchronous**
+
+**Validation is synchronous; processing is asynchronous**
 
 All input-file and JSONL validation happens before the response returns -
   if it succeeds, the batch is durably committed. Lines are then processed
   asynchronously through an internal queue.
+
 </Note>
 
 ### What happens at creation
@@ -164,14 +185,14 @@ response:
    - Per-line size ≤ 1 MB; total file size ≤ 200 MB; total lines ≤ 50,000.
 3. The batch row is persisted; one queue message is enqueued per line.
 
-Any validation failure returns `400` with the offending `line_idx`. Once the
+Any validation failure returns `400` with the offending `line`. Once the
 response returns, the batch is durably committed and processing has begun.
 
 ### Response: `200 OK`
 
 A [Batch object](#the-batch-object) with:
 
-- `status: "in_progress"`
+- `status: "in_progress"` (the response is sent after `validating` succeeds)
 - `output_file_id: null`, `error_file_id: null`
 - `request_counts: { total: N, completed: 0, failed: 0 }`
 
@@ -183,17 +204,20 @@ A [Batch object](#the-batch-object) with:
 | `400` | `endpoint is required` |
 | `400` | `completion_window must be "24h"` |
 | `400` | `endpoint "X" does not match the url "Y" used by the input file` (when the `endpoint` field disagrees with the `url` in the JSONL) |
-| `400` | JSONL validation failure. The error body includes `line_idx` to point at the offending line. |
-| `404` | `Input file not found: <file_id>`. The input file is missing, deleted, or in another project. |
-| `401` / `403` / `420` / `500` | See [errors.md](/api-reference/batch/errors). |
+| `400` | JSONL validation failure. The error body includes `line` (1-based) to point at the offending line. The batch is also persisted with `status: "failed"` so it can be retrieved later via `GET /v1/batches/{id}`. |
+| `404` | `Input file not found: <file_id>`, the input file is missing, deleted, or in another project. |
+| `401` / `403` / `429` / `500` | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 Validation errors look like:
 
 ```json
 {
   "error": {
-    "message":  "Line 5 duplicates custom_id \"req-1\"",
-    "line_idx": 5
+    "message": "Line 5 duplicates custom_id \"req-1\"",
+    "type":    "invalid_request_error",
+    "code":    "invalid_request_error",
+    "param":   null,
+    "line":    5
   }
 }
 ```
@@ -271,14 +295,16 @@ Example after completion:
   small batches.
 - The `Retry-After` header is **not** set; pick your own interval.
 - Once `status` is `completed`, `expired`, or `failed`, no further state
-  changes occur: stop polling.
+  changes occur, stop polling.
 
 <Tip>
-**✓ Use this endpoint for live counts**
 
-Retrieve returns real-time `request_counts` while a batch is
-  running. The list endpoint may lag by a few seconds: for accurate
+**Use this endpoint for live counts**
+
+Retrieve returns real-time <code>request_counts</code> while a batch is
+  running. The list endpoint may lag by a few seconds, for accurate
   progress, retrieve specific batches.
+
 </Tip>
 
 ### Errors
@@ -287,7 +313,7 @@ Retrieve returns real-time `request_counts` while a batch is
 |---|---|
 | `400` | Missing batch ID. |
 | `404` | Batch not found, or belongs to another project. |
-| `401` / `403` / `420` / `500` | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -315,7 +341,7 @@ x-project-id: <uuid>
 | Param | Default | Description |
 |---|---|---|
 | `limit` | `20` | Number of batches per page. Clamped to `[1, 100]`. |
-| `after` |: | Cursor: pass `last_id` from the previous response to get the next page. |
+| `after` | - | Cursor: pass `last_id` from the previous response to get the next page. |
 
 ### Response: `200 OK`
 
@@ -345,7 +371,7 @@ progress for a specific batch, call `GET /v1/batches/{id}` instead.
 
 | Status | Cause |
 |---|---|
-| `401` / `403` / `420` / `500` | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -363,14 +389,48 @@ curl "https://api.zerogpu.ai/v1/batches?limit=20&after=batch_01HZW..." \
 
 ---
 
-## Cancellation
+## POST `/v1/batches/{batch_id}/cancel`: Cancel a batch
 
-**Not supported in this release.** A `POST /v1/batches/{id}/cancel` endpoint
-is not implemented. Once a batch is created it either runs to completion or
-expires after 24 hours.
+Requests cancellation of an in-flight batch. Returns immediately with the
+batch object in `status: "cancelling"`; the batch then drains and
+transitions to `cancelled` once all pending lines have been short-circuited.
 
-If you need to abandon a batch, simply stop polling. The work will finish or
-expire on its own.
+### Request
+
+```
+POST /v1/batches/{batch_id}/cancel
+x-api-key:    <key>
+x-project-id: <uuid>
+```
+
+### Response: `200 OK`
+
+The updated [Batch object](#the-batch-object). On the first successful
+cancel, `status` is `cancelling` and `cancelling_at` is populated.
+Subsequent calls are idempotent and return the same shape; once the worker
+finishes draining, polling `GET /v1/batches/{id}` will show
+`status: "cancelled"` with `cancelled_at` populated.
+
+Lines that completed before the cancel request are written to
+`output_file_id` as normal. Lines that never dispatched appear in
+`error_file_id` with `error.code: "batch_cancelled"`.
+
+### Errors
+
+| Status | Cause |
+|---|---|
+| `400` | Missing batch ID. |
+| `404` | Batch not found, or belongs to another project. |
+| `409` | Batch is already in a terminal state (`completed`, `failed`, `expired`) and cannot be cancelled. |
+| `401` / `403` / `429` / `500` | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
+
+### Example
+
+```bash
+curl -X POST https://api.zerogpu.ai/v1/batches/batch_01HZX.../cancel \
+  -H "x-api-key: $ZGPU_API_KEY" \
+  -H "x-project-id: $ZGPU_PROJECT_ID"
+```
 
 ## Limits
 
@@ -389,29 +449,30 @@ When a batch reaches `status: "completed"`:
 
 - `output_file_id` is set if at least one line returned 2xx. Download with
   `GET /v1/files/{output_file_id}/content`. See
-  [jsonl-format.md](/api-reference/batch/jsonl-format#output-jsonl) for the line schema.
+  [jsonl format](/api-reference/batch/jsonl-format)(/api-reference/batch/jsonl-format#output-jsonl) for the line schema.
 - `error_file_id` is set if at least one line failed. Download with
   `GET /v1/files/{error_file_id}/content`. See
-  [jsonl-format.md](/api-reference/batch/jsonl-format#error-jsonl) for the line schema.
-- Both files have `purpose` `batch_output` and `batch_errors` respectively
-  and follow the same 30-day retention policy as your uploads.
+  [jsonl format](/api-reference/batch/jsonl-format)(/api-reference/batch/jsonl-format#error-jsonl) for the line schema.
+- Both files share `purpose: "batch_output"`. Error files are additionally
+  tagged with the ZeroGPU-specific `is_error: true` flag on the File object
+  so you can distinguish them in `GET /v1/files?purpose=batch_output`. Both
+  follow the same 30-day retention policy as your uploads.
 
 When a batch reaches `status: "expired"`, whatever work finished before the
 24-hour deadline is still recorded in `output_file_id` and `error_file_id`.
 Anything that didn't make it through appears in the error file with
-`code: "dlq_exhausted"`.
+`code: "batch_expired"`.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
-  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
-    Per-endpoint request body and response body for all 5 supported URLs.
+  <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
+    Body and response shape for <code>/v1/chat/completions</code>.
   </Card>
-  <Card title="Errors reference" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/api-reference/batch/errors">
     Every HTTP status, every validation message, every JSONL error code.
   </Card>
 </CardGroup>
-

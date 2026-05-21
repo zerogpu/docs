@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "First batch in under 10 minutes: auth, upload, create, poll, download."
+description: "First batch in under 10 minutes, auth, upload, create, poll, download."
 ---
 
 This page walks through a complete batch from start to finish in both `curl`
@@ -17,10 +17,12 @@ completions through the Batch API and read the results.
 Both headers are required on every request. Missing either returns `401`.
 
 <Warning>
-**⚠ Keep your API key out of source control**
+
+**Keep your API key out of source control**
 
 Store it in environment variables, secret managers, or your CI's secret
-  store: never commit it.
+  store, never commit it.
+
 </Warning>
 
 ```bash
@@ -78,14 +80,16 @@ request:
 |---|---|---|
 | `custom_id` | Yes | Your identifier for the request. Must be **unique within the batch**. Echoed back in the output so you can match results to inputs. |
 | `method` | Yes | Must be `"POST"`. |
-| `url` | Yes | One of the [supported endpoints](/api-reference/batch/supported-endpoints). All lines in a batch must share the same `url`. |
-| `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected: batches are non-streaming. |
+| `url` | Yes | Must be `/v1/chat/completions`, the only [supported batch endpoint](/api-reference/batch/supported-endpoints). All lines in a batch must share the same `url`. |
+| `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected, batches are non-streaming. |
 
 Full schema and validation rules: [JSONL format](/api-reference/batch/jsonl-format).
 
-<CodeGroup>
+<!-- tabs:start -->
 
-```bash bash
+#### **bash**
+
+```bash
 cat > input.jsonl <<'EOF'
 {"custom_id":"q-1","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of France?"}]}}
 {"custom_id":"q-2","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Germany?"}]}}
@@ -93,7 +97,9 @@ cat > input.jsonl <<'EOF'
 EOF
 ```
 
-```python Python
+#### **Python**
+
+```python
 import json
 
 questions = [
@@ -115,16 +121,18 @@ with open("input.jsonl", "w") as f:
         }) + "\n")
 ```
 
-</CodeGroup>
+<!-- tabs:end -->
 
 ## 2. Upload the file
 
 Send the JSONL to `POST /v1/files` with `purpose=batch`. The response
 contains the `file_id` you'll reference when creating the batch.
 
-<CodeGroup>
+<!-- tabs:start -->
 
-```bash cURL
+#### **curl**
+
+```bash
 curl -X POST https://api.zerogpu.ai/v1/files \
   -H "x-api-key: $ZGPU_API_KEY" \
   -H "x-project-id: $ZGPU_PROJECT_ID" \
@@ -132,7 +140,9 @@ curl -X POST https://api.zerogpu.ai/v1/files \
   -F file=@input.jsonl
 ```
 
-```python Python
+#### **Python**
+
+```python
 from openai import OpenAI
 
 client = OpenAI(
@@ -151,7 +161,7 @@ uploaded = client.files.create(
 print(uploaded.id)  # file-abc...
 ```
 
-</CodeGroup>
+<!-- tabs:end -->
 
 Response:
 
@@ -172,11 +182,13 @@ Response:
 
 Submit the batch with the file ID, the target endpoint, and a 24-hour
 completion window. The response returns immediately with
-`status: "in_progress"`: actual processing is asynchronous.
+`status: "in_progress"`, actual processing is asynchronous.
 
-<CodeGroup>
+<!-- tabs:start -->
 
-```bash cURL
+#### **curl**
+
+```bash
 curl -X POST https://api.zerogpu.ai/v1/batches \
   -H "x-api-key: $ZGPU_API_KEY" \
   -H "x-project-id: $ZGPU_PROJECT_ID" \
@@ -188,7 +200,9 @@ curl -X POST https://api.zerogpu.ai/v1/batches \
   }'
 ```
 
-```python Python
+#### **Python**
+
+```python
 batch = client.batches.create(
     input_file_id=uploaded.id,
     endpoint="/v1/chat/completions",
@@ -198,7 +212,7 @@ batch = client.batches.create(
 print(batch.id, batch.status)  # batch_01HZX... in_progress
 ```
 
-</CodeGroup>
+<!-- tabs:end -->
 
 Response:
 
@@ -218,13 +232,15 @@ Response:
 ```
 
 <Note>
-**ℹ Validation runs at create time**
+
+**Validation runs at create time**
 
 The server streams the entire input JSONL and validates every line before
-  responding. If anything is wrong: duplicate `custom_id`, line
-  over 1 MB, `stream: true`, mismatched `url`: you'll
-  get a 400 with the offending `line_idx`. Once the response
+  responding. If anything is wrong, duplicate <code>custom_id</code>, line
+  over 1 MB, <code>stream: true</code>, mismatched <code>url</code>, you'll
+  get a 400 with the offending <code>line</code>. Once the response
   returns, the batch is durably committed.
+
 </Note>
 
 ## 4. Poll until complete
@@ -232,9 +248,11 @@ The server streams the entire input JSONL and validates every line before
 Poll `GET /v1/batches/{batch_id}` until `status` is `completed`, `expired`,
 or `failed`. A 30-second interval is a reasonable default.
 
-<CodeGroup>
+<!-- tabs:start -->
 
-```bash cURL
+#### **curl**
+
+```bash
 while true; do
   RESP=$(curl -s "https://api.zerogpu.ai/v1/batches/$BATCH_ID" \
     -H "x-api-key: $ZGPU_API_KEY" \
@@ -246,7 +264,9 @@ while true; do
 done
 ```
 
-```python Python
+#### **Python**
+
+```python
 import time
 
 while batch.status not in ("completed", "failed", "expired"):
@@ -255,7 +275,7 @@ while batch.status not in ("completed", "failed", "expired"):
     print(batch.status, batch.request_counts)
 ```
 
-</CodeGroup>
+<!-- tabs:end -->
 
 When `status` is `completed`, the response contains `output_file_id` (and,
 if any line failed, `error_file_id`).
@@ -264,9 +284,11 @@ if any line failed, `error_file_id`).
 
 Stream the output and error files via `GET /v1/files/{file_id}/content`.
 
-<CodeGroup>
+<!-- tabs:start -->
 
-```bash cURL
+#### **curl**
+
+```bash
 curl -s "https://api.zerogpu.ai/v1/files/$OUTPUT_FILE_ID/content" \
   -H "x-api-key: $ZGPU_API_KEY" \
   -H "x-project-id: $ZGPU_PROJECT_ID" \
@@ -275,7 +297,9 @@ curl -s "https://api.zerogpu.ai/v1/files/$OUTPUT_FILE_ID/content" \
 jq -r '"\(.custom_id): \(.response.body.choices[0].message.content)"' output.jsonl
 ```
 
-```python Python
+#### **Python**
+
+```python
 if batch.output_file_id:
     data = client.files.content(batch.output_file_id).read()
     with open("output.jsonl", "wb") as f:
@@ -286,19 +310,19 @@ if batch.output_file_id:
         print(rec["custom_id"], rec["response"]["body"]["choices"][0]["message"]["content"])
 ```
 
-</CodeGroup>
+<!-- tabs:end -->
 
-Output line shape (one per successful line, order **not preserved**: match
+Output line shape (one per successful line, order **not preserved**, match
 by `custom_id`):
 
 ```json
-{"custom_id": "q-1", "response": {"status_code": 200, "request_id": null, "body": { ... }}}
+{"id": "batch_req_a", "custom_id": "q-1", "response": {"status_code": 200, "request_id": "req_xyz", "body": { ... }}}
 ```
 
 Error line shape (one per failed line):
 
 ```json
-{"custom_id": "q-2", "error": {"code": "http_400", "message": "...", "details": { ... }}}
+{"id": "batch_req_b", "custom_id": "q-2", "response": null, "error": {"code": "invalid_request_error", "message": "[legacy:http_400] ...", "param": null}}
 ```
 
 Full schemas: [JSONL format](/api-reference/batch/jsonl-format).
@@ -306,17 +330,16 @@ Full schemas: [JSONL format](/api-reference/batch/jsonl-format).
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
-  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
-    Per-endpoint request body and response body for all 5 supported URLs.
+  <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
+    Body and response shape for <code>/v1/chat/completions</code>.
   </Card>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
     Status lifecycle, limits, full Batch object schema.
   </Card>
-  <Card title="More examples" href="/api-reference/batch/examples">
+  <Card title="More examples →" href="/api-reference/batch/examples">
     Full Python script, plus a realistic IAB-classification batch.
   </Card>
 </CardGroup>
-

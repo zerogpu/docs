@@ -1,13 +1,14 @@
 ---
 title: "Files API"
-description: "Store the JSONL files that drive a batch: input you upload, output and error files the service writes back."
+description: "Store the JSONL files that drive a batch, input you upload, output and error files the service writes back."
 ---
 
 Wire-compatible with OpenAI's `/v1/files`, with these ZeroGPU specifics:
 
-- Only `purpose=batch` is accepted on upload. (`batch_output` and
-  `batch_errors` files are written by the service itself and surfaced to you
-  through the list and retrieve calls.)
+- Only `purpose=batch` is accepted on upload. Server-written output files
+  (both successes and errors) carry `purpose=batch_output`; error files are
+  additionally tagged with the ZeroGPU-specific `is_error: true` flag on
+  the File object.
 - Authentication uses `x-api-key` + `x-project-id` headers instead of a Bearer
   token.
 - Files are soft-deleted (the row is preserved for audit; the object is
@@ -34,7 +35,7 @@ x-project-id: <your-project-uuid>
 
 Missing or invalid headers return `401`. Inactive keys or keys that don't
 belong to the supplied project return `403`. An organization with no balance
-and no free credits returns `420` with an `insufficient_quota` error.
+and no free credits returns `429` with an `insufficient_quota` error.
 
 ## The File object
 
@@ -53,16 +54,33 @@ This is the shape returned by upload, retrieve, and (inside `data[]`) list.
 }
 ```
 
+For batch error files, an additional `is_error` flag is set:
+
+```json
+{
+  "id":         "file-err789...",
+  "object":     "file",
+  "bytes":      512,
+  "created_at": 1736295000,
+  "filename":   "batch_01HZX_errors.jsonl",
+  "purpose":    "batch_output",
+  "status":     "processed",
+  "is_error":   true
+}
+```
+
 | Field | Type | Description |
 |---|---|---|
-| `id` | string | File identifier. Customer uploads have the `file-` prefix; server-written output and error files have the `file_` prefix. Both are valid in every endpoint. |
+| `id` | string | File identifier. Always prefixed `file-`. Legacy `file_` (underscore) ids written before the prefix was normalised remain readable and resolvable. |
 | `object` | string | Always `"file"`. |
 | `bytes` | integer | Size in bytes as measured by the server after upload. |
 | `created_at` | integer | Unix timestamp (seconds). |
 | `filename` | string | Original filename you uploaded, or `{file_id}.jsonl` if none was supplied. |
-| `purpose` | string | `"batch"` for uploads, `"batch_output"` for batch results, `"batch_errors"` for batch errors. |
-| `status` | string | Always `"processed"`. The field exists for OpenAI compatibility; there are no `pending` / `error` states. |
+| `purpose` | string | `"batch"` for uploads, `"batch_output"` for both batch result and batch error files. |
+| `status` | string | One of `"uploaded"` / `"processed"` / `"error"`. ZeroGPU emits `"processed"` exclusively today; the wider union matches OpenAI's published type for forward compatibility. |
+| `status_details` | string \| omitted | OpenAI-compatible diagnostic string. Omitted on healthy files. |
 | `expires_at` | integer \| omitted | Unix timestamp at which the file will be removed. Customer uploads expire 30 days after upload. May be absent for server-written files. |
+| `is_error` | boolean \| omitted | ZeroGPU extension. Present and `true` only on batch error files (the ones referenced by `Batch.error_file_id`). Omitted on input and success files. OpenAI SDKs ignore this field unless explicitly read. |
 
 ---
 
@@ -87,12 +105,14 @@ Multipart form fields:
 | `file` | Yes | The JSONL file. Max **100 MB**. |
 
 <Note>
-**Note: JSONL is validated at batch creation, not upload**
+
+**Note. JSONL is validated at batch creation, not upload**
 
 The server stores your file as-is. Malformed JSONL will upload
-  successfully but fail with a 400 (and a `line_idx`) when you
-  call `POST /v1/batches`. See the
-  [JSONL format](/api-reference/batch/jsonl-format) page for the exact schema.
+  successfully but fail with a 400 (and a <code>line</code> field) when you
+  call <code>POST /v1/batches</code>. See the
+  <a href="#/jsonl-format">JSONL format</a> page for the exact schema.
+
 </Note>
 
 Other notes:
@@ -126,7 +146,7 @@ Other notes:
 | `400` | `missing_file` | No `file` field in the multipart body. |
 | `400` | `empty_file` | The uploaded file had zero bytes. |
 | `413` | `file_too_large` | File exceeded 100 MB. |
-| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -156,9 +176,9 @@ Query parameters (all optional):
 
 | Param | Default | Description |
 |---|---|---|
-| `purpose` | (all) | Filter by purpose: `batch`, `batch_output`, or `batch_errors`. |
+| `purpose` | (all) | Filter by purpose: `batch` or `batch_output`. When you query `batch_output`, both success and error files are returned (distinguished by `is_error` on each file object). |
 | `order` | `desc` | Sort order on `created_at`. `desc` = newest first, `asc` = oldest first. |
-| `after` |: | Cursor for pagination. Pass the `id` of the last file from the previous page. |
+| `after` | - | Cursor for pagination. Pass the `id` of the last file from the previous page (or use the `last_id` field from the previous response). |
 | `limit` | `10000` | Maximum number of files to return. Must be a positive integer ≤ `10000`. |
 
 ### Response: `200 OK`
@@ -178,15 +198,17 @@ Query parameters (all optional):
       "expires_at": 1738882000
     },
     {
-      "id":         "file_out_xyz...",
+      "id":         "file-out_xyz...",
       "object":     "file",
       "bytes":      12345,
       "created_at": 1736289900,
-      "filename":   "file_out_xyz.jsonl",
+      "filename":   "file-out_xyz.jsonl",
       "purpose":    "batch_output",
       "status":     "processed"
     }
   ],
+  "first_id": "file-abc...",
+  "last_id":  "file-out_xyz...",
   "has_more": false
 }
 ```
@@ -195,17 +217,19 @@ Query parameters (all optional):
 |---|---|---|
 | `object` | string | Always `"list"`. |
 | `data` | array | File objects in the requested order. |
+| `first_id` | string \| null | The `id` of the first item on the page, or `null` if `data` is empty. |
+| `last_id` | string \| null | The `id` of the last item on the page. Use this as `after` for the next page. |
 | `has_more` | boolean | `true` if more files exist beyond `limit`. |
 
-To page forward, take the last item's `id` and pass it as `after` on the next
-request, keeping the same `purpose` and `order`.
+To page forward, pass `last_id` as `after` on the next request, keeping the
+same `purpose` and `order`.
 
 ### Errors
 
 | Status | Code | Cause |
 |---|---|---|
 | `400` | `invalid_limit` | `limit` was not a positive integer. |
-| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -239,7 +263,7 @@ Same shape as the File object returned by upload.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File does not exist, belongs to another project, or has been deleted. The same `404` is returned in all three cases to avoid leaking file existence across projects. |
-| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -280,7 +304,7 @@ The body is streamed; you do not need to fit it in memory.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, deleted, or belongs to another project. |
-| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -300,7 +324,7 @@ the database row is preserved with a `deleted_at` timestamp for audit
 purposes.
 
 After a successful delete, the file disappears from list, retrieve, and
-content endpoints: all three return `404`. Deletes cannot be undone via the
+content endpoints, all three return `404`. Deletes cannot be undone via the
 API.
 
 ### Request
@@ -326,7 +350,7 @@ x-project-id: <uuid>
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, already deleted, or belongs to another project. |
-| `401` / `403` / `420` / `500` |: | See [errors.md](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [errors](/api-reference/batch/errors)(/api-reference/batch/errors). |
 
 ### Example
 
@@ -346,30 +370,31 @@ curl -X DELETE https://api.zerogpu.ai/v1/files/file-abc123... \
 | Default retention | 30 days |
 | Max list `limit` | 10,000 |
 | Accepted upload `purpose` | `batch` only |
-| Returned `purpose` values | `batch`, `batch_output`, `batch_errors` |
+| Returned `purpose` values | `batch`, `batch_output` |
 
 Notes:
 
 - There is no rate-limit envelope returned in headers; quota is enforced at
   the organization level. A request from an organization with no balance and
-  no free credits returns `420 insufficient_quota`.
+  no free credits returns `429 insufficient_quota`.
 - Deleting a file that is the input to an active batch does not stop the
-  batch. The batch reads the input file at creation time, not on demand.
-- The output and error files produced by a batch are written with
-  `purpose: batch_output` and `purpose: batch_errors`. You can list them by
-  filtering on those purposes.
+  batch, the batch reads the input file at creation time, not on demand.
+- The output and error files produced by a batch are both written with
+  `purpose: batch_output`. Error files are additionally tagged with
+  `is_error: true` so you can distinguish them at list time. The Batch
+  object's `error_file_id` is the canonical way to discover the error file
+  for a given batch.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
     Create, list, retrieve batches; status lifecycle and limits.
   </Card>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
     What an input line, an output line, and an error line look like.
   </Card>
-  <Card title="Errors reference" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/api-reference/batch/errors">
     Every HTTP status, every validation message, every JSONL error code.
   </Card>
 </CardGroup>
-

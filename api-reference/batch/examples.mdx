@@ -269,22 +269,20 @@ OK   q-3: Rome.
 - **`base_url`**: Must include the `/v1` suffix because the SDK appends paths
   like `/files` and `/batches` directly to the base URL.
 - **`default_headers`**: This is how the OpenAI SDK lets you attach custom
-  headers to every request: exactly what's needed for `x-api-key` and
+  headers to every request, exactly what's needed for `x-api-key` and
   `x-project-id`.
 - **`client.batches.create(...)`**: The SDK call accepts the same fields as
   the raw API: `input_file_id`, `endpoint`, `completion_window`, `metadata`.
 - **`client.files.content(file_id).read()`**: Returns the raw JSONL bytes.
   Iterate `.iter_lines()` if you prefer to stream rather than load it all.
-- **No cancel**: `client.batches.cancel(batch_id)` will fail because the
-  endpoint is not implemented. Just stop polling if you need to abandon a
-  batch.
+- **`client.batches.cancel(batch_id)`**: Cancels an in-flight batch. See [Batches API](/api-reference/batch/batches-api).
 
 ---
 
-## Worked example: IAB classification batch
+## Worked example, bulk chat-completion batch
 
-A more realistic example: classify 1,000 documents and write the IAB
-categories to a CSV.
+A more realistic example: send 1,000 prompts and collect the answers
+into a CSV.
 
 ```python
 import csv
@@ -302,30 +300,33 @@ client = OpenAI(
     },
 )
 
-# Load your data: anything that yields (doc_id, text) tuples
-documents = load_my_dataset()  # 1000 records
+# Load your data, anything that yields (doc_id, prompt) tuples
+prompts = load_my_dataset()  # 1000 records
 
 # 1. Write JSONL
-with open("classify.jsonl", "w") as f:
-    for doc_id, text in documents:
+with open("chat.jsonl", "w") as f:
+    for doc_id, prompt in prompts:
         line = {
             "custom_id": doc_id,
             "method":    "POST",
-            "url":       "/usecase/classify/iab",
-            "body":      {"text": text, "min_confidence_score": 0.1},
+            "url":       "/v1/chat/completions",
+            "body":      {
+                "model": "<your-model-id>",
+                "messages": [{"role": "user", "content": prompt}],
+            },
         }
         f.write(json.dumps(line) + "\n")
 
 # 2-3. Upload + create
-uploaded = client.files.create(file=open("classify.jsonl", "rb"), purpose="batch")
+uploaded = client.files.create(file=open("chat.jsonl", "rb"), purpose="batch")
 batch    = client.batches.create(
     input_file_id=uploaded.id,
-    endpoint="/usecase/classify/iab",
+    endpoint="/v1/chat/completions",
     completion_window="24h",
 )
 
 # 4. Poll
-while batch.status not in ("completed", "failed", "expired"):
+while batch.status not in ("completed", "failed", "expired", "cancelled"):
     time.sleep(60)
     batch = client.batches.retrieve(batch.id)
     print(f"{batch.status}: {batch.request_counts.completed}/{batch.request_counts.total}")
@@ -338,33 +339,27 @@ output_bytes = client.files.content(batch.output_file_id).read()
 results = {}
 for raw in output_bytes.decode().splitlines():
     rec = json.loads(raw)
-    content = rec["response"]["body"]["choices"][0]["message"]["content"]
-    results[rec["custom_id"]] = content["classification_response"]
+    answer = rec["response"]["body"]["choices"][0]["message"]["content"]
+    results[rec["custom_id"]] = answer
 
 # 6. Write CSV
 with open("results.csv", "w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(["doc_id", "top_content_category", "score"])
-    for doc_id, cls in results.items():
-        top = cls["content"][0] if cls["content"] else None
-        writer.writerow([
-            doc_id,
-            top["name"] if top else "",
-            top["score"] if top else "",
-        ])
+    writer.writerow(["doc_id", "answer"])
+    for doc_id, ans in results.items():
+        writer.writerow([doc_id, ans])
 ```
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
-  <Card title="Supported endpoints" href="/api-reference/batch/supported-endpoints">
-    Per-endpoint request body and response body for all 5 supported URLs.
+  <Card title="Supported endpoint →" href="/api-reference/batch/supported-endpoints">
+    Body and response shape for <code>/v1/chat/completions</code>.
   </Card>
-  <Card title="Errors reference" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/api-reference/batch/errors">
     How to recover from failed lines without re-running the whole batch.
   </Card>
 </CardGroup>
-

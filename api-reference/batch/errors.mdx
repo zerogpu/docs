@@ -1,6 +1,6 @@
 ---
 title: "Errors"
-description: "Every HTTP status, every validation message, every JSONL error code: and how to recover."
+description: "Every HTTP status, every validation message, every JSONL error code, and how to recover."
 ---
 
 This page is a catalog of every error code you can encounter when using the
@@ -8,28 +8,35 @@ Batch and Files APIs, what each one means, and what to do about it.
 
 ## Error response shape
 
-All errors (other than CORS preflight) return JSON in the same shape:
+All errors (other than CORS preflight) return JSON in the OpenAI-compatible
+envelope:
 
 ```json
 {
   "error": {
     "message": "Human-readable description.",
-    "type":    "...",
-    "code":    "...",
-    "param":   "...",
-    "details": { ... },
-    "line_idx": 5
+    "type":    "invalid_request_error",
+    "code":    "invalid_purpose",
+    "param":   "purpose",
+    "line":    5
   }
 }
 ```
 
 - `message` is always present.
-- `type`, `code`, `param` are present when meaningful (e.g. `420` always
-  has `type: "insufficient_quota"`).
-- `details` is included for some errors (e.g. JSONL validation `details`
-  may carry the raw upstream error body).
-- `line_idx` is included for JSONL validation failures during
-  `POST /v1/batches` to point at the offending line.
+- `type` is always present. Values mirror OpenAI's vocabulary:
+  `invalid_request_error`, `authentication_error`, `rate_limit_exceeded`,
+  `internal_error`, plus `insufficient_quota` on `429` responses.
+- `code` is a machine-readable string (e.g. `invalid_purpose`,
+  `file_not_found`, `insufficient_quota`). `null` when not meaningful.
+- `param` names the offending parameter (`"model"`, `"messages"`,
+  `"input_file_id"`, …) or is `null`.
+- `line` is included for JSONL validation failures during
+  `POST /v1/batches` to point at the offending line (1-based).
+
+Every response, success or error, also carries an `x-request-id`
+response header (format `req_<token>`). Pass it along when reporting
+issues to support so the call can be located in logs.
 
 ## HTTP status codes
 
@@ -42,19 +49,23 @@ All errors (other than CORS preflight) return JSON in the same shape:
 | `403` | Headers were supplied but credentials are invalid, inactive, or don't belong to the supplied project. |
 | `404` | The resource doesn't exist, or doesn't belong to your project. Both cases return `404` to avoid leaking cross-project information. |
 | `413` | Uploaded file is larger than 100 MB. |
-| `420` | Insufficient quota: organization has no balance and no free credits. **This is intentional**, mirroring OpenAI's `insufficient_quota` semantics. |
+| `429` | Rate-limit / insufficient quota. The `error.type` distinguishes: `insufficient_quota` (no balance and no free credits) vs `rate_limit_exceeded` (transient throttling). |
 | `500` | Internal server error. Retry with exponential backoff; if persistent, contact support. |
 
-<Warning>
-**⚠ `429` is not used: quota errors return `420`**
+<Note>
 
-This is intentional, mirroring OpenAI's `insufficient_quota`
-  semantics. Don't catch `429` expecting quota errors.
-</Warning>
+**Quota errors return <code>429</code>**
+
+Catch <code>429</code> for both quota exhaustion (<code>error.type:
+  "insufficient_quota"</code>) and rate-limiting (<code>error.type:
+  "rate_limit_exceeded"</code>). This matches OpenAI's behaviour and works
+  with the official SDK's built-in retry logic.
+
+</Note>
 
 ## Common synchronous errors
 
-### `401 Unauthorized`: missing headers
+### `401 Unauthorized`, missing headers
 
 ```json
 { "error": { "message": "Missing authentication headers" } }
@@ -63,7 +74,7 @@ This is intentional, mirroring OpenAI's `insufficient_quota`
 **Cause:** Either `x-api-key` or `x-project-id` was not sent.
 **Fix:** Send both headers on every request.
 
-### `403 Forbidden`: invalid credentials
+### `403 Forbidden`, invalid credentials
 
 ```json
 { "error": { "message": "Invalid credentials" } }
@@ -73,14 +84,15 @@ This is intentional, mirroring OpenAI's `insufficient_quota`
 project than the one in `x-project-id`.
 **Fix:** Verify the key, and verify the project UUID matches.
 
-### `420 Insufficient Quota`
+### `429 Insufficient Quota`
 
 ```json
 {
   "error": {
     "message": "You exceeded your current quota, please check your plan and billing details.",
     "type":    "insufficient_quota",
-    "code":    "insufficient_quota"
+    "code":    "insufficient_quota",
+    "param":   null
   }
 }
 ```
@@ -90,10 +102,12 @@ project than the one in `x-project-id`.
 
 > **Important:** quota is checked at line-execution time. If your balance
 > drops to zero **during** a batch, the remaining lines fail with
-> `error.code: "http_420"` in the error file. The batch as a whole still
-> transitions to `completed` once all lines have been accounted for.
+> `error.code: "insufficient_quota"` in the error file (the JSONL line's
+> `error.message` includes the legacy `[legacy:http_420] ` prefix for
+> forensics). The batch as a whole still transitions to `completed` once
+> all lines have been accounted for.
 
-### `404 Not Found`: file or batch
+### `404 Not Found`, file or batch
 
 ```json
 { "error": { "message": "File file-xxx not found" } }
@@ -125,11 +139,14 @@ has been soft-deleted. The same `404` is returned in all three cases.
 
 ---
 
-## Batches API: `POST /v1/batches` validation errors
+## Batches API. `POST /v1/batches` validation errors
 
 When you create a batch, the service streams the entire input JSONL and
 validates every line **synchronously** before returning a response. Any
-failure returns `400` with the offending `line_idx`.
+failure returns `400` with the offending `line` (1-based, mirroring
+OpenAI's `BatchError.line`). The batch is also persisted with
+`status: "failed"` and a populated `errors` list, so subsequent
+`GET /v1/batches/{id}` calls can introspect what went wrong.
 
 | `message` | Cause |
 |---|---|
@@ -146,22 +163,25 @@ failure returns `400` with the offending `line_idx`.
 | `Line N exceeds maximum size of 1048576 bytes` | Line N > 1 MB. |
 | `Line N is missing custom_id` | Missing or non-string `custom_id`. |
 | `Line N duplicates custom_id "X"` | A previous line already used custom_id `X`. |
-| `Line N method must be "POST"` | `method` was not exactly `"POST"`. |
+| `Line N method must be "POST"` | `method` (case-insensitive) was not `"POST"`. |
 | `Line N is missing url` | Missing or non-string `url`. |
-| `Line N url "X" is not an allowed batch endpoint` | `url` is not one of the [supported endpoints](/api-reference/batch/supported-endpoints). |
+| `Line N url "X" is not an allowed batch endpoint` | `url` is not `/v1/chat/completions`, the only [supported batch endpoint](/api-reference/batch/supported-endpoints). |
 | `Line N url "X" does not match the batch endpoint "Y"` | Lines in the file disagree on `url`. |
 | `Line N is missing body` | `body` is not a non-empty object. |
 | `Line N has stream=true; streaming is not supported in batch mode` | `body.stream === true`. |
 | `endpoint "X" does not match the url "Y" used by the input file` | The `endpoint` field on the create request disagrees with what's in the file. |
 
-Validation errors carry `line_idx` in the JSON body so you can locate and
+Validation errors carry `line` in the JSON body so you can locate and
 fix the offending line:
 
 ```json
 {
   "error": {
-    "message":  "Line 5 duplicates custom_id \"req-1\"",
-    "line_idx": 5
+    "message": "Line 5 duplicates custom_id \"req-1\"",
+    "type":    "invalid_request_error",
+    "code":    "invalid_request_error",
+    "param":   null,
+    "line":    5
   }
 }
 ```
@@ -176,19 +196,19 @@ an `error` object. These are the codes you'll see:
 
 | `error.code` | Triggered when | Recovery |
 |---|---|---|
-| `http_400` | The underlying endpoint rejected the line's body. `error.details` usually contains the upstream error payload. | Fix the line's `body` and re-submit just that line. |
-| `http_401`, `http_403` | The API key used to submit the batch lost permission mid-flight. | Verify key status. |
-| `http_404` | A resource referenced in the body (e.g. model ID) doesn't exist. | Verify model IDs. |
-| `http_413`, `http_422` | Body size or schema rejected by the endpoint. | Reduce input or fix the schema. |
-| `http_420` | Organization quota ran out partway through the batch. | Top up balance and re-submit the failed lines. |
-| `http_5xx` | The upstream service returned an unexpected status. Should be rare: `5xx` responses normally trigger retries before reaching the error file. | Retry; if persistent, contact support. |
-| `retries_exhausted` | The upstream service returned 5xx or 429 on every retry attempt. `error.message` contains the last response. | Retry the line: it's a transient failure. |
-| `dlq_exhausted` | The line was undeliverable at the queue level (e.g. consumer crashed repeatedly). | Retry the line. |
-| `api_key_unavailable` | The API key used to submit the batch was deactivated while the batch was running. | Issue a new key and re-submit failed lines. |
+| `invalid_request_error` | The underlying endpoint rejected the line's body (bad shape, missing field, schema violation). Legacy prefix on `error.message`: `[legacy:http_400]` or `[legacy:http_422]`. | Fix the line's `body` and re-submit just that line. |
+| `authentication_error` | The API key used to submit the batch lost permission mid-flight, was deactivated, or otherwise became unusable. Legacy: `[legacy:http_401]` / `[legacy:http_403]` / `[legacy:api_key_unavailable]`. | Verify key status; issue a new key if needed. |
+| `not_found_error` | A resource referenced in the body (e.g. model ID) doesn't exist. Legacy: `[legacy:http_404]`. | Verify model IDs. |
+| `request_too_large` | The line body exceeded the per-request size or token budget. Legacy: `[legacy:http_413]`. | Reduce input length. |
+| `insufficient_quota` | Organization quota ran out partway through the batch. Legacy: `[legacy:http_420]` / `[legacy:http_429]`. | Top up balance and re-submit the failed lines. |
+| `rate_limit_exceeded` | The endpoint throttled the line (non-quota rate limit). | Re-submit the line; transient. |
+| `internal_error` | The upstream service returned 5xx on every retry, or the queue exhausted delivery attempts. Legacy: `[legacy:http_5xx]` / `[legacy:retries_exhausted]` / `[legacy:dlq_exhausted]`. | Re-submit the line; transient. |
+| `batch_cancelled` | The parent batch was cancelled via `POST /v1/batches/{id}/cancel` before this line was dispatched. | The line did not run; submit a fresh batch if you still need the result. |
+| `batch_expired` | The 24-hour completion window elapsed before this line was dispatched. | Submit a fresh batch with the remaining lines. |
 
-`error.details` may be `null`, a string, or an object depending on the
-underlying endpoint's response. For `http_400` it's typically the upstream
-JSON error body, useful for diagnostics.
+The original ZeroGPU code is preserved as a `[legacy:<old_code>] ` prefix
+on `error.message` for forensics. No `error.details` field is emitted -
+the relevant upstream detail (if any) is folded into the message.
 
 ---
 
@@ -199,12 +219,13 @@ The pattern for handling this is:
 
 1. Read `output_file_id` and write successful results to your data store.
 2. Read `error_file_id` and partition by `error.code`:
-   - `http_400`, `http_404`, `http_422`: client-side issues: log, fix the
-     input lines, and resubmit.
-   - `retries_exhausted`, `dlq_exhausted`, `http_5xx`: transient: resubmit
-     as-is.
-   - `http_420`, `api_key_unavailable`: operational: fix the underlying
-     issue first, then resubmit.
+   - `invalid_request_error`, `not_found_error`, `request_too_large`:
+     client-side issues, log, fix the input lines, and resubmit.
+   - `internal_error`, `rate_limit_exceeded`: transient, resubmit as-is.
+   - `insufficient_quota`, `authentication_error`: operational, fix the
+     underlying issue first, then resubmit.
+   - `batch_cancelled`, `batch_expired`: the lines never ran; resubmit
+     them in a fresh batch.
 3. Build a smaller JSONL containing only the lines you want to retry, upload,
    and create a new batch.
 
@@ -226,14 +247,13 @@ Reach out to ZeroGPU support if you see:
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
     Status lifecycle, limits, full Batch object schema.
   </Card>
-  <Card title="Files API reference" href="/api-reference/batch/files-api">
-    Upload, download, delete: every files-API endpoint.
+  <Card title="Files API reference →" href="/api-reference/batch/files-api">
+    Upload, download, delete, every files-API endpoint.
   </Card>
-  <Card title="Quickstart" href="/api-reference/batch/getting-started">
-    First batch in under 10 minutes: auth, upload, create, download.
+  <Card title="Quickstart →" href="/api-reference/batch/getting-started">
+    First batch in under 10 minutes, auth, upload, create, download.
   </Card>
 </CardGroup>
-
