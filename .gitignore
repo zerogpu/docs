@@ -23,3 +23,6 @@ Thumbs.db
 
 # Mintlify / build
 .mintlify/
+
+# Local batch playground fixtures (keep on disk only)
+examples/batch-input-dummy.jsonl

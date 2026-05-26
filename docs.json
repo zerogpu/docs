@@ -43,7 +43,8 @@
             "pages": [
               "index",
               "quickstart",
-              "platform/dashboard"
+              "platform/dashboard",
+              "api-reference/batch/index"
             ]
           },
           {
