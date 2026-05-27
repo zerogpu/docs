@@ -96,7 +96,7 @@ node scripts/import-orchestration-batch-docs.mjs   # from ../orchestration-api/d
 
 **Batch & Files playgrounds** use `openapi/batch.openapi.json` (hand-maintained; all `/v1/files` and `/v1/batches` paths). Playground pages: `api-reference/batch/upload-file.mdx`, `list-files.mdx`, `retrieve-file.mdx`, `download-file.mdx`, `delete-file.mdx`, `create-batch.mdx`, `retrieve-batch.mdx`, `list-batches.mdx`, `cancel-batch.mdx`. Prose reference pages are imported from `orchestration-api/docs/batch/`; re-import injects playground cards on `files-api` and `batches-api`.
 
-Docs use ASCII hyphens only (no em/en dashes). After editing prose, run `node scripts/normalize-dashes.mjs` to catch any `—` or `–` characters (it avoids turning them into awkward colons).
+Docs use ASCII hyphens only (no em/en dashes). After editing prose, run `node scripts/normalize-dashes.mjs` to catch any `-` or `-` characters (it avoids turning them into awkward colons).
 
 See `openapi/zerogpu.openapi.json` and `api` in `docs.json`. Validate with `mint validate`.
 
