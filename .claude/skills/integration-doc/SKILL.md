@@ -62,17 +62,52 @@ boilerplate below. No heading.>
        ZEROGPU_API_KEY and the base URL https://api.zerogpu.ai/v1.
 
 ## Usage
-   Free-form, integration-specific. Subheadings vary per tool, pick whatever
-   genuinely fits the integration's API surface (e.g. for LlamaIndex: LLM
-   provider, embeddings, query engine; for LangChain: ChatModel, streaming,
-   tool calls). Do not force a fixed template here; the goal is to teach the
-   integration well, not to fill slots.
+   Free-form, integration-specific, and **deliberately detailed**, this is
+   where the page earns its keep. The Quickstart proves the integration
+   works; everything from here on is the real reference users come back to.
+   Subheadings vary per integration, pick whatever genuinely fits the
+   surface area, whether that's classes, functions, CLI commands, slash
+   commands, model wrappers, tool wrappers, plugin entry points, REST
+   endpoints, config blocks, decorators, hooks, or middleware.
+
+   Use generic language ("entry point", "surface", "primitive") inside
+   this skill, the concrete noun ("ChatModel", "skill", "tool", "client",
+   "adapter") is whatever that specific integration ships, and you should
+   use the integration's own terminology on the page itself.
+
+   Depth expectations:
+   - Cover **every** meaningful entry point the integration exposes for
+     ZeroGPU, not just the highlights. If it ships 12 of them, document
+     all 12.
+   - For each entry point, include: what it does, which ZeroGPU model or
+     endpoint it hits, full argument / parameter table (name, required,
+     default, description), a runnable example in the integration's
+     native language, and the shape of the response. Use the same
+     structure for every entry so the page is scannable.
+   - Add a short "patterns / recipes" subsection at the end of Usage with
+     2-4 cross-cutting workflows that combine multiple entry points (e.g.
+     PII sanitation pipeline, cheap classifier in front of a chat model,
+     structured extraction over free-form parsing, routing by cost or
+     latency). These teach judgment, not just syntax.
+   - End Usage with a single at-a-glance reference table summarizing every
+     entry point, one row each, so readers can find the right one quickly.
+
+   Do not force a fixed template at the section level, the goal is to teach
+   the integration well. But within Usage, keep per-entry structure
+   consistent so the page stays predictable.
 
 ## Troubleshooting
-   Recurring issues and fixes. 3-8 entries, each a short heading or bolded
-   problem followed by the resolution. Common candidates: wrong base URL,
-   missing/expired API key, model ID typos, rate limits, streaming format
-   mismatches.
+   Recurring issues and fixes, written with the same depth as Usage.
+   Aim for 6-12 entries that cover real failure modes a user of this
+   specific integration will hit. Common candidates across integration
+   types: install or PATH problems, missing / mistyped base URL, auth
+   (401), authorization or project-scope (403), rate limits (429),
+   schema / quoting / serialization errors, low-confidence or empty
+   results, model or endpoint typos, streaming format mismatches,
+   reload / cache / stale-state issues. Pick the ones that actually
+   apply, don't pad. Each entry is a bolded symptom followed by the
+   resolution in one or two sentences, including the exact command or
+   config change when applicable.
 
 ## Conclusion
    Short wrap-up (2-4 sentences) tying the integration back to ZeroGPU's
