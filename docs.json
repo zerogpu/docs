@@ -8,6 +8,14 @@
     "dark": "#16A34A"
   },
   "favicon": "/favicon.ico",
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
   "api": {
     "playground": {
       "display": "interactive",
@@ -147,6 +155,18 @@
               "sdks/rust",
               "sdks/go",
               "sdks/ruby"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/index",
+              "integrations/claude-code-plugin"
             ]
           }
         ]
