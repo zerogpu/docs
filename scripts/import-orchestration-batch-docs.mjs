@@ -52,19 +52,19 @@ const BATCH_PAGES = [
 const FILES_API_PLAYGROUND_CALLOUT = `
 <CardGroup cols={2}>
   <Card title="Upload file" href="/api-reference/batch/upload-file">
-    \`POST /v1/files\` — attach JSONL with \`purpose=batch\`.
+    \`POST /v1/files\`, attach JSONL with \`purpose=batch\`.
   </Card>
   <Card title="List files" href="/api-reference/batch/list-files">
-    \`GET /v1/files\` — filter by purpose, paginate with \`after\`.
+    \`GET /v1/files\`, filter by purpose, paginate with \`after\`.
   </Card>
   <Card title="Retrieve file" href="/api-reference/batch/retrieve-file">
-    \`GET /v1/files/{file_id}\` — metadata only.
+    \`GET /v1/files/{file_id}\`, metadata only.
   </Card>
   <Card title="Download file" href="/api-reference/batch/download-file">
-    \`GET /v1/files/{file_id}/content\` — raw JSONL body.
+    \`GET /v1/files/{file_id}/content\`, raw JSONL body.
   </Card>
   <Card title="Delete file" href="/api-reference/batch/delete-file">
-    \`DELETE /v1/files/{file_id}\` — soft-delete.
+    \`DELETE /v1/files/{file_id}\`, soft-delete.
   </Card>
 </CardGroup>
 
@@ -73,13 +73,13 @@ const FILES_API_PLAYGROUND_CALLOUT = `
 const BATCHES_API_PLAYGROUND_CALLOUT = `
 <CardGroup cols={2}>
   <Card title="Create batch" href="/api-reference/batch/create-batch">
-    \`POST /v1/batches\` — after you have an input file id.
+    \`POST /v1/batches\`, after you have an input file id.
   </Card>
   <Card title="Retrieve batch" href="/api-reference/batch/retrieve-batch">
-    \`GET /v1/batches/{batch_id}\` — poll status and file ids.
+    \`GET /v1/batches/{batch_id}\`, poll status and file ids.
   </Card>
   <Card title="List batches" href="/api-reference/batch/list-batches">
-    \`GET /v1/batches\` — paginate with \`after\`.
+    \`GET /v1/batches\`, paginate with \`after\`.
   </Card>
   <Card title="Cancel batch" href="/api-reference/batch/cancel-batch">
     \`POST /v1/batches/{batch_id}/cancel\`.
@@ -236,7 +236,7 @@ function convertMarkdownBody(raw, slug) {
   text = convertDocsifyTabs(text);
 
   text = text.replace(
-    /## <span class="verb (\w+)">(\w+)<\/span> `([^`]+)` — ([^\n]+)/g,
+    /## <span class="verb (\w+)">(\w+)<\/span> `([^`]+)`. ([^\n]+)/g,
     "## $2 `$3`: $4"
   );
   text = text.replace(/<span class="verb \w+">(\w+)<\/span>/g, "$1");
@@ -258,13 +258,13 @@ function convertMarkdownBody(raw, slug) {
   );
 
   // Table default cells
-  text = text.replace(/\| — \|/g, "| - |");
+  text = text.replace(/\|. \|/g, "| - |");
 
   text = normalizeDashes(text);
 
-  // "Response — 200 OK" became "Response. 200 OK" after dash normalization.
+  // "Response. 200 OK" became "Response. 200 OK" after dash normalization.
   text = text.replace(/### Response\. (`?\d)/g, "### Response: $1");
-  text = text.replace(/### Response — /g, "### Response: ");
+  text = text.replace(/### Response. /g, "### Response: ");
 
   if (slug === "getting-started") {
     text = text.replace(/\n## End-to-end flow[\s\S]*?(?=\n---\n\n## 1\.)/, "\n\n---\n");
@@ -302,7 +302,7 @@ function convertMarkdownBody(raw, slug) {
     First batch in under 10 minutes: auth, upload, create, poll, download.
   </Card>
   <Card title="Upload file (playground)" href="/api-reference/batch/upload-file">
-    \`POST /v1/files\` — attach JSONL with \`purpose=batch\`.
+    \`POST /v1/files\`, attach JSONL with \`purpose=batch\`.
   </Card>
   <Card title="Create batch (playground)" href="/api-reference/batch/create-batch">
     \`POST /v1/batches\` after you have an input file id.

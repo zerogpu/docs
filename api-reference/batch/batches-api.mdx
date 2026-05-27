@@ -5,13 +5,13 @@ description: "Submit, monitor, cancel, and list asynchronous batch jobs. Wire-co
 
 <CardGroup cols={2}>
   <Card title="Create batch" href="/api-reference/batch/create-batch">
-    `POST /v1/batches` — after you have an input file id.
+    `POST /v1/batches`, after you have an input file id.
   </Card>
   <Card title="Retrieve batch" href="/api-reference/batch/retrieve-batch">
-    `GET /v1/batches/{batch_id}` — poll status and file ids.
+    `GET /v1/batches/{batch_id}`, poll status and file ids.
   </Card>
   <Card title="List batches" href="/api-reference/batch/list-batches">
-    `GET /v1/batches` — paginate with `after`.
+    `GET /v1/batches`, paginate with `after`.
   </Card>
   <Card title="Cancel batch" href="/api-reference/batch/cancel-batch">
     `POST /v1/batches/{batch_id}/cancel`.
