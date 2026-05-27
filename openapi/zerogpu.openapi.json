@@ -34,10 +34,10 @@
               },
               "examples": {
                 "default": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched (see model pages for more)",
+                  "summary": "llama-3.1-8b-instruct-fast (see model pages for more)",
                   "value": {
-                    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-                    "model": "zlm-v1-iab-classify-edge-enriched"
+                    "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
+                    "model": "llama-3.1-8b-instruct-fast"
                   }
                 }
               }
@@ -104,13 +104,13 @@
               },
               "examples": {
                 "default": {
-                  "summary": "zlm-v1-iab-classify-edge-enriched (see model pages for more)",
+                  "summary": "llama-3.1-8b-instruct-fast (see model pages for more)",
                   "value": {
-                    "model": "zlm-v1-iab-classify-edge-enriched",
+                    "model": "llama-3.1-8b-instruct-fast",
                     "messages": [
                       {
                         "role": "user",
-                        "content": "What are the basics of exercise and physical fitness?Exercise is anything that gets your body moving. Regular exercise is one of the best things you can do for your health. It has many benefits, including improving your overall health and fitness, and reducing your risk for many chronic (long-term) diseases.Every physical fitness routine is built on a few simple ideas. These include:Make exercise a habit, as your body adapts to the type of activity you do most often. Regular practice will help you improve.Build up your activity level slowly to help you continue to get stronger, faster, or more flexible without pushing too hard all at once.Challenge yourself by lifting slightly heavier weights, adding a few more minutes to your walk, or increasing your pace."
+                        "content": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
                       }
                     ]
                   }
@@ -180,8 +180,8 @@
           "model": {
             "type": "string",
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
-            "default": "zlm-v1-iab-classify-edge-enriched",
-            "example": "zlm-v1-iab-classify-edge-enriched"
+            "default": "llama-3.1-8b-instruct-fast",
+            "example": "llama-3.1-8b-instruct-fast"
           },
           "input": {
             "description": "Model-dependent input. Plain string or message list with role and content.",
@@ -221,7 +221,7 @@
           "model": {
             "type": "string",
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
-            "example": "zlm-v1-iab-classify-edge-enriched"
+            "example": "llama-3.1-8b-instruct-fast"
           },
           "messages": {
             "type": "array",

@@ -8,3 +8,30 @@
 .zgpu-model-field-locked button[data-zgpu-model-delete-hidden="1"] {
   display: none !important;
 }
+
+/* Responses playground: make the `input` string editor behave like metadata. */
+.zgpu-input-textarea-source {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.zgpu-input-textarea {
+  width: 100% !important;
+  min-height: 10rem !important;
+  padding: 0.875rem 1rem !important;
+  border: 1px solid rgb(63 63 70) !important;
+  border-radius: 0.75rem !important;
+  background: transparent !important;
+  color: inherit !important;
+  font: inherit !important;
+  line-height: 1.5 !important;
+  resize: vertical !important;
+  outline: none !important;
+}
+
+.zgpu-input-textarea:focus {
+  border-color: rgb(113 113 122) !important;
+}

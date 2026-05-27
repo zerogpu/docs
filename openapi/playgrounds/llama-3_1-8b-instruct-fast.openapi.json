@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "t5-small playground",
+    "title": "llama-3.1-8b-instruct-fast playground",
     "version": "1.0",
-    "description": "Interactive playground for **t5-small**.\nModel is always `t5-small` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **llama-3.1-8b-instruct-fast**.\nModel is always `llama-3.1-8b-instruct-fast` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
   },
   "servers": [
     {
@@ -20,10 +20,10 @@
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse_t5-small",
-        "summary": "t5-small: Responses",
+        "operationId": "createResponse_llama-3_1-8b-instruct-fast",
+        "summary": "llama-3.1-8b-instruct-fast: Responses",
         "tags": [
-          "t5-small"
+          "llama-3.1-8b-instruct-fast"
         ],
         "requestBody": {
           "required": true,
@@ -39,9 +39,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "t5-small",
-                        "default": "t5-small",
-                        "example": "t5-small",
+                        "const": "llama-3.1-8b-instruct-fast",
+                        "default": "llama-3.1-8b-instruct-fast",
+                        "example": "llama-3.1-8b-instruct-fast",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -53,7 +53,7 @@
                   "summary": "Default",
                   "value": {
                     "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
-                    "model": "t5-small"
+                    "model": "llama-3.1-8b-instruct-fast"
                   }
                 }
               }
@@ -98,10 +98,10 @@
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_t5-small",
-        "summary": "t5-small: Chat completions",
+        "operationId": "createChatCompletion_llama-3_1-8b-instruct-fast",
+        "summary": "llama-3.1-8b-instruct-fast: Chat completions",
         "tags": [
-          "t5-small"
+          "llama-3.1-8b-instruct-fast"
         ],
         "requestBody": {
           "required": true,
@@ -117,9 +117,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "t5-small",
-                        "default": "t5-small",
-                        "example": "t5-small",
+                        "const": "llama-3.1-8b-instruct-fast",
+                        "default": "llama-3.1-8b-instruct-fast",
+                        "example": "llama-3.1-8b-instruct-fast",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -130,7 +130,7 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "model": "t5-small",
+                    "model": "llama-3.1-8b-instruct-fast",
                     "messages": [
                       {
                         "role": "user",
@@ -196,9 +196,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "t5-small",
-            "default": "t5-small",
-            "example": "t5-small",
+            "const": "llama-3.1-8b-instruct-fast",
+            "default": "llama-3.1-8b-instruct-fast",
+            "example": "llama-3.1-8b-instruct-fast",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -226,9 +226,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "t5-small",
-            "default": "t5-small",
-            "example": "t5-small",
+            "const": "llama-3.1-8b-instruct-fast",
+            "default": "llama-3.1-8b-instruct-fast",
+            "example": "llama-3.1-8b-instruct-fast",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {

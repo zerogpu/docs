@@ -1,4 +1,14 @@
 {
+  "llama-3.1-8b-instruct-fast": {
+    "spec": "openapi/playgrounds/llama-3_1-8b-instruct-fast.openapi.json",
+    "operations": [
+      "POST /responses",
+      "POST /chat/completions"
+    ],
+    "primary": "POST /responses",
+    "page": "models/llama-3-1-8b-instruct-fast",
+    "displayName": "llama-3.1-8b-instruct-fast"
+  },
   "zlm-v1-iab-classify-edge-enriched": {
     "spec": "openapi/playgrounds/zlm-v1-iab-classify-edge-enriched.openapi.json",
     "operations": [
@@ -58,16 +68,6 @@
     "primary": "POST /responses",
     "page": "models/deberta-v3-small",
     "displayName": "deberta-v3-small"
-  },
-  "t5-small": {
-    "spec": "openapi/playgrounds/t5-small.openapi.json",
-    "operations": [
-      "POST /responses",
-      "POST /chat/completions"
-    ],
-    "primary": "POST /responses",
-    "page": "models/t5-small",
-    "displayName": "t5-small"
   },
   "LFM2.5-1.2B-Thinking": {
     "spec": "openapi/playgrounds/LFM2_5-1_2B-Thinking.openapi.json",

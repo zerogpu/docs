@@ -109,7 +109,7 @@
                   "models/gliner2-base-v1",
                   "models/lfm2-5-1-2b-instruct",
                   "models/lfm2-5-1-2b-thinking",
-                  "models/t5-small",
+                  "models/llama-3-1-8b-instruct-fast",
                   "models/zlm-v1-followup-questions-edge",
                   "models/zlm-v1-iab-classify-edge",
                   "models/zlm-v1-iab-classify-edge-enriched"
