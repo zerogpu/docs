@@ -175,15 +175,15 @@
         "tab": "Cookbook",
         "groups": [
           {
-            "group": "Cookbook",
+            "group": "General",
             "pages": [
-              "cookbook/index",
-              "cookbook/demos",
-              "cookbook/summarize-text",
-              "cookbook/iab-classification",
-              "cookbook/data-extraction",
-              "cookbook/data-extraction-tutorial",
-              "cookbook/batch-requests"
+              "cookbook/data-extraction-tutorial"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "cookbook/claude-code-csv-sanitizer"
             ]
           }
         ]
