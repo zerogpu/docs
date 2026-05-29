@@ -174,6 +174,40 @@ Same shape as `chat`, but the model returns its reasoning trace alongside the an
 /zerogpu-router:chat-thinking "If a train leaves at 3 PM going 60 mph, when does it cover 150 miles?"
 ```
 
+### `/zerogpu-router:summarize`
+
+Condense a longer passage into a short summary. Use this when you need the gist of a report, ticket thread, transcript, or document without spending Claude tokens on the read.
+
+- **Model:** `llama-3-1-8b-instruct-fast`
+- **Wraps:** `zerogpu summarize`
+- **When Claude auto-invokes:** "summarize this", "give me the gist", "TL;DR this passage", "condense this into a few sentences."
+
+**Synopsis**
+
+```text
+/zerogpu-router:summarize <text>
+```
+
+**Example**
+
+```text
+/zerogpu-router:summarize "The board met Thursday to review Q3 results. Revenue rose 18% \
+year-over-year to $42M, driven mainly by enterprise renewals and a strong launch in the EU \
+market. Operating margin slipped to 11% from 14% as headcount grew 30% ahead of the new \
+data-center buildout. The CFO flagged rising cloud costs as the top risk for Q4 and proposed \
+a hiring freeze on non-engineering roles until margins recover. The board approved the freeze \
+and asked for a revised 2025 budget by mid-December."
+```
+
+**Illustrative output**
+
+```text
+Q3 revenue grew 18% YoY to $42M on enterprise renewals and EU growth, but operating margin
+fell to 11% due to a 30% headcount increase for the data-center buildout. Citing cloud costs
+as the main Q4 risk, the board approved a hiring freeze on non-engineering roles and requested
+a revised 2025 budget by mid-December.
+```
+
 ### `/zerogpu-router:classify-iab`
 
 Classify text against the **IAB content / audience taxonomy** (standard ad-tech category labels).
@@ -428,6 +462,7 @@ Every skill at a glance.
 | `/zerogpu-router:status` | Show current sign-in status (manual only) | `/zerogpu-router:status` |
 | `/zerogpu-router:chat <text>` | Short chat reply via `LFM2.5-1.2B-Instruct` | `/zerogpu-router:chat "Explain WebSockets in two sentences."` |
 | `/zerogpu-router:chat-thinking <text>` | Chat with the Thinking variant (returns reasoning) | `/zerogpu-router:chat-thinking "If a train leaves at 3 PM going 60 mph..."` |
+| `/zerogpu-router:summarize <text>` | Condense a longer passage into a short summary | `/zerogpu-router:summarize "The board met Thursday to review Q3 results..."` |
 | `/zerogpu-router:classify-iab <text>` | IAB taxonomy classification | `/zerogpu-router:classify-iab "The Lakers signed a new point guard."` |
 | `/zerogpu-router:classify-iab-enriched <text>` | IAB + topics/keywords/intent | `/zerogpu-router:classify-iab-enriched "Compare the Tesla Model Y..."` |
 | `/zerogpu-router:classify-zero-shot <text> -l ...` | Zero-shot against custom labels | `/zerogpu-router:classify-zero-shot "fast laptop" -l positive -l negative` |
