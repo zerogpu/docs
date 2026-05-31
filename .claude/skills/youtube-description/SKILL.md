@@ -5,7 +5,7 @@ description: Generate a ready-to-paste YouTube title and description for a ZeroG
 
 # youtube-description
 
-Produce a single YouTube **title** and a ready-to-paste **description** for a video about a ZeroGPU topic. The output goes in `.socials/youtube/<topic-slug>.md` (one file per video, named after the anchor topic, e.g. `.socials/youtube/claude-code-plugin.md`) so the user can copy the body straight into YouTube's description box. Create the `.socials/youtube/` directory if it does not exist.
+Produce a single YouTube **title** and a ready-to-paste **description** for a video about a ZeroGPU topic. The output goes in `youtube/<topic-slug>.md` (one file per video, named after the anchor topic, e.g. `youtube/claude-code-plugin.md`) so the user can copy the body straight into YouTube's description box. Create the `youtube/` directory if it does not exist.
 
 The whole point is that the user pastes this without editing, so two things must hold:
 - **Every link must resolve and nothing may be invented.** Links come from the repo (`docs.json` for socials/nav, the anchor `.mdx` for content), not from memory.
@@ -47,7 +47,7 @@ Open the anchor `.mdx` and pull the substance from it, do not paraphrase from im
 
 ### 3. Assemble the output file
 
-Write `.socials/youtube/<topic-slug>.md` using this layout. Keep the divider so it's obvious what to copy. Everything in angle brackets below is an instruction to you, the author, fill it in with real content. The finished file must contain zero `<` or `>` characters in the body (below the divider); the only allowed `>` is the blockquote marker on the "Copy everything below the divider" note, which sits above it.
+Write `youtube/<topic-slug>.md` using this layout. Keep the divider so it's obvious what to copy. Everything in angle brackets below is an instruction to you, the author, fill it in with real content. The finished file must contain zero `<` or `>` characters in the body (below the divider); the only allowed `>` is the blockquote marker on the "Copy everything below the divider" note, which sits above it.
 
 ```
 # YouTube Video Description: <Topic>
