@@ -4,7 +4,6 @@
  */
 (function () {
   const endpoint = "https://api-dashboard.zerogpu.ai/api/models";
-  const fallbackEndpoint = "/snippets/model-catalog-fallback.json";
 
   function fmtMoney(value) {
     if (typeof value !== "number" || Number.isNaN(value)) return null;
@@ -471,11 +470,7 @@
   var modelsPromise = null;
   function getModels() {
     if (modelsPromise) return modelsPromise;
-    modelsPromise = fetchJson(endpoint)
-      .then(parsePayload)
-      .catch(function () {
-        return fetchJson(fallbackEndpoint).then(parsePayload);
-      });
+    modelsPromise = fetchJson(endpoint).then(parsePayload);
     return modelsPromise;
   }
 
@@ -1116,18 +1111,10 @@
       .then(function (payload) {
         renderCategory(parsePayload(payload));
       })
-      .catch(function () {
-        return fetchJson(fallbackEndpoint)
-          .then(function (payload) {
-            renderCategory(parsePayload(payload));
-            statusEl.textContent =
-              statusEl.textContent + " (using local fallback snapshot)";
-          })
-          .catch(function (fallbackError) {
-            statusEl.style.display = "";
-            statusEl.textContent =
-              "Unable to load models right now. " + fallbackError.message;
-          });
+      .catch(function (error) {
+        statusEl.style.display = "";
+        statusEl.textContent =
+          "Unable to load models right now. " + error.message;
       });
   }
 
@@ -1166,18 +1153,10 @@
       .then(function (payload) {
         renderModel(parsePayload(payload));
       })
-      .catch(function () {
-        return fetchJson(fallbackEndpoint)
-          .then(function (payload) {
-            renderModel(parsePayload(payload));
-            statusEl.textContent =
-              statusEl.textContent + " (using local fallback snapshot)";
-          })
-          .catch(function (fallbackError) {
-            statusEl.style.display = "";
-            statusEl.textContent =
-              "Unable to load model details right now. " + fallbackError.message;
-          });
+      .catch(function (error) {
+        statusEl.style.display = "";
+        statusEl.textContent =
+          "Unable to load model details right now. " + error.message;
       });
   }
 
@@ -1260,17 +1239,9 @@
       .then(function (payload) {
         renderCatalog(parsePayload(payload));
       })
-      .catch(function () {
-        return fetchJson(fallbackEndpoint)
-          .then(function (payload) {
-            renderCatalog(parsePayload(payload));
-            statusEl.textContent =
-              statusEl.textContent + " (using local fallback snapshot)";
-          })
-          .catch(function (fallbackError) {
-            statusEl.textContent =
-              "Unable to load models right now. " + fallbackError.message;
-          });
+      .catch(function (error) {
+        statusEl.textContent =
+          "Unable to load models right now. " + error.message;
       });
   }
 

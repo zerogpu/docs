@@ -25,7 +25,7 @@ All scripts must be run from the repo root (`docs/`); several resolve paths agai
 
 **Three sources of truth, glued by scripts:**
 
-1. **Live model catalog** at `https://api-dashboard.zerogpu.ai/api/models`, the canonical list of models, pricing, schemas. `snippets/model-catalog-fallback.json` is the offline mirror used when the endpoint is unreachable (both at build time and at runtime via `model-catalog-bootstrap.js`).
+1. **Live model catalog** at `https://api-dashboard.zerogpu.ai/api/models`, the canonical list of models, pricing, schemas. There is no offline fallback: the build scripts and the runtime `model-catalog-bootstrap.js` fetch this endpoint directly and surface an error if it is unreachable.
 2. **Hand-maintained `openapi/batch.openapi.json`**, covers all `/v1/files` and `/v1/batches` paths. Not regenerated; edit directly.
 3. **External `orchestration-api/docs/batch/`** prose, imported into `api-reference/batch/*.mdx` by the import script, which also injects playground cards into `files-api.mdx` / `batches-api.mdx`.
 

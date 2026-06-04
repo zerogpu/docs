@@ -17,7 +17,6 @@ const playgroundsDir = path.join(docsRoot, "openapi", "playgrounds");
 const manifestPath = path.join(docsRoot, "snippets", "model-playgrounds.json");
 const modelsIndexPath = path.join(docsRoot, "api-reference", "models", "index.mdx");
 const docsJsonPath = path.join(docsRoot, "docs.json");
-const fallbackPath = path.join(docsRoot, "snippets", "model-catalog-fallback.json");
 
 const MODEL_PLAYGROUNDS_PATH = "/api-reference/models";
 const MODEL_FIELD_DESCRIPTION =
@@ -168,24 +167,15 @@ function buildExamples(entries) {
 }
 
 async function fetchModels() {
-  try {
-    const response = await fetch(MODELS_ENDPOINT, {
-      headers: { accept: "application/json", "user-agent": "zerogpu-docs-openapi-generator" },
-    });
-    if (!response.ok) throw new Error(`API ${response.status}`);
-    const payload = await response.json();
-    if (!payload?.success || !Array.isArray(payload.models)) {
-      throw new Error("Unexpected API shape");
-    }
-    return payload.models;
-  } catch (error) {
-    const raw = await readFile(fallbackPath, "utf8");
-    const payload = JSON.parse(raw);
-    if (!payload?.success || !Array.isArray(payload.models)) {
-      throw new Error(`API and fallback failed: ${error.message}`);
-    }
-    return payload.models;
+  const response = await fetch(MODELS_ENDPOINT, {
+    headers: { accept: "application/json", "user-agent": "zerogpu-docs-openapi-generator" },
+  });
+  if (!response.ok) throw new Error(`API ${response.status}`);
+  const payload = await response.json();
+  if (!payload?.success || !Array.isArray(payload.models)) {
+    throw new Error("Unexpected API shape");
   }
+  return payload.models;
 }
 
 function sharedComponents() {

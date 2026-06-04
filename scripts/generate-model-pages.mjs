@@ -8,7 +8,6 @@ const MODELS_ENDPOINT = "https://api-dashboard.zerogpu.ai/api/models";
 const projectRoot = process.cwd();
 const docsRoot = path.join(projectRoot);
 const modelsDir = path.join(docsRoot, "models");
-const fallbackPath = path.join(docsRoot, "snippets", "model-catalog-fallback.json");
 const playgroundsManifestPath = path.join(docsRoot, "snippets", "model-playgrounds.json");
 
 function slugify(value) {
@@ -332,32 +331,17 @@ async function loadPlaygroundsManifest() {
 }
 
 async function fetchModels() {
-  try {
-    const response = await fetch(MODELS_ENDPOINT, {
-      headers: { accept: "application/json", "user-agent": "zerogpu-docs-generator" },
-    });
-    if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`);
-    }
-    const payload = await response.json();
-    if (!payload || payload.success !== true || !Array.isArray(payload.models)) {
-      throw new Error("Unexpected API response shape");
-    }
-    return payload.models;
-  } catch (error) {
-    const fallbackRaw = await readFile(fallbackPath, "utf8");
-    const fallbackPayload = JSON.parse(fallbackRaw);
-    if (
-      !fallbackPayload ||
-      fallbackPayload.success !== true ||
-      !Array.isArray(fallbackPayload.models)
-    ) {
-      throw new Error(
-        `Could not fetch API or parse fallback payload: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-    return fallbackPayload.models;
+  const response = await fetch(MODELS_ENDPOINT, {
+    headers: { accept: "application/json", "user-agent": "zerogpu-docs-generator" },
+  });
+  if (!response.ok) {
+    throw new Error(`API request failed with status ${response.status}`);
   }
+  const payload = await response.json();
+  if (!payload || payload.success !== true || !Array.isArray(payload.models)) {
+    throw new Error("Unexpected API response shape");
+  }
+  return payload.models;
 }
 
 async function main() {
