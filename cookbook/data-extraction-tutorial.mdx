@@ -6,7 +6,7 @@ description: "Step-by-step guide with example dataset. Text-only extraction, no 
 This tutorial walks through **three production-style use cases** for the [Data extraction](/cookbook/data-extraction) recipe. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
 
 <Note>
-All sample people and companies in the [example dataset](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset) are **synthetic and fictional**.
+All sample people and companies in the [example dataset](https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset) are **synthetic and fictional**.
 </Note>
 
 ## What you will build
@@ -24,17 +24,17 @@ Get your **API key** and **project ID** from the [dashboard](https://zerogpu.ai)
 
 ## Before you start
 
-Clone or browse the example data and scripts in the docs repo:
+Clone or browse the example data and scripts in the cookbook repo:
 
 ```
-tutorials/data-extraction/
+demos/data-extraction/
 ├── dataset/          # resumes.jsonl, profiles.jsonl, job_posts.jsonl
 ├── schemas/          # resume.json, linkedin-profile.json
 ├── scripts/          # run_batch_extraction.py
 └── blog-post.md      # companion article (optional read)
 ```
 
-GitHub: [zerogpu/docs/tutorials/data-extraction](https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction) (see the [README](https://github.com/zerogpu/docs/blob/main/tutorials/data-extraction/README.md) for setup).
+GitHub: [zerogpu/cookbook/demos/data-extraction](https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction) (see the [README](https://github.com/zerogpu/cookbook/blob/main/demos/data-extraction/README.md) for setup).
 
 ## Step 1: Extract a candidate from a resume
 
@@ -78,7 +78,7 @@ headers = {
     "x-project-id": "YOUR_PROJECT_ID",
 }
 
-# First line of tutorials/data-extraction/dataset/resumes.jsonl (clone docs repo)
+# First line of demos/data-extraction/dataset/resumes.jsonl (clone cookbook repo)
 with open("resumes.jsonl", encoding="utf-8") as f:
     record = json.loads(f.readline())
 
@@ -175,7 +175,7 @@ Lower `threshold` to recall more spans; raise it when precision matters more.
 Batch all synthetic resumes or profiles locally:
 
 ```bash
-cd tutorials/data-extraction/scripts
+cd cookbook/demos/data-extraction/scripts
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 export ZEROGPU_API_KEY="zgpu-..."
@@ -185,7 +185,7 @@ export ZEROGPU_PROJECT_ID="your-project-uuid"
 .venv/bin/python run_batch_extraction.py --dataset job_posts
 ```
 
-Results are written to `tutorials/data-extraction/outputs/*.jsonl`. Inspect them before wiring into production ETL.
+Results are written to `demos/data-extraction/outputs/*.jsonl`. Inspect them before wiring into production ETL.
 
 For many files at once, combine this with [Batch requests](/cookbook/batch-requests) patterns (parallelism, retries).
 
@@ -206,11 +206,11 @@ Before storing user-submitted resumes, run [PII extraction](/cookbook/data-extra
   <Card title="Data extraction recipe" icon="book" href="/cookbook/data-extraction">
     API reference-style examples for json, NER, and PII.
   </Card>
-  <Card title="Example dataset (GitHub)" icon="github" href="https://github.com/zerogpu/docs/tree/main/tutorials/data-extraction/dataset">
+  <Card title="Example dataset (GitHub)" icon="github" href="https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset">
     Synthetic resumes, profiles, and job posts (JSONL).
   </Card>
-  <Card title="Companion article" icon="newspaper" href="https://github.com/zerogpu/docs/blob/main/tutorials/data-extraction/blog-post.md">
-    Long-form walkthrough in the docs repo.
+  <Card title="Companion article" icon="newspaper" href="https://github.com/zerogpu/cookbook/blob/main/demos/data-extraction/blog-post.md">
+    Long-form walkthrough in the cookbook repo.
   </Card>
   <Card title="gliner2-base-v1 playground" icon="play" href="/models/gliner2-base-v1">
     Try schemas interactively in the model catalog.
