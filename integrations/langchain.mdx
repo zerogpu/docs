@@ -6,8 +6,6 @@ icon: "crow"
 
 LangChain is an open-source framework for building applications powered by large language models. It provides composable building blocks for prompts, chains, agents, retrieval, and tool use, and its [tool abstraction](https://python.langchain.com/docs/concepts/tools/) lets any agent call out to external capabilities with validated, typed inputs. Teams use LangChain to wire LLMs into production pipelines without rewriting glue code for every model vendor.
 
-ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
-
 ## Overview
 
 This guide walks through [`langchain-zerogpu`](https://github.com/zerogpu/langchain-zerogpu), the official package that exposes ZeroGPU's task models as first-class LangChain `BaseTool` subclasses. You'll install the package from [PyPI](https://pypi.org/project/langchain-zerogpu/), authenticate with your API key and project ID, invoke your first tool, and then work through all eleven tools - chat, summarization, classification, entity and JSON extraction, and PII handling - plus the `ZeroGPUToolkit` that binds the whole set to an agent in one line. By the end, any LangChain agent (including `create_agent` and LangGraph graphs) can hand its repeatable NLP work to ZeroGPU instead of spending frontier-model tokens.
