@@ -1,65 +1,107 @@
 ---
 title: "Introduction"
-description: "Run AI model inference through an API without managing GPU infrastructure."
+description: "Run high-volume AI tasks on specialized small and nano language models across an edge-powered network - faster and cheaper, through one OpenAI-compatible API."
 ---
 
-Send a POST request, get an AI response. No GPUs to provision, no infrastructure to manage.
+ZeroGPU is the compute efficiency layer for AI inference. It runs repeatable, high-volume AI tasks on specialized small and nano language models across an edge-powered network - so the same workloads run faster and cheaper than on centralized GPUs.
 
-ZeroGPU handles model hosting, scaling, and routing. You get an API key and start building.
+Send a request to one OpenAI-compatible endpoint; ZeroGPU picks the right small or nano model and runs it on the right compute. Frontier models for reasoning. ZeroGPU for repeatable execution - classification, extraction, moderation, summarization, routing - at the scale AI demands.
 
-<Card
-  title="First API call in 5 minutes"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Three steps: get credentials, send a request, see the response.
-</Card>
+## Make your first call
+
+Find your API key and project ID in the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+
+```bash wrap
+curl --location 'https://api.zerogpu.ai/v1/responses' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --header 'x-project-id: YOUR_PROJECT_ID' \
+  --data '{
+  "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
+  "model": "zlm-v1-iab-classify-edge"
+}'
+```
+
+Already using the OpenAI SDK? Point it at ZeroGPU:
+
+```python wrap
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="unused",  # ZeroGPU authenticates via the headers below
+    default_headers={
+        "x-api-key": "YOUR_API_KEY",
+        "x-project-id": "YOUR_PROJECT_ID",
+    },
+)
+
+resp = client.responses.create(
+    model="zlm-v1-iab-classify-edge",
+    input="Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
+)
+```
+
+🎉 Either call returns the same classification result:
+
+```json
+{
+  "audience": [
+    { "name": "Technology & Computing", "score": 0.8194953318627214 },
+    { "name": "Consumer Electronics", "score": 0.7730970665427267 },
+    { "name": "IT and Internet Support", "score": 0.6476231908025892 }
+  ],
+  "content": {
+    "iab_1_0": [
+      { "name": "Technology & Computing", "score": 0.8130967783784443 },
+      { "name": "Automotive", "score": 0.6588144281246334 }
+    ],
+    "iab_2_2": [
+      { "name": "Technology & Computing", "score": 0.8130967783784443 },
+      { "name": "Wearable Technology", "score": 0.7080836335415118 },
+      { "name": "Auto Infotainment Technologies", "score": 0.6588144281246334 }
+    ]
+  }
+}
+```
+
+## What you can run
+
+<Columns cols={4}>
+  <Card title="Classification" icon="tags" href="/models/text-classification" />
+  <Card title="Intent and signal extraction" icon="bullseye" href="/models/ad-tech" />
+  <Card title="Moderation" icon="shield" href="/models/moderation" />
+  <Card title="PII detection" icon="user-secret" href="/models/pii" />
+  <Card title="Summarization" icon="align-left" href="/models/summarization" />
+  <Card title="Query routing" icon="route" href="/models/query-routing" />
+  <Card title="Translation" icon="language" href="/models/translation" />
+  <Card title="Document parsing" icon="file-lines" href="/models/document-parsing" />
+</Columns>
 
 ## What you get
 
 <Columns cols={3}>
-  <Card title="One API endpoint" icon="bolt">
-    `POST /v1/responses`: send text in, get AI output back. Six SDKs included.
+  <Card title="Lower cost and latency" icon="gauge-high">
+    Specialized small and nano models on distributed compute. ~10x faster and 50%+ cheaper on production tasks.
   </Card>
-  <Card title="Real-time analytics" icon="chart-line">
-    Track every request: token counts, latency, volume, model distribution.
+  <Card title="One OpenAI-compatible API" icon="plug">
+    `POST /v1/responses`; integrate with minimal code changes.
   </Card>
-  <Card title="Project isolation" icon="folder">
-    Separate dev, staging, and production with independent keys, logs, and analytics.
+  <Card title="Built for production" icon="chart-line">
+    Token usage, latency, and volume per request, with project isolation for dev, staging, and production.
   </Card>
 </Columns>
 
 ## How it works
 
-<Steps>
-  <Step title="Create a project">
-    One organization, multiple projects. Each gets its own API key and dashboard.
-  </Step>
-  <Step title="Send requests">
-    POST to `/v1/responses` with your key, project ID, and model. Response comes back as structured JSON.
-  </Step>
-  <Step title="Monitor everything">
-    Token usage, request volume, latency, error rates: all visible in the dashboard. Debug individual requests in Logs.
-  </Step>
-</Steps>
+Workload analysis → Model selection → Edge orchestration. ZeroGPU classifies each task, picks the fastest viable model, and routes it to the right compute. See [How ZeroGPU works](/concepts/how-zerogpu-works) for the full picture.
 
 ## Go deeper
 
-<Columns cols={2}>
-  <Card title="Quickstart" icon="play" href="/quickstart">
-    Credentials → first request → response. Under 5 minutes.
-  </Card>
-  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
-    Full endpoint spec with request/response schemas.
-  </Card>
-  <Card title="SDK Examples" icon="code" href="/sdks/python">
-    Copy-paste examples for Python, JavaScript, Rust, Go, Ruby.
-  </Card>
-  <Card title="Dashboard" icon="gauge" href="/platform/dashboard">
-    Your API key, project ID, and ready-to-use code snippet.
-  </Card>
-  <Card title="Batch API" icon="layers" href="/api-reference/batch">
-    Upload JSONL files and run asynchronous workloads at scale.
-  </Card>
+<Columns cols={3}>
+  <Card title="Quickstart" icon="play" href="/quickstart" />
+  <Card title="How ZeroGPU works" icon="diagram-project" href="/concepts/how-zerogpu-works" />
+  <Card title="Model Catalog" icon="table-list" href="/platform/model-catalog" />
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction" />
+  <Card title="Build with AI" icon="robot" href="/resources/ai-and-mcp" />
 </Columns>
