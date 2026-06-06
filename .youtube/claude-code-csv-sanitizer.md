@@ -27,7 +27,7 @@ CSV Sanitizer cookbook: https://docs.zerogpu.ai/cookbook/claude-code-csv-sanitiz
 Claude Code plugin guide: https://docs.zerogpu.ai/integrations/claude-code-plugin
 Get your API key (Dashboard): https://platform.zerogpu.ai/dashboard
 Model catalog: https://docs.zerogpu.ai/platform/model-catalog
-Quickstart: https://docs.zerogpu.ai/quickstart
+Quickstart: https://docs.zerogpu.ai/docs/quickstart
 
 🛠️ Skills shown
 redact-pii (mask PII in-line as [PERSON], [EMAIL], [PHONE_NUMBER])

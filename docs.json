@@ -47,12 +47,11 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Get Started",
             "pages": [
               "index",
-              "quickstart",
-              "platform/dashboard",
-              "api-reference/batch/index"
+              "docs/how-zerogpu-works",
+              "docs/quickstart"
             ]
           },
           {
@@ -63,7 +62,11 @@
               "models/text-classification",
               "models/text-generation",
               "models/pii",
-              "models/summarization"
+              "models/summarization",
+              "models/moderation",
+              "models/query-routing",
+              "models/translation",
+              "models/document-parsing"
             ]
           },
           {

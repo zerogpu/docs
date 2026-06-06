@@ -21,7 +21,7 @@ Why it matters: keep raw PII out of Claude's context, cut token spend on routine
 Claude Code Plugin guide: https://docs.zerogpu.ai/integrations/claude-code-plugin
 Get your API key (Dashboard): https://platform.zerogpu.ai/dashboard
 Model Catalog: https://docs.zerogpu.ai/platform/model-catalog
-Quickstart (first API call in 5 min): https://docs.zerogpu.ai/quickstart
+Quickstart (first API call in 5 min): https://docs.zerogpu.ai/docs/quickstart
 All Integrations: https://docs.zerogpu.ai/integrations/index
 
 🛠️ Skills shown in the video

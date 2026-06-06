@@ -1,0 +1,2 @@
+Fix all the broken pages in index.mdx.
+Remove unused files.
