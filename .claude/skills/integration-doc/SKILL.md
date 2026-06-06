@@ -51,7 +51,7 @@ boilerplate below. No heading.>
    ### Prerequisites
        What the user needs before starting (account, runtime version, etc.).
        Link the API key page (https://platform.zerogpu.ai/dashboard) and the
-       model catalog (/platform/model-catalog).
+       model catalog (/docs/model-catalog).
    ### Get your ZeroGPU API key
        Short steps to create and copy an API key.
    ### Install <integration>

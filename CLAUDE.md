@@ -26,8 +26,6 @@ Everything is static, committed `.mdx` plus a few committed OpenAPI/JSON files. 
 
 **Adding/removing a model:** fully manual now, edit the OpenAPI specs and `models/<slug>.mdx` page, then add/remove the `models/<slug>` entry in the **By model** group in `docs.json`.
 
-**Runtime JS/CSS:** None. Mintlify auto-loads every root `.js` file globally as a `<script>` on all pages, but the repo currently ships no custom runtime scripts or stylesheets. The previous client-side catalog hydration (`model-catalog-bootstrap.js`) and playground tweaks (`playground-model-lock.js` + `style.css`) were removed and are being rebuilt from scratch. Pages render as static MDX; the per-model playgrounds use Mintlify's stock OpenAPI playground.
-
 ## Conventions
 
 - **ASCII hyphens only.** No em (`-`) or en (`-`) dashes anywhere in prose. Check this by hand when editing (the `normalize-dashes.mjs` helper was removed).

@@ -1,2 +1,4 @@
 Fix all the broken pages in index.mdx.
 Remove unused files.
+Check for any broken links at the end.
+Always redirect our model-catlog to docs/model-catalog.mdx

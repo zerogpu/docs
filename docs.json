@@ -57,7 +57,7 @@
           {
             "group": "Models",
             "pages": [
-              "platform/model-catalog",
+              "docs/model-catalog",
               "models/ad-tech",
               "models/text-classification",
               "models/text-generation",
@@ -250,6 +250,16 @@
       "href": "https://platform.zerogpu.ai/"
     }
   },
+  "redirects": [
+    {
+      "source": "/platform/model-catalog",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/model-catalog",
+      "destination": "/docs/model-catalog"
+    }
+  ],
   "footer": {
     "socials": {
       "website": "https://zerogpu.ai",

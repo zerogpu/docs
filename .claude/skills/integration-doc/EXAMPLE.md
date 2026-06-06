@@ -25,7 +25,7 @@ Video walkthrough coming soon.
 ### Prerequisites
 
 - A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard).
-- A model ID from the [model catalog](/platform/model-catalog) (for example, `lfm2-5-1-2b-instruct`).
+- A model ID from the [model catalog](/docs/model-catalog) (for example, `lfm2-5-1-2b-instruct`).
 - Python 3.9+.
 
 ### Get your ZeroGPU API key
@@ -85,7 +85,7 @@ Use a cheap classifier (e.g. `deberta-v3-small`) as a router in front of a chat 
 
 **`401 Unauthorized`**. `ZEROGPU_API_KEY` is missing or expired. Re-export it or rotate the key in the dashboard.
 
-**`404 Not Found` on the model**, the `model` argument must match a slug from the [model catalog](/platform/model-catalog) exactly. Common typos include `lfm-2.5` instead of `lfm2-5-1-2b-instruct`.
+**`404 Not Found` on the model**, the `model` argument must match a slug from the [model catalog](/docs/model-catalog) exactly. Common typos include `lfm-2.5` instead of `lfm2-5-1-2b-instruct`.
 
 **Empty streaming responses**, confirm `base_url` is `https://api.zerogpu.ai/v1` (with `/v1`); LangChain silently falls back to OpenAI defaults if the URL is wrong.
 
@@ -96,7 +96,7 @@ Use a cheap classifier (e.g. `deberta-v3-small`) as a router in front of a chat 
 LangChain plus ZeroGPU gives you a familiar chain-and-agent abstraction backed by fast, low-cost nano models, so you can prototype and ship production AI pipelines without managing GPU infrastructure or rewriting glue code when you swap models.
 
 <CardGroup cols={2}>
-  <Card title="Model Catalog" icon="layer-group" href="/platform/model-catalog">
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
     Browse every model available on ZeroGPU and pick the best fit.
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference/introduction">
