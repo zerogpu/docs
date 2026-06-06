@@ -1,10 +1,34 @@
 ---
 title: "How ZeroGPU works"
-description: "Workload analysis, model selection, and edge orchestration behind every ZeroGPU request."
+description: "ZeroGPU turns idle compute into one programmable inference layer - specialized small models, an edge-powered network, and routing handled for you."
 ---
 
-ZeroGPU classifies each task, picks the fastest viable model, and routes it to the right compute.
+ZeroGPU turns idle compute into one programmable inference layer. You send a request; we run it on a specialized small or nano model, on the cheapest compute that can serve it well.
 
-Workload analysis → Model selection → Edge orchestration.
+## Specialized small and nano models
 
-{/* Stub page - content to be added. */}
+ZeroGPU runs purpose-built ZLMs (ZeroGPU Language Models) for high-volume tasks like IAB classification and signal extraction, alongside a catalog of open small and nano models - DeBERTa, GLiNER, LFM2.5, Llama 3.1 8B. Small enough to run at the edge, good enough for production. See the [Model Catalog](/platform/model-catalog).
+
+## An edge-powered network
+
+Requests run across a hybrid of:
+
+<Columns cols={3}>
+  <Card title="Edge devices" icon="mobile-screen">
+    Phones, gaming PCs.
+  </Card>
+  <Card title="Optimized edge servers" icon="server">
+    Mid-sized models, higher load.
+  </Card>
+  <Card title="Cloud fallback" icon="cloud">
+    Consistent performance and burst capacity.
+  </Card>
+</Columns>
+
+## Routing
+
+For each request, ZeroGPU picks the right model and the right compute by capability, availability, and load - and routes geographically to cut latency. You call one endpoint; the orchestration is handled for you.
+
+<Note>
+  This is network-side routing (which model, which compute). It's distinct from the ZeroGPU Router in the skills/plugins, which decides - on the client side - which steps of an agent run to offload to ZeroGPU at all. See [Integrations → Claude Code Plugin](/integrations/claude-code-plugin).
+</Note>
