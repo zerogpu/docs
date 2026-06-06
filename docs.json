@@ -95,6 +95,18 @@
         ]
       },
       {
+        "tab": "Integrations",
+        "groups": [
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/index",
+              "integrations/claude-code-plugin"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Reference",
         "groups": [
           {
@@ -155,18 +167,6 @@
               "sdks/rust",
               "sdks/go",
               "sdks/ruby"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Integrations",
-        "groups": [
-          {
-            "group": "Integrations",
-            "pages": [
-              "integrations/index",
-              "integrations/claude-code-plugin"
             ]
           }
         ]
