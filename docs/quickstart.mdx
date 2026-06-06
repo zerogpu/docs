@@ -1,106 +1,70 @@
 ---
 title: "Quickstart"
-description: "First API call in under 5 minutes."
+description: "First API call in minutes."
 ---
 
-Three things from your [dashboard](https://zerogpu.ai), one API call, done.
+First API call in minutes. Three things from your dashboard, one API call, done.
 
 ## 1. Grab your credentials
 
-Log into the [ZeroGPU dashboard](https://zerogpu.ai). Copy these three values:
+Log into the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard) and copy these three values:
 
 | Credential | Where to find it |
-|------------|-----------------|
+|------------|------------------|
 | **API Key** | Dashboard → API Keys |
 | **Project ID** | Dashboard → Project Settings |
-| **Model** | Dashboard → Model selector |
+| **Model** | Dashboard → Model selector, or pick one from the [Model Catalog](/docs/model-catalog) |
 
 ## 2. Send a request
 
 <CodeGroup>
 
-```bash cURL
-curl --location 'https://api.zerogpu.ai/v1/responses' \
-  --header 'content-type: application/json' \
-  --header 'x-api-key: YOUR_API_KEY' \
-  --header 'x-project-id: YOUR_PROJECT_ID' \
-  --data '{
+```bash cURL wrap
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ZEROGPU_API_KEY" \
+  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
+  -d '{
     "model": "YOUR_MODEL",
-    "input": [
-      {
-        "role": "user",
-        "content": "Your input text here..."
-      }
-    ],
-    "text": {
-      "format": {
-        "type": "text"
-      }
-    }
+    "input": "Your input text here..."
   }'
 ```
 
-```python Python
-import requests
+```python Python wrap
+# pip install zerogpu-api
+import os
+from zerogpu import ZerogpuApi
 
-url = "https://api.zerogpu.ai/v1/responses"
-headers = {
-    "content-type": "application/json",
-    "x-api-key": "YOUR_API_KEY",
-    "x-project-id": "YOUR_PROJECT_ID",
-}
-payload = {
-    "model": "YOUR_MODEL",
-    "input": [
-        {
-            "role": "user",
-            "content": "Your input text here...",
-        }
-    ],
-    "text": {
-        "format": {
-            "type": "text"
-        }
-    },
-}
+client = ZerogpuApi(
+    api_key=os.environ["ZEROGPU_API_KEY"],
+    project_id=os.environ["ZEROGPU_PROJECT_ID"],
+)
 
-response = requests.post(url, headers=headers, json=payload)
-print(response.json())
+response = client.responses.create_response(
+    model="YOUR_MODEL",
+    input="Your input text here...",
+)
+print(response)
 ```
 
-```javascript JavaScript
-const url = 'https://api.zerogpu.ai/v1/responses';
-const headers = {
-  'content-type': 'application/json',
-  'x-api-key': 'YOUR_API_KEY',
-  'x-project-id': 'YOUR_PROJECT_ID'
-};
-const payload = {
+```javascript JavaScript wrap
+// npm install zerogpu-api
+import { ZerogpuApiClient } from 'zerogpu-api';
+
+const client = new ZerogpuApiClient({
+  apiKey: process.env.ZEROGPU_API_KEY,
+  projectId: process.env.ZEROGPU_PROJECT_ID,
+});
+
+const response = await client.responses.createResponse({
   model: 'YOUR_MODEL',
-  input: [
-    {
-      role: 'user',
-      content: 'Your input text here...'
-    }
-  ],
-  text: {
-    format: {
-      type: 'text'
-    }
-  }
-};
+  input: 'Your input text here...',
+});
 
-fetch(url, {
-  method: 'POST',
-  headers,
-  body: JSON.stringify(payload)
-})
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Error:', error));
+console.log(response.output);
 ```
 
-```rust Rust
+```rust Rust wrap
 use reqwest::Client;
 use serde_json::json;
 
@@ -110,17 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let payload = json!({
         "model": "YOUR_MODEL",
-        "input": [
-            {
-                "role": "user",
-                "content": "Your input text here..."
-            }
-        ],
-        "text": {
-            "format": {
-                "type": "text"
-            }
-        }
+        "input": "Your input text here..."
     });
 
     let response = client
@@ -138,7 +92,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-```go Go
+```go Go wrap
 package main
 
 import (
@@ -154,17 +108,7 @@ func main() {
 
   payload := map[string]any{
     "model": "YOUR_MODEL",
-    "input": []map[string]string{
-      {
-        "role":    "user",
-        "content": "Your input text here...",
-      },
-    },
-    "text": map[string]any{
-      "format": map[string]string{
-        "type": "text",
-      },
-    },
+    "input": "Your input text here...",
   }
 
   payloadBytes, err := json.Marshal(payload)
@@ -193,7 +137,7 @@ func main() {
 }
 ```
 
-```ruby Ruby
+```ruby Ruby wrap
 require 'net/http'
 require 'uri'
 require 'json'
@@ -209,17 +153,7 @@ request['x-project-id'] = 'YOUR_PROJECT_ID'
 
 request.body = {
   model: 'YOUR_MODEL',
-  input: [
-    {
-      role: 'user',
-      content: 'Your input text here...'
-    }
-  ],
-  text: {
-    format: {
-      type: 'text'
-    }
-  }
+  input: 'Your input text here...'
 }.to_json
 
 response = http.request(request)
@@ -232,24 +166,174 @@ puts response.body
   Store your API key in environment variables. Never commit it to version control or expose it in client-side code.
 </Warning>
 
-Some models expect `input` as a **JSON string** instead of a message array. If you see `400` with `invalid_type` on `input`, switch shapes: see [Responses](/api-reference/endpoint/responses#input-shape).
+## 3. See a complete example
 
-## 3. Verify it worked
+A full request - here the `llama-3.1-8b-instruct-fast` model summarizing a passage:
 
-Check the [dashboard](https://zerogpu.ai):
+<CodeGroup>
 
-- **Logs**: your request appears with model, status, and latency
-- **Usage**: token counts update in real time
+```bash cURL wrap
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ZEROGPU_API_KEY" \
+  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
+  -d '{
+    "model": "llama-3.1-8b-instruct-fast",
+    "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
+  }'
+```
 
-If you got a `401`, your API key is wrong. `403` means bad project ID. See [Authentication](/platform/authentication) for details.
+```python Python wrap
+# pip install zerogpu-api
+import os
+from zerogpu import ZerogpuApi
+
+client = ZerogpuApi(
+    api_key=os.environ["ZEROGPU_API_KEY"],
+    project_id=os.environ["ZEROGPU_PROJECT_ID"],
+)
+
+response = client.responses.create_response(
+    model="llama-3.1-8b-instruct-fast",
+    input="NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
+)
+print(response)
+```
+
+```javascript JavaScript wrap
+// npm install zerogpu-api
+import { ZerogpuApiClient } from 'zerogpu-api';
+
+const client = new ZerogpuApiClient({
+  apiKey: process.env.ZEROGPU_API_KEY,
+  projectId: process.env.ZEROGPU_PROJECT_ID,
+});
+
+const response = await client.responses.createResponse({
+  model: 'llama-3.1-8b-instruct-fast',
+  input: 'NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.',
+});
+
+console.log(response.output);
+```
+
+```rust Rust wrap
+use reqwest::Client;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+
+    let payload = json!({
+        "model": "llama-3.1-8b-instruct-fast",
+        "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
+    });
+
+    let response = client
+        .post("https://api.zerogpu.ai/v1/responses")
+        .header("content-type", "application/json")
+        .header("x-api-key", "YOUR_API_KEY")
+        .header("x-project-id", "YOUR_PROJECT_ID")
+        .json(&payload)
+        .send()
+        .await?;
+
+    let body = response.text().await?;
+    println!("{}", body);
+    Ok(())
+}
+```
+
+```go Go wrap
+package main
+
+import (
+  "bytes"
+  "encoding/json"
+  "fmt"
+  "io"
+  "net/http"
+)
+
+func main() {
+  url := "https://api.zerogpu.ai/v1/responses"
+
+  payload := map[string]any{
+    "model": "llama-3.1-8b-instruct-fast",
+    "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.",
+  }
+
+  payloadBytes, err := json.Marshal(payload)
+  if err != nil {
+    panic(err)
+  }
+
+  req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+  if err != nil {
+    panic(err)
+  }
+
+  req.Header.Set("content-type", "application/json")
+  req.Header.Set("x-api-key", "YOUR_API_KEY")
+  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
+
+  client := &http.Client{}
+  res, err := client.Do(req)
+  if err != nil {
+    panic(err)
+  }
+  defer res.Body.Close()
+
+  body, _ := io.ReadAll(res.Body)
+  fmt.Println(string(body))
+}
+```
+
+```ruby Ruby wrap
+require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse('https://api.zerogpu.ai/v1/responses')
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = (uri.scheme == 'https')
+
+request = Net::HTTP::Post.new(uri.request_uri)
+request['content-type'] = 'application/json'
+request['x-api-key'] = 'YOUR_API_KEY'
+request['x-project-id'] = 'YOUR_PROJECT_ID'
+
+request.body = {
+  model: 'llama-3.1-8b-instruct-fast',
+  input: 'NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon.'
+}.to_json
+
+response = http.request(request)
+puts response.body
+```
+
+</CodeGroup>
+
+🎉 The model returns the summary:
+
+```text wrap
+NASA's Artemis III mission is now scheduled for late 2026, marking the first lunar landing since Apollo 17 in 1972, with a crew of four astronauts aboard the Orion spacecraft, including two descending to the Moon's south pole using SpaceX Starship as a lunar lander to explore permanently shadowed craters potentially containing water ice crucial for sustaining a long-term human presence on the Moon.
+```
+
+## 4. Verify it worked
+
+Check the dashboard:
+
+- **Logs**: your request appears with model, status, and latency.
+- **Usage**: token counts update in real time.
+
+If you get a `401`, your API key is wrong. A `403` means a bad project ID - see [Authentication](/platform/authentication).
 
 ## Next steps
 
-<Columns cols={2}>
-  <Card title="API Reference" icon="terminal" href="/api-reference/introduction">
-    Full request/response spec for `/v1/responses`.
-  </Card>
-  <Card title="SDK Examples" icon="code" href="/sdks/python">
-    Error handling, env vars, and production patterns.
-  </Card>
+<Columns cols={3}>
+  <Card title="API Reference" icon="terminal" href="/api-reference/introduction" />
+  <Card title="How ZeroGPU works" icon="diagram-project" href="/docs/how-zerogpu-works" />
+  <Card title="Build with AI" icon="robot" href="/resources/ai-and-mcp" />
 </Columns>
