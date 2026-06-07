@@ -42,7 +42,7 @@ x-api-key:    <your-api-key>
 x-project-id: <your-project-uuid>
 ```
 
-See [Errors reference](/api-reference/batch/errors) for the auth failure codes (`401`, `403`, `429`).
+See [Errors reference](/docs/batch/errors) for the auth failure codes (`401`, `403`, `429`).
 
 ## The Batch object
 
@@ -221,7 +221,7 @@ A [Batch object](#the-batch-object) with:
 | `400` | `endpoint "X" does not match the url "Y" used by the input file` (when the `endpoint` field disagrees with the `url` in the JSONL) |
 | `400` | JSONL validation failure. The error body includes `line` (1-based) to point at the offending line. The batch is also persisted with `status: "failed"` so it can be retrieved later via `GET /v1/batches/{id}`. |
 | `404` | `Input file not found: <file_id>`, the input file is missing, deleted, or in another project. |
-| `401` / `403` / `429` / `500` | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [Errors reference](/docs/batch/errors). |
 
 Validation errors look like:
 
@@ -328,7 +328,7 @@ Retrieve returns real-time <code>request_counts</code> while a batch is
 |---|---|
 | `400` | Missing batch ID. |
 | `404` | Batch not found, or belongs to another project. |
-| `401` / `403` / `429` / `500` | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -386,7 +386,7 @@ progress for a specific batch, call `GET /v1/batches/{id}` instead.
 
 | Status | Cause |
 |---|---|
-| `401` / `403` / `429` / `500` | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -437,7 +437,7 @@ Lines that completed before the cancel request are written to
 | `400` | Missing batch ID. |
 | `404` | Batch not found, or belongs to another project. |
 | `409` | Batch is already in a terminal state (`completed`, `failed`, `expired`) and cannot be cancelled. |
-| `401` / `403` / `429` / `500` | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -464,10 +464,10 @@ When a batch reaches `status: "completed"`:
 
 - `output_file_id` is set if at least one line returned 2xx. Download with
   `GET /v1/files/{output_file_id}/content`. See
-  [JSONL format](/api-reference/batch/jsonl-format#output-jsonl) for the line schema.
+  [JSONL format](/docs/batch/jsonl-format#output-jsonl) for the line schema.
 - `error_file_id` is set if at least one line failed. Download with
   `GET /v1/files/{error_file_id}/content`. See
-  [JSONL format](/api-reference/batch/jsonl-format#error-jsonl) for the line schema.
+  [JSONL format](/docs/batch/jsonl-format#error-jsonl) for the line schema.
 - Both files share `purpose: "batch_output"`. Error files are additionally
   tagged with the ZeroGPU-specific `is_error: true` flag on the File object
   so you can distinguish them in `GET /v1/files?purpose=batch_output`. Both
@@ -481,13 +481,13 @@ Anything that didn't make it through appears in the error file with
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/docs/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
   <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Errors reference →" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/docs/batch/errors">
     Every HTTP status, every validation message, every JSONL error code.
   </Card>
 </CardGroup>

@@ -64,7 +64,7 @@ request:
 | `url` | Yes | Must be `/v1/chat/completions`, the only [supported batch endpoint](/api-reference/batch/supported-endpoints). All lines in a batch must share the same `url`. |
 | `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected, batches are non-streaming. |
 
-Full schema and validation rules: [JSONL format](/api-reference/batch/jsonl-format).
+Full schema and validation rules: [JSONL format](/docs/batch/jsonl-format).
 
 <CodeGroup>
 
@@ -286,21 +286,21 @@ Error line shape (one per failed line):
 {"id": "batch_req_b", "custom_id": "q-2", "response": null, "error": {"code": "invalid_request_error", "message": "[legacy:http_400] ...", "param": null}}
 ```
 
-Full schemas: [JSONL format](/api-reference/batch/jsonl-format).
+Full schemas: [JSONL format](/docs/batch/jsonl-format).
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/docs/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
   <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference →" href="/docs/batch/batches-api">
     Status lifecycle, limits, full Batch object schema.
   </Card>
-  <Card title="More examples →" href="/api-reference/batch/examples">
+  <Card title="More examples →" href="/docs/batch/examples">
     Full Python script, plus a realistic IAB-classification batch.
   </Card>
 </CardGroup>

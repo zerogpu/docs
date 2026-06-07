@@ -164,7 +164,7 @@ Other notes:
 | `400` | `missing_file` | No `file` field in the multipart body. |
 | `400` | `empty_file` | The uploaded file had zero bytes. |
 | `413` | `file_too_large` | File exceeded 100 MB. |
-| `401` / `403` / `429` / `500` | - | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -247,7 +247,7 @@ same `purpose` and `order`.
 | Status | Code | Cause |
 |---|---|---|
 | `400` | `invalid_limit` | `limit` was not a positive integer. |
-| `401` / `403` / `429` / `500` | - | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -281,7 +281,7 @@ Same shape as the File object returned by upload.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File does not exist, belongs to another project, or has been deleted. The same `404` is returned in all three cases to avoid leaking file existence across projects. |
-| `401` / `403` / `429` / `500` | - | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -322,7 +322,7 @@ The body is streamed; you do not need to fit it in memory.
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, deleted, or belongs to another project. |
-| `401` / `403` / `429` / `500` | - | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -368,7 +368,7 @@ x-project-id: <uuid>
 | Status | Code | Cause |
 |---|---|---|
 | `404` | `file_not_found` | File missing, already deleted, or belongs to another project. |
-| `401` / `403` / `429` / `500` | - | See [Errors reference](/api-reference/batch/errors). |
+| `401` / `403` / `429` / `500` | - | See [Errors reference](/docs/batch/errors). |
 
 ### Example
 
@@ -406,13 +406,13 @@ Notes:
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Batches API reference →" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference →" href="/docs/batch/batches-api">
     Create, list, retrieve batches; status lifecycle and limits.
   </Card>
-  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/docs/batch/jsonl-format">
     What an input line, an output line, and an error line look like.
   </Card>
-  <Card title="Errors reference →" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/docs/batch/errors">
     Every HTTP status, every validation message, every JSONL error code.
   </Card>
 </CardGroup>

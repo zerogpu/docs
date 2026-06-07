@@ -275,7 +275,7 @@ OK   q-3: Rome.
   the raw API: `input_file_id`, `endpoint`, `completion_window`, `metadata`.
 - **`client.files.content(file_id).read()`**: Returns the raw JSONL bytes.
   Iterate `.iter_lines()` if you prefer to stream rather than load it all.
-- **`client.batches.cancel(batch_id)`**: Cancels an in-flight batch. See [Batches API](/api-reference/batch/batches-api).
+- **`client.batches.cancel(batch_id)`**: Cancels an in-flight batch. See [Batches API](/docs/batch/batches-api).
 
 ---
 
@@ -353,13 +353,13 @@ with open("results.csv", "w", newline="") as f:
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="JSONL format →" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format →" href="/docs/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
   <Card title="Supported endpoint →" href="/api-reference/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Errors reference →" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/docs/batch/errors">
     How to recover from failed lines without re-running the whole batch.
   </Card>
 </CardGroup>

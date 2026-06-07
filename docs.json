@@ -67,7 +67,18 @@
           {
             "group": "Guides",
             "pages": [
-              "docs/batch",
+              {
+                "group": "Batch & Files API",
+                "pages": [
+                  "docs/batch/index",
+                  "docs/batch/getting-started",
+                  "docs/batch/jsonl-format",
+                  "docs/batch/files-api",
+                  "docs/batch/batches-api",
+                  "docs/batch/examples",
+                  "docs/batch/errors"
+                ]
+              },
               "docs/production-patterns"
             ]
           },
@@ -135,22 +146,16 @@
           {
             "group": "Batch API",
             "pages": [
-              "api-reference/batch/getting-started",
               "api-reference/batch/upload-file",
               "api-reference/batch/list-files",
               "api-reference/batch/retrieve-file",
               "api-reference/batch/download-file",
               "api-reference/batch/delete-file",
-              "api-reference/batch/files-api",
               "api-reference/batch/create-batch",
               "api-reference/batch/retrieve-batch",
               "api-reference/batch/list-batches",
               "api-reference/batch/cancel-batch",
-              "api-reference/batch/batches-api",
-              "api-reference/batch/jsonl-format",
-              "api-reference/batch/supported-endpoints",
-              "api-reference/batch/examples",
-              "api-reference/batch/errors"
+              "api-reference/batch/supported-endpoints"
             ]
           }
         ]
@@ -251,6 +256,30 @@
     {
       "source": "/api-reference/batch",
       "destination": "/docs/batch"
+    },
+    {
+      "source": "/api-reference/batch/getting-started",
+      "destination": "/docs/batch/getting-started"
+    },
+    {
+      "source": "/api-reference/batch/jsonl-format",
+      "destination": "/docs/batch/jsonl-format"
+    },
+    {
+      "source": "/api-reference/batch/files-api",
+      "destination": "/docs/batch/files-api"
+    },
+    {
+      "source": "/api-reference/batch/batches-api",
+      "destination": "/docs/batch/batches-api"
+    },
+    {
+      "source": "/api-reference/batch/examples",
+      "destination": "/docs/batch/examples"
+    },
+    {
+      "source": "/api-reference/batch/errors",
+      "destination": "/docs/batch/errors"
     },
     {
       "source": "/platform/dashboard",

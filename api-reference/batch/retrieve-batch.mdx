@@ -6,4 +6,4 @@ openapi: "openapi/batch.openapi.json GET /v1/batches/{batch_id}"
 
 Poll a batch by ID. Use this while `status` is `in_progress` or `cancelling`; stop when the status is terminal (`completed`, `failed`, `expired`, or `cancelled`).
 
-When complete, download results with `output_file_id` and `error_file_id` via [Files API](/api-reference/batch/files-api).
+When complete, download results with `output_file_id` and `error_file_id` via [Files API](/docs/batch/files-api).

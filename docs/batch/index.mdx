@@ -1,5 +1,5 @@
 ---
-title: "Batch & Files API"
+title: "Overview"
 description: "Run large workloads of AI inference asynchronously, wire-compatible with `/v1/batches` and `/v1/files`."
 ---
 
@@ -9,7 +9,7 @@ choice when you don't need a real-time response and want to avoid per-request
 rate limits.
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" href="/api-reference/batch/getting-started">
+  <Card title="Quickstart" href="/docs/batch/getting-started">
     First batch in under 10 minutes: auth, upload, create, poll, download.
   </Card>
   <Card title="Upload file (playground)" href="/api-reference/batch/upload-file">
@@ -21,16 +21,16 @@ rate limits.
   <Card title="Retrieve batch (playground)" href="/api-reference/batch/retrieve-batch">
     Poll `GET /v1/batches/{batch_id}` for status and output file ids.
   </Card>
-  <Card title="JSONL format" href="/api-reference/batch/jsonl-format">
+  <Card title="JSONL format" href="/docs/batch/jsonl-format">
     Input line schema, output schema, error schema, validation rules.
   </Card>
-  <Card title="Files API reference" href="/api-reference/batch/files-api">
+  <Card title="Files API reference" href="/docs/batch/files-api">
     All five `/v1/files` endpoints (prose).
   </Card>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference" href="/docs/batch/batches-api">
     Create, list, retrieve, cancel (prose).
   </Card>
-  <Card title="Examples" href="/api-reference/batch/examples">
+  <Card title="Examples" href="/docs/batch/examples">
     End-to-end walkthroughs in `curl` and the Python `openai` SDK.
   </Card>
 </CardGroup>
@@ -62,13 +62,13 @@ rate limits.
 ## Go deeper
 
 <CardGroup cols={2}>
-  <Card title="Files API reference" href="/api-reference/batch/files-api">
+  <Card title="Files API reference" href="/docs/batch/files-api">
     Upload, list, retrieve, download, delete, every endpoint, every parameter.
   </Card>
-  <Card title="Batches API reference" href="/api-reference/batch/batches-api">
+  <Card title="Batches API reference" href="/docs/batch/batches-api">
     Create, list, retrieve, including the full Batch object schema and lifecycle.
   </Card>
-  <Card title="Errors reference" href="/api-reference/batch/errors">
+  <Card title="Errors reference" href="/docs/batch/errors">
     Every HTTP status, every validation message, every code that can appear in the error JSONL.
   </Card>
 </CardGroup>

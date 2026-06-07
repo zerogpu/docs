@@ -16,9 +16,9 @@ This page is the canonical specification for all three line schemas.
 ## Input JSONL
 
 The input is a JSONL file (one JSON object per line, separated by `\n`). You
-upload it via [`POST /v1/files`](/api-reference/batch/files-api#post-v1files--upload-a-file)
+upload it via [`POST /v1/files`](/docs/batch/files-api#post-v1files--upload-a-file)
 with `purpose=batch`, then reference its ID when you call
-[`POST /v1/batches`](/api-reference/batch/batches-api#post-v1batches--create-a-batch).
+[`POST /v1/batches`](/docs/batch/batches-api#post-v1batches--create-a-batch).
 
 ### Line schema
 
@@ -82,7 +82,7 @@ See [Supported endpoints](/api-reference/batch/supported-endpoints) for the
 When a batch reaches `status: "completed"`, the service writes the successful
 results to a file referenced by `output_file_id` on the Batch object. You
 download it via
-[`GET /v1/files/{file_id}/content`](/api-reference/batch/files-api#get-v1filesfile_idcontent--download-a-files-body).
+[`GET /v1/files/{file_id}/content`](/docs/batch/files-api#get-v1filesfile_idcontent--download-a-files-body).
 
 Only lines that received a **2xx** response from the underlying endpoint
 appear in the output file. Failed lines go to the error file (see below).
@@ -249,10 +249,10 @@ Output and error lines are <em>not</em> guaranteed to appear in input
   <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Examples →" href="/api-reference/batch/examples">
+  <Card title="Examples →" href="/docs/batch/examples">
     Full end-to-end walkthrough in curl and Python.
   </Card>
-  <Card title="Errors reference →" href="/api-reference/batch/errors">
+  <Card title="Errors reference →" href="/docs/batch/errors">
     Every JSONL validation message and error code, with recovery guidance.
   </Card>
 </CardGroup>
