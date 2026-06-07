@@ -76,21 +76,6 @@
             "pages": [
               "docs/platform"
             ]
-          },
-          {
-            "group": "Core Concepts",
-            "pages": [
-              "concepts/nano-language-models",
-              "concepts/distributed-inference",
-              "concepts/geo-aware-routing"
-            ]
-          },
-          {
-            "group": "Resources",
-            "pages": [
-              "faq",
-              "resources/ai-and-mcp"
-            ]
           }
         ]
       },
