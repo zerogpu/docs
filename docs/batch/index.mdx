@@ -10,32 +10,21 @@ rate limits.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/docs/batch/getting-started">
-    First batch in under 10 minutes: auth, upload, create, poll, download.
+    Run your first batch end to end in curl and Python: upload, create, poll, download.
   </Card>
-  <Card title="Upload file (playground)" href="/api-reference/batch/upload-file">
-    `POST /v1/files`, attach JSONL with `purpose=batch`.
-  </Card>
-  <Card title="Create batch (playground)" href="/api-reference/batch/create-batch">
-    `POST /v1/batches` after you have an input file id.
-  </Card>
-  <Card title="Retrieve batch (playground)" href="/api-reference/batch/retrieve-batch">
-    Poll `GET /v1/batches/{batch_id}` for status and output file ids.
+  <Card title="Objects & lifecycle" href="/docs/batch/objects">
+    The File and Batch objects, the status lifecycle, and every endpoint.
   </Card>
   <Card title="JSONL format" href="/docs/batch/jsonl-format">
-    Input line schema, output schema, error schema, validation rules.
+    Line schemas for input, output, and error files, plus validation rules.
   </Card>
-  <Card title="Files API reference" href="/docs/batch/files-api">
-    All five `/v1/files` endpoints (prose).
+  <Card title="Supported endpoints" href="/docs/batch/supported-endpoints">
+    The one endpoint a batch line can target, with its request and response body.
   </Card>
-  <Card title="Batches API reference" href="/docs/batch/batches-api">
-    Create, list, retrieve, cancel (prose).
-  </Card>
-  <Card title="Examples" href="/docs/batch/examples">
-    End-to-end walkthroughs in `curl` and the Python `openai` SDK.
+  <Card title="Errors" href="/docs/batch/errors">
+    Every status and error-file code, with recovery guidance.
   </Card>
 </CardGroup>
-
-
 
 ## Quick facts
 
@@ -59,16 +48,5 @@ rate limits.
 | To avoid per-second rate limits during a backfill | The Batch API |
 | Streaming responses | The synchronous endpoint, streaming is **not** supported in batch mode |
 
-## Go deeper
-
-<CardGroup cols={2}>
-  <Card title="Files API reference" href="/docs/batch/files-api">
-    Upload, list, retrieve, download, delete, every endpoint, every parameter.
-  </Card>
-  <Card title="Batches API reference" href="/docs/batch/batches-api">
-    Create, list, retrieve, including the full Batch object schema and lifecycle.
-  </Card>
-  <Card title="Errors reference" href="/docs/batch/errors">
-    Every HTTP status, every validation message, every code that can appear in the error JSONL.
-  </Card>
-</CardGroup>
+Every endpoint also has an interactive playground under
+[API Reference → Batch API](/api-reference/batch/upload-file).

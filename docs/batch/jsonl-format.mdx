@@ -16,9 +16,9 @@ This page is the canonical specification for all three line schemas.
 ## Input JSONL
 
 The input is a JSONL file (one JSON object per line, separated by `\n`). You
-upload it via [`POST /v1/files`](/docs/batch/files-api#post-v1files--upload-a-file)
+upload it via [`POST /v1/files`](/api-reference/batch/upload-file)
 with `purpose=batch`, then reference its ID when you call
-[`POST /v1/batches`](/docs/batch/batches-api#post-v1batches--create-a-batch).
+[`POST /v1/batches`](/api-reference/batch/create-batch).
 
 ### Line schema
 
@@ -35,8 +35,8 @@ with `purpose=batch`, then reference its ID when you call
 |---|---|---|---|
 | `custom_id` | string | **Yes** | Your identifier for this request. Must be non-empty and **unique within the batch**. Returned verbatim in the corresponding output or error line so you can match results to inputs. |
 | `method` | string | **Yes** | HTTP method, case-insensitive. Only `POST` (any case) is accepted today. |
-| `url` | string | **Yes** | Must be `/v1/chat/completions`, the [only batchable endpoint](/api-reference/batch/supported-endpoints). **All lines in a single batch must share the same `url`**, and it must match the `endpoint` field on the create call. |
-| `body` | object | **Yes** | The request body that would be sent to the synchronous endpoint. See [Supported endpoints](/api-reference/batch/supported-endpoints) for the shape. The field `stream: true` is rejected. |
+| `url` | string | **Yes** | Must be `/v1/chat/completions`, the [only batchable endpoint](/docs/batch/supported-endpoints). **All lines in a single batch must share the same `url`**, and it must match the `endpoint` field on the create call. |
+| `body` | object | **Yes** | The request body that would be sent to the synchronous endpoint. See [Supported endpoints](/docs/batch/supported-endpoints) for the shape. The field `stream: true` is rejected. |
 
 ### Validation rules
 
@@ -72,7 +72,7 @@ The service performs all of the following checks at `POST /v1/batches` time
 {"custom_id":"req-3","method":"POST","url":"/v1/chat/completions","body":{"model":"<model-id>","messages":[{"role":"user","content":"What is the capital of Italy?"}]}}
 ```
 
-See [Supported endpoints](/api-reference/batch/supported-endpoints) for the
+See [Supported endpoints](/docs/batch/supported-endpoints) for the
 `/v1/chat/completions` body schema.
 
 ---
@@ -82,7 +82,7 @@ See [Supported endpoints](/api-reference/batch/supported-endpoints) for the
 When a batch reaches `status: "completed"`, the service writes the successful
 results to a file referenced by `output_file_id` on the Batch object. You
 download it via
-[`GET /v1/files/{file_id}/content`](/docs/batch/files-api#get-v1filesfile_idcontent--download-a-files-body).
+[`GET /v1/files/{file_id}/content`](/api-reference/batch/download-file).
 
 Only lines that received a **2xx** response from the underlying endpoint
 appear in the output file. Failed lines go to the error file (see below).
@@ -112,7 +112,7 @@ order of lines in the input file, match results to inputs by `custom_id`.
 | `response.request_id` | string \| null | The synchronous request id (`req_…`) of the underlying call to the orchestration API. Useful for cross-referencing logs. `null` if the upstream service didn't surface a request id. |
 | `response.body` | object | The same JSON body the synchronous endpoint would have returned for this request. |
 
-See [Supported endpoints](/api-reference/batch/supported-endpoints) for the exact
+See [Supported endpoints](/docs/batch/supported-endpoints) for the exact
 `response.body` shape (OpenAI `chat.completion`).
 
 ### Example, chat completions output
@@ -169,19 +169,9 @@ disjoint.
 | `error.message` | string | Human-readable description. The original ZeroGPU internal code is preserved as a `[legacy:<old>] ` prefix on this string for forensics. |
 | `error.param` | string \| null | Name of the offending parameter when known. |
 
-### Error codes you might see
-
-| `error.code` | Triggered when | What to do |
-|---|---|---|
-| `invalid_request_error` | The line body was rejected by the endpoint (bad shape, unknown model, missing field). Legacy prefix: `http_400` / `http_422`. | Fix the line's `body` and rerun just that line. |
-| `authentication_error` | The API key used to submit the batch is no longer valid for this endpoint mid-flight. Legacy: `http_401` / `http_403` / `api_key_unavailable`. | Check the key status; issue a new key if needed. |
-| `not_found_error` | The endpoint or a resource referenced in the body (e.g. model ID) doesn't exist. Legacy: `http_404`. | Verify model IDs and endpoint URL. |
-| `request_too_large` | Line body exceeded the per-request size or token limit. Legacy: `http_413`. | Reduce input length. |
-| `insufficient_quota` | Organization ran out of quota partway through the batch. Legacy: `http_420` / `http_429`. | Top up balance and rerun remaining lines. |
-| `rate_limit_exceeded` | The endpoint rate-limited the request (non-quota). | Rerun the line; transient. |
-| `internal_error` | The upstream service returned 5xx on every retry, or the queue exhausted its delivery attempts. Legacy: `http_5xx` / `retries_exhausted` / `dlq_exhausted`. | Rerun the line; transient. |
-| `batch_cancelled` | The parent batch was cancelled via `POST /v1/batches/{id}/cancel` before this line was dispatched. | The line did not run; submit a fresh batch if you still need the result. |
-| `batch_expired` | The 24-hour completion window elapsed before this line was dispatched. | Submit a fresh batch with the remaining lines. |
+Each error line carries an `error.code` (`invalid_request_error`,
+`internal_error`, `batch_cancelled`, and so on). The full list, what triggers
+each, and how to recover is in the [Errors reference](/docs/batch/errors).
 
 ### Example, error file
 
@@ -246,10 +236,10 @@ Output and error lines are <em>not</em> guaranteed to appear in input
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
+  <Card title="Supported endpoints →" href="/docs/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Examples →" href="/docs/batch/examples">
+  <Card title="Quickstart →" href="/docs/batch/getting-started">
     Full end-to-end walkthrough in curl and Python.
   </Card>
   <Card title="Errors reference →" href="/docs/batch/errors">

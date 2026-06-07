@@ -43,9 +43,6 @@ The Batch and Files endpoints live under these hostnames:
 - `POST   /v1/files`, `GET /v1/files`, `GET /v1/files/{id}`, `GET /v1/files/{id}/content`, `DELETE /v1/files/{id}`
 - `POST   /v1/batches`, `GET /v1/batches`, `GET /v1/batches/{batch_id}`
 
-
----
-
 ---
 
 ## 1. Build the input JSONL
@@ -61,7 +58,7 @@ request:
 |---|---|---|
 | `custom_id` | Yes | Your identifier for the request. Must be **unique within the batch**. Echoed back in the output so you can match results to inputs. |
 | `method` | Yes | Must be `"POST"`. |
-| `url` | Yes | Must be `/v1/chat/completions`, the only [supported batch endpoint](/api-reference/batch/supported-endpoints). All lines in a batch must share the same `url`. |
+| `url` | Yes | Must be `/v1/chat/completions`, the only [supported batch endpoint](/docs/batch/supported-endpoints). All lines in a batch must share the same `url`. |
 | `body` | Yes | The JSON body you would send to that endpoint synchronously. `"stream": true` is rejected, batches are non-streaming. |
 
 Full schema and validation rules: [JSONL format](/docs/batch/jsonl-format).
@@ -288,19 +285,81 @@ Error line shape (one per failed line):
 
 Full schemas: [JSONL format](/docs/batch/jsonl-format).
 
+## Scale it up
+
+The same five steps handle a real workload. This script sends 1,000 prompts
+and collects the answers into a CSV, generating the JSONL from your own data,
+polling once a minute, and matching results back by `custom_id`:
+
+```python
+import csv, json, os, time
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="ignored-by-zerogpu",
+    base_url="https://api.zerogpu.ai/v1",
+    default_headers={
+        "x-api-key":    os.environ["ZGPU_API_KEY"],
+        "x-project-id": os.environ["ZGPU_PROJECT_ID"],
+    },
+)
+
+# 1. Write JSONL from your data (anything yielding (doc_id, prompt) tuples)
+prompts = load_my_dataset()  # 1000 records
+with open("chat.jsonl", "w") as f:
+    for doc_id, prompt in prompts:
+        f.write(json.dumps({
+            "custom_id": doc_id,
+            "method":    "POST",
+            "url":       "/v1/chat/completions",
+            "body":      {"model": "<model-id>", "messages": [{"role": "user", "content": prompt}]},
+        }) + "\n")
+
+# 2-3. Upload + create
+uploaded = client.files.create(file=open("chat.jsonl", "rb"), purpose="batch")
+batch    = client.batches.create(
+    input_file_id=uploaded.id,
+    endpoint="/v1/chat/completions",
+    completion_window="24h",
+)
+
+# 4. Poll
+while batch.status not in ("completed", "failed", "expired", "cancelled"):
+    time.sleep(60)
+    batch = client.batches.retrieve(batch.id)
+    print(f"{batch.status}: {batch.request_counts.completed}/{batch.request_counts.total}")
+
+if batch.status != "completed":
+    raise SystemExit(f"Batch ended with status {batch.status}")
+
+# 5. Download, parse, write CSV
+output = client.files.content(batch.output_file_id).read().decode()
+results = {
+    rec["custom_id"]: rec["response"]["body"]["choices"][0]["message"]["content"]
+    for rec in (json.loads(line) for line in output.splitlines() if line.strip())
+}
+with open("results.csv", "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["doc_id", "answer"])
+    writer.writerows(results.items())
+```
+
+For larger jobs, also read `error_file_id` and resubmit only the failed
+lines, see [Errors reference](/docs/batch/errors) for the recovery pattern.
+
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="JSONL format →" href="/docs/batch/jsonl-format">
     Exact line schema for input, output, and error files.
   </Card>
-  <Card title="Supported endpoints →" href="/api-reference/batch/supported-endpoints">
+  <Card title="Supported endpoints →" href="/docs/batch/supported-endpoints">
     Body and response shape for `/v1/chat/completions`.
   </Card>
-  <Card title="Batches API reference →" href="/docs/batch/batches-api">
-    Status lifecycle, limits, full Batch object schema.
+  <Card title="Objects & lifecycle →" href="/docs/batch/objects">
+    Status lifecycle, the full Batch object schema, and every endpoint.
   </Card>
-  <Card title="More examples →" href="/docs/batch/examples">
-    Full Python script, plus a realistic IAB-classification batch.
+  <Card title="Errors reference →" href="/docs/batch/errors">
+    Recover from failed lines without re-running the whole batch.
   </Card>
 </CardGroup>

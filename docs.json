@@ -72,10 +72,9 @@
                 "pages": [
                   "docs/batch/index",
                   "docs/batch/getting-started",
+                  "docs/batch/objects",
                   "docs/batch/jsonl-format",
-                  "docs/batch/files-api",
-                  "docs/batch/batches-api",
-                  "docs/batch/examples",
+                  "docs/batch/supported-endpoints",
                   "docs/batch/errors"
                 ]
               },
@@ -116,12 +115,6 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Overview",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
             "group": "Endpoints",
             "pages": [
               "api-reference/endpoint/responses",
@@ -129,7 +122,6 @@
               {
                 "group": "By model",
                 "pages": [
-                  "api-reference/models/index",
                   "models/deberta-v3-small",
                   "models/gliner-multi-pii-v1",
                   "models/gliner2-base-v1",
@@ -154,8 +146,7 @@
               "api-reference/batch/create-batch",
               "api-reference/batch/retrieve-batch",
               "api-reference/batch/list-batches",
-              "api-reference/batch/cancel-batch",
-              "api-reference/batch/supported-endpoints"
+              "api-reference/batch/cancel-batch"
             ]
           }
         ]
@@ -242,6 +233,10 @@
       "destination": "/integrations/:slug"
     },
     {
+      "source": "/api-reference/introduction",
+      "destination": "/api-reference/endpoint/responses"
+    },
+    {
       "source": "/platform/model-catalog",
       "destination": "/docs/model-catalog"
     },
@@ -267,19 +262,35 @@
     },
     {
       "source": "/api-reference/batch/files-api",
-      "destination": "/docs/batch/files-api"
+      "destination": "/docs/batch/objects"
     },
     {
       "source": "/api-reference/batch/batches-api",
-      "destination": "/docs/batch/batches-api"
+      "destination": "/docs/batch/objects"
+    },
+    {
+      "source": "/docs/batch/files-api",
+      "destination": "/docs/batch/objects"
+    },
+    {
+      "source": "/docs/batch/batches-api",
+      "destination": "/docs/batch/objects"
     },
     {
       "source": "/api-reference/batch/examples",
-      "destination": "/docs/batch/examples"
+      "destination": "/docs/batch/getting-started"
+    },
+    {
+      "source": "/docs/batch/examples",
+      "destination": "/docs/batch/getting-started"
     },
     {
       "source": "/api-reference/batch/errors",
       "destination": "/docs/batch/errors"
+    },
+    {
+      "source": "/api-reference/batch/supported-endpoints",
+      "destination": "/docs/batch/supported-endpoints"
     },
     {
       "source": "/platform/dashboard",

@@ -165,7 +165,7 @@ OpenAI's `BatchError.line`). The batch is also persisted with
 | `Line N duplicates custom_id "X"` | A previous line already used custom_id `X`. |
 | `Line N method must be "POST"` | `method` (case-insensitive) was not `"POST"`. |
 | `Line N is missing url` | Missing or non-string `url`. |
-| `Line N url "X" is not an allowed batch endpoint` | `url` is not `/v1/chat/completions`, the only [supported batch endpoint](/api-reference/batch/supported-endpoints). |
+| `Line N url "X" is not an allowed batch endpoint` | `url` is not `/v1/chat/completions`, the only [supported batch endpoint](/docs/batch/supported-endpoints). |
 | `Line N url "X" does not match the batch endpoint "Y"` | Lines in the file disagree on `url`. |
 | `Line N is missing body` | `body` is not a non-empty object. |
 | `Line N has stream=true; streaming is not supported in batch mode` | `body.stream === true`. |
@@ -247,11 +247,11 @@ Reach out to ZeroGPU support if you see:
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Batches API reference →" href="/docs/batch/batches-api">
-    Status lifecycle, limits, full Batch object schema.
+  <Card title="Objects & lifecycle →" href="/docs/batch/objects">
+    The Batch object, status lifecycle, and every endpoint.
   </Card>
-  <Card title="Files API reference →" href="/docs/batch/files-api">
-    Upload, download, delete, every files-API endpoint.
+  <Card title="JSONL format →" href="/docs/batch/jsonl-format">
+    Line schemas for input, output, and error files.
   </Card>
   <Card title="Quickstart →" href="/docs/batch/getting-started">
     First batch in under 10 minutes, auth, upload, create, download.
