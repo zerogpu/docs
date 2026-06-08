@@ -408,9 +408,6 @@
             "maxLength": 131072,
             "description": "Multi-line text or document content to send to the model."
           },
-          "instructions": {
-            "type": "string"
-          },
           "metadata": {
             "type": "object",
             "additionalProperties": true
