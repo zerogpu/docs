@@ -7,129 +7,47 @@ The **Model Catalog** lets you browse every available ZeroGPU model and compare 
 
 Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed model cards](#detailed-model-cards), and [Model library by task](#model-library-by-task).
 
-export const ZGPU_MODELS_URL = "https://api-dashboard.zerogpu.ai/api/models";
+{/*
+  Model data is fetched once on app load by the global custom script
+  /zgpu-models-init.js and cached on window.__zgpuModels. The useModels() hook
+  below just reads that cached variable (reused across navigation, refetched
+  only on a hard refresh). It renders nothing until the fetch resolves.
+*/}
 
 {/*
-  SEED_MODELS is a committed snapshot of https://api-dashboard.zerogpu.ai/api/models.
-  It seeds the page so it always renders (offline, SSR, or when the cross-origin
-  fetch is blocked by CORS). On mount the components refresh from the live API and
-  replace this data when the request succeeds.
+  Reads the model data cached on window by /zgpu-models-init.js (already sorted
+  by display priority there). Three cases: data already present -> use it;
+  fetch still in flight -> await the promise; store not created yet (component
+  mounted before the script ran) -> wait for the "zgpu:models-loaded" event.
 */}
-export const SEED_MODELS = [
-  {
-    "modelId": "llama-3.1-8b-instruct-fast",
-    "taskDisplayName": "Summarization",
-    "parameters": "3B",
-    "maxTokens": 131072,
-    "displayPriority": 12,
-    "pricing": {
-      "input_per_1m_tokens": 0.05,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png",
-      "description": "The Meta Llama 3.1 collection of multilingual large language models (LLMs) is a collection of pretrained and instruction tuned generative models in 8B, 70B and 405B sizes (text in/text out). The Llama 3.1 instruction tuned text only models (8B, 70B, 405B) are optimized for multilingual dialogue use cases and outperform many of the available open source and closed chat models on common industry benchmarks. The models allow both research and commercial use, and include built-in safety features such as Llama Guard 3 and Prompt Guard for responsible deployment."
+export const useModels = () => {
+  const [models, setModels] = useState(() => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return store.data || [];
+  });
+  useEffect(() => {
+    let active = true;
+    const apply = (d) => {
+      if (active && d && d.length) setModels(d);
+    };
+    const store = window.__zgpuModels;
+    if (store && store.data) {
+      apply(store.data);
+    } else if (store && store.promise) {
+      store.promise.then(apply);
+    } else {
+      const onLoaded = () => apply((window.__zgpuModels || {}).data);
+      window.addEventListener("zgpu:models-loaded", onLoaded);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", onLoaded);
+      };
     }
-  },
-  {
-    "modelId": "zlm-v1-iab-classify-edge-enriched",
-    "taskDisplayName": "Text Classification",
-    "parameters": "90M",
-    "maxTokens": 400,
-    "displayPriority": 11,
-    "pricing": {
-      "input_per_1m_tokens": 0.05,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png",
-      "description": "The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs giving you richer, more actionable classification data per inference call. This means you get not just a category, but layered context signals that downstream systems can use for better targeting, filtering, and personalization decisions. Same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speeds. When a single label isn't enough and your pipeline needs deeper content intelligence, this is the model."
-    }
-  },
-  {
-    "modelId": "zlm-v1-iab-classify-edge",
-    "taskDisplayName": "Text Classification",
-    "parameters": "90M",
-    "maxTokens": 400,
-    "displayPriority": 10,
-    "pricing": {
-      "input_per_1m_tokens": 0.05,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png",
-      "description": "ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy, the industry standard used across programmatic advertising enabling instant, low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it's optimized for the kind of high-volume, sub-millisecond classification that ad tech and content platforms demand. Deploy it on edge devices to classify content in-stream, at the point of interaction."
-    }
-  },
-  {
-    "modelId": "gliner-multi-pii-v1",
-    "taskDisplayName": "PII",
-    "parameters": "300M",
-    "maxTokens": 512,
-    "displayPriority": 7,
-    "pricing": {
-      "input_per_1m_tokens": 0.2,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png",
-      "description": "GLiNER Multi PII v1 is a multilingual PII detection and redaction model based on the GLiNER architecture. It identifies 40+ personally identifiable information entity types - identity, contact, government IDs, financial, medical, organization, demographic, travel, network, and vehicle - across six European languages (English, French, German, Spanish, Italian, Portuguese). Built for zero-shot label prompting, it accepts custom label sets at inference time and supports curated PII catalogues, redaction with label or character masks, and generic NER with user-supplied labels. Runs efficiently on CPU for privacy-preserving PII workflows."
-    }
-  },
-  {
-    "modelId": "gliner2-base-v1",
-    "taskDisplayName": "PII",
-    "parameters": "205M",
-    "maxTokens": 512,
-    "displayPriority": 6,
-    "pricing": {
-      "input_per_1m_tokens": 0.2,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png",
-      "description": "GLiNER2 extends the original GLiNER architecture to support multi-task information extraction with a schema-driven interface. This base model provides efficient CPU-based inference while maintaining high accuracy across diverse extraction tasks. Unlike traditional NER models trained on fixed label sets, GLiNER2 accepts arbitrary entity types at inference time, making it adaptable to new domains without fine-tuning. It supports named entity recognition, relation extraction, and span classification within a unified framework, guided by natural language schema definitions."
-    }
-  },
-  {
-    "modelId": "deberta-v3-small",
-    "taskDisplayName": "Text Classification",
-    "parameters": "142M",
-    "maxTokens": 400,
-    "displayPriority": 5,
-    "pricing": {
-      "input_per_1m_tokens": 0.05,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png",
-      "description": "Microsoft's DeBERTa-v3-small uses a disentangled attention mechanism that separately encodes content and position giving it a major edge in understanding context compared to models of similar size. With ELECTRA-style pre-training and gradient-disentangled embedding sharing, it punches well above its weight on NLU benchmarks, outperforming many frontier models on classification and inference tasks. It's one of the most efficient classifiers you can run at the edge. Ideal for high-throughput classification workloads where every millisecond and every cent matters."
-    }
-  },
-  {
-    "modelId": "LFM2.5-1.2B-Thinking",
-    "taskDisplayName": "Text Generation",
-    "parameters": "1.2B",
-    "maxTokens": 32768,
-    "displayPriority": 3,
-    "pricing": {
-      "input_per_1m_tokens": 0.2,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png",
-      "description": "Liquid AI's LFM2.5-1.2B-Thinking is a hybrid architecture reasoning model built for deep, step-by-step problem solving at the 1B scale. It generates explicit reasoning traces before producing a final answer working through math, logic, and multi-step tasks the way a human would on paper delivering thinking-model performance without the compute overhead that typically comes with it. Its hybrid SSM-attention design keeps inference fast and memory usage low, making it one of the most capable small reasoning models available for constrained environments."
-    }
-  },
-  {
-    "modelId": "LFM2.5-1.2B-Instruct",
-    "taskDisplayName": "Text Generation",
-    "parameters": "1.2B",
-    "maxTokens": 800,
-    "displayPriority": 2,
-    "pricing": {
-      "input_per_1m_tokens": 0.2,
-      "output_per_1m_tokens": 0.4,
-      "favicon_url": "https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png",
-      "description": "Liquid AI's LFM2.5-1.2B-Instruct is a hybrid architecture model purpose-built for on-device deployment, trained on 28 trillion tokens with multi-stage reinforcement learning. It delivers best-in-class instruction following and native tool-calling at the 1B scale - something very few models this size can do reliably. Its hybrid design gives it significantly faster inference with lower memory usage compared to transformer-only models of the same size. If you need a conversational model that can actually run on real devices without a GPU, this is it. Supports 8 languages including English, Chinese, Japanese, and Spanish."
-    }
-  }
-];
-
-export const byPriority = (list) =>
-  list.slice().sort((a, b) => (b.displayPriority || 0) - (a.displayPriority || 0));
-
-export const loadModels = () => {
-  if (typeof window === "undefined") return Promise.resolve(SEED_MODELS);
-  return fetch(ZGPU_MODELS_URL)
-    .then((r) => r.json())
-    .then((d) => (d && d.models && d.models.length ? d.models : SEED_MODELS));
+    return () => {
+      active = false;
+    };
+  }, []);
+  return models;
 };
 
 export const modelSlug = (id) => id.toLowerCase().replace(/\./g, "-");
@@ -171,22 +89,6 @@ export const Badge = ({ children }) => (
     {children}
   </span>
 );
-
-export const useModels = () => {
-  const [models, setModels] = useState(byPriority(SEED_MODELS));
-  useEffect(() => {
-    let active = true;
-    loadModels()
-      .then((m) => {
-        if (active && m && m.length) setModels(byPriority(m));
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, []);
-  return models;
-};
 
 {/*
   Rendered as a CSS grid of <div>/<a> rows rather than a <table>: Mintlify
