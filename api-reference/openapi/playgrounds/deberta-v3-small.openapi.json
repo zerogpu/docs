@@ -236,7 +236,8 @@
             "description": "Multi-line text or document content to send to the model."
           },
           "instructions": {
-            "type": "string"
+            "type": "string",
+            "description": "Add categories as a comma-separated array. Categories are capped at a maximum of 10, but response time varies based on the number of categories provided."
           },
           "metadata": {
             "type": "object",
