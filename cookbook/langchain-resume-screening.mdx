@@ -2,9 +2,9 @@
 title: "🦜 Screen Resumes with LangChain and ZeroGPU"
 ---
 
-{/* Colab link: add after uploading the notebook to Colab under hello@zerogpu.ai, e.g. "You can also check this cookbook in colab [here](<colab-url>)." */}
+You can also run this cookbook in Colab [here](https://colab.research.google.com/drive/10OYr9s4kfp63twlN_FjXfuhtZpwjba6A?usp=sharing).
 
-Recruiting teams drown in resumes. Every one is a blob of unstructured text wrapped around a pile of personal data: names, emails, phone numbers, home addresses. You want the signal (skills, titles, companies) without holding the PII any longer than you must, and GDPR and CCPA make "any longer than you must" a legal line, not a preference. This notebook builds a small resume-screening pipeline that pulls the structured signal out of a PDF resume, strips the PII before anything is stored or shared, and routes the candidate to the right team, using three ZeroGPU tools through LangChain.
+Recruiting teams drown in resumes. Every resume is a blob of unstructured text wrapped around a pile of personal data: names, emails, phone numbers, home addresses. You want the signal (skills, titles, companies) without holding the PII any longer than you must, and GDPR and CCPA make "any longer than you must" a legal line, not a preference. This notebook builds a small resume-screening pipeline that pulls the structured signal out of a PDF resume, strips the PII before anything is stored or shared, and routes the candidate to the right team, using three ZeroGPU tools through LangChain.
 
 For the full reference, see the [`langchain-zerogpu` repository on GitHub](https://github.com/zerogpu/langchain-zerogpu) and the [package on PyPI](https://pypi.org/project/langchain-zerogpu/).
 
@@ -150,14 +150,14 @@ Names, emails, phone numbers, and addresses come back masked; skills, titles, an
 
 ## 🧭 Route the Candidate with Zero-Shot Classification
 
-With the signal extracted and the PII gone, the last step is routing: which team should review this candidate? `ZeroGPUClassifyZeroShotTool` scores the resume against a flat list of labels on `deberta-v3-small` and returns a score per label, so you can pick the best match.
+With the signal extracted and the PII gone, the last step is routing: which team should review this candidate? `ZeroGPUClassifyZeroShotTool` scores the redacted resume against a flat list of labels on `deberta-v3-small` and returns a score per label, so you can pick the best match. Routing on the anonymized copy keeps the whole downstream flow PII-free.
 
 ```python Python
 from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
 
 classify = ZeroGPUClassifyZeroShotTool()
 routing = classify.invoke({
-    "text": resume_text,
+    "text": anonymized_resume,
     "labels": ["engineering", "design", "sales", "operations"],
 })
 print(routing)
@@ -200,7 +200,7 @@ def screen_resume(text: str) -> dict:
     })
     anonymized = redact_pii.invoke({"text": text})
     routing = classify.invoke({
-        "text": text,
+        "text": anonymized,
         "labels": ["engineering", "design", "sales", "operations"],
     })
     return {
@@ -241,5 +241,3 @@ Key tools utilized in this notebook include:
 - **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring structured extraction and compliant handling of sensitive documents. For more, see the [`langchain-zerogpu` repository](https://github.com/zerogpu/langchain-zerogpu), the [PyPI page](https://pypi.org/project/langchain-zerogpu/), and the [ZeroGPU documentation](https://docs.zerogpu.ai).
-</content>
-</invoke>
