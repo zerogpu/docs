@@ -10,6 +10,14 @@ LangChain is an open-source framework for building applications powered by large
 
 This guide walks through [`langchain-zerogpu`](https://github.com/zerogpu/langchain-zerogpu), the official package that exposes ZeroGPU's task models as first-class LangChain `BaseTool` subclasses. You'll install the package from [PyPI](https://pypi.org/project/langchain-zerogpu/), authenticate with your API key and project ID, invoke your first tool, and then work through all eleven tools - chat, summarization, classification, entity and JSON extraction, and PII handling - plus the `ZeroGPUToolkit` that binds the whole set to an agent in one line. By the end, any LangChain agent (including `create_agent` and LangGraph graphs) can hand its repeatable NLP work to ZeroGPU instead of spending frontier-model tokens.
 
+## Cookbook
+
+Prefer to learn by running real code? A worked, end-to-end example is available as a notebook: **[Screen Resumes with LangChain and ZeroGPU](https://colab.research.google.com/drive/10OYr9s4kfp63twlN_FjXfuhtZpwjba6A?usp=sharing)**. It chains three of the tools below to pull structured fields out of a PDF resume, strip the PII before anything is stored or shared, and route the candidate to the right team, all on ZeroGPU's small models. Open it in Google Colab and run it top to bottom.
+
+<Note>
+  More LangChain cookbooks are on the way. Check the [cookbook index](/cookbook/index) for the latest worked examples.
+</Note>
+
 ## Video walkthrough
 
 Video walkthrough coming soon.
@@ -128,6 +136,16 @@ tool = ZeroGPUChatThinkingTool()
 print(tool.invoke({
     "text": "If a train leaves at 3 PM going 60 mph, when does it cover 150 miles?"
 }))
+```
+
+```text
+<thinking>
+The train travels at 60 mph and needs to cover 150 miles.
+Time = distance / speed = 150 / 60 = 2.5 hours.
+Starting at 3:00 PM, adding 2 hours and 30 minutes lands at 5:30 PM.
+</thinking>
+
+The train covers 150 miles at 5:30 PM.
 ```
 
 ### `ZeroGPUSummarizeTool`
@@ -423,12 +441,26 @@ tools = toolkit.get_tools()  # all eleven tools, one shared client
 
 agent = create_agent("anthropic:claude-sonnet-4-6", tools=tools)
 
-agent.invoke({
+result = agent.invoke({
     "messages": [
-        {"role": "user", "content": "Redact the PII in: 'Call Jane at 555-0100.'"}
+        {"role": "user", "content": (
+            "Triage this support ticket: summarize it in one line and tell me "
+            "whether it's a bug, feature request, or question. "
+            "'The CSV export on the billing page returns a 500 error whenever I "
+            "select more than 90 days of data. Smaller ranges work fine.'"
+        )}
     ]
 })
+print(result["messages"][-1].content)
 ```
+
+```text
+Summary: Exporting more than 90 days of billing data as CSV returns a 500 error,
+while smaller date ranges work fine.
+Category: bug.
+```
+
+Behind that one call, the agent routed the summary to `ZeroGPUSummarizeTool` and the label to `ZeroGPUClassifyZeroShotTool`, each a cheap ZeroGPU call instead of more frontier-model tokens.
 
 Each tool ships an LLM-facing description, so the agent picks the right one from intent ("redact", "summarize", "classify by sentiment and topic") without you naming tools explicitly. You can also bind a single tool directly to a chat model:
 
@@ -445,7 +477,23 @@ llm_with_tools = llm.bind_tools([ZeroGPUExtractPIITool()])
 Every tool implements the async path, so the same inputs work with `ainvoke` inside LangGraph nodes or any asyncio application:
 
 ```python
-result = await tool.ainvoke({"text": "...", "labels": ["a", "b"]})
+from langchain_zerogpu import ZeroGPUSummarizeTool
+
+summary = await ZeroGPUSummarizeTool().ainvoke({
+    "text": (
+        "The board met Thursday to review Q3 results. Revenue rose 18% "
+        "year-over-year to $42M, driven by enterprise renewals and a strong EU "
+        "launch, while operating margin slipped to 11% from 14% as headcount "
+        "grew ahead of the new data-center buildout."
+    )
+})
+print(summary)
+```
+
+```text
+Q3 revenue grew 18% year-over-year to $42M on enterprise renewals and EU
+expansion, though operating margin fell to 11% as headcount outpaced the new
+data-center buildout.
 ```
 
 ### Patterns and recipes
