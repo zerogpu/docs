@@ -71,10 +71,19 @@ print(resume_text[:500])
 ```
 
 ```
-Loaded jordan-lee-resume.pdf (2184 characters)
-JORDAN LEE
-San Francisco, CA | jordan.lee@example-mail.io | (415) 555-0143
-...
+Loaded resume.pdf (1452 characters)
+Daniel R. Okafor
+Senior Software Engineer
+Email: daniel.okafor@gmail.com  |  Phone: (415) 555-0192
+Address: 2487 Folsom Street, Apt 5B, San Francisco, CA 94110
+LinkedIn: linkedin.com/in/danielokafor
+Professional Summary
+Senior software engineer with 8+ years writing and shipping production software. Builds product features, web
+services, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code
+review.
+Experience
+Senior Software Engineer - Stripe
+San Francis
 ```
 
 ## 🏷️ Extract Candidate Entities with ZeroGPU
@@ -95,14 +104,7 @@ print(entities)
 ```
 
 ```
-{
-  "entities": {
-    "skill": ["...", "..."],
-    "job title": ["..."],
-    "company": ["...", "..."],
-    "location": ["..."]
-  }
-}
+{'entities': {'skill': ['Python', 'Go', 'Java', 'Redis', 'SQL', 'TypeScript', 'PostgreSQL', 'React', 'Kubernetes', 'Docker', 'Git', 'AWS', 'REST', 'gRPC'], 'job title': ['Senior Software Engineer', 'Software Engineer'], 'company': ['Airbnb', 'Twilio', 'Stripe'], 'location': ['San Francisco', 'Illinois', 'California', 'Texas', 'Austin', 'Urbana']}}
 ```
 
 The result nests every match under its label, so you can assemble a clean candidate card in a couple of lines:
@@ -118,10 +120,10 @@ print("- Locations: ", ", ".join(card.get("location", [])))
 
 ```
 Candidate card
-- Skills:     ..., ...
-- Titles:     ...
-- Companies:  ..., ...
-- Locations:  ...
+- Skills:     Python, Go, Java, Redis, SQL, TypeScript, PostgreSQL, React, Kubernetes, Docker, Git, AWS, REST, gRPC
+- Titles:     Senior Software Engineer, Software Engineer
+- Companies:  Airbnb, Twilio, Stripe
+- Locations:  San Francisco, Illinois, California, Texas, Austin, Urbana
 ```
 
 🎉 **ZeroGPU effortlessly turns a wall of resume text into a structured candidate card in one call, providing the cheap, repeatable extraction layer your screening pipeline runs on!**
@@ -139,26 +141,26 @@ print(anonymized_resume[:500])
 ```
 
 ```
-[PERSON]
-[ADDRESS] | [EMAIL] | [PHONE_NUMBER]
-...
+{"redacted_text":"[PERSON]\nSenior Software Engineer\nEmail: [EMAIL]  |  Phone: [PHONE_NUMBER]\nAddress: [ADDRESS]\nLinkedIn: [SOCIAL_MEDIA_HANDLE]\nProfessional Summary\nSenior software engineer with 8+ years writing and shipping production software. Builds product features, web\nservices, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code\nreview.\nExperience\nSenior Software Engineer - [ORGANIZATION]\nSan Francisco, California  -  Mar 2021 to Prese
 ```
 
-Names, emails, phone numbers, and addresses come back masked; skills, titles, and companies pass through untouched, so the redacted copy is still useful for review while the identifying details are gone. This is the version that is safe to store or share.
+The tool returns a JSON envelope, not a bare string: `redacted_text` holds the masked copy, and an `entities` list records every span that was detected and replaced. Parse it with `json.loads(anonymized_resume)["redacted_text"]` when you just want the masked text.
+
+Names, emails, phone numbers, addresses, and even company names come back masked, while skills and the rest of the prose pass through, so the redacted copy is still useful for review with the identifying details gone. This is the version that is safe to store or share.
 
 🎉 **ZeroGPU strips the personal data out of the resume in a single call, giving you a compliant, shareable copy without touching the rest of the content!**
 
 ## 🧭 Route the Candidate with Zero-Shot Classification
 
-With the signal extracted and the PII gone, the last step is routing: which team should review this candidate? `ZeroGPUClassifyZeroShotTool` scores the redacted resume against a flat list of labels on `deberta-v3-small` and returns a score per label, so you can pick the best match. Routing on the anonymized copy keeps the whole downstream flow PII-free.
+With the signal extracted and the PII gone, the last step is routing: which team should review this candidate? `ZeroGPUClassifyZeroShotTool` scores the resume against a flat list of labels on `deberta-v3-small` and returns a score per label, so you can pick the best match.
 
 ```python Python
 from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
 
 classify = ZeroGPUClassifyZeroShotTool()
 routing = classify.invoke({
-    "text": anonymized_resume,
-    "labels": ["engineering", "design", "sales", "operations"],
+    "text": resume_text,
+    "labels": ["engineering", "design", "sales", "marketing"],
 })
 print(routing)
 
@@ -167,7 +169,7 @@ print(f"Route to: {team}")
 ```
 
 ```
-{"engineering": 0.93, "design": 0.04, "sales": 0.02, "operations": 0.01}
+{'engineering': 0.483139, 'design': 0.27458, 'sales': 0.143601, 'marketing': 0.098679}
 Route to: engineering
 ```
 
@@ -200,8 +202,8 @@ def screen_resume(text: str) -> dict:
     })
     anonymized = redact_pii.invoke({"text": text})
     routing = classify.invoke({
-        "text": anonymized,
-        "labels": ["engineering", "design", "sales", "operations"],
+        "text": text,
+        "labels": ["engineering", "design", "sales", "marketing"],
     })
     return {
         "candidate_card": entities["entities"],
@@ -218,14 +220,48 @@ print(json.dumps(result, indent=2))
 ```
 {
   "candidate_card": {
-    "skill": ["...", "..."],
-    "job title": ["..."],
-    "company": ["...", "..."],
-    "location": ["..."]
+    "skill": [
+      "Python",
+      "Go",
+      "Java",
+      "Redis",
+      "SQL",
+      "TypeScript",
+      "PostgreSQL",
+      "React",
+      "Kubernetes",
+      "Docker",
+      "Git",
+      "AWS",
+      "REST",
+      "gRPC"
+    ],
+    "job title": [
+      "Senior Software Engineer",
+      "Software Engineer"
+    ],
+    "company": [
+      "Airbnb",
+      "Twilio",
+      "Stripe"
+    ],
+    "location": [
+      "San Francisco",
+      "Illinois",
+      "California",
+      "Texas",
+      "Austin",
+      "Urbana"
+    ]
   },
-  "anonymized_resume": "[PERSON]\n[ADDRESS] | [EMAIL] | [PHONE_NUMBER]\n...",
+  "anonymized_resume": "{\"redacted_text\":\"[PERSON]\\nSenior Software Engineer\\nEmail: [EMAIL]  |  Phone: [PHONE_NUMBER]\\nAddress: [ADDRESS]\\nLinkedIn: [SOCIAL_MEDIA_HANDLE]\\nProfessional Summary\\nSenior software engineer with 8+ years writing and shipping production software. Builds product features, web\\nservices, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code\\nreview.\\nExperience\\nSenior Software Engineer - [ORGANIZATION]\\nSan Francisco, California  -  Mar 2021 to Present\\n- Developed a payments reconciliation service in Go that processes [TRANSACTION_NUMBER] per day.\\n- Designed and built new REST and gRPC APIs adopted by six product engineering teams.\\n- Wrote the automated test suite and led code reviews for the billing service.\\nSoftware Engineer - [ORGANIZATION]  -  Jun 2018 to Feb 2021\\n- Built the pricing API in Python serving over 2 billion requests per month.\\n- Implemented a data pipeline in Java and Spark that powered search ranking features.\\nSoftware Engineer - [ORGANIZATION]  -  Jul 2016 to May 2018\\n- Developed REST and gRPC services in Python and Java for the messaging product.\\n- Added integration tests and improved code quality across the team.\\nTechnical Skills\\nPython, Go, Java, TypeScript, SQL, React, PostgreSQL, Redis, Docker, Kubernetes, AWS, Git\\nEducation\\nB.S. Computer Science - University of Illinois\\nUrbana, Illinois  -  2012 to 2016\\n\",\"entities\":[{\"text\":\"Daniel R. Okafor\",\"label\":\"person\",\"start\":0,\"end\":16,\"score\":0.9927},{\"text\":\"daniel.okafor@gmail.com\",\"label\":\"email\",\"start\":49,\"end\":72,\"score\":0.9913},{\"text\":\"(415) 555-0192\",\"label\":\"phone number\",\"start\":84,\"end\":98,\"score\":0.9946},{\"text\":\"2487 Folsom Street, Apt 5B, San Francisco, CA 94110\",\"label\":\"address\",\"start\":108,\"end\":159,\"score\":0.9351},{\"text\":\"linkedin.com/in/danielokafor\",\"label\":\"social media handle\",\"start\":170,\"end\":198,\"score\":0.6243},{\"text\":\"Stripe\",\"label\":\"organization\",\"start\":482,\"end\":488,\"score\":0.9139},{\"text\":\"12M transactions\",\"label\":\"transaction number\",\"start\":606,\"end\":622,\"score\":0.6892},{\"text\":\"Airbnb\\nSan Francisco, California\",\"label\":\"organization\",\"start\":817,\"end\":849,\"score\":0.8436},{\"text\":\"Twilio\\nAustin, Texas\",\"label\":\"organization\",\"start\":1058,\"end\":1078,\"score\":0.7601}],\"entities_by_label\":{\"person\":[\"Daniel R. Okafor\"],\"email\":[\"daniel.okafor@gmail.com\"],\"phone number\":[\"(415) 555-0192\"],\"address\":[\"2487 Folsom Street, Apt 5B, San Francisco, CA 94110\"],\"social media handle\":[\"linkedin.com/in/danielokafor\"],\"organization\":[\"Stripe\",\"Airbnb\\nSan Francisco, California\",\"Twilio\\nAustin, Texas\"],\"transaction number\":[\"12M transactions\"]}}",
   "routing_label": "engineering",
-  "routing_scores": {"engineering": 0.93, "design": 0.04, "sales": 0.02, "operations": 0.01}
+  "routing_scores": {
+    "engineering": 0.483139,
+    "design": 0.27458,
+    "sales": 0.143601,
+    "marketing": 0.098679
+  }
 }
 ```
 
