@@ -7,4 +7,8 @@ openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge-enriched.op
 
 > The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs giving you richer, more actionable classification data per inference call. This means you get not just a category, but layered context signals that downstream systems can use for better targeting, filtering, and personalization decisions. Same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speeds. When a single label isn't enough and your pipeline needs deeper content intelligence, this is the model.
 
+<Note>
+The `instructions` field is not needed for this model. It maps your input directly to the IAB Content Taxonomy, so you only need to send the text you want classified.
+</Note>
+
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

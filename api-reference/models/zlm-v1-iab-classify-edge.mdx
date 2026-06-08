@@ -7,4 +7,8 @@ openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.jso
 
 > ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy, the industry standard used across programmatic advertising enabling instant, low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it's optimized for the kind of high-volume, sub-millisecond classification that ad tech and content platforms demand. Deploy it on edge devices to classify content in-stream, at the point of interaction.
 
+<Note>
+The `instructions` field is not needed for this model. It maps your input directly to the IAB Content Taxonomy, so you only need to send the text you want classified.
+</Note>
+
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
