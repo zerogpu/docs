@@ -23,6 +23,7 @@ Trigger on phrasings like:
 Ask the user for whatever is missing, never invent these:
 
 1. **Title**, descriptive name with a leading emoji. Use the framework's mascot when it has one (🐫 CAMEL, 🦜 LangChain, 🦙 LlamaIndex, 👥 CrewAI), otherwise pick a thematic emoji.
+1b. **Description**, a one-sentence frontmatter `description` summarizing what the cookbook does. This is **required** on every page. Mintlify feeds it into the auto-generated `llms.txt`/`llms-full.txt` entry (truncated at 300 characters and the first line break) and into the page's SEO metadata. If the user does not supply one, write it yourself from the intro paragraph; do not leave it blank. Keep it under 300 characters, on one line, no leading emoji, ASCII hyphens only.
 2. **Framework / platform** being paired with ZeroGPU: its install command, the canonical 1-2 sentence description for the intro bullet, and its key-management story (which env var, where to get the key).
 3. **Concrete task** the cookbook walks through (e.g. "build a multi-agent travel planner using real-time weather", "summarize a long support thread inside an Electron app", "route Claude Code subagents through ZeroGPU's nano models").
 4. **ZeroGPU capability** to feature, chat (`LFM2.5-1.2B-Instruct`), thinking (`LFM2.5-1.2B-Thinking`), classification (zero-shot, IAB, structured), extraction (entities, PII, JSON), summarization. Pick one as the headline, mention adjacent ones only if the task genuinely uses them.
@@ -62,6 +63,7 @@ Follow this section order exactly. Sections marked *optional* are only included 
 ````mdx
 ---
 title: "<emoji> <Descriptive Title>"
+description: "<One-sentence summary of what this cookbook does. Required. No leading emoji, one line, under 300 characters, ASCII hyphens only. Feeds the auto-generated llms.txt entry and SEO metadata.>"
 ---
 
 You can also check this cookbook in colab [here](<colab-url>).   <!-- optional -->
@@ -235,6 +237,7 @@ These are the things that make a page read like a ZeroGPU cookbook rather than g
 - **Show outputs.** After any code cell whose output is meaningful (an agent reply, a search result, a final summary), include an unlabeled fenced block beneath it with a realistic example output. Outputs may include emojis, casual phrasing, and the framework's own logs (e.g. `🖇 AgentOps: Replay: ...`), they are part of the reader's expected experience.
 - **🎉 outros.** After the "Access <Capability> with ZeroGPU" demo and at the end of the main scenario, include a single `🎉 ...` sentence summarizing what just happened.
 - **Always link to the canonical reference doc up front.** The opening paragraph must point the reader to the full reference page for the thing the cookbook builds on (integration page, model page, endpoint page). The cookbook covers *one task*; the reference covers the *full surface*.
+- **Frontmatter `description` is required.** Every page must have a one-line `description` in its frontmatter alongside `title`. Mintlify auto-generates `llms.txt`/`llms-full.txt` from these descriptions (truncated at 300 characters and the first line break), so a missing one produces a weak, auto-derived entry. No leading emoji, one line, under 300 characters, ASCII hyphens only.
 - **ASCII hyphens only.** Per repo convention, no em or en dashes anywhere in prose. Check by hand after writing and fix any that slipped in.
 - **No invented URLs.** Use only URLs the user supplied or canonical pages (the ZeroGPU dashboard above, the standard YouTube embed URL pattern, the integration page slug). Do not fabricate Colab links, video IDs, or dashboard URLs.
 - **Video section always present.** The `## 🎥 Watch the Video Guide` section is never omitted. When the user supplies a YouTube video ID, embed the iframe. When they do not, keep the heading and write `Video walkthrough coming soon.` as the body, never a placeholder ID or a fabricated embed URL. (The Colab link, by contrast, stays optional and is dropped entirely when absent.)
@@ -242,7 +245,7 @@ These are the things that make a page read like a ZeroGPU cookbook rather than g
 
 ## After writing
 
-1. Save to `cookbook/<slug>.mdx` (kebab-case slug derived from the title).
+1. Save to `cookbook/<slug>.mdx` (kebab-case slug derived from the title). Confirm the frontmatter has both `title` and a non-empty `description`.
 2. Add the new slug to the Cookbook group in `docs.json` (under the `"tab": "Cookbook"` entry, around line 175). Place it next to thematically related entries.
 3. Add a `<Card>` to the `<Columns cols={2}>` grid in `cookbook/index.mdx`:
    ```mdx
@@ -262,6 +265,7 @@ For a "Claude Code subagent router using ZeroGPU's nano models" cookbook, the in
 ```mdx
 ---
 title: "🤖 Claude Code Subagent Router: Offload Cheap NLP Tasks to ZeroGPU's Nano Models"
+description: "Set up the zerogpu-router plugin so Claude Code can hand off classification, extraction, and short chat tasks to ZeroGPU's nano models, cutting token spend and keeping PII out of context."
 ---
 
 This notebook demonstrates how to set up the `zerogpu-router` plugin so that Claude Code can hand off classification, extraction, and short chat tasks to ZeroGPU's nano models without leaving your terminal session. By combining Claude Code's plugin system with ZeroGPU's edge-optimized models, this notebook walks you through a practical pattern for cutting token spend on well-defined NLP work while keeping raw PII out of Claude's context.
