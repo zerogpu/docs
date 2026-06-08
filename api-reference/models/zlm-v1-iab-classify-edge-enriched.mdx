@@ -1,5 +1,6 @@
 ---
 title: "zlm-v1-iab-classify-edge-enriched"
+sidebarTitle: "IAB Classification Enriched"
 description: "Model details for zlm-v1-iab-classify-edge-enriched."
 openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge-enriched.openapi.json POST /responses"
 ---
@@ -7,23 +8,3 @@ openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge-enriched.op
 > The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs giving you richer, more actionable classification data per inference call. This means you get not just a category, but layered context signals that downstream systems can use for better targeting, filtering, and personalization decisions. Same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speeds. When a single label isn't enough and your pipeline needs deeper content intelligence, this is the model.
 
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
-
-## Specifications
-
-| Property | Value |
-| --- | --- |
-| Model ID | `zlm-v1-iab-classify-edge-enriched` |
-| Task | Text Classification |
-| Type | `iab-classify` |
-| Parameters | 90M |
-| Version | 1 |
-| Max Tokens | 400 |
-| Provider | ZeroGPU |
-| Input Price | $0.05 / 1M |
-| Output Price | $0.40 / 1M |
-| Total Price | $0.45 / 1M |
-
-## Try it
-
-Send a live request with your `x-api-key` and `x-project-id`. Model is fixed to `zlm-v1-iab-classify-edge-enriched`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).
-

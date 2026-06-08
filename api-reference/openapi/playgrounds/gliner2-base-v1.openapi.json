@@ -114,6 +114,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "ner": {
+                    "summary": "Entity Extraction",
+                    "value": {
+                      "entities": {
+                        "programming language": [
+                          "Python 3.11"
+                        ],
+                        "database": [
+                          "PostgreSQL 15"
+                        ],
+                        "technology": [
+                          "Kubernetes",
+                          "Docker",
+                          "gRPC"
+                        ],
+                        "protocol": [
+                          "gRPC"
+                        ]
+                      }
+                    }
+                  },
+                  "json": {
+                    "summary": "Structured Data Extraction",
+                    "value": {
+                      "data": {
+                        "contact": [
+                          {
+                            "name": "John Smith",
+                            "title": "Senior Software Engineer",
+                            "company": "Acme Corp",
+                            "phone": "(555) 123-4567",
+                            "email": "john.smith@acme.com",
+                            "address": null
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "classification": {
+                    "summary": "Text Classification",
+                    "value": {
+                      "classification": {
+                        "sentiment": "positive"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -254,6 +302,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "ner": {
+                    "summary": "Entity Extraction",
+                    "value": {
+                      "entities": {
+                        "programming language": [
+                          "Python 3.11"
+                        ],
+                        "database": [
+                          "PostgreSQL 15"
+                        ],
+                        "technology": [
+                          "Kubernetes",
+                          "Docker",
+                          "gRPC"
+                        ],
+                        "protocol": [
+                          "gRPC"
+                        ]
+                      }
+                    }
+                  },
+                  "json": {
+                    "summary": "Structured Data Extraction",
+                    "value": {
+                      "data": {
+                        "contact": [
+                          {
+                            "name": "John Smith",
+                            "title": "Senior Software Engineer",
+                            "company": "Acme Corp",
+                            "phone": "(555) 123-4567",
+                            "email": "john.smith@acme.com",
+                            "address": null
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "classification": {
+                    "summary": "Text Classification",
+                    "value": {
+                      "classification": {
+                        "sentiment": "positive"
+                      }
+                    }
+                  }
                 }
               }
             }

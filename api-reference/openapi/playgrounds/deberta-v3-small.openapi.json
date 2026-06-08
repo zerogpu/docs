@@ -68,6 +68,17 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "technology": 0.971784,
+                      "politics": 0.011858,
+                      "sports": 0.01175,
+                      "finance": 0.004608
+                    }
+                  }
                 }
               }
             }
@@ -155,6 +166,17 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "technology": 0.971784,
+                      "politics": 0.011858,
+                      "sports": 0.01175,
+                      "finance": 0.004608
+                    }
+                  }
                 }
               }
             }

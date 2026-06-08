@@ -1,5 +1,6 @@
 ---
 title: "deberta-v3-small"
+sidebarTitle: "Text Classifier"
 description: "Model details for deberta-v3-small."
 openapi: "api-reference/openapi/playgrounds/deberta-v3-small.openapi.json POST /responses"
 ---
@@ -7,23 +8,3 @@ openapi: "api-reference/openapi/playgrounds/deberta-v3-small.openapi.json POST /
 > Microsoft's DeBERTa-v3-small uses a disentangled attention mechanism that separately encodes content and position giving it a major edge in understanding context compared to models of similar size. With ELECTRA-style pre-training and gradient-disentangled embedding sharing, it punches well above its weight on NLU benchmarks, outperforming many frontier models on classification and inference tasks. It's one of the most efficient classifiers you can run at the edge. Ideal for high-throughput classification workloads where every millisecond and every cent matters.
 
 **References:** [Model docs](https://github.com/microsoft/DeBERTa/tree/master/docs) • [Terms](https://github.com/microsoft/DeBERTa/blob/master/SECURITY.md) • [Privacy](https://github.com/microsoft/DeBERTa/blob/master/LICENSE)
-
-## Specifications
-
-| Property | Value |
-| --- | --- |
-| Model ID | `deberta-v3-small` |
-| Task | Text Classification |
-| Type | `nli-deberta-v3` |
-| Parameters | 142M |
-| Version | 1 |
-| Max Tokens | 400 |
-| Provider | Microsoft |
-| Input Price | $0.05 / 1M |
-| Output Price | $0.40 / 1M |
-| Total Price | $0.45 / 1M |
-
-## Try it
-
-Send a live request with your `x-api-key` and `x-project-id`. Model is fixed to `deberta-v3-small`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).
-

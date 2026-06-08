@@ -86,6 +86,95 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "redact": {
+                    "summary": "PII Redaction",
+                    "value": {
+                      "redacted_text": "Hello [PERSON], this is [PERSON] reaching out regarding my recent order. If you need any additional details, feel free to call me at [PHONE_NUMBER] during business hours. You can also email me at [EMAIL], and I will respond as soon as possible.",
+                      "entities": [
+                        {
+                          "text": "Jane Doe",
+                          "label": "person",
+                          "start": 6,
+                          "end": 14,
+                          "score": 0.9982
+                        },
+                        {
+                          "text": "John Doe",
+                          "label": "person",
+                          "start": 24,
+                          "end": 32,
+                          "score": 0.9981
+                        },
+                        {
+                          "text": "415-555-0134",
+                          "label": "phone number",
+                          "start": 133,
+                          "end": 145,
+                          "score": 0.9725
+                        },
+                        {
+                          "text": "hi@example.com",
+                          "label": "email",
+                          "start": 194,
+                          "end": 208,
+                          "score": 0.9812
+                        }
+                      ],
+                      "entities_by_label": {
+                        "person": [
+                          "Jane Doe",
+                          "John Doe"
+                        ],
+                        "phone number": [
+                          "415-555-0134"
+                        ],
+                        "email": [
+                          "hi@example.com"
+                        ]
+                      }
+                    }
+                  },
+                  "extract-pii": {
+                    "summary": "PII Extraction",
+                    "value": {
+                      "entities": [
+                        {
+                          "text": "John Doe",
+                          "label": "person",
+                          "start": 8,
+                          "end": 16,
+                          "score": 0.9989
+                        },
+                        {
+                          "text": "john@example.com",
+                          "label": "email",
+                          "start": 20,
+                          "end": 36,
+                          "score": 0.9776
+                        },
+                        {
+                          "text": "+1-415-555-0134",
+                          "label": "phone number",
+                          "start": 40,
+                          "end": 55,
+                          "score": 0.9714
+                        }
+                      ],
+                      "entities_by_label": {
+                        "person": [
+                          "John Doe"
+                        ],
+                        "email": [
+                          "john@example.com"
+                        ],
+                        "phone number": [
+                          "+1-415-555-0134"
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -193,6 +282,95 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "redact": {
+                    "summary": "PII Redaction",
+                    "value": {
+                      "redacted_text": "Hello [PERSON], this is [PERSON] reaching out regarding my recent order. If you need any additional details, feel free to call me at [PHONE_NUMBER] during business hours. You can also email me at [EMAIL], and I will respond as soon as possible.",
+                      "entities": [
+                        {
+                          "text": "Jane Doe",
+                          "label": "person",
+                          "start": 6,
+                          "end": 14,
+                          "score": 0.9982
+                        },
+                        {
+                          "text": "John Doe",
+                          "label": "person",
+                          "start": 24,
+                          "end": 32,
+                          "score": 0.9981
+                        },
+                        {
+                          "text": "415-555-0134",
+                          "label": "phone number",
+                          "start": 133,
+                          "end": 145,
+                          "score": 0.9725
+                        },
+                        {
+                          "text": "hi@example.com",
+                          "label": "email",
+                          "start": 194,
+                          "end": 208,
+                          "score": 0.9812
+                        }
+                      ],
+                      "entities_by_label": {
+                        "person": [
+                          "Jane Doe",
+                          "John Doe"
+                        ],
+                        "phone number": [
+                          "415-555-0134"
+                        ],
+                        "email": [
+                          "hi@example.com"
+                        ]
+                      }
+                    }
+                  },
+                  "extract-pii": {
+                    "summary": "PII Extraction",
+                    "value": {
+                      "entities": [
+                        {
+                          "text": "John Doe",
+                          "label": "person",
+                          "start": 8,
+                          "end": 16,
+                          "score": 0.9989
+                        },
+                        {
+                          "text": "john@example.com",
+                          "label": "email",
+                          "start": 20,
+                          "end": 36,
+                          "score": 0.9776
+                        },
+                        {
+                          "text": "+1-415-555-0134",
+                          "label": "phone number",
+                          "start": 40,
+                          "end": 55,
+                          "score": 0.9714
+                        }
+                      ],
+                      "entities_by_label": {
+                        "person": [
+                          "John Doe"
+                        ],
+                        "email": [
+                          "john@example.com"
+                        ],
+                        "phone number": [
+                          "+1-415-555-0134"
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }

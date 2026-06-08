@@ -68,6 +68,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "That's an amazing accomplishment! Keep up the great work, each step brings you closer to your goals. You're stronger than you think!\n\nWould you like tips to help you keep improving?"
+                  }
                 }
               }
             }
@@ -155,6 +161,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "That's an amazing accomplishment! Keep up the great work, each step brings you closer to your goals. You're stronger than you think!\n\nWould you like tips to help you keep improving?"
+                  }
                 }
               }
             }

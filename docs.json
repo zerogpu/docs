@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ZeroGPU",
+  "description": "ZeroGPU is the compute efficiency layer for AI inference. It runs repeatable, high-volume tasks - classification, extraction, PII redaction, moderation, summarization, routing - on specialized small and nano language models across an edge-powered network, faster and cheaper than centralized GPUs, through one OpenAI-compatible API.",
   "colors": {
     "primary": "#22C55E",
     "light": "#4ADE80",
@@ -128,7 +129,6 @@
                   "api-reference/models/lfm2-5-1-2b-instruct",
                   "api-reference/models/lfm2-5-1-2b-thinking",
                   "api-reference/models/llama-3-1-8b-instruct-fast",
-                  "api-reference/models/zlm-v1-followup-questions-edge",
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v1-iab-classify-edge-enriched"
                 ]

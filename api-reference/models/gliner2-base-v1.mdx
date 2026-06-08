@@ -1,5 +1,6 @@
 ---
 title: "gliner2-base-v1"
+sidebarTitle: "Entity Extraction"
 description: "Model details for gliner2-base-v1."
 openapi: "api-reference/openapi/playgrounds/gliner2-base-v1.openapi.json POST /responses"
 ---
@@ -7,22 +8,3 @@ openapi: "api-reference/openapi/playgrounds/gliner2-base-v1.openapi.json POST /r
 > GLiNER2 extends the original GLiNER architecture to support multi-task    information extraction with a schema-driven interface. This base model    provides efficient CPU-based inference while maintaining high accuracy across diverse extraction tasks. Unlike traditional NER models trained on fixed label sets, GLiNER2 accepts arbitrary entity types at inference time, making it adaptable to new domains without fine-tuning. It supports named entity recognition, relation extraction, and span classification within a unified framework, guided by natural language schema definitions.
 
 **References:** [Model docs](https://github.com/fastino-ai/GLiNER2/blob/main/README.md) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
-
-## Specifications
-
-| Property | Value |
-| --- | --- |
-| Model ID | `gliner2-base-v1` |
-| Task | PII |
-| Type | `gliner2` |
-| Parameters | 205M |
-| Version | 2 |
-| Max Tokens | 512 |
-| Input Price | $0.20 / 1M |
-| Output Price | $0.40 / 1M |
-| Total Price | $0.60 / 1M |
-
-## Try it
-
-Send a live request with your `x-api-key` and `x-project-id`. Model is fixed to `gliner2-base-v1`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).
-

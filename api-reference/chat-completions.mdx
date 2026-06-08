@@ -7,67 +7,6 @@ openapi: "api-reference/openapi/zerogpu.openapi.json POST /chat/completions"
 
 Some models are invoked with a **chat-completions** style body (`messages` array) instead of the [Responses](/api-reference/responses) `input` field. The dashboard and [model catalog](/docs/model-catalog) indicate which route applies. Each model page has its own playground with the right examples for that model.
 
-### Request headers
-
-Same as [Responses](/api-reference/responses#request-headers): `x-api-key`, `x-project-id`, `content-type: application/json`.
-
-### Request body
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `model` | string | Yes | Model identifier from your dashboard |
-| `messages` | array | Yes | List of objects with `role` (`system`, `user`, or `assistant`) and string `content` |
-| `metadata` | object | No | Model-specific options (e.g. PII `mask`, `usecase`) when supported |
-
-### Example
-
-<CodeGroup>
-
-```bash cURL
-curl --location 'https://api.zerogpu.ai/v1/chat/completions' \
-  --header 'content-type: application/json' \
-  --header 'x-api-key: YOUR_API_KEY' \
-  --header 'x-project-id: YOUR_PROJECT_ID' \
-  --data '{
-    "model": "YOUR_MODEL",
-    "messages": [
-      { "role": "user", "content": "Your input text here..." }
-    ]
-  }'
-```
-
-```javascript JavaScript
-import { ZerogpuApiClient } from 'zerogpu-api'; 
-
-const client = new ZerogpuApiClient({
-  apiKey: process.env.ZEROGPU_API_KEY,
-  projectId: process.env.ZEROGPU_PROJECT_ID,
-});
-
-const data = await client.chat.createChatCompletion({
-  model: 'YOUR_MODEL',
-  messages: [{ role: 'user', content: 'Your input text here...' }],
-});
-console.log(data);
-```
-
-```python Python
-import os
-from zerogpu import ZerogpuApi, ChatMessage
-
-client = ZerogpuApi(
-    api_key=os.environ["ZEROGPU_API_KEY"],
-    project_id=os.environ["ZEROGPU_PROJECT_ID"],
-)
-data = client.chat.create_chat_completion(
-    model="YOUR_MODEL",
-    messages=[ChatMessage(role="user", content="Your input text here...")],
-)
-print(data)
-```
-
-</CodeGroup>
-
 Install the official SDK from [npm](https://www.npmjs.com/package/zerogpu-api) or [PyPI](https://pypi.org/project/zerogpu-api/) (`pip install zerogpu-api`). Source: [zerogpu/SDK](https://github.com/zerogpu/SDK).
 
 Response JSON shape depends on the model; handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).

@@ -1,13 +1,12 @@
 ---
 title: "Text Generation"
-description: "Edge generative models for conversation, reasoning, and follow-up prompts."
+description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers conversational and reasoning models from Liquid AI plus a purpose-built follow-up question generator. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Text generation models produce new text from an input prompt. ZeroGPU offers conversational and reasoning models from Liquid AI. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
 | Model | Params | Max tokens | Input /1M | Output /1M |
 | --- | --- | --- | --- | --- |
-| [`zlm-v1-followup-questions-edge`](/api-reference/models/zlm-v1-followup-questions-edge) | 120M | 400 | $0.25 | $0.40 |
 | [`LFM2.5-1.2B-Thinking`](/api-reference/models/lfm2-5-1-2b-thinking) | 1.2B | 32,768 | $0.20 | $0.40 |
 | [`LFM2.5-1.2B-Instruct`](/api-reference/models/lfm2-5-1-2b-instruct) | 1.2B | 800 | $0.20 | $0.40 |
 
@@ -112,55 +111,4 @@ The capital of Japan is **Tokyo**.
 **Reasoning:**
 1. Japan's political, cultural, and economic center is located in Tokyo.
 2. Historically, Tokyo has served as Japan's...
-```
-
-## zlm-v1-followup-questions-edge
-
-ZeroGPU's follow-up question generator is fine-tuned specifically to generate contextual follow-up responses that drive deeper user engagement. Built for edge deployment on the ONNX runtime, it's optimized for the low-latency, conversational interactions that keep users active: smart nudges, re-engagement prompts, and contextual suggestions. Unlike general-purpose generators, this model is laser-focused on conversational depth.
-
-**References:** [Terms](https://zerogpu.ai/terms) - [Privacy](https://zerogpu.ai/privacy-policy)
-
-### Request
-
-<CodeGroup>
-
-```bash Responses API wrap
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-followup-questions-edge",
-    "input": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes."
-  }'
-```
-
-```bash Chat Completions wrap
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-followup-questions-edge",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes."
-      }
-    ]
-  }'
-```
-
-</CodeGroup>
-
-### Response
-
-Returns a list of suggested follow-up questions.
-
-```json wrap
-[
-  "What are the benefits of electric EVs?",
-  "How do Electric vehicles compare to other models?",
-  "Can you summarize recent news about energy-saving technology?"
-]
 ```

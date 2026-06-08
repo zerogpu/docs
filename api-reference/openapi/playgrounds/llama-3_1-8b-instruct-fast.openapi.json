@@ -67,6 +67,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "NASA's Artemis III mission is now scheduled for late 2026, marking the first lunar landing since Apollo 17 in 1972, with a crew of four astronauts aboard the Orion spacecraft, including two who will descend to the Moon's south pole using the SpaceX Starship as a lunar lander."
+                  }
                 }
               }
             }
@@ -150,6 +156,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "NASA's Artemis III mission is now scheduled for late 2026, marking the first lunar landing since Apollo 17 in 1972, with a crew of four astronauts aboard the Orion spacecraft, including two who will descend to the Moon's south pole using the SpaceX Starship as a lunar lander."
+                  }
                 }
               }
             }

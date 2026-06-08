@@ -67,6 +67,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "The capital of Japan is **Tokyo**.\n\n**Reasoning:**\n1. Japan's political, cultural, and economic center is located in Tokyo.\n2. Historically, Tokyo has served as Japan's..."
+                  }
                 }
               }
             }
@@ -150,6 +156,12 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": "The capital of Japan is **Tokyo**.\n\n**Reasoning:**\n1. Japan's political, cultural, and economic center is located in Tokyo.\n2. Historically, Tokyo has served as Japan's..."
+                  }
                 }
               }
             }

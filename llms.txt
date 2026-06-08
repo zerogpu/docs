@@ -1,0 +1,76 @@
+# ZeroGPU
+
+> ZeroGPU is the compute efficiency layer for AI inference. It runs repeatable, high-volume tasks - classification, extraction, PII redaction, moderation, summarization, and routing - on specialized small and nano language models across an edge-powered network, faster and cheaper than centralized GPUs, through one OpenAI-compatible API. Send a request to one endpoint (`POST /v1/responses` or the OpenAI-compatible `/v1/chat/completions`); ZeroGPU picks the right small or nano model and runs it on the right compute.
+
+## Get Started
+
+- [Introduction](https://docs.zerogpu.ai/index.md): What ZeroGPU is and how to make your first OpenAI-compatible call.
+- [How ZeroGPU works](https://docs.zerogpu.ai/docs/how-zerogpu-works.md): Specialized small models, an edge-powered network, and routing handled for you.
+- [Quickstart](https://docs.zerogpu.ai/docs/quickstart.md): First API call in minutes - credentials, one request, done.
+
+## Models
+
+- [Model Catalog](https://docs.zerogpu.ai/docs/model-catalog.md): Browse every model, compare pricing, and pick the model ID to call.
+- [Text Classification](https://docs.zerogpu.ai/docs/text-classification.md): Edge models that map text to labels, IAB taxonomy, and audience signals.
+- [Text Generation](https://docs.zerogpu.ai/docs/text-generation.md): Edge generative models for conversation, reasoning, and follow-up prompts.
+- [PII](https://docs.zerogpu.ai/docs/pii.md): Multilingual PII detection, redaction, and schema-driven extraction.
+- [Summarization](https://docs.zerogpu.ai/docs/summarization.md): Models tuned to condense long content into concise summaries.
+
+## Guides
+
+- [Production patterns](https://docs.zerogpu.ai/docs/production-patterns.md): What to get right when you move ZeroGPU from a first call into production.
+- [Batch & Files API: Overview](https://docs.zerogpu.ai/docs/batch/index.md): Run large workloads asynchronously, wire-compatible with `/v1/batches` and `/v1/files`.
+- [Batch Quickstart](https://docs.zerogpu.ai/docs/batch/getting-started.md): First batch in under 10 minutes - auth, upload, create, poll, download.
+- [Batch Objects & lifecycle](https://docs.zerogpu.ai/docs/batch/objects.md): The File and Batch objects, the status lifecycle, and how the two APIs fit together.
+- [Batch JSONL Format](https://docs.zerogpu.ai/docs/batch/jsonl-format.md): Mandatory line schemas for input, output, and error JSONL files.
+- [Batch Supported Endpoints](https://docs.zerogpu.ai/docs/batch/supported-endpoints.md): The only endpoint a batch line can target.
+- [Batch Errors](https://docs.zerogpu.ai/docs/batch/errors.md): Every HTTP status, validation message, and JSONL error code, and how to recover.
+
+## Platform
+
+- [Platform](https://docs.zerogpu.ai/docs/platform.md): Manage your organization, projects, API keys, authentication, usage, logs, and billing.
+
+## Integrations & SDKs
+
+- [Integrations Overview](https://docs.zerogpu.ai/integrations/index.md): Plug ZeroGPU's nano language models into the tools and runtimes you already use.
+- [Skills + CLI (Claude Code)](https://docs.zerogpu.ai/integrations/claude-code-plugin.md): Route Claude Code subagents and slash commands through ZeroGPU's nano models.
+- [Python SDK](https://docs.zerogpu.ai/integrations/python.md): Integrate ZeroGPU into your Python application.
+- [JavaScript SDK](https://docs.zerogpu.ai/integrations/javascript.md): Integrate ZeroGPU into your JavaScript or Node.js application.
+- [Rust SDK](https://docs.zerogpu.ai/integrations/rust.md): Integrate ZeroGPU into your Rust application.
+- [Go SDK](https://docs.zerogpu.ai/integrations/go.md): Integrate ZeroGPU into your Go application.
+- [Ruby SDK](https://docs.zerogpu.ai/integrations/ruby.md): Integrate ZeroGPU into your Ruby application.
+
+## API Reference
+
+- [Responses](https://docs.zerogpu.ai/api-reference/responses.md): Send input to a model and receive a response - the primary `POST /v1/responses` endpoint.
+- [Chat completions](https://docs.zerogpu.ai/api-reference/chat-completions.md): OpenAI-style chat inference for models that use this route.
+- [Model: LFM2.5-1.2B-Instruct](https://docs.zerogpu.ai/api-reference/models/lfm2-5-1-2b-instruct.md): Edge instruct model details and request schema.
+- [Model: LFM2.5-1.2B-Thinking](https://docs.zerogpu.ai/api-reference/models/lfm2-5-1-2b-thinking.md): Edge reasoning model details and request schema.
+- [Model: llama-3.1-8b-instruct-fast](https://docs.zerogpu.ai/api-reference/models/llama-3-1-8b-instruct-fast.md): Fast Llama 3.1 8B instruct model details.
+- [Model: deberta-v3-small](https://docs.zerogpu.ai/api-reference/models/deberta-v3-small.md): Zero-shot classification model details.
+- [Model: gliner2-base-v1](https://docs.zerogpu.ai/api-reference/models/gliner2-base-v1.md): Structured extraction and entity model details.
+- [Model: gliner-multi-pii-v1](https://docs.zerogpu.ai/api-reference/models/gliner-multi-pii-v1.md): Multilingual PII detection and redaction model details.
+- [Model: zlm-v1-iab-classify-edge](https://docs.zerogpu.ai/api-reference/models/zlm-v1-iab-classify-edge.md): IAB taxonomy classifier model details.
+- [Model: zlm-v1-iab-classify-edge-enriched](https://docs.zerogpu.ai/api-reference/models/zlm-v1-iab-classify-edge-enriched.md): Enriched IAB classifier with topics, keywords, and intent.
+
+## Cookbook
+
+- [Cookbook Overview](https://docs.zerogpu.ai/cookbook/index.md): Ready-to-run recipes for the high-volume tasks ZeroGPU's nano models are built for.
+- [Tutorial: Resume & profile extraction](https://docs.zerogpu.ai/cookbook/data-extraction-tutorial.md): Step-by-step structured extraction with an example dataset.
+- [Sanitize a CSV of Customer Feedback with the ZeroGPU Router Plugin](https://docs.zerogpu.ai/cookbook/claude-code-csv-sanitizer.md): Redact PII from a CSV using the Claude Code plugin.
+
+## OpenAPI Specs
+
+- [ZeroGPU OpenAPI](https://docs.zerogpu.ai/api-reference/openapi/zerogpu.openapi.json): Full OpenAPI spec for the core API.
+
+## Optional
+
+- [Upload file](https://docs.zerogpu.ai/api-reference/upload-file.md): `POST /v1/files` - multipart JSONL upload for batch jobs.
+- [List files](https://docs.zerogpu.ai/api-reference/list-files.md): `GET /v1/files`.
+- [Retrieve file](https://docs.zerogpu.ai/api-reference/retrieve-file.md): `GET /v1/files/{file_id}`.
+- [Download file](https://docs.zerogpu.ai/api-reference/download-file.md): `GET /v1/files/{file_id}/content`.
+- [Delete file](https://docs.zerogpu.ai/api-reference/delete-file.md): `DELETE /v1/files/{file_id}`.
+- [Create batch](https://docs.zerogpu.ai/api-reference/create-batch.md): `POST /v1/batches`.
+- [Retrieve batch](https://docs.zerogpu.ai/api-reference/retrieve-batch.md): `GET /v1/batches/{batch_id}`.
+- [List batches](https://docs.zerogpu.ai/api-reference/list-batches.md): `GET /v1/batches`.
+- [Cancel batch](https://docs.zerogpu.ai/api-reference/cancel-batch.md): `POST /v1/batches/{batch_id}/cancel`.

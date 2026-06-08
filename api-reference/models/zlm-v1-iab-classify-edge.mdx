@@ -1,5 +1,6 @@
 ---
 title: "zlm-v1-iab-classify-edge"
+sidebarTitle: "IAB Classifier"
 description: "Model details for zlm-v1-iab-classify-edge."
 openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.json POST /responses"
 ---
@@ -7,23 +8,3 @@ openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.jso
 > ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy, the industry standard used across programmatic advertising enabling instant, low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it's optimized for the kind of high-volume, sub-millisecond classification that ad tech and content platforms demand. Deploy it on edge devices to classify content in-stream, at the point of interaction.
 
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
-
-## Specifications
-
-| Property | Value |
-| --- | --- |
-| Model ID | `zlm-v1-iab-classify-edge` |
-| Task | Text Classification |
-| Type | `iab-classify` |
-| Parameters | 90M |
-| Version | 1 |
-| Max Tokens | 400 |
-| Provider | ZeroGPU |
-| Input Price | $0.05 / 1M |
-| Output Price | $0.40 / 1M |
-| Total Price | $0.45 / 1M |
-
-## Try it
-
-Send a live request with your `x-api-key` and `x-project-id`. Model is fixed to `zlm-v1-iab-classify-edge`. Use **request examples** below to switch use cases (JSON extraction, NER, PII, and so on).
-

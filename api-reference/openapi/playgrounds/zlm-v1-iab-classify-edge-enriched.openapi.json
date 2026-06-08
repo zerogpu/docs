@@ -67,6 +67,81 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "id": 687,
+                          "parent_id": 206,
+                          "name": "Technology & Computing",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Technology & Computing",
+                          "score": 0.7686
+                        },
+                        {
+                          "id": 703,
+                          "parent_id": 687,
+                          "name": "Consumer Electronics",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Technology & Computing",
+                          "tier3_name": "Consumer Electronics",
+                          "score": 0.7206
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "code": "IAB19-6",
+                            "name": "Cell Phones",
+                            "tier": 2,
+                            "parent_code": "IAB19",
+                            "score": 0.7597
+                          },
+                          {
+                            "code": "IAB19",
+                            "name": "Technology & Computing",
+                            "tier": 1,
+                            "parent_code": null,
+                            "score": 0.7387
+                          }
+                        ]
+                      },
+                      "topics": [
+                        {
+                          "name": "smartphones",
+                          "score": 0.7597
+                        },
+                        {
+                          "name": "wearable technology",
+                          "score": 0.7387
+                        },
+                        {
+                          "name": "technology & computing",
+                          "score": 0.7109
+                        }
+                      ],
+                      "keywords": [
+                        "technology",
+                        "reshaped",
+                        "everyday",
+                        "routines",
+                        "quietly",
+                        "weaving",
+                        "rhythm",
+                        "itself",
+                        "life",
+                        "into"
+                      ],
+                      "user_intent": {
+                        "name": "mastering technology quietly reshaped rhythm everyday life",
+                        "category": "informational",
+                        "score": 0.5
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -150,6 +225,81 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "id": 687,
+                          "parent_id": 206,
+                          "name": "Technology & Computing",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Technology & Computing",
+                          "score": 0.7686
+                        },
+                        {
+                          "id": 703,
+                          "parent_id": 687,
+                          "name": "Consumer Electronics",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Technology & Computing",
+                          "tier3_name": "Consumer Electronics",
+                          "score": 0.7206
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "code": "IAB19-6",
+                            "name": "Cell Phones",
+                            "tier": 2,
+                            "parent_code": "IAB19",
+                            "score": 0.7597
+                          },
+                          {
+                            "code": "IAB19",
+                            "name": "Technology & Computing",
+                            "tier": 1,
+                            "parent_code": null,
+                            "score": 0.7387
+                          }
+                        ]
+                      },
+                      "topics": [
+                        {
+                          "name": "smartphones",
+                          "score": 0.7597
+                        },
+                        {
+                          "name": "wearable technology",
+                          "score": 0.7387
+                        },
+                        {
+                          "name": "technology & computing",
+                          "score": 0.7109
+                        }
+                      ],
+                      "keywords": [
+                        "technology",
+                        "reshaped",
+                        "everyday",
+                        "routines",
+                        "quietly",
+                        "weaving",
+                        "rhythm",
+                        "itself",
+                        "life",
+                        "into"
+                      ],
+                      "user_intent": {
+                        "name": "mastering technology quietly reshaped rhythm everyday life",
+                        "category": "informational",
+                        "score": 0.5
+                      }
+                    }
+                  }
                 }
               }
             }

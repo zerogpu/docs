@@ -67,6 +67,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "name": "Technology & Computing",
+                          "score": 0.7686
+                        },
+                        {
+                          "name": "Consumer Electronics",
+                          "score": 0.7206
+                        },
+                        {
+                          "name": "65-69",
+                          "score": 0.595
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "name": "Cell Phones",
+                            "score": 0.7597
+                          },
+                          {
+                            "name": "Technology & Computing",
+                            "score": 0.7387
+                          }
+                        ],
+                        "iab_2_2": [
+                          {
+                            "name": "Smartphones",
+                            "score": 0.7597
+                          },
+                          {
+                            "name": "Wearable Technology",
+                            "score": 0.7387
+                          },
+                          {
+                            "name": "Technology & Computing",
+                            "score": 0.7109
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -150,6 +197,53 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "name": "Technology & Computing",
+                          "score": 0.7686
+                        },
+                        {
+                          "name": "Consumer Electronics",
+                          "score": 0.7206
+                        },
+                        {
+                          "name": "65-69",
+                          "score": 0.595
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "name": "Cell Phones",
+                            "score": 0.7597
+                          },
+                          {
+                            "name": "Technology & Computing",
+                            "score": 0.7387
+                          }
+                        ],
+                        "iab_2_2": [
+                          {
+                            "name": "Smartphones",
+                            "score": 0.7597
+                          },
+                          {
+                            "name": "Wearable Technology",
+                            "score": 0.7387
+                          },
+                          {
+                            "name": "Technology & Computing",
+                            "score": 0.7109
+                          }
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
