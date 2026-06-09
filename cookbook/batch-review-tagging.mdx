@@ -1,57 +1,111 @@
 ---
-title: "Cookbook: Tag customer reviews overnight with the Batch API"
-description: "Take a CSV of customer reviews, tag each row with sentiment and topics using LFM2.5-1.2B-Instruct, and recover failed rows. End to end with the ZeroGPU Batch API."
+title: "🏷️ Tag Customer Reviews Overnight with the ZeroGPU Batch API"
+description: "Tag a CSV of customer reviews with sentiment and topics in one overnight job using the ZeroGPU Batch API and LFM2.5-1.2B-Instruct, then recover any failed rows by custom_id."
 ---
 
-This cookbook walks through a realistic overnight job: you have a CSV of customer reviews and you want a `sentiment` label plus a short list of `topics` for every row. You will submit them as a single batch to the ZeroGPU Batch API, sleep, and wake up to a tagged CSV.
+This notebook demonstrates how to use the ZeroGPU Batch API to tag a CSV of customer reviews in a single asynchronous job. You hand the API a `reviews.csv` with one review per row, and you get back a `tagged.csv` with a `sentiment` label and a short list of `topics` for every row, plus a recoverable list of any rows that failed. By combining the Batch API's OpenAI-compatible JSONL flow with LFM2.5-1.2B-Instruct, this notebook walks you through a practical pattern where thousands of rows are tagged overnight at a fraction of the cost of synchronous calls, keyed back to their source rows by `custom_id`.
 
-We use [LFM2.5-1.2B-Instruct](/api-reference/models/lfm2-5-1-2b-instruct) because it is small, fast, and good enough for short-form classification on a CPU-cheap budget.
+For the full reference, see the [Batch API quickstart](/docs/batch/getting-started).
 
-<Note>
-**Batch API scope.** The Batch API only accepts `/v1/chat/completions` requests, and every line in a batch must target the same endpoint. Streaming (`"stream": true`) is rejected at create time — batches are inherently non-streaming. If you need a different endpoint or live token streams, use the synchronous APIs instead.
-</Note>
+In this notebook, you'll explore:
 
-<Tip>
-**Cheaper model alternatives.** A 1.2B instruct model is overkill for many tagging jobs. If your taxonomy is fixed and short, swap in a classifier head:
+- **ZeroGPU Batch API**: An asynchronous, OpenAI-compatible endpoint that takes thousands of `/v1/chat/completions` requests as a single JSONL file and returns the results within a completion window, at a lower per-request cost than synchronous calls. Here it tags every row of a customer-review CSV in one overnight job.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **LFM2.5-1.2B-Instruct**: A small, fast instruct model that handles short-form classification well, keeping per-row cost low while still producing open-vocabulary topics and a JSON tag. See the [model card](/api-reference/models/lfm2-5-1-2b-instruct) for context window and playground.
 
-- [deberta-v3-small](/api-reference/models/deberta-v3-small) for a sentiment-only label (positive / neutral / negative) at a fraction of the cost.
-- [zlm-v1-iab-classify-edge](/api-reference/models/zlm-v1-iab-classify-edge) for topic tagging against the standard IAB content taxonomy when "topics" really means content category.
+This setup not only demonstrates a practical application of large-scale review tagging, but also provides a flexible framework that can be adapted to other real-world scenarios requiring high-volume, asynchronous classification over tabular data.
 
-Both are batch-friendly and noticeably cheaper per row than a chat model. Use LFM only when you genuinely need open-vocabulary topics or a free-form rationale.
-</Tip>
+## 🎥 Watch the Video Guide
 
-<Note>
-All sample reviews below are synthetic. Swap them for your own CSV before running in production.
-</Note>
+Video walkthrough coming soon.
 
-## What you will build
+## 📦 Installation
 
-| Step | Input | Output |
-| --- | --- | --- |
-| 1 | `reviews.csv` (one review per row) | `input.jsonl` (one Batch request per row) |
-| 2 | `input.jsonl` | `file-...` ID from `POST /v1/files` |
-| 3 | `file-...` ID | `batch_...` ID from `POST /v1/batches` |
-| 4 | `batch_...` ID | Polled status from `GET /v1/batches/{id}` |
-| 5 | `output_file_id` / `error_file_id` | `tagged.csv` plus a list of failed rows |
-
-**Model:** `LFM2.5-1.2B-Instruct`
-**Endpoint per line:** `POST /v1/chat/completions`
-**Batch endpoints:** `POST /v1/files`, `POST /v1/batches`, `GET /v1/batches/{id}`, `GET /v1/files/{id}/content`
-
-Grab your **API key** and **project ID** from the [dashboard](https://zerogpu.ai). See [Authentication](/docs/platform#authentication) and the [Batch quickstart](/docs/batch/getting-started).
+First, install `requests`, the only dependency for driving the Batch API from Python. You reach ZeroGPU through its OpenAI-compatible REST surface, so no SDK is required:
 
 ```bash
-export ZEROGPU_API_KEY="zgpu-..."
+!pip install requests
+```
+
+The cURL examples below also use `jq` to pretty-print JSON responses. For the full lifecycle, see the [Batch API quickstart](/docs/batch/getting-started).
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your ZeroGPU API key and Project ID so that every Batch API call authenticates. This ensures the upload, create, poll, and download calls can reach ZeroGPU securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+
+```python Python
+import os
+from getpass import getpass
+
+# Prompt for the ZeroGPU API key and Project ID securely
+zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
+os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
+
+zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
+os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
+```
+
+This cookbook calls the raw REST surface with the `x-api-key` and `x-project-id` headers. If you use an SDK client, authentication is handled for you. The cURL examples read the same two values from your shell environment:
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
 export ZEROGPU_PROJECT_ID="your-project-uuid"
 ```
-<Note>
-This cookbook uses the raw REST headers (`x-api-key`, `x-project-id`).
-If using the SDK, authentication is handled automatically.
-</Note>
 
-## The dataset
+## 🏷️ Tag a Review with ZeroGPU
 
-A tiny `reviews.csv` is enough to demonstrate the pattern. Notice **row 7 is intentionally malformed** (missing the `review` column). We will see how the Batch API surfaces that as a per-line error instead of failing the whole job.
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will tag a single review as an example, so you can see exactly what the model returns before pointing it at a whole file.
+
+We pin the model to JSON-only output with `temperature: 0` so the parser does not have to be clever. The same system prompt drives every row of the batch later.
+
+```python Python
+import os, requests
+
+resp = requests.post(
+    "https://api.zerogpu.ai/v1/chat/completions",
+    headers={
+        "x-api-key":    os.environ["ZEROGPU_API_KEY"],
+        "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
+        "content-type": "application/json",
+    },
+    json={
+        "model":       "LFM2.5-1.2B-Instruct",
+        "temperature": 0,
+        "messages": [
+            {"role": "system", "content": (
+                "You are a review tagger. Respond with a single JSON object and "
+                'nothing else, in this shape: { "sentiment": "...", "topics": ["..."] }. '
+                'sentiment is one of: "positive", "neutral", "negative".'
+            )},
+            {"role": "user", "content": "Battery lasts two days, love it."},
+        ],
+    },
+).json()
+
+print(resp["choices"][0]["message"]["content"])
+```
+
+```
+{"sentiment": "positive", "topics": ["battery"]}
+```
+
+For a fixed, short taxonomy, a classifier head like [deberta-v3-small](/api-reference/models/deberta-v3-small) for sentiment or [zlm-v1-iab-classify-edge](/api-reference/models/zlm-v1-iab-classify-edge) for IAB topics is cheaper and slots into the same batch flow. Reach for LFM only when you need open-vocabulary topics or a free-form rationale.
+
+🎉 **ZeroGPU tags a review in a single call, returning a clean JSON object you can parse straight into a row, the building block for tagging an entire CSV at once!**
+
+## 🌙 Tag a CSV of Reviews Overnight
+
+_This section takes a CSV of customer reviews and produces a tagged copy plus a recoverable list of failures, with the Batch API running every row as one asynchronous job while you sleep._
+
+Your support tool exports `reviews.csv`, one review per row. You want a `sentiment` label and a short list of `topics` for every row, but calling the model synchronously across thousands of rows is slow and costly. Instead you submit them as a single batch, poll until it finishes, and merge the results back by `custom_id`.
+
+The job has six steps: prepare the CSV, build a JSONL request file, upload it, create the batch, poll until it finishes, then download and merge the results.
+
+### Step 1: Prepare the input CSV
+
+Place your export in the working directory. The recipe assumes a CSV with a stable, unique `review_id` and a free-text `review` column. Note that **row 7 is intentionally malformed** (missing the `review` value); you'll see how it is handled before it ever reaches the API.
 
 ```csv reviews.csv
 review_id,review
@@ -67,21 +121,13 @@ r-009,"Best purchase of the year. Replaced my old setup entirely."
 r-010,"Refund process was smooth, even if the product wasn't for me."
 ```
 
-## Step-by-step flow
+Keep the `review_id` column unique. It is what links a tagged row back to its source, and duplicates are rejected at create time.
 
-The job has five steps. Each one maps to one Batch API call.
+### Step 2: Build the JSONL, one request per row
 
-| # | Action | API call |
-| --- | --- | --- |
-| 1 | Build `input.jsonl` from `reviews.csv`, one line per review | local |
-| 2 | Upload the JSONL | `POST /v1/files` (`purpose=batch`) |
-| 3 | Create the batch | `POST /v1/batches` |
-| 4 | Poll until `completed`, `failed`, or `expired` | `GET /v1/batches/{id}` |
-| 5 | Download output and error files, merge back into a tagged CSV | `GET /v1/files/{id}/content` |
+Each line in the JSONL is an independent chat completion. `custom_id` is the only way to match a result back to a CSV row, because the Batch API does not preserve input order in the output file. Use your `review_id` directly so the join is unambiguous.
 
-### The system prompt
-
-Every line in the JSONL is an independent chat completion. We pin the model to JSON-only output so the parser does not have to be clever:
+We pin the same JSON-only system prompt on every line:
 
 ```text
 You are a review tagger. For each customer review, respond with a single JSON
@@ -95,9 +141,7 @@ topics is a list of 1-3 short lowercase strings (for example: "battery",
 fences, no extra keys.
 ```
 
-### A single JSONL line
-
-`custom_id` is **the only way to match a result back to a CSV row**, because the Batch API does not preserve input order in the output file. Use your `review_id` directly.
+A single JSONL line for `r-001` looks like this:
 
 ```json
 {
@@ -115,7 +159,11 @@ fences, no extra keys.
 }
 ```
 
-### Upload and create
+Row `r-007` has no review text. The builder skips it locally rather than spending a request on a line the API would reject, and records it as a local skip.
+
+### Step 3: Upload the file and create the batch
+
+Upload the JSONL with `purpose=batch`, then create the batch against `/v1/chat/completions`:
 
 <CodeGroup>
 
@@ -140,22 +188,10 @@ curl -X POST https://api.zerogpu.ai/v1/batches \
     "metadata":          { "job": "review-tagging-2026-06-08" }
   }'
 # -> { "id": "batch_01HZX...", "status": "in_progress", ... }
-
-# 3. Poll
-curl -s "https://api.zerogpu.ai/v1/batches/batch_01HZX..." \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
-  | jq '{status, request_counts}'
-
-# 4. Download once completed
-curl -s "https://api.zerogpu.ai/v1/files/$OUTPUT_FILE_ID/content" \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
-  -o output.jsonl
 ```
 
 ```python Python
-import os, json, requests
+import os, requests
 
 BASE    = "https://api.zerogpu.ai"
 HEADERS = {
@@ -189,13 +225,40 @@ batch_id = batch["id"]
 
 </CodeGroup>
 
-<Note>
-**Validation runs at create time.** The Batch API parses every line of your JSONL before `POST /v1/batches` returns. A duplicate `custom_id`, a line over 1 MB, or `"stream": true` will reject the whole batch with a 400 that points at the offending `line`. Fix the JSONL locally and resubmit; nothing is charged for a rejected create.
-</Note>
+Validation runs at create time: the Batch API parses every line before `POST /v1/batches` returns, so a duplicate `custom_id`, a line over 1 MB, or `"stream": true` rejects the whole batch with a 400 that points at the offending line. Fix the JSONL locally and resubmit; nothing is charged for a rejected create.
 
-## Full Python script
+### Step 4: Poll until the batch finishes
 
-End-to-end: read the CSV, build the JSONL, upload, create, poll, download, merge into `tagged.csv`, and write any failed rows to `failed.csv` for inspection.
+Poll `GET /v1/batches/{id}` until the batch reaches a terminal state. A batch ends in one of four: `completed`, `failed`, `expired`, or `cancelled`. Only `completed` guarantees an `output_file_id`, and even a `completed` batch can carry a populated `error_file_id` when some lines failed. Don't poll faster than every 30 seconds; the status only changes on minute-scale transitions.
+
+```python Python
+import time
+
+def poll(batch_id: str, interval: int = 30) -> dict:
+    while True:
+        resp = requests.get(f"{BASE}/v1/batches/{batch_id}", headers=HEADERS)
+        resp.raise_for_status()
+        batch = resp.json()
+        counts = batch.get("request_counts", {})
+        print(
+            f"{batch['status']}: "
+            f"{counts.get('completed', 0)}/{counts.get('total', 0)} done, "
+            f"{counts.get('failed', 0)} failed"
+        )
+        if batch["status"] in ("completed", "failed", "expired", "cancelled"):
+            return batch
+        time.sleep(interval)
+```
+
+```
+in_progress: 6/9 done, 0 failed
+in_progress: 9/9 done, 0 failed
+completed: 9/9 done, 0 failed
+```
+
+### Step 5: Download and merge into a tagged CSV
+
+The full script below reads the CSV, builds the JSONL (skipping the empty row), uploads, creates, polls, downloads the output and error files, and merges everything back into `tagged.csv` by `custom_id`. Failed rows land in `failed.csv` for inspection.
 
 ```python tag_reviews.py
 import csv
@@ -232,7 +295,7 @@ def build_jsonl(csv_path: str, jsonl_path: str) -> int:
         for row in reader:
             review = (row.get("review") or "").strip()
             if not review:
-                # Row 7 in the sample CSV has no review text. Don't waste a
+                # Row r-007 in the sample CSV has no review text. Don't waste a
                 # request on it; record it as a local skip instead.
                 print(f"skip {row.get('review_id')}: empty review text")
                 continue
@@ -412,30 +475,9 @@ A successful output line looks like this:
 }
 ```
 
-A failed line looks like this (`response` is `null`, `error` is populated):
+The script keys results by `custom_id`, then walks the original CSV in order to attach tags. This means the row order of `tagged.csv` is identical to `reviews.csv`, even though the Batch API returned results in arbitrary order, and rows that failed land with empty `sentiment` and `topics` columns instead of being dropped silently.
 
-```json
-{
-  "id": "batch_req_a7",
-  "custom_id": "r-007",
-  "response": null,
-  "error": {
-    "code": "invalid_request_error",
-    "message": "messages[1].content must be a non-empty string",
-    "param": "messages[1].content"
-  }
-}
-```
-
-<Warning>
-**Output order is not preserved.** Lines in `output.jsonl` (and `error.jsonl`) can arrive in any order. Always key by `custom_id`. If two of your rows share the same `custom_id`, the batch is rejected at create time, so pick a column that is already unique (here, `review_id`).
-</Warning>
-
-## Before and after CSV
-
-The script keys results by `custom_id`, then walks the original CSV in order to attach tags. This means the **row order of `tagged.csv` is identical to `reviews.csv`** — even though the Batch API returned results in arbitrary order — and rows that failed land with empty `sentiment` / `topics` columns instead of being dropped silently.
-
-**Before** (`reviews.csv`):
+`reviews.csv` goes in:
 
 ```csv
 review_id,review
@@ -451,7 +493,7 @@ r-009,"Best purchase of the year. Replaced my old setup entirely."
 r-010,"Refund process was smooth, even if the product wasn't for me."
 ```
 
-**After** (`tagged.csv`):
+`tagged.csv` comes out:
 
 ```csv
 review_id,review,sentiment,topics
@@ -467,28 +509,26 @@ r-009,"Best purchase of the year. Replaced my old setup entirely.",positive,gene
 r-010,"Refund process was smooth, even if the product wasn't for me.",neutral,refund|support
 ```
 
-And `failed.csv`, which is only written when at least one batch line failed at the API:
+Row `r-007` carries through with empty tags because it was filtered locally before upload, so it never reached the API.
 
-```csv
-review_id,code,message
+### Step 6: Recover the failed rows
+
+Even a `completed` batch can have a populated `error_file_id` when some lines failed but the batch as a whole ran. A failed line carries a null `response` and a populated `error`. If you skip the local filter and let the API reject the empty row, the error file carries a line like this:
+
+```json
+{
+  "id": "batch_req_a7",
+  "custom_id": "r-007",
+  "response": null,
+  "error": {
+    "code": "invalid_request_error",
+    "message": "messages[1].content must be a non-empty string",
+    "param": "messages[1].content"
+  }
+}
 ```
 
-(Empty here because `r-007` was filtered locally before upload. If you skip the local filter and let the API reject it, you would see it here with `code=invalid_request_error`.)
-
-## Error recovery
-
-A batch ends in one of four terminal states, and only `completed` guarantees an `output_file_id`. Even a `completed` batch can have a populated `error_file_id` when *some* lines failed but the batch as a whole ran.
-
-| Status | What it means | What to do |
-| --- | --- | --- |
-| `completed` | Batch ran to the end. Some lines may still have failed. | Read `output_file_id` for successes, `error_file_id` for per-line failures. |
-| `failed` | The batch itself never made progress (auth, quota, infra). | Inspect the top-level `errors` array, fix, resubmit the same input file. |
-| `expired` | Did not finish inside the 24h `completion_window`. | Same as `failed`, plus consider splitting the input into smaller batches. |
-| `cancelled` | You called `POST /v1/batches/{id}/cancel`. | Resubmit when ready. |
-
-### Resubmit only the failed lines
-
-For the common case (`completed` with a non-empty `error_file_id`), do not re-run the whole job. Build a follow-up JSONL from the original `input.jsonl` keyed by the `custom_id`s that appear in the error file:
+Do not re-run the whole job. Build a follow-up JSONL from the original `input.jsonl`, keyed by the `custom_id`s that appear in the error file, then upload and create a new batch the same way as before:
 
 ```python recover.py
 import json
@@ -502,6 +542,7 @@ HEADERS = {
     "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
 }
 
+
 def errored_ids(error_file_id: str) -> set[str]:
     text = requests.get(
         f"{BASE}/v1/files/{error_file_id}/content", headers=HEADERS
@@ -510,6 +551,7 @@ def errored_ids(error_file_id: str) -> set[str]:
         json.loads(line)["custom_id"]
         for line in text.splitlines() if line.strip()
     }
+
 
 def retry(input_jsonl: str, error_file_id: str) -> str:
     ids = errored_ids(error_file_id)
@@ -523,115 +565,18 @@ def retry(input_jsonl: str, error_file_id: str) -> str:
     return "retry.jsonl"
 ```
 
-For the malformed row in the sample CSV (`r-007`), the right fix is **upstream** — drop or backfill the row before building the JSONL. The local `build_jsonl` in the main script already does that, which is why `r-007` never reaches the API.
+Common per-line error codes: `invalid_request_error` (repair the line locally and retry), `rate_limit_exceeded` (wait, raise quota, then retry the failed `custom_id`s), `model_error` (transient, safe to retry as-is), and `timeout` (shorten the input or lower `max_tokens`, then retry). For a malformed row like `r-007`, the right fix is upstream: drop or backfill it before building the JSONL, which is exactly what `build_jsonl` already does. See the [Errors reference](/docs/batch/errors) for the full table.
 
-### Common per-line errors
+🎉 From one JSONL upload, the Batch API tagged every review row, returned results keyed by `custom_id`, and surfaced failures as a recoverable list, all in a single overnight job that costs a fraction of synchronous calls.
 
-| `error.code` | Likely cause | Fix |
-| --- | --- | --- |
-| `invalid_request_error` | Empty content, bad role, unsupported field. | Repair the offending line locally and retry. |
-| `rate_limit_exceeded` | Project quota tripped mid-batch. | Wait, raise quota, then retry the failed `custom_id`s. |
-| `model_error` | Transient model failure on that line. | Safe to retry as-is. |
-| `timeout` | Single line took too long. | Shorten the input, lower `max_tokens`, then retry. |
+## 🌟 Highlights
 
-See the [Errors reference](/docs/batch/errors) for the full table.
+This notebook has guided you through setting up and running a ZeroGPU Batch API workflow for tagging a CSV of customer reviews with sentiment and topics. You can adapt and expand this example for various other scenarios requiring high-volume, asynchronous classification over tabular data.
 
-## Other Batch API endpoints
+Key tools utilized in this notebook include:
 
-The four endpoints used above (`POST /v1/files`, `POST /v1/batches`, `GET /v1/batches/{id}`, `GET /v1/files/{id}/content`) drive the happy path. A handful of housekeeping endpoints round out the surface — useful for inspection, cleanup, and aborting a stuck job.
+- **ZeroGPU Batch API**: An asynchronous, OpenAI-compatible endpoint that takes thousands of `/v1/chat/completions` requests as a single JSONL file and returns the results within a completion window, at a lower per-request cost than synchronous calls. Here it tags every row of a customer-review CSV in one overnight job.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **LFM2.5-1.2B-Instruct**: A small, fast instruct model that handles short-form classification well, keeping per-row cost low while still producing open-vocabulary topics and a JSON tag. See the [model card](/api-reference/models/lfm2-5-1-2b-instruct) for context window and playground.
 
-| Endpoint | Use it to |
-| --- | --- |
-| `GET /v1/files` | List uploaded files for the project, newest first. Pass `purpose=batch` or `purpose=batch_output` to scope. Page with `after=<last_id>`. |
-| `GET /v1/batches` | List batches for the project, newest first. Cheap way to find an in-flight or recent batch when you've lost the ID. |
-| `DELETE /v1/files/{id}` | Delete an input, output, or error file before its `expires_at`. Useful for cost cleanup or compliance after you've persisted results elsewhere. |
-| `POST /v1/batches/{id}/cancel` | Cancel an in-flight batch. The status moves to `cancelling`, then `cancelled`; any lines already completed remain in `output_file_id`. |
-
-<CodeGroup>
-
-```bash cURL
-# List recent batches
-curl -s "https://api.zerogpu.ai/v1/batches?limit=10" \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID"
-
-# List batch input files
-curl -s "https://api.zerogpu.ai/v1/files?purpose=batch&limit=20" \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID"
-
-# Delete a file you no longer need
-curl -X DELETE "https://api.zerogpu.ai/v1/files/file-abc123..." \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID"
-
-# Cancel an in-flight batch
-curl -X POST "https://api.zerogpu.ai/v1/batches/batch_01HZX.../cancel" \
-  -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID"
-```
-
-```python Python
-import os, requests
-
-BASE    = "https://api.zerogpu.ai"
-HEADERS = {
-    "x-api-key":    os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
-}
-
-# List recent batches
-recent = requests.get(f"{BASE}/v1/batches", headers=HEADERS, params={"limit": 10}).json()
-
-# List batch input files
-files = requests.get(
-    f"{BASE}/v1/files", headers=HEADERS, params={"purpose": "batch", "limit": 20}
-).json()
-
-# Delete a file
-requests.delete(f"{BASE}/v1/files/file-abc123...", headers=HEADERS)
-
-# Cancel an in-flight batch
-requests.post(f"{BASE}/v1/batches/batch_01HZX.../cancel", headers=HEADERS)
-```
-
-</CodeGroup>
-
-<Note>
-Cancelling is not refunding. Lines that already completed count toward your usage. Cancel early if you spot a problem; don't wait for "almost done" to bail.
-</Note>
-
-## Production tips
-
-- **One CSV column for `custom_id`.** Pick a column that is already unique (an order ID, a UUID, a review hash). Duplicates are rejected at create time, and they break your join even if they slipped through.
-- **Pin `temperature: 0`.** For classification you want determinism. It also makes failed-line retries idempotent.
-- **Trust the schema, but verify.** Even with a strict system prompt, models occasionally emit a code fence or a stray sentence. Keep a `parse_tag` step and treat parse failures as their own bucket — do not silently drop them into `sentiment=""`.
-- **Cap batch size by your real SLO, not the 100 MB file limit.** A million-line batch that expires after 24h is worse than ten 100k-line batches that finish in two hours each. Pick a chunk size that comfortably fits the `completion_window`.
-- **Log `request_counts` on every poll.** It is the cheapest progress signal you have, and a stalled `completed` counter is usually the first sign something is wrong upstream of the model.
-- **Keep the input JSONL around** until you have read both `output_file_id` and `error_file_id`. Files expire (`expires_at` on the file object), and recovery needs the original line bodies, not just the IDs.
-- **Don't poll faster than 30s.** It costs you nothing to wait, and the batch status only changes on minute-scale transitions.
-
-## Go deeper
-
-If "topics" in your taxonomy really means **content category** (ads, brand safety, recommendation buckets), drop the chat model and use a purpose-built classifier instead. [`zlm-v1-iab-classify-edge`](/api-reference/models/zlm-v1-iab-classify-edge) returns IAB-standard categories directly, runs cheaper than a 1.2B instruct model, and slots into the same Batch JSONL flow — just swap the `body.model` in each line and drop the system prompt. Same `custom_id` join, same `output_file_id` download path.
-
-<CardGroup cols={2}>
-  <Card title="Batch quickstart" icon="rocket" href="/docs/batch/getting-started">
-    The five-step batch lifecycle in cURL and Python.
-  </Card>
-  <Card title="JSONL format" icon="file-lines" href="/docs/batch/jsonl-format">
-    Exact line schema for input, output, and error files.
-  </Card>
-  <Card title="Errors reference" icon="triangle-exclamation" href="/docs/batch/errors">
-    Per-line error codes and the recovery pattern.
-  </Card>
-  <Card title="LFM2.5-1.2B-Instruct" icon="book" href="/api-reference/models/lfm2-5-1-2b-instruct">
-    Model card, context window, and chat playground.
-  </Card>
-  <Card title="deberta-v3-small" icon="tag" href="/api-reference/models/deberta-v3-small">
-    Cheap sentiment-only classifier. Great drop-in when you don't need open topics.
-  </Card>
-  <Card title="zlm-v1-iab-classify-edge" icon="sitemap" href="/api-reference/models/zlm-v1-iab-classify-edge">
-    IAB content classification at edge cost. Same Batch flow, fixed taxonomy.
-  </Card>
-</CardGroup>
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring high-volume, asynchronous classification over tabular data.
