@@ -280,33 +280,49 @@ SYSTEM_PROMPT = (
 
 
 def build_jsonl(csv_path: str, jsonl_path: str) -> int:
-    """Skip rows with an empty review; return the number of lines written."""
     written = 0
+    seen_ids: set[str] = set()
+
     with open(csv_path, encoding="utf-8") as src, \
          open(jsonl_path, "w", encoding="utf-8") as dst:
+
         reader = csv.DictReader(src)
+
         for row in reader:
+            review_id = (row.get("review_id") or "").strip()
+
+            if not review_id:
+                print("skip: empty review_id")
+                continue
+
+            if review_id in seen_ids:
+                print(f"skip {review_id}: duplicate review_id")
+                continue
+
+            seen_ids.add(review_id)
+
             review = (row.get("review") or "").strip()
             if not review:
-                # Row r-007 in the sample CSV has no review text. Don't waste a
-                # request on it; record it as a local skip instead.
-                print(f"skip {row.get('review_id')}: empty review text")
+                print(f"skip {review_id}: empty review text")
                 continue
+
             line = {
-                "custom_id": row["review_id"],
-                "method":    "POST",
-                "url":       "/v1/chat/completions",
+                "custom_id": review_id,
+                "method": "POST",
+                "url": "/v1/chat/completions",
                 "body": {
-                    "model":       MODEL,
+                    "model": MODEL,
                     "temperature": 0,
                     "messages": [
                         {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user",   "content": review},
+                        {"role": "user", "content": review},
                     ],
                 },
             }
+
             dst.write(json.dumps(line) + "\n")
             written += 1
+
     return written
 
 
@@ -535,9 +551,14 @@ HEADERS = {
 
 
 def errored_ids(error_file_id: str) -> set[str]:
-    text = requests.get(
-        f"{BASE}/v1/files/{error_file_id}/content", headers=HEADERS
-    ).text
+    resp = requests.get(
+        f"{BASE}/v1/files/{error_file_id}/content",
+        headers=HEADERS
+    )
+    resp.raise_for_status()
+
+    text = resp.text
+
     return {
         json.loads(line)["custom_id"]
         for line in text.splitlines() if line.strip()
