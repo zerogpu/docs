@@ -170,7 +170,8 @@
           {
             "group": "Tutorials",
             "pages": [
-              "cookbook/data-extraction-tutorial"
+              "cookbook/data-extraction-tutorial",
+              "cookbook/batch-review-tagging"
             ]
           },
           {
