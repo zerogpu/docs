@@ -83,7 +83,7 @@
             "description": "Forbidden (invalid project ID or permissions)"
           },
           "420": {
-            "description": "Input exceeds model token limit (context_length_exceeded)",
+            "description": "Insufficient quota (insufficient_quota)",
             "content": {
               "application/json": {
                 "schema": {
@@ -91,8 +91,8 @@
                 },
                 "example": {
                   "error": {
-                    "code": "context_length_exceeded",
-                    "message": "Input exceeds the model's maximum token limit."
+                    "code": "insufficient_quota",
+                    "message": "You have insufficient quota to complete this request."
                   }
                 }
               }
@@ -180,7 +180,7 @@
             "description": "Forbidden (invalid project ID or permissions)"
           },
           "420": {
-            "description": "Input exceeds model token limit (context_length_exceeded)",
+            "description": "Insufficient quota (insufficient_quota)",
             "content": {
               "application/json": {
                 "schema": {
@@ -188,8 +188,8 @@
                 },
                 "example": {
                   "error": {
-                    "code": "context_length_exceeded",
-                    "message": "Input exceeds the model's maximum token limit."
+                    "code": "insufficient_quota",
+                    "message": "You have insufficient quota to complete this request."
                   }
                 }
               }
@@ -235,6 +235,7 @@
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
+              "zlm-v1-followup-questions-edge",
               "zlm-v1-iab-classify-edge",
               "zlm-v1-iab-classify-edge-enriched"
             ],
@@ -291,6 +292,7 @@
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
+              "zlm-v1-followup-questions-edge",
               "zlm-v1-iab-classify-edge",
               "zlm-v1-iab-classify-edge-enriched"
             ],
@@ -513,13 +515,13 @@
             "properties": {
               "code": {
                 "type": "string",
-                "description": "Machine-readable error code, for example `context_length_exceeded`.",
-                "example": "context_length_exceeded"
+                "description": "Machine-readable error code, for example `insufficient_quota`.",
+                "example": "insufficient_quota"
               },
               "message": {
                 "type": "string",
                 "description": "Human-readable description of the error.",
-                "example": "Input exceeds the model's maximum token limit."
+                "example": "You have insufficient quota to complete this request."
               }
             }
           }

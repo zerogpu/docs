@@ -179,72 +179,63 @@ export const ModelCards = () => {
 };
 
 {/*
-  Curated cross-task grouping: the IAB classify models are surfaced as their
-  own "Ad Tech" card in addition to their native Text Classification group.
+  Reads the "model library by task" grouping prebuilt on app load by
+  /zgpu-models-init.js (window.__zgpuModels.byTask): an ordered array of
+  { task, models }. Same window/promise/event timing as useModels.
 */}
-export const AD_TECH_MODELS = [
-  "zlm-v1-iab-classify-edge",
-  "zlm-v1-iab-classify-edge-enriched",
-];
-
-{/*
-  Card order follows the Models group in docs.json (Text Classification,
-  Text Generation, PII, Summarization). The curated Ad Tech card has no
-  docs.json page slot, so it leads as the featured grouping. Any task not
-  listed here falls to the end in priority order.
-*/}
-export const TASK_ORDER = [
-  "Ad Tech",
-  "Text Classification",
-  "Text Generation",
-  "PII",
-  "Summarization",
-];
+export const useByTask = () => {
+  const [groups, setGroups] = useState(() => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return store.byTask || [];
+  });
+  useEffect(() => {
+    let active = true;
+    const apply = () => {
+      const store = window.__zgpuModels || {};
+      if (active && store.byTask) setGroups(store.byTask);
+    };
+    const store = window.__zgpuModels;
+    if (store && store.byTask) {
+      apply();
+    } else if (store && store.promise) {
+      store.promise.then(apply);
+    } else {
+      window.addEventListener("zgpu:models-loaded", apply);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", apply);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  return groups;
+};
 
 export const ModelLibrary = () => {
-  const models = useModels();
-  const order = [];
-  const byTask = {};
-  models.forEach((m) => {
-    if (!byTask[m.taskDisplayName]) {
-      byTask[m.taskDisplayName] = [];
-      order.push(m.taskDisplayName);
-    }
-    byTask[m.taskDisplayName].push(m);
-  });
-  const adTech = AD_TECH_MODELS
-    .map((id) => models.find((m) => m.modelId === id))
-    .filter(Boolean);
-  if (adTech.length) {
-    byTask["Ad Tech"] = adTech;
-    order.push("Ad Tech");
-  }
-  order.sort((a, b) => {
-    const ia = TASK_ORDER.indexOf(a);
-    const ib = TASK_ORDER.indexOf(b);
-    return (ia === -1 ? TASK_ORDER.length : ia) - (ib === -1 ? TASK_ORDER.length : ib);
-  });
+  const groups = useByTask();
   return (
     <div className="not-prose grid grid-cols-1 gap-4 md:grid-cols-2">
-      {order.map((t) => (
+      {groups.map(({ task, models }) => (
         <a
-          key={t}
-          href={"/docs/" + taskSlug(t)}
+          key={task}
+          href={"/docs/" + taskSlug(task)}
           className="flex flex-col rounded-2xl border border-zinc-950/10 bg-white/40 p-5 no-underline transition-all hover:-translate-y-0.5 hover:border-zinc-950/30 hover:shadow-sm dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-white/30"
         >
           <div className="flex items-center justify-between gap-2">
-            <div className="font-semibold text-zinc-950 dark:text-white">{t}</div>
+            <div className="font-semibold text-zinc-950 dark:text-white">{task}</div>
             <span className="shrink-0 rounded-full bg-zinc-950/[0.06] px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
-              {byTask[t].length} {byTask[t].length === 1 ? "model" : "models"}
+              {models.length} {models.length === 1 ? "model" : "models"}
             </span>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {byTask[t].map((m) => (
+            {models.map((m) => (
               <ModelLogo key={m.modelId} src={pricingOf(m).favicon_url} alt={m.modelId} size={28} />
             ))}
           </div>
           <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-            {byTask[t].map((m) => m.modelId).join(", ")}
+            {models.map((m) => m.modelId).join(", ")}
           </p>
         </a>
       ))}

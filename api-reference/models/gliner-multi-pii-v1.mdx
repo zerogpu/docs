@@ -5,6 +5,65 @@ description: "Model details for gliner-multi-pii-v1."
 openapi: "api-reference/openapi/playgrounds/gliner-multi-pii-v1.openapi.json POST /responses"
 ---
 
-> GLiNER Multi PII v1 is a multilingual PII detection and redaction model based on the GLiNER architecture. It identifies 40+ personally identifiable information entity types, identity, contact, government IDs, financial, medical, organization, demographic, travel, network, and vehicle, across six European languages (English, French, German, Spanish, Italian, Portuguese). Built for zero-shot label prompting, it accepts custom label sets at inference time and supports curated PII catalogues, redaction with label or character masks, and generic NER with user-supplied labels. Runs efficiently on CPU for privacy-preserving PII workflows.
+{/*
+  Description and reference links pulled live from the API and cached on
+  window.__zgpuModels by /zgpu-models-init.js. Renders nothing until loaded.
+*/}
 
-**References:** [Model docs](https://github.com/fastino-ai/GLiNER2/blob/main/README.md) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
+export const ModelDescription = ({ id }) => {
+  const read = () => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return (store.data || []).find((x) => x.modelId === id) || null;
+  };
+  const [model, setModel] = useState(read);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active) setModel(read());
+    };
+    const store = window.__zgpuModels;
+    if (store && store.data) {
+      refresh();
+    } else if (store && store.promise) {
+      store.promise.then(refresh);
+    } else {
+      window.addEventListener("zgpu:models-loaded", refresh);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", refresh);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  const p = (model && model.pricing) || {};
+  const href = (u) => (u || "").replace(/\s+/g, "");
+  const refs = [
+    [p.model_doc_url, "Model docs"],
+    [p.terms_url, "Terms"],
+    [p.privacy_service, "Privacy"],
+  ].filter((r) => r[0]);
+  if (!p.description && !refs.length) return null;
+  const refNodes = [];
+  refs.forEach((r, i) => {
+    if (i) refNodes.push(<span key={"sep" + i}> • </span>);
+    refNodes.push(
+      <a key={r[1]} href={href(r[0])}>
+        {r[1]}
+      </a>
+    );
+  });
+  return (
+    <>
+      {p.description ? <blockquote>{p.description}</blockquote> : null}
+      {refNodes.length ? (
+        <p>
+          <strong>References:</strong> {refNodes}
+        </p>
+      ) : null}
+    </>
+  );
+};
+
+<ModelDescription id="gliner-multi-pii-v1" />

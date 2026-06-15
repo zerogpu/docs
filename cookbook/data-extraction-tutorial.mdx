@@ -1,21 +1,27 @@
 ---
-title: "Tutorial: Resume & profile extraction"
+title: "🎓 Resume & profile extraction"
 description: "Step-by-step guide with example dataset. Text-only extraction, no OCR."
 ---
 
 This tutorial walks through **three production-style use cases** for structured data extraction with the [gliner2-base-v1](/api-reference/models/gliner2-base-v1) model. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
 
 <Note>
-All sample people and companies in the [example dataset](https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset) are **synthetic and fictional**.
+	All sample people and companies in the [example
+	dataset](https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset)
+	are **synthetic and fictional**.
 </Note>
+
+## 🎥 Watch the Video Guide
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/QBZDKzjuA60?si=Mwkylkx8ioK97jUl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## What you will build
 
-| Step | Input | Output |
-| --- | --- | --- |
-| 1 | Plain-text resume | `candidate` JSON (name, title, skills, …) |
-| 2 | Scraped profile text | `profile` JSON (headline, role, location, …) |
-| 3 | Job description | Labeled skill/tool spans (`ner`) |
+| Step | Input                | Output                                       |
+| ---- | -------------------- | -------------------------------------------- |
+| 1    | Plain-text resume    | `candidate` JSON (name, title, skills, …)    |
+| 2    | Scraped profile text | `profile` JSON (headline, role, location, …) |
+| 3    | Job description      | Labeled skill/tool spans (`ner`)             |
 
 **Model (steps 1-3):** `gliner2-base-v1`  
 **Endpoint:** `POST https://api.zerogpu.ai/v1/responses`
@@ -128,7 +134,8 @@ Scrapers often return a single blob: headline, About, Experience. Use a **`profi
 Paste text from `profiles.jsonl` (`profile-001`) as `input`. Parse the response the same way as Step 1.
 
 <Info>
-This tutorial assumes you already have **compliant text** from your pipeline. ZeroGPU does not scrape LinkedIn for you.
+	This tutorial assumes you already have **compliant text** from your pipeline.
+	ZeroGPU does not scrape LinkedIn for you.
 </Info>
 
 ## Step 3: Tag skills in a job post (NER)
@@ -203,16 +210,32 @@ Before storing user-submitted resumes, run PII extraction with the [gliner-multi
 ## Go deeper
 
 <CardGroup cols={2}>
-  <Card title="gliner2-base-v1 model" icon="book" href="/api-reference/models/gliner2-base-v1">
-    API reference and schema examples for json and NER extraction.
-  </Card>
-  <Card title="Example dataset (GitHub)" icon="github" href="https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset">
-    Synthetic resumes, profiles, and job posts (JSONL).
-  </Card>
-  <Card title="Companion article" icon="newspaper" href="https://github.com/zerogpu/cookbook/blob/main/demos/data-extraction/blog-post.md">
-    Long-form walkthrough in the cookbook repo.
-  </Card>
-  <Card title="gliner2-base-v1 playground" icon="play" href="/api-reference/models/gliner2-base-v1">
-    Try schemas interactively in the model catalog.
-  </Card>
+	<Card
+		title="gliner2-base-v1 model"
+		icon="book"
+		href="/api-reference/models/gliner2-base-v1"
+	>
+		API reference and schema examples for json and NER extraction.
+	</Card>
+	<Card
+		title="Example dataset (GitHub)"
+		icon="github"
+		href="https://github.com/zerogpu/cookbook/tree/main/demos/data-extraction/dataset"
+	>
+		Synthetic resumes, profiles, and job posts (JSONL).
+	</Card>
+	<Card
+		title="Companion article"
+		icon="newspaper"
+		href="https://github.com/zerogpu/cookbook/blob/main/demos/data-extraction/blog-post.md"
+	>
+		Long-form walkthrough in the cookbook repo.
+	</Card>
+	<Card
+		title="gliner2-base-v1 playground"
+		icon="play"
+		href="/api-reference/models/gliner2-base-v1"
+	>
+		Try schemas interactively in the model catalog.
+	</Card>
 </CardGroup>

@@ -156,7 +156,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded",
+            "description": "Insufficient quota",
             "content": {
               "application/json": {
                 "schema": {
@@ -314,7 +314,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded"
+            "description": "Insufficient quota"
           },
           "500": {
             "description": "Internal server error"
@@ -357,10 +357,6 @@
             "format": "textarea",
             "maxLength": 131072,
             "description": "Multi-line text or document content to send to the model."
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },
@@ -384,10 +380,6 @@
             "items": {
               "$ref": "#/components/schemas/ChatMessage"
             }
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },

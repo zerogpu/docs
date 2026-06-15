@@ -93,7 +93,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded",
+            "description": "Insufficient quota",
             "content": {
               "application/json": {
                 "schema": {
@@ -191,7 +191,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded"
+            "description": "Insufficient quota"
           },
           "500": {
             "description": "Internal server error"
@@ -236,11 +236,9 @@
             "description": "Multi-line text or document content to send to the model."
           },
           "instructions": {
-            "type": "string"
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
+            "type": "string",
+            "example": "[sports, finance, politics]",
+            "description": "Candidate categories for zero-shot classification, passed as a comma-separated array (e.g. `[sports, finance, politics]`). A maximum of 10 categories is supported; response time increases with the number of categories provided."
           }
         }
       },
@@ -264,10 +262,6 @@
             "items": {
               "$ref": "#/components/schemas/ChatMessage"
             }
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },

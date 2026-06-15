@@ -1,0 +1,279 @@
+---
+title: "🦜 Screen Resumes with LangChain and ZeroGPU"
+---
+
+You can also run this cookbook in Colab [here](https://colab.research.google.com/drive/10OYr9s4kfp63twlN_FjXfuhtZpwjba6A?usp=sharing).
+
+Recruiting teams drown in resumes. Every resume is a blob of unstructured text wrapped around a pile of personal data: names, emails, phone numbers, home addresses. You want the signal (skills, titles, companies) without holding the PII any longer than you must, and GDPR and CCPA make "any longer than you must" a legal line, not a preference. This notebook builds a small resume-screening pipeline that pulls the structured signal out of a PDF resume, strips the PII before anything is stored or shared, and routes the candidate to the right team, using three ZeroGPU tools through LangChain.
+
+For the full reference, see the [`langchain-zerogpu` repository on GitHub](https://github.com/zerogpu/langchain-zerogpu) and the [package on PyPI](https://pypi.org/project/langchain-zerogpu/).
+
+In this notebook, you'll explore:
+
+- **LangChain**: The framework for building applications with LLMs and agents. Its `langchain-zerogpu` package exposes ZeroGPU's small and nano models as first-class tools, so you can drop entity extraction, PII redaction, and zero-shot classification straight into a pipeline without writing any HTTP code.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+This setup not only demonstrates a practical application of privacy-aware resume screening, but also provides a flexible framework that can be adapted to other real-world scenarios requiring structured extraction and compliant handling of sensitive documents.
+
+## 🎥 Watch the Video Guide
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/QBZDKzjuA60?si=Mwkylkx8ioK97jUl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## 📦 Installation
+
+First, install the `langchain-zerogpu` package, which ships the ZeroGPU tools. You'll also install `pypdf` to pull the text out of an uploaded PDF resume (this pipeline is text-only, no OCR):
+
+```bash
+!pip install -U langchain-zerogpu pypdf
+```
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your ZeroGPU credentials so the tools can reach the inference API securely. This ensures every tool call is authenticated without re-prompting.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+
+```python Python
+import os
+from getpass import getpass
+
+# Prompt for the ZeroGPU API key and Project ID securely
+zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
+os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
+
+zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
+os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
+```
+
+Each tool reads `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID` from the environment when you construct it with no arguments. The key is held as a `SecretStr` and is never logged.
+
+<Note>
+The example outputs throughout this notebook are illustrative placeholders that show the shape of each result. Rerun the cells with your own credentials and resume to capture live values.
+</Note>
+
+## 📄 Upload a Resume
+
+Upload a single PDF resume straight from your machine, then read its text with `pypdf`. Everything downstream runs on `resume_text`.
+
+```python Python
+from google.colab import files
+from pypdf import PdfReader
+
+# Pick one PDF resume from the file dialog
+uploaded = files.upload()
+pdf_path = next(iter(uploaded))
+
+reader = PdfReader(pdf_path)
+resume_text = "\n".join(page.extract_text() or "" for page in reader.pages)
+
+print(f"Loaded {pdf_path} ({len(resume_text)} characters)")
+print(resume_text[:500])
+```
+
+```
+Loaded resume.pdf (1452 characters)
+Daniel R. Okafor
+Senior Software Engineer
+Email: daniel.okafor@gmail.com  |  Phone: (415) 555-0192
+Address: 2487 Folsom Street, Apt 5B, San Francisco, CA 94110
+LinkedIn: linkedin.com/in/danielokafor
+Professional Summary
+Senior software engineer with 8+ years writing and shipping production software. Builds product features, web
+services, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code
+review.
+Experience
+Senior Software Engineer - Stripe
+San Francis
+```
+
+## 🏷️ Extract Candidate Entities with ZeroGPU
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will extract skills, job titles, companies, and locations from the resume as a structured candidate card.
+
+`ZeroGPUExtractEntitiesTool` runs custom-label named-entity recognition on `gliner2-base-v1`. You pass the entity types you care about as `labels`, and it returns the matched spans grouped by label.
+
+```python Python
+from langchain_zerogpu import ZeroGPUExtractEntitiesTool
+
+extract_entities = ZeroGPUExtractEntitiesTool()
+entities = extract_entities.invoke({
+    "text": resume_text,
+    "labels": ["skill", "job title", "company", "location"],
+})
+print(entities)
+```
+
+```
+{'entities': {'skill': ['Python', 'Go', 'Java', 'Redis', 'SQL', 'TypeScript', 'PostgreSQL', 'React', 'Kubernetes', 'Docker', 'Git', 'AWS', 'REST', 'gRPC'], 'job title': ['Senior Software Engineer', 'Software Engineer'], 'company': ['Airbnb', 'Twilio', 'Stripe'], 'location': ['San Francisco', 'Illinois', 'California', 'Texas', 'Austin', 'Urbana']}}
+```
+
+The result nests every match under its label, so you can assemble a clean candidate card in a couple of lines:
+
+```python Python
+card = entities["entities"]
+print("Candidate card")
+print("- Skills:    ", ", ".join(card.get("skill", [])))
+print("- Titles:    ", ", ".join(card.get("job title", [])))
+print("- Companies: ", ", ".join(card.get("company", [])))
+print("- Locations: ", ", ".join(card.get("location", [])))
+```
+
+```
+Candidate card
+- Skills:     Python, Go, Java, Redis, SQL, TypeScript, PostgreSQL, React, Kubernetes, Docker, Git, AWS, REST, gRPC
+- Titles:     Senior Software Engineer, Software Engineer
+- Companies:  Airbnb, Twilio, Stripe
+- Locations:  San Francisco, Illinois, California, Texas, Austin, Urbana
+```
+
+🎉 **ZeroGPU effortlessly turns a wall of resume text into a structured candidate card in one call, providing the cheap, repeatable extraction layer your screening pipeline runs on!**
+
+## 🔐 Redact PII Before Sharing
+
+Before the resume goes into a dashboard, an applicant-tracking system, or a shared review channel, the personal data has to come out. `ZeroGPURedactPIITool` masks PII inline on `gliner-multi-pii-v1`, replacing each match with an uppercase `[LABEL]` placeholder and returning the redacted text.
+
+```python Python
+from langchain_zerogpu import ZeroGPURedactPIITool
+
+redact_pii = ZeroGPURedactPIITool()
+anonymized_resume = redact_pii.invoke({"text": resume_text})
+print(anonymized_resume[:500])
+```
+
+```
+{"redacted_text":"[PERSON]\nSenior Software Engineer\nEmail: [EMAIL]  |  Phone: [PHONE_NUMBER]\nAddress: [ADDRESS]\nLinkedIn: [SOCIAL_MEDIA_HANDLE]\nProfessional Summary\nSenior software engineer with 8+ years writing and shipping production software. Builds product features, web\nservices, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code\nreview.\nExperience\nSenior Software Engineer - [ORGANIZATION]\nSan Francisco, California  -  Mar 2021 to Prese
+```
+
+The tool returns a JSON envelope, not a bare string: `redacted_text` holds the masked copy, and an `entities` list records every span that was detected and replaced. Parse it with `json.loads(anonymized_resume)["redacted_text"]` when you just want the masked text.
+
+Names, emails, phone numbers, addresses, and even company names come back masked, while skills and the rest of the prose pass through, so the redacted copy is still useful for review with the identifying details gone. This is the version that is safe to store or share.
+
+🎉 **ZeroGPU strips the personal data out of the resume in a single call, giving you a compliant, shareable copy without touching the rest of the content!**
+
+## 🧭 Route the Candidate with Zero-Shot Classification
+
+With the signal extracted and the PII gone, the last step is routing: which team should review this candidate? `ZeroGPUClassifyZeroShotTool` scores the resume against a flat list of labels on `deberta-v3-small` and returns a score per label, so you can pick the best match.
+
+```python Python
+from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
+
+classify = ZeroGPUClassifyZeroShotTool()
+routing = classify.invoke({
+    "text": resume_text,
+    "labels": ["engineering", "design", "sales", "marketing"],
+})
+print(routing)
+
+team = max(routing, key=routing.get)
+print(f"Route to: {team}")
+```
+
+```
+{'engineering': 0.483139, 'design': 0.27458, 'sales': 0.143601, 'marketing': 0.098679}
+Route to: engineering
+```
+
+The tool returns every label with a score, so `max(routing, key=routing.get)` gives you the top team. Swap the `labels` list for your own org chart to route against any set of teams.
+
+🎉 **ZeroGPU classifies the resume against your own team labels in one call, turning unstructured text into a routing decision!**
+
+## 🤖 Run the Full Screening Pipeline
+
+Now chain the three tools into one function that takes a resume and returns a structured candidate card, an anonymized copy, and a routing label. This is the end-to-end pipeline you'd wire into a real screening flow.
+
+```python Python
+import json
+
+from langchain_zerogpu import (
+    ZeroGPUClassifyZeroShotTool,
+    ZeroGPUExtractEntitiesTool,
+    ZeroGPURedactPIITool,
+)
+
+extract_entities = ZeroGPUExtractEntitiesTool()
+redact_pii = ZeroGPURedactPIITool()
+classify = ZeroGPUClassifyZeroShotTool()
+
+
+def screen_resume(text: str) -> dict:
+    entities = extract_entities.invoke({
+        "text": text,
+        "labels": ["skill", "job title", "company", "location"],
+    })
+    anonymized = redact_pii.invoke({"text": text})
+    routing = classify.invoke({
+        "text": text,
+        "labels": ["engineering", "design", "sales", "marketing"],
+    })
+    return {
+        "candidate_card": entities["entities"],
+        "anonymized_resume": anonymized,
+        "routing_label": max(routing, key=routing.get),
+        "routing_scores": routing,
+    }
+
+
+result = screen_resume(resume_text)
+print(json.dumps(result, indent=2))
+```
+
+```
+{
+  "candidate_card": {
+    "skill": [
+      "Python",
+      "Go",
+      "Java",
+      "Redis",
+      "SQL",
+      "TypeScript",
+      "PostgreSQL",
+      "React",
+      "Kubernetes",
+      "Docker",
+      "Git",
+      "AWS",
+      "REST",
+      "gRPC"
+    ],
+    "job title": [
+      "Senior Software Engineer",
+      "Software Engineer"
+    ],
+    "company": [
+      "Airbnb",
+      "Twilio",
+      "Stripe"
+    ],
+    "location": [
+      "San Francisco",
+      "Illinois",
+      "California",
+      "Texas",
+      "Austin",
+      "Urbana"
+    ]
+  },
+  "anonymized_resume": "{\"redacted_text\":\"[PERSON]\\nSenior Software Engineer\\nEmail: [EMAIL]  |  Phone: [PHONE_NUMBER]\\nAddress: [ADDRESS]\\nLinkedIn: [SOCIAL_MEDIA_HANDLE]\\nProfessional Summary\\nSenior software engineer with 8+ years writing and shipping production software. Builds product features, web\\nservices, and developer-facing APIs in Python, Go, and Java. Strong in software design, testing, and code\\nreview.\\nExperience\\nSenior Software Engineer - [ORGANIZATION]\\nSan Francisco, California  -  Mar 2021 to Present\\n- Developed a payments reconciliation service in Go that processes [TRANSACTION_NUMBER] per day.\\n- Designed and built new REST and gRPC APIs adopted by six product engineering teams.\\n- Wrote the automated test suite and led code reviews for the billing service.\\nSoftware Engineer - [ORGANIZATION]  -  Jun 2018 to Feb 2021\\n- Built the pricing API in Python serving over 2 billion requests per month.\\n- Implemented a data pipeline in Java and Spark that powered search ranking features.\\nSoftware Engineer - [ORGANIZATION]  -  Jul 2016 to May 2018\\n- Developed REST and gRPC services in Python and Java for the messaging product.\\n- Added integration tests and improved code quality across the team.\\nTechnical Skills\\nPython, Go, Java, TypeScript, SQL, React, PostgreSQL, Redis, Docker, Kubernetes, AWS, Git\\nEducation\\nB.S. Computer Science - University of Illinois\\nUrbana, Illinois  -  2012 to 2016\\n\",\"entities\":[{\"text\":\"Daniel R. Okafor\",\"label\":\"person\",\"start\":0,\"end\":16,\"score\":0.9927},{\"text\":\"daniel.okafor@gmail.com\",\"label\":\"email\",\"start\":49,\"end\":72,\"score\":0.9913},{\"text\":\"(415) 555-0192\",\"label\":\"phone number\",\"start\":84,\"end\":98,\"score\":0.9946},{\"text\":\"2487 Folsom Street, Apt 5B, San Francisco, CA 94110\",\"label\":\"address\",\"start\":108,\"end\":159,\"score\":0.9351},{\"text\":\"linkedin.com/in/danielokafor\",\"label\":\"social media handle\",\"start\":170,\"end\":198,\"score\":0.6243},{\"text\":\"Stripe\",\"label\":\"organization\",\"start\":482,\"end\":488,\"score\":0.9139},{\"text\":\"12M transactions\",\"label\":\"transaction number\",\"start\":606,\"end\":622,\"score\":0.6892},{\"text\":\"Airbnb\\nSan Francisco, California\",\"label\":\"organization\",\"start\":817,\"end\":849,\"score\":0.8436},{\"text\":\"Twilio\\nAustin, Texas\",\"label\":\"organization\",\"start\":1058,\"end\":1078,\"score\":0.7601}],\"entities_by_label\":{\"person\":[\"Daniel R. Okafor\"],\"email\":[\"daniel.okafor@gmail.com\"],\"phone number\":[\"(415) 555-0192\"],\"address\":[\"2487 Folsom Street, Apt 5B, San Francisco, CA 94110\"],\"social media handle\":[\"linkedin.com/in/danielokafor\"],\"organization\":[\"Stripe\",\"Airbnb\\nSan Francisco, California\",\"Twilio\\nAustin, Texas\"],\"transaction number\":[\"12M transactions\"]}}",
+  "routing_label": "engineering",
+  "routing_scores": {
+    "engineering": 0.483139,
+    "design": 0.27458,
+    "sales": 0.143601,
+    "marketing": 0.098679
+  }
+}
+```
+
+🎉 From a single PDF, the pipeline produced a structured candidate card, a PII-free copy safe to store or share, and a routing label, with each task running on a purpose-built ZeroGPU model instead of a frontier LLM.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running a LangChain workflow with ZeroGPU for privacy-aware resume screening. You can adapt and expand this example for various other scenarios requiring structured extraction and compliant handling of sensitive documents.
+
+Key tools utilized in this notebook include:
+
+- **LangChain**: The framework for building applications with LLMs and agents. Its `langchain-zerogpu` package exposes ZeroGPU's small and nano models as first-class tools, so you can drop entity extraction, PII redaction, and zero-shot classification straight into a pipeline without writing any HTTP code.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring structured extraction and compliant handling of sensitive documents. For more, see the [`langchain-zerogpu` repository](https://github.com/zerogpu/langchain-zerogpu), the [PyPI page](https://pypi.org/project/langchain-zerogpu/), and the [ZeroGPU documentation](https://docs.zerogpu.ai).

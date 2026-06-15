@@ -189,7 +189,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded",
+            "description": "Insufficient quota",
             "content": {
               "application/json": {
                 "schema": {
@@ -385,7 +385,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded"
+            "description": "Insufficient quota"
           },
           "500": {
             "description": "Internal server error"
@@ -429,12 +429,46 @@
             "maxLength": 131072,
             "description": "Multi-line text or document content to send to the model."
           },
-          "instructions": {
-            "type": "string"
-          },
           "metadata": {
             "type": "object",
-            "additionalProperties": true
+            "description": "Use-case options for the model. Two use cases are supported:\n- `extract-pii` — return detected PII entities without altering the source text.\n- `redact` — mask detected PII in-line in the returned `redacted_text` (e.g. `[PERSON]`, `[EMAIL]`).",
+            "additionalProperties": true,
+            "properties": {
+              "usecase": {
+                "type": "string",
+                "enum": [
+                  "extract-pii",
+                  "redact"
+                ],
+                "default": "extract-pii",
+                "description": "Which operation to run. `extract-pii` returns only the detected entities; `redact` also returns a masked `redacted_text`."
+              },
+              "mask": {
+                "type": "string",
+                "enum": [
+                  "label"
+                ],
+                "description": "Redaction style, used when `usecase` is `redact`. `label` replaces each entity with a typed placeholder such as `[PERSON]` or `[EMAIL]`."
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5,
+                "description": "Minimum confidence score (0–1) an entity must reach to be returned. Lower values surface more, lower-confidence matches."
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "identity",
+                  "contact"
+                ],
+                "description": "Restrict detection to specific PII category groups (e.g. `identity`, `contact`). Omit to detect all supported categories."
+              }
+            }
           }
         }
       },
@@ -461,7 +495,44 @@
           },
           "metadata": {
             "type": "object",
-            "additionalProperties": true
+            "description": "Use-case options for the model. Two use cases are supported:\n- `extract-pii` — return detected PII entities without altering the source text.\n- `redact` — mask detected PII in-line in the returned `redacted_text` (e.g. `[PERSON]`, `[EMAIL]`).",
+            "additionalProperties": true,
+            "properties": {
+              "usecase": {
+                "type": "string",
+                "enum": [
+                  "extract-pii",
+                  "redact"
+                ],
+                "default": "extract-pii",
+                "description": "Which operation to run. `extract-pii` returns only the detected entities; `redact` also returns a masked `redacted_text`."
+              },
+              "mask": {
+                "type": "string",
+                "enum": [
+                  "label"
+                ],
+                "description": "Redaction style, used when `usecase` is `redact`. `label` replaces each entity with a typed placeholder such as `[PERSON]` or `[EMAIL]`."
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5,
+                "description": "Minimum confidence score (0–1) an entity must reach to be returned. Lower values surface more, lower-confidence matches."
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "identity",
+                  "contact"
+                ],
+                "description": "Restrict detection to specific PII category groups (e.g. `identity`, `contact`). Omit to detect all supported categories."
+              }
+            }
           }
         }
       },

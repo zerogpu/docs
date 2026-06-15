@@ -43,6 +43,15 @@ boilerplate below. No heading.>
    scope, the audience, and what the reader will be able to do by the end.
    Not a bulleted TOC; write it as a paragraph.
 
+## Cookbook
+   Point readers to a runnable, real-world example for this integration.
+   If a cookbook page or notebook exists (a `cookbook/<slug>.mdx` page or a
+   Colab/Jupyter notebook), link it here and describe in one or two
+   sentences what the example does, then invite the reader to check it out.
+   If none exists yet, keep the heading and write a single line:
+   "Cookbook coming soon." Optionally add a <Note> pointing at the
+   [cookbook index](/cookbook/index) for more worked examples.
+
 ## Video walkthrough
    Embed if one exists; otherwise a single line: "Video walkthrough coming soon."
    Keep the heading either way so structure stays consistent across pages.

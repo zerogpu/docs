@@ -3,215 +3,235 @@ title: "Text Classification"
 description: "Edge models that map text to labels, IAB taxonomy, and audience signals."
 ---
 
+{/*
+  Fully data-driven renderer for this task page. <ModelDocs models="id1,id2" />
+  renders, for the given model ids:
+    - a pricing table (Params / Max tokens / Input + Output /1M)
+    - one section per model: heading, description, reference links, and one
+      Request/Response example per entry in the model's `examples` list.
+
+  Everything comes from the live catalog cached on window.__zgpuModels by
+  /zgpu-models-init.js: specs + pricing + description + reference URLs from the
+  API, and the request/response example bodies from the hardcoded MODEL_EXTRAS
+  map in that script (the API has no response samples). Renders the table shell
+  with empty cells until the data resolves; sections appear once it loads.
+*/}
+
+export const slug = (id) => (id || "").toLowerCase().replace(/\./g, "-");
+export const href = (u) => (u || "").replace(/\s+/g, "");
+export const fmtNum = (n) =>
+  typeof n === "number" ? n.toLocaleString("en-US") : n != null ? n : "-";
+export const fmtPrice = (n) => (typeof n === "number" ? "$" + n.toFixed(2) : "-");
+
+export const curl = (path, body) =>
+  "curl https://api.zerogpu.ai/v1/" +
+  path +
+  ' \\\n  -H "content-type: application/json" \\\n  -H "x-api-key: YOUR_API_KEY" \\\n  -H "x-project-id: YOUR_PROJECT_ID" \\\n  -d \'' +
+  JSON.stringify(body, null, 2) +
+  "'";
+
+export const useStore = () => {
+  const read = () => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return store.data || [];
+  };
+  const [list, setList] = useState(read);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active) setList(read());
+    };
+    const store = window.__zgpuModels;
+    if (store && store.data) {
+      refresh();
+    } else if (store && store.promise) {
+      store.promise.then(refresh);
+    } else {
+      window.addEventListener("zgpu:models-loaded", refresh);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", refresh);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  return list;
+};
+
+export const InlineMD = ({ text }) => {
+  const parts = (text || "").split("`");
+  return parts.map((s, i) =>
+    i % 2 ? <code key={i}>{s}</code> : <span key={i}>{s}</span>
+  );
+};
+
+export const codePre =
+  "overflow-x-auto bg-zinc-950 p-4 text-[13px] leading-relaxed text-zinc-100";
+export const codeBox =
+  "not-prose my-4 overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10";
+export const codeHead =
+  "border-b border-zinc-200 bg-zinc-50 text-xs font-medium dark:border-white/10 dark:bg-white/[0.03]";
+
+export const RequestTabs = ({ responsesBody, chatBody }) => {
+  const [tab, setTab] = useState("responses");
+  const tabs = [
+    ["responses", "Responses API", responsesBody, "responses"],
+    ["chat", "Chat Completions", chatBody, "chat/completions"],
+  ].filter((t) => t[2]);
+  const active = tabs.find((t) => t[0] === tab) || tabs[0];
+  if (!active) return null;
+  return (
+    <div className={codeBox}>
+      <div className={"flex " + codeHead}>
+        {tabs.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={
+              "px-4 py-2 " +
+              (active[0] === key
+                ? "-mb-px border-b-2 border-zinc-900 text-zinc-900 dark:border-white dark:text-white"
+                : "text-zinc-500 dark:text-zinc-400")
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <pre className={codePre}>
+        <code>{curl(active[3], active[2])}</code>
+      </pre>
+    </div>
+  );
+};
+
+export const ResponseBlock = ({ output }) => (
+  <div className={codeBox}>
+    <div className={codeHead + " px-4 py-2 text-zinc-500 dark:text-zinc-400"}>
+      Response
+    </div>
+    <pre className={codePre}>
+      <code>{output}</code>
+    </pre>
+  </div>
+);
+
+export const ModelSection = ({ model }) => {
+  const p = model.pricing || {};
+  const refs = [
+    [p.model_doc_url, "Model docs"],
+    [p.terms_url, "Terms"],
+    [p.privacy_service, "Privacy"],
+  ].filter((r) => r[0]);
+  const examples = model.examples || [];
+  return (
+    <>
+      <h2 id={slug(model.modelId)}>{model.modelId}</h2>
+      {p.description ? <blockquote>{p.description}</blockquote> : null}
+      {refs.length ? (
+        <p>
+          <strong>References:</strong>{" "}
+          {refs.map((r, i) => (
+            <span key={r[1]}>
+              {i ? " • " : ""}
+              <a href={href(r[0])}>{r[1]}</a>
+            </span>
+          ))}
+        </p>
+      ) : null}
+      {examples.map((ex, i) => (
+        <div key={i}>
+          {ex.title ? <h3 id={slug(model.modelId) + "-" + slug(ex.title)}>{ex.title}</h3> : null}
+          {ex.requestNote ? (
+            <p>
+              <InlineMD text={ex.requestNote} />
+            </p>
+          ) : null}
+          <RequestTabs
+            responsesBody={ex.responsesBody || p.sample_responses_body}
+            chatBody={ex.chatBody || p.sample_chat_completions_body}
+          />
+          {ex.responseNote ? (
+            <p>
+              <InlineMD text={ex.responseNote} />
+            </p>
+          ) : null}
+          <ResponseBlock output={ex.output} />
+        </div>
+      ))}
+    </>
+  );
+};
+
+export const PricingTable = ({ ids, byId }) => {
+  const cols = {
+    display: "grid",
+    gridTemplateColumns:
+      "minmax(0,2.6fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr)",
+    gap: "1.5rem",
+    alignItems: "center",
+    minWidth: "640px",
+  };
+  return (
+    <div className="not-prose w-full overflow-x-auto text-base">
+      <div
+        style={cols}
+        className="border-b border-zinc-950/10 pb-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400"
+      >
+        <div>Model</div>
+        <div>Params</div>
+        <div className="text-right">Max tokens</div>
+        <div className="text-right">Input /1M</div>
+        <div className="text-right">Output /1M</div>
+      </div>
+      {ids.map((id) => {
+        const m = byId[id] || {};
+        const p = m.pricing || {};
+        return (
+          <a
+            key={id}
+            href={"/api-reference/models/" + slug(id)}
+            style={cols}
+            className="border-b border-zinc-950/5 py-4 no-underline dark:border-white/5"
+          >
+            <div className="font-medium text-zinc-950 dark:text-white">
+              <code className="break-words text-sm">{id}</code>
+            </div>
+            <div className="text-zinc-600 dark:text-zinc-300">{m.parameters || "-"}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtNum(m.maxTokens)}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtPrice(p.input_per_1m_tokens)}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtPrice(p.output_per_1m_tokens)}</div>
+          </a>
+        );
+      })}
+    </div>
+  );
+};
+
+export const ModelDocs = ({ models }) => {
+  const ids = (models || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const list = useStore();
+  const byId = {};
+  list.forEach((m) => {
+    byId[m.modelId] = m;
+  });
+  const ordered = ids.map((id) => byId[id]).filter(Boolean);
+  return (
+    <>
+      <PricingTable ids={ids} byId={byId} />
+      {ordered.map((m) => (
+        <ModelSection key={m.modelId} model={m} />
+      ))}
+    </>
+  );
+};
+
 Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech plus a general zero-shot classifier where you supply the candidate labels. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
-| Model | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | --- | --- | --- |
-| [`zlm-v1-iab-classify-edge-enriched`](/api-reference/models/zlm-v1-iab-classify-edge-enriched) | 90M | 400 | $0.05 | $0.40 |
-| [`zlm-v1-iab-classify-edge`](/api-reference/models/zlm-v1-iab-classify-edge) | 90M | 400 | $0.05 | $0.40 |
-| [`deberta-v3-small`](/api-reference/models/deberta-v3-small) | 142M | 400 | $0.05 | $0.40 |
-
-## zlm-v1-iab-classify-edge
-
-ZeroGPU's IAB taxonomy classifier is purpose-built for real-time content categorization at the edge. It maps text to the IAB Content Taxonomy, the industry standard used across programmatic advertising, enabling instant, low-latency content classification without roundtrips to a centralized server. At 90M parameters on ONNX, it's optimized for the high-volume, sub-millisecond classification that ad tech and content platforms demand.
-
-**References:** [Terms](https://zerogpu.ai/terms) - [Privacy](https://zerogpu.ai/privacy-policy)
-
-### Request
-
-<CodeGroup>
-
-```bash Responses API wrap
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-iab-classify-edge",
-    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment."
-  }'
-```
-
-```bash Chat Completions wrap
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-iab-classify-edge",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment."
-      }
-    ]
-  }'
-```
-
-</CodeGroup>
-
-### Response
-
-Returns IAB `audience` categories plus `content` matches across taxonomy versions, each with a confidence score.
-
-```json wrap
-{
-  "audience": [
-    { "name": "Technology & Computing", "score": 0.7686 },
-    { "name": "Consumer Electronics", "score": 0.7206 },
-    { "name": "65-69", "score": 0.5950 }
-  ],
-  "content": {
-    "iab_1_0": [
-      { "name": "Cell Phones", "score": 0.7597 },
-      { "name": "Technology & Computing", "score": 0.7387 }
-    ],
-    "iab_2_2": [
-      { "name": "Smartphones", "score": 0.7597 },
-      { "name": "Wearable Technology", "score": 0.7387 },
-      { "name": "Technology & Computing", "score": 0.7109 }
-    ]
-  }
-}
-```
-
-## zlm-v1-iab-classify-edge-enriched
-
-The enriched variant of ZeroGPU's IAB classifier goes beyond standard taxonomy labels by producing multi-signal outputs, giving you richer, more actionable classification data per inference call. You get not just a category, but layered context signals that downstream systems can use for better targeting, filtering, and personalization. Same 90M-parameter ONNX architecture as the base classifier, so it runs at the same edge-native speeds.
-
-**References:** [Terms](https://zerogpu.ai/terms) - [Privacy](https://zerogpu.ai/privacy-policy)
-
-### Request
-
-<CodeGroup>
-
-```bash Responses API wrap
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-iab-classify-edge-enriched",
-    "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment."
-  }'
-```
-
-```bash Chat Completions wrap
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "zlm-v1-iab-classify-edge-enriched",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment."
-      }
-    ]
-  }'
-```
-
-</CodeGroup>
-
-### Response
-
-In addition to scored `audience` and `content` categories, the enriched model returns taxonomy codes and parent IDs, plus `topics`, `keywords`, and an inferred `user_intent`.
-
-```json wrap
-{
-  "audience": [
-    {
-      "id": 687,
-      "parent_id": 206,
-      "name": "Technology & Computing",
-      "tier1_name": "Interest",
-      "tier2_name": "Technology & Computing",
-      "score": 0.7686
-    },
-    {
-      "id": 703,
-      "parent_id": 687,
-      "name": "Consumer Electronics",
-      "tier1_name": "Interest",
-      "tier2_name": "Technology & Computing",
-      "tier3_name": "Consumer Electronics",
-      "score": 0.7206
-    }
-  ],
-  "content": {
-    "iab_1_0": [
-      { "code": "IAB19-6", "name": "Cell Phones", "tier": 2, "parent_code": "IAB19", "score": 0.7597 },
-      { "code": "IAB19", "name": "Technology & Computing", "tier": 1, "parent_code": null, "score": 0.7387 }
-    ]
-  },
-  "topics": [
-    { "name": "smartphones", "score": 0.7597 },
-    { "name": "wearable technology", "score": 0.7387 },
-    { "name": "technology & computing", "score": 0.7109 }
-  ],
-  "keywords": ["technology", "reshaped", "everyday", "routines", "quietly", "weaving", "rhythm", "itself", "life", "into"],
-  "user_intent": {
-    "name": "mastering technology quietly reshaped rhythm everyday life",
-    "category": "informational",
-    "score": 0.5
-  }
-}
-```
-
-## deberta-v3-small
-
-Microsoft's DeBERTa-v3-small uses a disentangled attention mechanism that separately encodes content and position, giving it a major edge in understanding context compared to models of similar size. With ELECTRA-style pre-training and gradient-disentangled embedding sharing, it punches well above its weight on NLU benchmarks. Pass your candidate labels via `instructions` (Responses API) or a system message (Chat Completions) for zero-shot classification.
-
-**References:** [Model docs](https://github.com/microsoft/DeBERTa/tree/master/docs) - [Terms](https://github.com/microsoft/DeBERTa/blob/master/SECURITY.md) - [Privacy](https://github.com/microsoft/DeBERTa/blob/master/LICENSE)
-
-### Request
-
-<CodeGroup>
-
-```bash Responses API wrap
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "deberta-v3-small",
-    "input": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks.",
-    "instructions": "[sports, finance, politics, technology]"
-  }'
-```
-
-```bash Chat Completions wrap
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "deberta-v3-small",
-    "messages": [
-      {
-        "role": "system",
-        "content": "[sports, finance, politics, technology]"
-      },
-      {
-        "role": "user",
-        "content": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks."
-      }
-    ]
-  }'
-```
-
-</CodeGroup>
-
-### Response
-
-Returns each candidate label with a probability score.
-
-```json wrap
-{
-  "technology": 0.971784,
-  "politics": 0.011858,
-  "sports": 0.01175,
-  "finance": 0.004608
-}
-```
+<ModelDocs models="zlm-v1-iab-classify-edge,zlm-v1-iab-classify-edge-enriched,deberta-v3-small" />

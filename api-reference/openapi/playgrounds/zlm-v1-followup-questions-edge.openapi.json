@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "LFM2.5-1.2B-Instruct playground",
+    "title": "zlm-v1-followup-questions-edge playground",
     "version": "1.0",
-    "description": "Interactive playground for **LFM2.5-1.2B-Instruct**.\nModel is always `LFM2.5-1.2B-Instruct` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **zlm-v1-followup-questions-edge**.\nModel is always `zlm-v1-followup-questions-edge` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
   },
   "servers": [
     {
@@ -20,10 +20,10 @@
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse_LFM2_5-1_2B-Instruct",
-        "summary": "LFM2.5-1.2B-Instruct: Responses",
+        "operationId": "createResponse_zlm-v1-followup-questions-edge",
+        "summary": "zlm-v1-followup-questions-edge: Responses",
         "tags": [
-          "LFM2.5-1.2B-Instruct"
+          "zlm-v1-followup-questions-edge"
         ],
         "requestBody": {
           "required": true,
@@ -39,9 +39,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "LFM2.5-1.2B-Instruct",
-                        "default": "LFM2.5-1.2B-Instruct",
-                        "example": "LFM2.5-1.2B-Instruct",
+                        "const": "zlm-v1-followup-questions-edge",
+                        "default": "zlm-v1-followup-questions-edge",
+                        "example": "zlm-v1-followup-questions-edge",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -52,9 +52,8 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "input": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message.",
-                    "model": "LFM2.5-1.2B-Instruct",
-                    "instructions": "You are a friendly in-app assistant for a fitness app."
+                    "input": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption.",
+                    "model": "zlm-v1-followup-questions-edge"
                   }
                 }
               }
@@ -72,7 +71,7 @@
                 "examples": {
                   "default": {
                     "summary": "Default",
-                    "value": "That's an amazing accomplishment! Keep up the great work, each step brings you closer to your goals. You're stronger than you think!\n\nWould you like tips to help you keep improving?"
+                    "value": "How long does an EV battery typically last before it needs to be replaced?\nWhat happens to electric vehicle batteries at the end of their life, and how recyclable are they?\nIs the current power grid ready to handle widespread EV charging demand?"
                   }
                 }
               }
@@ -105,10 +104,10 @@
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_LFM2_5-1_2B-Instruct",
-        "summary": "LFM2.5-1.2B-Instruct: Chat completions",
+        "operationId": "createChatCompletion_zlm-v1-followup-questions-edge",
+        "summary": "zlm-v1-followup-questions-edge: Chat completions",
         "tags": [
-          "LFM2.5-1.2B-Instruct"
+          "zlm-v1-followup-questions-edge"
         ],
         "requestBody": {
           "required": true,
@@ -124,9 +123,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "LFM2.5-1.2B-Instruct",
-                        "default": "LFM2.5-1.2B-Instruct",
-                        "example": "LFM2.5-1.2B-Instruct",
+                        "const": "zlm-v1-followup-questions-edge",
+                        "default": "zlm-v1-followup-questions-edge",
+                        "example": "zlm-v1-followup-questions-edge",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -137,15 +136,11 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "model": "LFM2.5-1.2B-Instruct",
+                    "model": "zlm-v1-followup-questions-edge",
                     "messages": [
                       {
-                        "role": "system",
-                        "content": "You are a friendly in-app assistant for a fitness app."
-                      },
-                      {
                         "role": "user",
-                        "content": "I just completed a 5K run in 28 minutes. Give me a short motivational follow-up message."
+                        "content": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption."
                       }
                     ]
                   }
@@ -165,7 +160,7 @@
                 "examples": {
                   "default": {
                     "summary": "Default",
-                    "value": "That's an amazing accomplishment! Keep up the great work, each step brings you closer to your goals. You're stronger than you think!\n\nWould you like tips to help you keep improving?"
+                    "value": "How long does an EV battery typically last before it needs to be replaced?\nWhat happens to electric vehicle batteries at the end of their life, and how recyclable are they?\nIs the current power grid ready to handle widespread EV charging demand?"
                   }
                 }
               }
@@ -213,9 +208,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "LFM2.5-1.2B-Instruct",
-            "default": "LFM2.5-1.2B-Instruct",
-            "example": "LFM2.5-1.2B-Instruct",
+            "const": "zlm-v1-followup-questions-edge",
+            "default": "zlm-v1-followup-questions-edge",
+            "example": "zlm-v1-followup-questions-edge",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -224,13 +219,6 @@
             "format": "textarea",
             "maxLength": 131072,
             "description": "Multi-line text or document content to send to the model."
-          },
-          "instructions": {
-            "type": "string"
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },
@@ -243,9 +231,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "LFM2.5-1.2B-Instruct",
-            "default": "LFM2.5-1.2B-Instruct",
-            "example": "LFM2.5-1.2B-Instruct",
+            "const": "zlm-v1-followup-questions-edge",
+            "default": "zlm-v1-followup-questions-edge",
+            "example": "zlm-v1-followup-questions-edge",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {
@@ -254,10 +242,6 @@
             "items": {
               "$ref": "#/components/schemas/ChatMessage"
             }
-          },
-          "metadata": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },

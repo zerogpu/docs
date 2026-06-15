@@ -3,55 +3,235 @@ title: "Summarization"
 description: "Models tuned to condense long content into concise summaries."
 ---
 
+{/*
+  Fully data-driven renderer for this task page. <ModelDocs models="id1,id2" />
+  renders, for the given model ids:
+    - a pricing table (Params / Max tokens / Input + Output /1M)
+    - one section per model: heading, description, reference links, and one
+      Request/Response example per entry in the model's `examples` list.
+
+  Everything comes from the live catalog cached on window.__zgpuModels by
+  /zgpu-models-init.js: specs + pricing + description + reference URLs from the
+  API, and the request/response example bodies from the hardcoded MODEL_EXTRAS
+  map in that script (the API has no response samples). Renders the table shell
+  with empty cells until the data resolves; sections appear once it loads.
+*/}
+
+export const slug = (id) => (id || "").toLowerCase().replace(/\./g, "-");
+export const href = (u) => (u || "").replace(/\s+/g, "");
+export const fmtNum = (n) =>
+  typeof n === "number" ? n.toLocaleString("en-US") : n != null ? n : "-";
+export const fmtPrice = (n) => (typeof n === "number" ? "$" + n.toFixed(2) : "-");
+
+export const curl = (path, body) =>
+  "curl https://api.zerogpu.ai/v1/" +
+  path +
+  ' \\\n  -H "content-type: application/json" \\\n  -H "x-api-key: YOUR_API_KEY" \\\n  -H "x-project-id: YOUR_PROJECT_ID" \\\n  -d \'' +
+  JSON.stringify(body, null, 2) +
+  "'";
+
+export const useStore = () => {
+  const read = () => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return store.data || [];
+  };
+  const [list, setList] = useState(read);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active) setList(read());
+    };
+    const store = window.__zgpuModels;
+    if (store && store.data) {
+      refresh();
+    } else if (store && store.promise) {
+      store.promise.then(refresh);
+    } else {
+      window.addEventListener("zgpu:models-loaded", refresh);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", refresh);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  return list;
+};
+
+export const InlineMD = ({ text }) => {
+  const parts = (text || "").split("`");
+  return parts.map((s, i) =>
+    i % 2 ? <code key={i}>{s}</code> : <span key={i}>{s}</span>
+  );
+};
+
+export const codePre =
+  "overflow-x-auto bg-zinc-950 p-4 text-[13px] leading-relaxed text-zinc-100";
+export const codeBox =
+  "not-prose my-4 overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10";
+export const codeHead =
+  "border-b border-zinc-200 bg-zinc-50 text-xs font-medium dark:border-white/10 dark:bg-white/[0.03]";
+
+export const RequestTabs = ({ responsesBody, chatBody }) => {
+  const [tab, setTab] = useState("responses");
+  const tabs = [
+    ["responses", "Responses API", responsesBody, "responses"],
+    ["chat", "Chat Completions", chatBody, "chat/completions"],
+  ].filter((t) => t[2]);
+  const active = tabs.find((t) => t[0] === tab) || tabs[0];
+  if (!active) return null;
+  return (
+    <div className={codeBox}>
+      <div className={"flex " + codeHead}>
+        {tabs.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setTab(key)}
+            className={
+              "px-4 py-2 " +
+              (active[0] === key
+                ? "-mb-px border-b-2 border-zinc-900 text-zinc-900 dark:border-white dark:text-white"
+                : "text-zinc-500 dark:text-zinc-400")
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <pre className={codePre}>
+        <code>{curl(active[3], active[2])}</code>
+      </pre>
+    </div>
+  );
+};
+
+export const ResponseBlock = ({ output }) => (
+  <div className={codeBox}>
+    <div className={codeHead + " px-4 py-2 text-zinc-500 dark:text-zinc-400"}>
+      Response
+    </div>
+    <pre className={codePre}>
+      <code>{output}</code>
+    </pre>
+  </div>
+);
+
+export const ModelSection = ({ model }) => {
+  const p = model.pricing || {};
+  const refs = [
+    [p.model_doc_url, "Model docs"],
+    [p.terms_url, "Terms"],
+    [p.privacy_service, "Privacy"],
+  ].filter((r) => r[0]);
+  const examples = model.examples || [];
+  return (
+    <>
+      <h2 id={slug(model.modelId)}>{model.modelId}</h2>
+      {p.description ? <blockquote>{p.description}</blockquote> : null}
+      {refs.length ? (
+        <p>
+          <strong>References:</strong>{" "}
+          {refs.map((r, i) => (
+            <span key={r[1]}>
+              {i ? " • " : ""}
+              <a href={href(r[0])}>{r[1]}</a>
+            </span>
+          ))}
+        </p>
+      ) : null}
+      {examples.map((ex, i) => (
+        <div key={i}>
+          {ex.title ? <h3 id={slug(model.modelId) + "-" + slug(ex.title)}>{ex.title}</h3> : null}
+          {ex.requestNote ? (
+            <p>
+              <InlineMD text={ex.requestNote} />
+            </p>
+          ) : null}
+          <RequestTabs
+            responsesBody={ex.responsesBody || p.sample_responses_body}
+            chatBody={ex.chatBody || p.sample_chat_completions_body}
+          />
+          {ex.responseNote ? (
+            <p>
+              <InlineMD text={ex.responseNote} />
+            </p>
+          ) : null}
+          <ResponseBlock output={ex.output} />
+        </div>
+      ))}
+    </>
+  );
+};
+
+export const PricingTable = ({ ids, byId }) => {
+  const cols = {
+    display: "grid",
+    gridTemplateColumns:
+      "minmax(0,2.6fr) minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr)",
+    gap: "1.5rem",
+    alignItems: "center",
+    minWidth: "640px",
+  };
+  return (
+    <div className="not-prose w-full overflow-x-auto text-base">
+      <div
+        style={cols}
+        className="border-b border-zinc-950/10 pb-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:border-white/10 dark:text-zinc-400"
+      >
+        <div>Model</div>
+        <div>Params</div>
+        <div className="text-right">Max tokens</div>
+        <div className="text-right">Input /1M</div>
+        <div className="text-right">Output /1M</div>
+      </div>
+      {ids.map((id) => {
+        const m = byId[id] || {};
+        const p = m.pricing || {};
+        return (
+          <a
+            key={id}
+            href={"/api-reference/models/" + slug(id)}
+            style={cols}
+            className="border-b border-zinc-950/5 py-4 no-underline dark:border-white/5"
+          >
+            <div className="font-medium text-zinc-950 dark:text-white">
+              <code className="break-words text-sm">{id}</code>
+            </div>
+            <div className="text-zinc-600 dark:text-zinc-300">{m.parameters || "-"}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtNum(m.maxTokens)}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtPrice(p.input_per_1m_tokens)}</div>
+            <div className="text-right tabular-nums text-zinc-600 dark:text-zinc-300">{fmtPrice(p.output_per_1m_tokens)}</div>
+          </a>
+        );
+      })}
+    </div>
+  );
+};
+
+export const ModelDocs = ({ models }) => {
+  const ids = (models || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const list = useStore();
+  const byId = {};
+  list.forEach((m) => {
+    byId[m.modelId] = m;
+  });
+  const ordered = ids.map((id) => byId[id]).filter(Boolean);
+  return (
+    <>
+      <PricingTable ids={ids} byId={byId} />
+      {ordered.map((m) => (
+        <ModelSection key={m.modelId} model={m} />
+      ))}
+    </>
+  );
+};
+
 Summarization models take long passages and return a short, faithful summary. Call either the [Responses API](/api-reference/responses) (`POST /v1/responses`) or the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) (`POST /v1/chat/completions`).
 
-| Model | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | --- | --- | --- |
-| [`llama-3.1-8b-instruct-fast`](/api-reference/models/llama-3-1-8b-instruct-fast) | 3B | 131,072 | $0.05 | $0.40 |
-
-## llama-3.1-8b-instruct-fast
-
-The Meta Llama 3.1 collection of multilingual large language models is a collection of pretrained and instruction tuned generative models in 8B, 70B and 405B sizes (text in/text out). The instruction tuned text only models are optimized for multilingual dialogue use cases and outperform many available open source and closed chat models on common industry benchmarks. Ideal for summarization and intent detection.
-
-**References:** [Model docs](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) - [Terms](https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/LICENSE) - [Privacy](https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct/blob/main/LICENSE)
-
-### Request
-
-<CodeGroup>
-
-```bash Responses API wrap
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "llama-3.1-8b-instruct-fast",
-    "input": "The global semiconductor industry is undergoing one of its most significant structural shifts in decades, driven by a combination of geopolitical tensions, surging demand from artificial intelligence workloads, and a wave of government-backed industrial policy across the United States, Europe, and Asia. At the center of this transformation is a race to onshore chip manufacturing capacity that had, for thirty years, been quietly concentrated in Taiwan and South Korea. The United States CHIPS and Science Act, signed into law in 2022, allocated over $52 billion in subsidies to incentivize domestic semiconductor fabrication. Since then, companies including TSMC, Intel, Samsung, and Micron have announced or broken ground on new fabs in Arizona, Ohio, Texas, and Idaho. However, construction timelines have slipped, costs have ballooned, and a shortage of skilled workers has prompted some manufacturers to bring in engineers from overseas, a move that has drawn political scrutiny even as it addresses a genuine talent gap. Meanwhile, the explosion of AI model training and inference has fundamentally altered the demand profile for chips. Graphics processing units originally designed for gaming, particularly those made by NVIDIA, have become the primary compute substrate for large language models. NVIDIA's H100 and successor Blackwell-series GPUs now trade at significant premiums on secondary markets, with some hyperscalers reporting lead times of over a year for large cluster orders. This bottleneck has accelerated investment in custom silicon: Google's Tensor Processing Units, Amazon's Trainium and Inferentia chips, and Meta's MTIA accelerators are all attempts to reduce dependence on third-party GPU supply chains. On the geopolitical front, the United States has progressively tightened export controls on advanced chips and chip-making equipment destined for China, with the most recent rules targeting gate-all-around transistor technology and high-bandwidth memory. China, in response, has dramatically increased state investment in its domestic semiconductor ecosystem, with companies like SMIC and Huawei making incremental but closely watched progress at advanced nodes. Analysts remain divided on how quickly China can close the gap, with estimates ranging from five to fifteen years depending on assumptions about technology transfer, equipment access, and the pace of indigenous innovation. The equipment layer, often overlooked in public discourse, may prove to be the most consequential chokepoint. ASML, the Dutch company that holds a near-monopoly on extreme ultraviolet lithography machines, has become a focal point of both trade diplomacy and industrial strategy. Without EUV tools, fabricating chips below 7 nanometers at scale is effectively impossible, giving ASML and its supply chain extraordinary leverage in a world where nations are suddenly treating semiconductor access as a matter of national security."
-  }'
-```
-
-```bash Chat Completions wrap
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-    "model": "llama-3.1-8b-instruct-fast",
-    "messages": [
-      {
-        "role": "user",
-        "content": "The global semiconductor industry is undergoing one of its most significant structural shifts in decades, driven by a combination of geopolitical tensions, surging demand from artificial intelligence workloads, and a wave of government-backed industrial policy across the United States, Europe, and Asia. At the center of this transformation is a race to onshore chip manufacturing capacity that had, for thirty years, been quietly concentrated in Taiwan and South Korea. The United States CHIPS and Science Act, signed into law in 2022, allocated over $52 billion in subsidies to incentivize domestic semiconductor fabrication. Since then, companies including TSMC, Intel, Samsung, and Micron have announced or broken ground on new fabs in Arizona, Ohio, Texas, and Idaho. However, construction timelines have slipped, costs have ballooned, and a shortage of skilled workers has prompted some manufacturers to bring in engineers from overseas, a move that has drawn political scrutiny even as it addresses a genuine talent gap. Meanwhile, the explosion of AI model training and inference has fundamentally altered the demand profile for chips. Graphics processing units originally designed for gaming, particularly those made by NVIDIA, have become the primary compute substrate for large language models. NVIDIA's H100 and successor Blackwell-series GPUs now trade at significant premiums on secondary markets, with some hyperscalers reporting lead times of over a year for large cluster orders. This bottleneck has accelerated investment in custom silicon: Google's Tensor Processing Units, Amazon's Trainium and Inferentia chips, and Meta's MTIA accelerators are all attempts to reduce dependence on third-party GPU supply chains. On the geopolitical front, the United States has progressively tightened export controls on advanced chips and chip-making equipment destined for China, with the most recent rules targeting gate-all-around transistor technology and high-bandwidth memory. China, in response, has dramatically increased state investment in its domestic semiconductor ecosystem, with companies like SMIC and Huawei making incremental but closely watched progress at advanced nodes. Analysts remain divided on how quickly China can close the gap, with estimates ranging from five to fifteen years depending on assumptions about technology transfer, equipment access, and the pace of indigenous innovation. The equipment layer, often overlooked in public discourse, may prove to be the most consequential chokepoint. ASML, the Dutch company that holds a near-monopoly on extreme ultraviolet lithography machines, has become a focal point of both trade diplomacy and industrial strategy. Without EUV tools, fabricating chips below 7 nanometers at scale is effectively impossible, giving ASML and its supply chain extraordinary leverage in a world where nations are suddenly treating semiconductor access as a matter of national security."
-      }
-    ]
-  }'
-```
-
-</CodeGroup>
-
-### Response
-
-The summary is returned as `output[].content[].text` (Responses API) or `choices[].message.content` (Chat Completions).
-
-```text wrap
-The global semiconductor industry is undergoing a significant transformation driven by geopolitical tensions, surging demand from artificial intelligence workloads, and government-backed industrial policies. A race to onshore chip manufacturing capacity is underway, with the US, Europe, and Asia investing heavily in domestic fabrication, while companies like TSMC, Intel, and Samsung are building new fabs in the US. However, construction timelines have slipped, costs have increased, and a shortage of skilled workers has prompted some manufacturers to bring in overseas engineers. The demand for chips has also changed, with AI model training and inference driving a shortage of graphics processing units, particularly those made by NVIDIA. In response, companies like Google, Amazon, and Meta are investing in custom silicon to reduce dependence on third-party supply chains. The US has tightened export controls on advanced chips and equipment destined for China, which has responded with increased state investment in its domestic semiconductor ecosystem. The equipment layer, particularly ASML's near-monopoly on extreme ultraviolet lithography machines, may prove to be the most consequential chokepoint in the industry.
-```
+<ModelDocs models="llama-3.1-8b-instruct-fast" />

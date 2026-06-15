@@ -1,0 +1,575 @@
+---
+title: "LangChain"
+description: "Offload classification, extraction, PII redaction, and chat from LangChain agents to ZeroGPU's nano language models with eleven ready-made tools."
+icon: "crow"
+---
+
+LangChain is an open-source framework for building applications powered by large language models. It provides composable building blocks for prompts, chains, agents, retrieval, and tool use, and its [tool abstraction](https://python.langchain.com/docs/concepts/tools/) lets any agent call out to external capabilities with validated, typed inputs. Teams use LangChain to wire LLMs into production pipelines without rewriting glue code for every model vendor.
+
+## Overview
+
+This guide walks through [`langchain-zerogpu`](https://github.com/zerogpu/langchain-zerogpu), the official package that exposes ZeroGPU's task models as first-class LangChain `BaseTool` subclasses. You'll install the package from [PyPI](https://pypi.org/project/langchain-zerogpu/), authenticate with your API key and project ID, invoke your first tool, and then work through all eleven tools - chat, summarization, classification, entity and JSON extraction, and PII handling - plus the `ZeroGPUToolkit` that binds the whole set to an agent in one line. By the end, any LangChain agent (including `create_agent` and LangGraph graphs) can hand its repeatable NLP work to ZeroGPU instead of spending frontier-model tokens.
+
+## Cookbook
+
+Prefer to learn by running real code? A worked, end-to-end example is available as a notebook: **[Screen Resumes with LangChain and ZeroGPU](https://colab.research.google.com/drive/10OYr9s4kfp63twlN_FjXfuhtZpwjba6A?usp=sharing)**. It chains three of the tools below to pull structured fields out of a PDF resume, strip the PII before anything is stored or shared, and route the candidate to the right team, all on ZeroGPU's small models. Open it in Google Colab and run it top to bottom.
+
+<Note>
+  More LangChain cookbooks are on the way. Check the [cookbook index](/cookbook/index) for the latest worked examples.
+</Note>
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/KMI8mxqfGBY?si=QpP-OacbQnktlF1n" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- Python 3.10 or newer.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`) and a Project ID.
+- A look at the [model catalog](/docs/model-catalog) if you want to see what each tool routes to.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`) and grab your Project ID (UUID) from the project settings page.
+4. Export both so every tool can pick them up automatically:
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+export ZEROGPU_PROJECT_ID="your-project-id"
+```
+
+### Install langchain-zerogpu
+
+```bash
+pip install langchain-zerogpu
+```
+
+The package depends on `langchain-core` and the official [`zerogpu-api`](https://pypi.org/project/zerogpu-api/) Python SDK; every call goes through the SDK to ZeroGPU's Responses API at `https://api.zerogpu.ai/v1`. Source lives at [github.com/zerogpu/langchain-zerogpu](https://github.com/zerogpu/langchain-zerogpu).
+
+### Your first request
+
+With `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID` exported, construct a tool with no arguments and invoke it:
+
+```python
+from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
+
+tool = ZeroGPUClassifyZeroShotTool()  # reads creds from the environment
+
+print(tool.invoke({
+    "text": "The new GPU smashes every benchmark we threw at it.",
+    "labels": ["tech", "politics", "sports"],
+}))
+```
+
+```json
+{ "label": "tech", "scores": { "tech": 0.95, "politics": 0.03, "sports": 0.02 } }
+```
+
+## Usage
+
+The package ships eleven tools, each a LangChain `BaseTool` with a typed `args_schema`, plus a `ZeroGPUToolkit` that bundles them behind one shared client. Every tool supports synchronous `invoke` and asynchronous `ainvoke`, and all calls route through ZeroGPU's `POST /v1/responses` endpoint. Chat, summarize, and redact tools return plain strings; classification and extraction tools return parsed JSON (a `dict` or `list`), falling back to the raw string if the model output isn't valid JSON.
+
+### Construction and credentials
+
+Every tool (and the toolkit) accepts the same constructor arguments. Pass nothing to resolve credentials from the environment:
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `api_key` | no | `ZEROGPU_API_KEY` env var | ZeroGPU API key. Must start with `zgpu-api-`. Stored as a `pydantic.SecretStr`, never logged. |
+| `project_id` | no | `ZEROGPU_PROJECT_ID` env var | ZeroGPU Project ID (UUID). |
+| `base_url` | no | production API | Optional base URL override for the ZeroGPU API. |
+| `client` | no | built from the above | A shared `ZeroGPUClient`; this is how the toolkit wires one client (and one connection pool) across all tools. |
+
+Failures surface as typed exceptions instead of raw stack traces: `ZeroGPUAuthError` for missing or malformed credentials and `401`/`403` responses, and `ZeroGPUError` for rate limits (`429`), server errors (`5xx`), and network failures.
+
+### `ZeroGPUChatTool`
+
+Short, single-turn chat reply for prompts that don't need frontier-model reasoning or conversation history.
+
+- **Tool name:** `zerogpu_chat`
+- **Model:** `LFM2.5-1.2B-Instruct`
+- **Returns:** `str` (the assistant reply)
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The user message to respond to. |
+| `system` | no | `None` | Optional system prompt that steers the reply. |
+
+```python
+from langchain_zerogpu import ZeroGPUChatTool
+
+tool = ZeroGPUChatTool()
+print(tool.invoke({
+    "text": "Explain WebSockets in two sentences.",
+    "system": "You are a concise technical writer.",
+}))
+```
+
+```text
+WebSockets provide a persistent, full-duplex connection between a client and a
+server over a single TCP socket. Unlike HTTP request/response cycles, both sides
+can push messages at any time, making them ideal for chat, live dashboards, and
+multiplayer state sync.
+```
+
+### `ZeroGPUChatThinkingTool`
+
+Same input shape as `ZeroGPUChatTool`, but the model returns a visible step-by-step reasoning trace followed by its answer. Use it for short logic, math, or word problems where you want the small model's intermediate reasoning.
+
+- **Tool name:** `zerogpu_chat_thinking`
+- **Model:** `LFM2.5-1.2B-Thinking`
+- **Returns:** `str` (reasoning trace plus answer)
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The user message to respond to. |
+| `system` | no | `None` | Optional system prompt that steers the reply. |
+
+```python
+from langchain_zerogpu import ZeroGPUChatThinkingTool
+
+tool = ZeroGPUChatThinkingTool()
+print(tool.invoke({
+    "text": "If a train leaves at 3 PM going 60 mph, when does it cover 150 miles?"
+}))
+```
+
+```text
+<thinking>
+The train travels at 60 mph and needs to cover 150 miles.
+Time = distance / speed = 150 / 60 = 2.5 hours.
+Starting at 3:00 PM, adding 2 hours and 30 minutes lands at 5:30 PM.
+</thinking>
+
+The train covers 150 miles at 5:30 PM.
+```
+
+### `ZeroGPUSummarizeTool`
+
+Condense a passage into a short summary. Best for passages up to a few paragraphs - reports, ticket threads, transcripts.
+
+- **Tool name:** `zerogpu_summarize`
+- **Model:** `llama-3.1-8b-instruct-fast`
+- **Returns:** `str` (the summary)
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The input text to summarize. |
+
+```python
+from langchain_zerogpu import ZeroGPUSummarizeTool
+
+tool = ZeroGPUSummarizeTool()
+print(tool.invoke({
+    "text": (
+        "The board met Thursday to review Q3 results. Revenue rose 18% "
+        "year-over-year to $42M, driven mainly by enterprise renewals and a "
+        "strong launch in the EU market. Operating margin slipped to 11% from "
+        "14% as headcount grew 30% ahead of the new data-center buildout."
+    )
+}))
+```
+
+```text
+Q3 revenue grew 18% YoY to $42M on enterprise renewals and EU growth, but
+operating margin fell to 11% due to a 30% headcount increase for the
+data-center buildout.
+```
+
+### `ZeroGPUClassifyIABTool`
+
+Classify text into the IAB content taxonomy (the standard ad / content category taxonomy).
+
+- **Tool name:** `zerogpu_classify_iab`
+- **Model:** `zlm-v1-iab-classify-edge`
+- **Returns:** parsed JSON (`dict`) with the IAB categories
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The input text to classify. |
+
+```python
+from langchain_zerogpu import ZeroGPUClassifyIABTool
+
+tool = ZeroGPUClassifyIABTool()
+print(tool.invoke({"text": "The Lakers signed a new point guard ahead of the playoffs."}))
+```
+
+```json
+{
+  "categories": [
+    { "id": "IAB17-44", "name": "Basketball", "confidence": 0.97 }
+  ]
+}
+```
+
+### `ZeroGPUClassifyIABEnrichedTool`
+
+Enriched IAB classification: categories plus topics, keywords, and inferred user intent. Use when you need richer ad / audience signals than plain IAB labels.
+
+- **Tool name:** `zerogpu_classify_iab_enriched`
+- **Model:** `zlm-v1-iab-classify-edge-enriched`
+- **Returns:** parsed JSON (`dict`) with categories, topics, keywords, and intent
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The input text to classify. |
+
+```python
+from langchain_zerogpu import ZeroGPUClassifyIABEnrichedTool
+
+tool = ZeroGPUClassifyIABEnrichedTool()
+print(tool.invoke({
+    "text": "Compare the Tesla Model Y and the Hyundai Ioniq 5 for a family of four."
+}))
+```
+
+```json
+{
+  "categories": [{ "id": "IAB2-1", "name": "Auto Buyers", "confidence": 0.92 }],
+  "topics": ["electric vehicles", "family cars"],
+  "keywords": ["Tesla Model Y", "Hyundai Ioniq 5"],
+  "intent": "comparison-shopping"
+}
+```
+
+### `ZeroGPUClassifyZeroShotTool`
+
+Zero-shot classification against a flat list of candidate labels you supply at call time. Returns a score per label so you (or your agent) can pick the best match.
+
+- **Tool name:** `zerogpu_classify_zero_shot`
+- **Model:** `deberta-v3-small`
+- **Returns:** parsed JSON (`dict`) with the winning label and per-label scores
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to classify. |
+| `labels` | yes | - | Candidate labels to score against, e.g. `["tech", "politics", "sports"]`. At least one. |
+
+```python
+from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
+
+tool = ZeroGPUClassifyZeroShotTool()
+print(tool.invoke({
+    "text": "I love how fast this laptop boots up.",
+    "labels": ["positive", "negative", "neutral"],
+}))
+```
+
+```json
+{ "label": "positive", "scores": { "positive": 0.94, "neutral": 0.04, "negative": 0.02 } }
+```
+
+### `ZeroGPUClassifyStructuredTool`
+
+Multi-axis classification driven by a labelled schema. You define each axis and its allowed labels; the model returns one chosen label per axis in a single call.
+
+- **Tool name:** `zerogpu_classify_structured`
+- **Model:** `gliner2-base-v1`
+- **Returns:** parsed JSON (`dict`) mapping each axis to its chosen label
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to classify. |
+| `schema` | yes | - | Axes mapped to candidate labels, e.g. `{"sentiment": ["positive", "negative"], "topic": ["billing", "support"]}`. |
+| `threshold` | no | `None` (service default) | Confidence threshold in `[0, 1]` for filtering labels. |
+
+```python
+from langchain_zerogpu import ZeroGPUClassifyStructuredTool
+
+tool = ZeroGPUClassifyStructuredTool()
+print(tool.invoke({
+    "text": "Support replied quickly but the fix didn't work.",
+    "schema": {
+        "sentiment": ["positive", "negative", "neutral"],
+        "topic": ["support", "billing", "product"],
+    },
+}))
+```
+
+```json
+{ "sentiment": "negative", "topic": "support" }
+```
+
+### `ZeroGPUExtractEntitiesTool`
+
+Custom-label named-entity recognition. You define the entity types; the model finds matching spans with confidence scores.
+
+- **Tool name:** `zerogpu_extract_entities`
+- **Model:** `gliner2-base-v1`
+- **Returns:** parsed JSON (`list`) of matched spans grouped by label
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to extract entities from. |
+| `labels` | yes | - | Entity types to extract, e.g. `["person", "company", "date"]`. At least one. |
+| `threshold` | no | `None` (service default) | Confidence threshold in `[0, 1]` for filtering spans. |
+
+```python
+from langchain_zerogpu import ZeroGPUExtractEntitiesTool
+
+tool = ZeroGPUExtractEntitiesTool()
+print(tool.invoke({
+    "text": "Apple CEO Tim Cook met with Sundar Pichai in Cupertino on Monday.",
+    "labels": ["person", "organization", "location"],
+    "threshold": 0.4,
+}))
+```
+
+```json
+[
+  { "label": "organization", "text": "Apple",         "score": 0.98 },
+  { "label": "person",       "text": "Tim Cook",      "score": 0.97 },
+  { "label": "person",       "text": "Sundar Pichai", "score": 0.96 },
+  { "label": "location",     "text": "Cupertino",     "score": 0.91 }
+]
+```
+
+### `ZeroGPUExtractPIITool`
+
+Detect and extract personally identifiable information, grouped by category, without modifying the source text. Use when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
+
+- **Tool name:** `zerogpu_extract_pii`
+- **Model:** `gliner-multi-pii-v1`
+- **Returns:** parsed JSON (`list`) of detected PII entities
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to scan for PII. |
+| `categories` | no | `None` (all detected PII) | Categories to restrict the scan to, e.g. `["identity", "contact"]`. Other values: `financial`, `medical`, `credentials`. |
+| `threshold` | no | `None` (service default) | Confidence threshold in `[0, 1]` for filtering matches. |
+
+```python
+from langchain_zerogpu import ZeroGPUExtractPIITool
+
+tool = ZeroGPUExtractPIITool()
+print(tool.invoke({
+    "text": "Contact Jane Doe at jane@example.com or +1 (415) 555-1212.",
+    "categories": ["identity", "contact"],
+}))
+```
+
+```json
+[
+  { "category": "identity", "label": "person", "text": "Jane Doe",          "score": 0.96 },
+  { "category": "contact",  "label": "email",  "text": "jane@example.com",  "score": 0.99 },
+  { "category": "contact",  "label": "phone",  "text": "+1 (415) 555-1212", "score": 0.95 }
+]
+```
+
+### `ZeroGPURedactPIITool`
+
+Detect PII and replace each span inline with a `[LABEL]` placeholder (the tool calls the PII model with `mask: "label"`). Use it before logging, sharing, or forwarding text to another LLM you don't want to expose raw PII to.
+
+- **Tool name:** `zerogpu_redact_pii`
+- **Model:** `gliner-multi-pii-v1` (with `mask: "label"`)
+- **Returns:** `str` (the redacted text)
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to redact PII from. |
+| `categories` | no | `None` (all detected PII) | Categories to restrict redaction to. |
+| `threshold` | no | `None` (service default) | Confidence threshold in `[0, 1]` for filtering matches. |
+
+```python
+from langchain_zerogpu import ZeroGPURedactPIITool
+
+tool = ZeroGPURedactPIITool()
+print(tool.invoke({"text": "Email John Smith at john@acme.com about invoice 12345."}))
+```
+
+```text
+Email [PERSON] at [EMAIL] about invoice 12345.
+```
+
+Note that `12345` is not masked: only spans the model recognizes as PII are replaced. Handle domain-specific identifiers (account numbers, internal ticket IDs) with your own redaction layer or with `ZeroGPUExtractEntitiesTool` and custom labels.
+
+### `ZeroGPUExtractJSONTool`
+
+Schema-driven JSON extraction: pull named fields out of free text into a structured object. Each field is declared as `name::type::description`, grouped under a group name.
+
+- **Tool name:** `zerogpu_extract_json`
+- **Model:** `gliner2-base-v1`
+- **Returns:** parsed JSON (`dict`) with the extracted fields
+
+| Argument | Required | Default | Description |
+| --- | --- | --- | --- |
+| `text` | yes | - | The text to extract fields from. |
+| `schema` | yes | - | Grouped schema mapping a group name to `"field::type::description"` specs, e.g. `{"contact": ["name::str::Full name", "email::str::Email address"]}`. |
+| `threshold` | no | `None` (service default) | Confidence threshold in `[0, 1]` for filtering fields. |
+
+```python
+from langchain_zerogpu import ZeroGPUExtractJSONTool
+
+tool = ZeroGPUExtractJSONTool()
+print(tool.invoke({
+    "text": "Reach Maria Lopez at maria.lopez@acme.io or 415-555-0188.",
+    "schema": {
+        "contact": [
+            "name::str::Full name",
+            "email::str::Email address",
+            "phone::str::Phone number",
+        ]
+    },
+}))
+```
+
+```json
+{
+  "contact": {
+    "name": "Maria Lopez",
+    "email": "maria.lopez@acme.io",
+    "phone": "415-555-0188"
+  }
+}
+```
+
+### `ZeroGPUToolkit`
+
+The toolkit bundles all eleven tools behind a single shared SDK client (one connection pool, one credential resolution). Construct it once and call `get_tools()` to register the whole set with an agent in one line. It takes the same `api_key` / `project_id` / `base_url` arguments as the individual tools.
+
+```python
+from langchain.agents import create_agent
+from langchain_zerogpu import ZeroGPUToolkit
+
+toolkit = ZeroGPUToolkit()  # reads ZEROGPU_API_KEY / ZEROGPU_PROJECT_ID
+tools = toolkit.get_tools()  # all eleven tools, one shared client
+
+agent = create_agent("anthropic:claude-sonnet-4-6", tools=tools)
+
+result = agent.invoke({
+    "messages": [
+        {"role": "user", "content": (
+            "Triage this support ticket: summarize it in one line and tell me "
+            "whether it's a bug, feature request, or question. "
+            "'The CSV export on the billing page returns a 500 error whenever I "
+            "select more than 90 days of data. Smaller ranges work fine.'"
+        )}
+    ]
+})
+print(result["messages"][-1].content)
+```
+
+```text
+Summary: Exporting more than 90 days of billing data as CSV returns a 500 error,
+while smaller date ranges work fine.
+Category: bug.
+```
+
+Behind that one call, the agent routed the summary to `ZeroGPUSummarizeTool` and the label to `ZeroGPUClassifyZeroShotTool`, each a cheap ZeroGPU call instead of more frontier-model tokens.
+
+Each tool ships an LLM-facing description, so the agent picks the right one from intent ("redact", "summarize", "classify by sentiment and topic") without you naming tools explicitly. You can also bind a single tool directly to a chat model:
+
+```python
+from langchain.chat_models import init_chat_model
+from langchain_zerogpu import ZeroGPUExtractPIITool
+
+llm = init_chat_model("anthropic:claude-sonnet-4-6")
+llm_with_tools = llm.bind_tools([ZeroGPUExtractPIITool()])
+```
+
+### Async usage
+
+Every tool implements the async path, so the same inputs work with `ainvoke` inside LangGraph nodes or any asyncio application:
+
+```python
+from langchain_zerogpu import ZeroGPUSummarizeTool
+
+summary = await ZeroGPUSummarizeTool().ainvoke({
+    "text": (
+        "The board met Thursday to review Q3 results. Revenue rose 18% "
+        "year-over-year to $42M, driven by enterprise renewals and a strong EU "
+        "launch, while operating margin slipped to 11% from 14% as headcount "
+        "grew ahead of the new data-center buildout."
+    )
+})
+print(summary)
+```
+
+```text
+Q3 revenue grew 18% year-over-year to $42M on enterprise renewals and EU
+expansion, though operating margin fell to 11% as headcount outpaced the new
+data-center buildout.
+```
+
+### Patterns and recipes
+
+**Sanitize before the frontier model sees raw input.** Run untrusted text through `ZeroGPURedactPIITool` before it enters your agent's context or transcript. Combine with `ZeroGPUExtractPIITool` when you also need an audit log of what was masked.
+
+```python
+redacted = ZeroGPURedactPIITool().invoke({"text": user_input})
+audit = ZeroGPUExtractPIITool().invoke({"text": user_input})
+agent.invoke({"messages": [{"role": "user", "content": redacted}]})
+```
+
+**Cheap classifier in front of an expensive model.** Use `ZeroGPUClassifyZeroShotTool` or `ZeroGPUClassifyStructuredTool` to triage incoming messages (bug / feature / question, urgent / normal) and only escalate hard cases to the frontier model. The classifier call costs orders of magnitude less than a frontier-model turn.
+
+**Structured extraction over free-form parsing.** For semi-structured text (signatures, invoices, contact blocks), prefer `ZeroGPUExtractJSONTool` over asking a chat model to "parse this into JSON". It's deterministic on the schema, faster, and cheaper. Keep field descriptions short and specific - the description is what the model uses to find each span.
+
+**Confidence thresholds.** For NER and PII extraction, omitting `threshold` uses service defaults tuned for recall (roughly `0.3` for NER, `0.5` for PII). Raise it to `0.6` or higher when you need precision (compliance-grade redaction lists); lower it when you'd rather over-extract and filter downstream.
+
+### Tools reference table
+
+Every tool at a glance.
+
+| Tool class | Tool name | ZeroGPU model | Purpose | Returns |
+| --- | --- | --- | --- | --- |
+| `ZeroGPUChatTool` | `zerogpu_chat` | `LFM2.5-1.2B-Instruct` | Short single-turn chat reply | `str` |
+| `ZeroGPUChatThinkingTool` | `zerogpu_chat_thinking` | `LFM2.5-1.2B-Thinking` | Chat with a visible reasoning trace | `str` |
+| `ZeroGPUSummarizeTool` | `zerogpu_summarize` | `llama-3.1-8b-instruct-fast` | Condense a passage | `str` |
+| `ZeroGPUClassifyIABTool` | `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` | IAB taxonomy classification | JSON |
+| `ZeroGPUClassifyIABEnrichedTool` | `zerogpu_classify_iab_enriched` | `zlm-v1-iab-classify-edge-enriched` | IAB + topics / keywords / intent | JSON |
+| `ZeroGPUClassifyZeroShotTool` | `zerogpu_classify_zero_shot` | `deberta-v3-small` | Zero-shot vs. custom labels | JSON |
+| `ZeroGPUClassifyStructuredTool` | `zerogpu_classify_structured` | `gliner2-base-v1` | Multi-axis schema classification | JSON |
+| `ZeroGPUExtractEntitiesTool` | `zerogpu_extract_entities` | `gliner2-base-v1` | Custom-label NER | JSON |
+| `ZeroGPUExtractPIITool` | `zerogpu_extract_pii` | `gliner-multi-pii-v1` | Extract PII entities | JSON |
+| `ZeroGPURedactPIITool` | `zerogpu_redact_pii` | `gliner-multi-pii-v1` (mask: label) | Mask PII inline with `[LABEL]` | `str` |
+| `ZeroGPUExtractJSONTool` | `zerogpu_extract_json` | `gliner2-base-v1` | Schema-driven JSON extraction | JSON |
+| `ZeroGPUToolkit` | - | - | Bundles all eleven tools behind one shared client | `list[BaseTool]` |
+
+## Troubleshooting
+
+**`ZeroGPUAuthError: No ZeroGPU API key provided`** - no key was passed and `ZEROGPU_API_KEY` isn't set in the environment the Python process sees. Export it (`export ZEROGPU_API_KEY="zgpu-api-..."`) or pass `api_key=...` to the tool or toolkit. Remember that notebooks and IDE run configurations often don't inherit your shell profile.
+
+**`ZeroGPUAuthError: Invalid ZeroGPU API key`** - the key must start with `zgpu-api-`. You've likely pasted a truncated key or a different credential; copy it again from the [dashboard](https://platform.zerogpu.ai/dashboard).
+
+**`ZeroGPUAuthError: No ZeroGPU project id provided`** - the package needs both a key and a project ID. Set `ZEROGPU_PROJECT_ID` or pass `project_id=...`.
+
+**`ZeroGPU authentication failed (401)`** - the key was rejected. It's been revoked or mistyped; rotate it in the dashboard and update `ZEROGPU_API_KEY`.
+
+**`ZeroGPU access denied (403)`** - the key is valid but the project doesn't have access to the requested model, or the Project ID doesn't match the project that owns the key. Check `ZEROGPU_PROJECT_ID` and your model entitlements.
+
+**`ZeroGPU rate limit exceeded (429)`** - back off and retry with exponential delay, or move bulk workloads to the [Batch API](/docs/batch/index), which has separate quotas tuned for offline jobs.
+
+**Pydantic validation error when invoking a tool** - tool inputs are validated against each tool's `args_schema`. Pass a `dict` with the documented argument names (`tool.invoke({"text": ..., "labels": [...]})`), not a bare string, and make sure list arguments like `labels` contain at least one entry.
+
+**Classification or extraction returns a string instead of a dict** - structured tools parse the model output as JSON and fall back to the raw string when parsing fails. This usually means the input was too short or ambiguous for the model to produce a structured result; retry with more context or log the raw string to inspect it.
+
+**Empty or low-confidence extraction results** - lower `threshold` to surface more candidates, or check that your labels match the language of the source text (the underlying models are English-tuned for most label sets). Very short inputs (one or two words) score low across the board.
+
+**The agent never picks a ZeroGPU tool** - tool selection is driven by each tool's description and your prompt. Phrase requests with intent words that match the task ("redact", "summarize", "classify as bug / feature / question"), or invoke the tool directly instead of going through the agent.
+
+**`UserWarning: Field name "schema" shadows an attribute`** - harmless and already suppressed inside the package; the schema-driven tools deliberately expose a field named `schema` because that's the natural LLM-facing argument name. If you see it, you're likely re-declaring the models yourself; the filter only covers the package's own schemas.
+
+## Conclusion
+
+`langchain-zerogpu` gives every LangChain agent a set of fast, low-cost specialists for the NLP work it runs constantly - classification, extraction, PII handling, summarization, and short chat - so frontier-model tokens are spent only where frontier-model reasoning is needed. Install the package, export two environment variables, and `ZeroGPUToolkit().get_tools()` puts all eleven on the table.
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model the tools route to and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/responses">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/index">
+    Worked examples for classification, extraction, and batch jobs.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>

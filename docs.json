@@ -8,6 +8,10 @@
     "light": "#4ADE80",
     "dark": "#16A34A"
   },
+  "appearance": {
+    "default": "dark",
+    "strict": true
+  },
   "favicon": "/assets/favicon.ico",
   "contextual": {
     "options": [
@@ -99,7 +103,8 @@
             "pages": [
               "integrations/index",
               "integrations/claude-code-plugin",
-              "integrations/mcp"
+              "integrations/mcp",
+              "integrations/langchain"
             ]
           },
           {
@@ -131,6 +136,7 @@
                   "api-reference/models/lfm2-5-1-2b-instruct",
                   "api-reference/models/lfm2-5-1-2b-thinking",
                   "api-reference/models/llama-3-1-8b-instruct-fast",
+                  "api-reference/models/zlm-v1-followup-questions-edge",
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v1-iab-classify-edge-enriched"
                 ]
@@ -165,13 +171,15 @@
           {
             "group": "Tutorials",
             "pages": [
-              "cookbook/data-extraction-tutorial"
+              "cookbook/data-extraction-tutorial",
+              "cookbook/batch-review-tagging"
             ]
           },
           {
             "group": "Integrations & plugins",
             "pages": [
-              "cookbook/claude-code-csv-sanitizer"
+              "cookbook/claude-code-csv-sanitizer",
+              "cookbook/langchain-resume-screening"
             ]
           }
         ]
@@ -220,7 +228,7 @@
       },
       {
         "label": "",
-        "href": "https://discord.gg/Ad5KZvAyky",
+        "href": "https://discord.gg/58XZuxKyq6",
         "icon": "discord"
       },
       {

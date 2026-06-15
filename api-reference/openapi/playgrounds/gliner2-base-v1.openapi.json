@@ -176,7 +176,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded",
+            "description": "Insufficient quota",
             "content": {
               "application/json": {
                 "schema": {
@@ -364,7 +364,7 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Context length exceeded"
+            "description": "Insufficient quota"
           },
           "500": {
             "description": "Internal server error"
@@ -408,12 +408,59 @@
             "maxLength": 131072,
             "description": "Multi-line text or document content to send to the model."
           },
-          "instructions": {
-            "type": "string"
-          },
           "metadata": {
             "type": "object",
-            "additionalProperties": true
+            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` — extract entities for the given `labels`.\n- `json` — extract structured fields defined by a `schema`.\n- `classification` — assign labels from candidate sets defined by a `schema`.",
+            "additionalProperties": true,
+            "properties": {
+              "usecase": {
+                "type": "string",
+                "enum": [
+                  "ner",
+                  "json",
+                  "classification"
+                ],
+                "default": "ner",
+                "description": "Which operation to run and which other fields apply: `ner` uses `labels`; `json` and `classification` use `schema`."
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "programming language",
+                  "database",
+                  "technology",
+                  "protocol"
+                ],
+                "description": "Entity types to extract, used when `usecase` is `ner`. Each label becomes a key in the returned `entities` object."
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5,
+                "description": "Minimum confidence score (0–1) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
+              },
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "Extraction/classification definition, used when `usecase` is `json` or `classification`. For `json`, each group maps to field definitions in `name::type::description` form (e.g. `\"email::str::Email address\"`). For `classification`, each group maps to a list of candidate labels (e.g. `[\"positive\", \"negative\", \"neutral\"]`).",
+                "example": {
+                  "contact": [
+                    "name::str::Full name",
+                    "email::str::Email address",
+                    "phone::str::Phone number"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -440,7 +487,57 @@
           },
           "metadata": {
             "type": "object",
-            "additionalProperties": true
+            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` — extract entities for the given `labels`.\n- `json` — extract structured fields defined by a `schema`.\n- `classification` — assign labels from candidate sets defined by a `schema`.",
+            "additionalProperties": true,
+            "properties": {
+              "usecase": {
+                "type": "string",
+                "enum": [
+                  "ner",
+                  "json",
+                  "classification"
+                ],
+                "default": "ner",
+                "description": "Which operation to run and which other fields apply: `ner` uses `labels`; `json` and `classification` use `schema`."
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "programming language",
+                  "database",
+                  "technology",
+                  "protocol"
+                ],
+                "description": "Entity types to extract, used when `usecase` is `ner`. Each label becomes a key in the returned `entities` object."
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5,
+                "description": "Minimum confidence score (0–1) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
+              },
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": "Extraction/classification definition, used when `usecase` is `json` or `classification`. For `json`, each group maps to field definitions in `name::type::description` form (e.g. `\"email::str::Email address\"`). For `classification`, each group maps to a list of candidate labels (e.g. `[\"positive\", \"negative\", \"neutral\"]`).",
+                "example": {
+                  "contact": [
+                    "name::str::Full name",
+                    "email::str::Email address",
+                    "phone::str::Phone number"
+                  ]
+                }
+              }
+            }
           }
         }
       },

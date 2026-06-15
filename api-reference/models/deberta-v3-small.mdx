@@ -5,6 +5,65 @@ description: "Model details for deberta-v3-small."
 openapi: "api-reference/openapi/playgrounds/deberta-v3-small.openapi.json POST /responses"
 ---
 
-> Microsoft's DeBERTa-v3-small uses a disentangled attention mechanism that separately encodes content and position giving it a major edge in understanding context compared to models of similar size. With ELECTRA-style pre-training and gradient-disentangled embedding sharing, it punches well above its weight on NLU benchmarks, outperforming many frontier models on classification and inference tasks. It's one of the most efficient classifiers you can run at the edge. Ideal for high-throughput classification workloads where every millisecond and every cent matters.
+{/*
+  Description and reference links pulled live from the API and cached on
+  window.__zgpuModels by /zgpu-models-init.js. Renders nothing until loaded.
+*/}
 
-**References:** [Model docs](https://github.com/microsoft/DeBERTa/tree/master/docs) • [Terms](https://github.com/microsoft/DeBERTa/blob/master/SECURITY.md) • [Privacy](https://github.com/microsoft/DeBERTa/blob/master/LICENSE)
+export const ModelDescription = ({ id }) => {
+  const read = () => {
+    const store = (typeof window !== "undefined" && window.__zgpuModels) || {};
+    return (store.data || []).find((x) => x.modelId === id) || null;
+  };
+  const [model, setModel] = useState(read);
+  useEffect(() => {
+    let active = true;
+    const refresh = () => {
+      if (active) setModel(read());
+    };
+    const store = window.__zgpuModels;
+    if (store && store.data) {
+      refresh();
+    } else if (store && store.promise) {
+      store.promise.then(refresh);
+    } else {
+      window.addEventListener("zgpu:models-loaded", refresh);
+      return () => {
+        active = false;
+        window.removeEventListener("zgpu:models-loaded", refresh);
+      };
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
+  const p = (model && model.pricing) || {};
+  const href = (u) => (u || "").replace(/\s+/g, "");
+  const refs = [
+    [p.model_doc_url, "Model docs"],
+    [p.terms_url, "Terms"],
+    [p.privacy_service, "Privacy"],
+  ].filter((r) => r[0]);
+  if (!p.description && !refs.length) return null;
+  const refNodes = [];
+  refs.forEach((r, i) => {
+    if (i) refNodes.push(<span key={"sep" + i}> • </span>);
+    refNodes.push(
+      <a key={r[1]} href={href(r[0])}>
+        {r[1]}
+      </a>
+    );
+  });
+  return (
+    <>
+      {p.description ? <blockquote>{p.description}</blockquote> : null}
+      {refNodes.length ? (
+        <p>
+          <strong>References:</strong> {refNodes}
+        </p>
+      ) : null}
+    </>
+  );
+};
+
+<ModelDescription id="deberta-v3-small" />
