@@ -103,8 +103,8 @@
             "pages": [
               "integrations/index",
               "integrations/claude-code-plugin",
-              "integrations/mcp",
-              "integrations/langchain"
+              "integrations/langchain",
+              "integrations/mcp"
             ]
           },
           {
