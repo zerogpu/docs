@@ -80,6 +80,7 @@ def classify_iab(content: str) -> dict:
             "model": "zlm-v1-iab-classify-edge",
             "input": content,
         },
+        timeout=(5, 20),
     )
     resp.raise_for_status()
     return resp.json()
@@ -205,7 +206,12 @@ def generate_copy(article: str) -> tuple[dict, str]:
     }]
 
     signals = None
-    while True:
+    attempt = 0
+    max_attempts = 10
+
+    while attempt < max_attempts:
+        attempt += 1
+
         resp = client.messages.create(
             model="claude-opus-4-8",
             max_tokens=2000,
@@ -229,9 +235,21 @@ def generate_copy(article: str) -> tuple[dict, str]:
                     "tool_use_id": block.id,
                     "content": json.dumps(signals),
                 })
+
+        if not tool_results:
+            raise RuntimeError("Expected tool_use but no matching tool found.")
+
         messages.append({"role": "user", "content": tool_results})
 
-    final_text = next(b.text for b in resp.content if b.type == "text")
+    else:
+        raise RuntimeError("Exceeded max tool rounds without a final text response.")
+
+    text_blocks = next(b.text for b in resp.content if b.type == "text")
+
+    if not text_blocks:
+        raise RuntimeError("No text response from model.")
+
+    final_text = text_blocks[0]
     return signals, final_text
 ```
 
