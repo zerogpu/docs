@@ -103,6 +103,7 @@
             "pages": [
               "integrations/index",
               "integrations/claude-code-plugin",
+              "integrations/claude-skill",
               "integrations/langchain",
               "integrations/mcp"
             ]

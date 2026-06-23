@@ -1,0 +1,150 @@
+---
+title: "Claude Skill (Claude Desktop)"
+description: "Install the ZeroGPU Skill so Claude follows ZeroGPU best practices whenever you ask about inference, models, the CLI, or the API."
+icon: "sparkles"
+---
+
+The ZeroGPU **Skill** is a single `SKILL.md` file you upload to Claude Desktop.
+Once installed, Claude automatically applies ZeroGPU best practices - correct API
+patterns, the right model for each task, official CLI commands, and accurate
+troubleshooting - whenever your conversation touches GPU workloads, AI inference,
+model serving, batch processing, or anything ZeroGPU.
+
+<Note>
+  This is a **knowledge skill**: it teaches Claude how to use ZeroGPU and helps
+  it generate correct, copy-paste-ready code and CLI commands. It does not run
+  inference by itself. To have an agent actually *call* ZeroGPU models, use the
+  [MCP Server](/integrations/mcp) or the [Claude Code plugin](/integrations/claude-code-plugin).
+</Note>
+
+## What it does
+
+When the Skill is active, Claude will:
+
+- Prefer official ZeroGPU patterns - the OpenAI-compatible endpoint and the two
+  required headers (`x-api-key`, `x-project-id`).
+- Recommend ZeroGPU CLI commands (`zerogpu-cli`) and the `zerogpu-router` plugin
+  when they fit your workflow.
+- Generate copy-paste-ready examples in your language, with secrets read from
+  environment variables.
+- Pick the right model for the task from the [Model Catalog](/docs/model-catalog).
+- Explain the deployment architecture and help troubleshoot status codes.
+- Point you to the official docs instead of guessing about unsupported features.
+
+It activates automatically when you ask about deploying or serving AI models,
+running GPU workloads, serverless inference, batch processing, classification,
+PII detection/redaction, entity or JSON extraction, summarization, the ZeroGPU
+CLI or APIs, or ZeroGPU documentation.
+
+## Download
+
+The Skill lives at a stable URL:
+
+```
+https://zerogpu.ai/SKILL.md
+```
+
+<CodeGroup>
+
+```bash macOS / Linux
+curl -O https://zerogpu.ai/SKILL.md
+```
+
+```powershell Windows (PowerShell)
+Invoke-WebRequest -Uri https://zerogpu.ai/SKILL.md -OutFile SKILL.md
+```
+
+```text Browser
+Open https://zerogpu.ai/SKILL.md and save the page as SKILL.md.
+```
+
+</CodeGroup>
+
+## Install into Claude Desktop
+
+<Steps>
+  <Step title="Download the file">
+    Save `SKILL.md` from `https://zerogpu.ai/SKILL.md` using one of the commands
+    above.
+  </Step>
+  <Step title="Open Skills in Settings">
+    In Claude Desktop, open **Settings -> Skills**.
+  </Step>
+  <Step title="Upload SKILL.md">
+    Add a new Skill and upload the `SKILL.md` file you downloaded. If your client
+    expects a folder or `.zip`, place `SKILL.md` inside a folder named `zerogpu`
+    and upload that.
+  </Step>
+  <Step title="Verify">
+    Start a new conversation and ask something like *"How do I classify 100k
+    support tickets cheaply with ZeroGPU?"* Claude should respond with ZeroGPU
+    patterns - a specific model, the Batch API, and runnable code.
+  </Step>
+</Steps>
+
+<Tip>
+  The Skill teaches Claude *how* to use ZeroGPU. You still need your own ZeroGPU
+  credentials to make real calls - grab an API key and Project ID from the
+  [dashboard](https://platform.zerogpu.ai/dashboard) and keep them in environment
+  variables.
+</Tip>
+
+## Try it
+
+Once installed, prompts like these will trigger the Skill:
+
+```text
+Write a Node script that summarizes long documents with ZeroGPU.
+```
+
+```text
+What's the cheapest ZeroGPU model to redact PII from support tickets?
+```
+
+```text
+Set up a ZeroGPU batch job to classify 50,000 product reviews.
+```
+
+```text
+Which ZeroGPU CLI command extracts named entities from text?
+```
+
+## How it compares to the other integrations
+
+<CardGroup cols={3}>
+  <Card title="Claude Skill (this page)" icon="sparkles">
+    Knowledge only. Claude *knows* ZeroGPU best practices and writes correct
+    code/CLI for you. No credentials needed to install.
+  </Card>
+  <Card title="MCP Server" icon="plug" href="/integrations/mcp">
+    Execution. Connect any MCP client so Claude can *call* ZeroGPU models as
+    tools.
+  </Card>
+  <Card title="Claude Code plugin" icon="terminal" href="/integrations/claude-code-plugin">
+    Execution in the terminal. The `zerogpu-router` plugin runs ZeroGPU skills
+    inside a Claude Code session.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+**The Skill doesn't seem to activate.** Make sure it's enabled in **Settings ->
+Skills**, then start a fresh conversation. Mention ZeroGPU or the task
+explicitly ("classify", "redact PII", "summarize", "batch") so the description
+matches.
+
+**Claude suggests an unsupported feature.** Re-download the latest `SKILL.md` -
+the file is versioned at `https://zerogpu.ai/SKILL.md`. The Skill instructs
+Claude to stick to documented features and to point you here when uncertain.
+
+**I need exact pricing or model details.** Those live in the
+[Model Catalog](/docs/model-catalog), which the Skill links rather than
+hardcoding, so prices stay current.
+
+## Next steps
+
+<Columns cols={3}>
+  <Card title="Quickstart" icon="play" href="/docs/quickstart" />
+  <Card title="Model Catalog" icon="table-list" href="/docs/model-catalog" />
+  <Card title="API Reference" icon="terminal" href="/api-reference/responses" />
+</Columns>
