@@ -1,0 +1,16 @@
+---
+title: "zlm-v1-iab-domain-classifier"
+sidebarTitle: "Domain IAB Classifier"
+description: "Model details for zlm-v1-iab-domain-classifier."
+openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-domain-classifier.openapi.json POST /responses"
+---
+
+<Note>
+	The `instructions` field is not needed for this model. It maps a raw domain
+	name directly to the IAB Content Taxonomy, so you only need to send the domain
+	as input
+</Note>
+
+> ZeroGPU's Domain IAB Classifier maps a raw domain name straight to the IAB Content Taxonomy in a single, fast inference call, returning content categories, topics, keywords, and user-intent signals. Because it needs only the domain as input, it reduces payload size by up to 10x compared to page-level classification workflows while still surfacing the contextual signals that bidstream enrichment, contextual targeting, and domain-level intelligence pipelines run on. At 149M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge.
+
+**References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

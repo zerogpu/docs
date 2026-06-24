@@ -9,6 +9,7 @@ Text classification models map a passage to predefined labels or categories. Zer
 | --- | --- | ---: | ---: | ---: |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | 90M | 400 | $0.05 | $0.40 |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge-enriched</code></a> | 90M | 400 | $0.05 | $0.40 |
+| <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | 149M | 100 | $0.05 | $0.40 |
 | <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | 142M | 400 | $0.04 | $0.10 |
 
 ## zlm-v1-iab-classify-edge
@@ -145,6 +146,71 @@ In addition to scored `audience` and `content` categories, the enriched model re
   "keywords": ["technology", "reshaped", "everyday", "routines", "quietly", "weaving", "rhythm", "itself", "life", "into"],
   "user_intent": {
     "name": "mastering technology quietly reshaped rhythm everyday life",
+    "category": "informational",
+    "score": 0.5
+  }
+}
+```
+
+## zlm-v1-iab-domain-classifier
+
+> ZeroGPU's Domain IAB Classifier maps a raw domain name straight to the IAB Content Taxonomy in a single, fast inference call, returning content categories, topics, keywords, and user-intent signals. Where the page-level IAB classifiers take the full body of an article as input, this model takes only the domain (for example `nytimes.com`), reducing payload size by up to 10x while still surfacing the contextual signals that bidstream enrichment, contextual targeting, and domain-level intelligence pipelines run on. At 149M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge.
+
+**References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "nytimes.com",
+  "model": "zlm-v1-iab-domain-classifier"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-iab-domain-classifier",
+  "messages": [
+    {
+      "role": "user",
+      "content": "nytimes.com"
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+Returns scored `content` categories across taxonomy versions plus `topics`, `keywords`, and an inferred `user_intent` for the domain.
+
+```json Response
+{
+  "content": {
+    "iab_1_0": [
+      { "name": "News", "score": 0.8124 },
+      { "name": "Politics", "score": 0.6533 }
+    ],
+    "iab_2_2": [
+      { "name": "News and Politics", "score": 0.8124 },
+      { "name": "Business and Finance", "score": 0.5980 }
+    ]
+  },
+  "topics": [
+    { "name": "news", "score": 0.8124 },
+    { "name": "journalism", "score": 0.6740 },
+    { "name": "current events", "score": 0.6533 }
+  ],
+  "keywords": ["news", "politics", "world", "business", "opinion", "media", "journalism"],
+  "user_intent": {
+    "name": "reading news and current events",
     "category": "informational",
     "score": 0.5
   }
