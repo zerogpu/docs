@@ -262,7 +262,14 @@
             "description": "Forbidden"
           },
           "420": {
-            "description": "Insufficient quota"
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal server error"
