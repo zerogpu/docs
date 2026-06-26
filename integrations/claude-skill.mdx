@@ -1,0 +1,53 @@
+---
+title: "Claude Skill"
+description: "Upload the ZeroGPU Skill to Claude Desktop so Claude follows ZeroGPU best practices when you ask it to classify, extract, summarize, or moderate content."
+icon: "sparkles"
+---
+
+The ZeroGPU Skill is a single `SKILL.md` file you upload to Claude Desktop. Once
+installed, Claude automatically applies ZeroGPU best practices whenever your
+conversation touches inference tasks like classification, PII detection,
+summarization, or content safety.
+
+## Installation
+
+<Steps>
+  <Step title="Download SKILL.md">
+    Download the Skill from `https://zerogpu.ai/SKILL.md`.
+  </Step>
+  <Step title="Open Claude Desktop">
+    Launch the Claude Desktop app.
+  </Step>
+  <Step title="Go to Settings -> Skills">
+    Open **Settings -> Skills**.
+  </Step>
+  <Step title="Upload the file">
+    Add a new Skill and upload the `SKILL.md` file you downloaded.
+  </Step>
+</Steps>
+
+## Usage
+
+Once installed, prompts like these will trigger the Skill:
+
+```text
+Classify nytimes.com using ZeroGPU
+```
+
+```text
+Detect PII in this text
+```
+
+```text
+Summarize this article
+```
+
+```text
+Check if this content is unsafe
+```
+
+## Notes
+
+- Requires a ZeroGPU API key.
+- Claude will ask for your credentials if they're missing.
+- Make sure your machine has network access to `api.zerogpu.ai`.
