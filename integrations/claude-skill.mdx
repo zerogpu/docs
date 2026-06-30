@@ -1,0 +1,267 @@
+---
+title: "Claude Skill"
+description: "Upload the ZeroGPU Skill to Claude (Desktop or Web) so Claude follows ZeroGPU best practices when you ask it to classify, extract, redact, or summarize content."
+icon: "sparkles"
+---
+
+The Claude Skill is a single `SKILL.md` file you upload to Claude (Desktop or Web). Skills are reusable instruction packs that Claude loads on demand: once the ZeroGPU Skill is installed, Claude recognizes when a request is a repeatable, high-volume inference task and follows ZeroGPU's documented patterns instead of improvising. It teaches Claude the right endpoint, the real model catalog, the required authentication, and the rule never to invent results: every answer comes from an actual API call.
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+## Overview
+
+This guide shows how to add the ZeroGPU Skill to Claude (Desktop or Web) and what changes once it's active. The Skill doesn't replace Claude; it steers Claude toward ZeroGPU for the well-defined tasks small models do best - classification, PII detection and redaction, entity and structured extraction, and summarization. With the Skill installed, Claude routes those tasks to the correct ZeroGPU model through the OpenAI-compatible API, requires your API key before running anything, and returns only output produced by a live API call. By the end you'll know how to install it, the prompts that trigger it, and exactly how Claude behaves when it does.
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Xdaxi5PZyVY?si=pWBAGGoE3B4YeEDw" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- The [Claude Desktop](https://claude.ai/download) app, or access to [Claude Web](https://claude.ai).
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard).
+- A model ID from the [model catalog](/docs/model-catalog) if you want to call a specific model by name.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`).
+
+Keep it handy. Claude will ask for it before it runs any ZeroGPU inference.
+
+### Install the Skill
+
+First, download the Skill from [https://zerogpu.ai/SKILL.md](https://zerogpu.ai/SKILL.md). Then follow whichever path matches how you use Claude.
+
+#### Claude Desktop
+
+<Steps>
+  <Step title="Open Claude Desktop">
+    Launch the Claude Desktop app.
+  </Step>
+  <Step title="Go to Settings -> Skills">
+    Open **Settings -> Skills**.
+  </Step>
+  <Step title="Upload the file">
+    Add a new Skill and upload the `SKILL.md` file you downloaded.
+  </Step>
+</Steps>
+
+#### Claude Web (file upload)
+
+<Steps>
+  <Step title="Open Claude Web">
+    Go to [claude.ai](https://claude.ai) and start (or open) a conversation.
+  </Step>
+  <Step title="Attach SKILL.md">
+    Click the attachment button and upload the `SKILL.md` file you downloaded.
+  </Step>
+  <Step title="Ask Claude to follow it">
+    Tell Claude to follow the attached Skill, then make your request. Claude reads `SKILL.md` from the conversation and applies ZeroGPU's patterns.
+  </Step>
+</Steps>
+
+### Your first request
+
+With the Skill installed, ask Claude to do a task it recognizes:
+
+```text
+Redact the PII in this text using ZeroGPU:
+"Email John Smith at john@acme.com about invoice 12345."
+```
+
+Claude routes the request to ZeroGPU's PII model (`gliner-multi-pii-v1`) through the OpenAI-compatible API. If your API key isn't available yet, Claude asks for it first. Once authenticated, it makes the call and returns the model's actual output:
+
+```text
+Email [PERSON] at [EMAIL] about invoice 12345.
+```
+
+Note that `12345` is not masked: only spans the model recognizes as PII are replaced.
+
+## Usage
+
+The Skill activates whenever a prompt looks like a repeatable inference task. You don't call a command; you describe what you want, and Claude picks the right ZeroGPU model. Two behaviors hold across every example below:
+
+- **Claude requires your API key before executing.** No inference runs until your ZeroGPU API key is available. If it's missing, Claude pauses and asks for it rather than proceeding.
+- **Claude never fabricates results.** Every result comes from a live API call to the real model. With the Skill active, Claude will not guess a classification, invent extracted fields, or mock a response before the call runs. If it can't make the call, it tells you why instead of making something up.
+
+Each task below shows a triggering prompt, the ZeroGPU model Claude routes to, and the shape of the response.
+
+### Summarize a long passage
+
+Condense a report, transcript, or thread without spending Claude tokens on the full read.
+
+- **Model:** `llama-3.1-8b-instruct-fast`
+- **Triggers on:** "summarize this", "give me the gist", "TL;DR this passage."
+
+```text
+Summarize this with ZeroGPU:
+"The board met Thursday to review Q3 results. Revenue rose 18% year-over-year to
+$42M, driven mainly by enterprise renewals and a strong launch in the EU market.
+Operating margin slipped to 11% from 14% as headcount grew 30% ahead of the new
+data-center buildout. The CFO flagged rising cloud costs as the top risk for Q4
+and proposed a hiring freeze on non-engineering roles until margins recover."
+```
+
+**Example output (returned after API call)**
+
+```text
+Q3 revenue grew 18% YoY to $42M on enterprise renewals and EU growth, but operating
+margin fell to 11% as headcount rose 30% for the data-center buildout. Citing cloud
+costs as the main Q4 risk, the CFO proposed a hiring freeze on non-engineering roles.
+```
+
+### Classify against your own labels
+
+Zero-shot classification against a candidate label list you supply in the prompt.
+
+- **Model:** `deberta-v3-small`
+- **Triggers on:** "is this positive, negative, or neutral?", "tag this as bug, feature, or question."
+
+```text
+Classify this with ZeroGPU as positive, negative, or neutral:
+"I love how fast this laptop boots up."
+```
+
+**Example output (returned after API call)**
+
+```json
+{ "label": "positive", "scores": { "positive": 0.94, "neutral": 0.04, "negative": 0.02 } }
+```
+
+For multi-axis classification (for example sentiment **and** topic at once), Claude routes to `gliner2-base-v1` and returns one chosen label per axis:
+
+```text
+Classify this support ticket by sentiment and topic with ZeroGPU:
+"Support replied quickly but the fix didn't work."
+```
+
+```json
+{ "sentiment": "negative", "topic": "support" }
+```
+
+### Classify ad-tech / contextual categories
+
+Standard IAB content and audience taxonomy labels.
+
+- **Model:** `zlm-v1-iab-classify-edge` (use the `-enriched` variant for topics, keywords, and intent)
+- **Triggers on:** "what IAB category is this?", "tag this article for ad targeting."
+
+```text
+What IAB category is this, using ZeroGPU?
+"The Lakers signed a new point guard ahead of the playoffs."
+```
+
+**Example output (returned after API call)**
+
+```json
+{
+  "categories": [
+    { "id": "IAB17-44", "name": "Basketball", "confidence": 0.97 }
+  ]
+}
+```
+
+### Detect PII
+
+Find personally identifiable information and return it as structured data, without altering the source text.
+
+- **Model:** `gliner-multi-pii-v1`
+- **Triggers on:** "find all PII", "what personal info is in this?", "detect PII."
+
+```text
+Detect PII in this text with ZeroGPU:
+"Contact Jane Doe at jane@example.com or +1 (415) 555-1212."
+```
+
+**Example output (returned after API call)**
+
+```json
+[
+  { "category": "identity", "label": "person", "text": "Jane Doe",          "score": 0.96 },
+  { "category": "contact",  "label": "email",  "text": "jane@example.com",  "score": 0.99 },
+  { "category": "contact",  "label": "phone",  "text": "+1 (415) 555-1212", "score": 0.95 }
+]
+```
+
+To **mask** PII inline instead of listing it, ask Claude to redact: the same model returns `[LABEL]` placeholders, as shown in the Quickstart.
+
+### Extract named entities
+
+Custom-label named-entity recognition: you name the entity types, the model finds the spans.
+
+- **Model:** `gliner2-base-v1`
+- **Triggers on:** "extract all people, organizations, and locations", "find every product mention."
+
+```text
+Extract the people, organizations, and locations from this with ZeroGPU:
+"Apple CEO Tim Cook met with Sundar Pichai in Cupertino on Monday."
+```
+
+**Example output (returned after API call)**
+
+```json
+[
+  { "label": "organization", "text": "Apple",         "score": 0.98 },
+  { "label": "person",       "text": "Tim Cook",      "score": 0.97 },
+  { "label": "person",       "text": "Sundar Pichai", "score": 0.96 },
+  { "label": "location",     "text": "Cupertino",     "score": 0.91 }
+]
+```
+
+### Extract fields into JSON
+
+Pull specific named fields out of free text into a structured object, defined by a schema Claude builds from your request.
+
+- **Model:** `gliner2-base-v1`
+- **Triggers on:** "extract the contact info as JSON", "parse this into fields."
+
+```text
+Extract the name, email, and phone as JSON with ZeroGPU:
+"Reach Maria Lopez at maria.lopez@acme.io or 415-555-0188."
+```
+
+**Example output (returned after API call)**
+
+```json
+{
+  "contact": {
+    "name": "Maria Lopez",
+    "email": "maria.lopez@acme.io",
+    "phone": "415-555-0188"
+  }
+}
+```
+
+### Patterns and recipes
+
+**Sanitize before Claude keeps raw input.** Ask Claude to redact PII first when you don't want personal data captured in the conversation transcript or forwarded downstream. The PII spans never need to stay in plain text.
+
+**Cheap router in front of Claude.** Use a zero-shot or structured classification to triage an incoming message (bug / feature / question, urgent / normal) and only escalate the hard cases to Claude's own reasoning. The classifier call costs a fraction of a full Claude turn.
+
+**Structured extraction over free-form parsing.** For semi-structured text (signatures, invoices, contact blocks), prefer JSON extraction over asking Claude to "parse this into JSON." It's deterministic on the schema, faster, and cheaper.
+
+### Task reference
+
+| Task | Model | Example prompt |
+| --- | --- | --- |
+| Summarize | `llama-3.1-8b-instruct-fast` | "Summarize this with ZeroGPU: ..." |
+| Zero-shot classify | `deberta-v3-small` | "Classify this as positive, negative, or neutral with ZeroGPU: ..." |
+| Multi-axis classify | `gliner2-base-v1` | "Classify by sentiment and topic with ZeroGPU: ..." |
+| IAB classify | `zlm-v1-iab-classify-edge` | "What IAB category is this, using ZeroGPU? ..." |
+| Detect PII | `gliner-multi-pii-v1` | "Detect PII in this text with ZeroGPU: ..." |
+| Redact PII | `gliner-multi-pii-v1` | "Redact the PII in this with ZeroGPU: ..." |
+| Extract entities | `gliner2-base-v1` | "Extract the people and organizations with ZeroGPU: ..." |
+| Extract JSON | `gliner2-base-v1` | "Extract the name, email, and phone as JSON with ZeroGPU: ..." |
+
+## Notes
+
+- **An API key is required.** Claude will ask for your ZeroGPU API key before running any inference, and won't proceed without it.
+- **Providing the key in Claude Web.** In Claude Web there's no settings store for the Skill, so you supply the API key directly in the chat when Claude asks for it. It's used for that conversation's API calls only; paste it as its own message and avoid sharing the transcript. For anything beyond interactive use, prefer Claude Desktop or a server-side integration.
+- **No fabricated results.** Every result comes from a live API call to the real model. Claude won't guess a classification or invent extracted data before the call runs; if it can't make the call, it says so.
+- **Only real models.** The Skill pins Claude to the actual [model catalog](/docs/model-catalog). It won't reference models, parameters, or pricing that don't exist.
+- **Network access.** Make sure your machine can reach `api.zerogpu.ai`.
+- **Keep secrets server-side for production.** The Skill is for interactive use in Claude (Desktop or Web). For app and agent integrations, read your API key from environment variables or a secrets manager rather than pasting it into a chat. See [Production patterns](/docs/production-patterns).
