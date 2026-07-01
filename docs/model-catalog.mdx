@@ -10,217 +10,118 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 ## At a glance
 
 | Model | Task | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | --- | --: | --: | --: |
-|  | Summarization | 8B | 131,072 | \$0.02 | \$0.05 |
-|  | Text Classification | 90M | 400 | \$0.02 | \$0.05 |
-|  | Text Classification | 90M | 400 | \$0.02 | \$0.05 |
-|  | Text Classification | 149M | 100 | \$0.02 | \$0.05 |
-|  | Text Generation | 120M | 400 | \$0.02 | \$0.05 |
-|  | PII | 300M | 800 | \$0.02 | \$0.05 |
-|  | PII | 205M | 800 | \$0.02 | \$0.05 |
-|  | Text Classification | 142M | 400 | \$0.02 | \$0.05 |
-|  | Text Generation | 1.2B | 32,768 | \$0.02 | \$0.05 |
-|  | Text Generation | 1.2B | 32,768 | \$0.02 | \$0.05 |
+| --- | --- | --- | ---: | ---: | ---: |
+| <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | Summarization | 8B | 131,072 | $0.02 | $0.05 |
+| <a href="/api-reference/models/zlm-v1-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge-enriched</code></a> | Text Classification | 90M | 400 | $0.02 | $0.05 |
+| <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | Text Classification | 90M | 400 | $0.02 | $0.05 |
+| <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | Text Classification | 149M | 100 | $0.02 | $0.05 |
+| <a href="/api-reference/models/zlm-v1-followup-questions-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="22" height="22" noZoom /> <code>zlm-v1-followup-questions-edge</code></a> | Text Generation | 120M | 400 | $0.02 | $0.05 |
+| <a href="/api-reference/models/gliner-multi-pii-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="22" height="22" noZoom /> <code>gliner-multi-pii-v1</code></a> | PII | 300M | 800 | $0.02 | $0.05 |
+| <a href="/api-reference/models/gliner2-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="22" height="22" noZoom /> <code>gliner2-base-v1</code></a> | PII | 205M | 800 | $0.02 | $0.05 |
+| <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | Text Classification | 142M | 400 | $0.02 | $0.05 |
+| <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | Text Generation | 1.2B | 32,768 | $0.02 | $0.05 |
+| <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | Text Generation | 1.2B | 32,768 | $0.02 | $0.05 |
 
 ## Detailed model cards
 
 <CardGroup cols={2}>
   <Card href="/api-reference/models/llama-3-1-8b-instruct-fast">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>llama-3.1-8b-instruct-fast</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>llama-3.1-8b-instruct-fast</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>llama-3.1-8b-instruct-fast</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Summarization</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>8B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>131,072 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.02 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Summarization</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>8B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>131,072 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     Meta's Llama 3.1 Instruct, tuned for fast, low-cost summarization at scale on the ZeroGPU edge network. Its 128K-token context window takes in entire documents, long transcripts, and full email or…
   </Card>
-
   <Card href="/api-reference/models/zlm-v1-iab-classify-edge-enriched">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge-enriched</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge-enriched</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge-enriched</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>90M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>90M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     The enriched variant of ZeroGPU's IAB classifier turns a single inference call into a full content-intelligence profile not just a label, but everything a contextual pipeline needs to act on. Each…
   </Card>
-
   <Card href="/api-reference/models/zlm-v1-iab-classify-edge">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-classify-edge</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>90M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>90M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     ZeroGPU's IAB classifier maps any text to the industry-standard IAB Content Taxonomy in a single, fast inference call. Each call returns categories across both the 1.0 and 2.2 taxonomies plus matched…
   </Card>
-
   <Card href="/api-reference/models/zlm-v1-iab-domain-classifier">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-domain-classifier</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-domain-classifier</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-iab-domain-classifier</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>149M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>100 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>149M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>100 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     ZeroGPU's Domain IAB Classifier maps a raw domain name straight to the IAB Content Taxonomy, returning content categories, topics, keywords, and user-intent signals. It needs only the domain as input, cutting payload size by up to 10x versus page-level…
   </Card>
-
   <Card href="/api-reference/models/zlm-v1-followup-questions-edge">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-followup-questions-edge</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-followup-questions-edge</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-followup-questions-edge</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>120M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>120M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     ZeroGPU's follow-up question generator takes any piece of content — an article, an answer, a chat turn and returns a short set of natural questions a reader would actually ask next. Where a…
   </Card>
-
   <Card href="/api-reference/models/gliner-multi-pii-v1">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner-multi-pii-v1</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner-multi-pii-v1</div>
-</div>
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>PII</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>300M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>800 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner-multi-pii-v1</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>PII</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>300M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>800 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
-
-    GLiNER Multi PII is a multilingual PII detection and redaction model that supports on-prem deployments as well. It identifies 40\+ personally identifiable entity types — identity, contact, government…
+    GLiNER Multi PII is a multilingual PII detection and redaction model that supports on-prem deployments as well. It identifies 40+ personally identifiable entity types — identity, contact, government…
   </Card>
-
   <Card href="/api-reference/models/gliner2-base-v1">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner2-base-v1</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner2-base-v1</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>gliner2-base-v1</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>PII</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>205M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>800 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.05 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.40 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>PII</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>205M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>800 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     gliner2-base-v1 is a versatile extraction-and-classification model for the structured tasks that fill most production pipelines. Point it at any text and, with a single API call, pull named entities…
   </Card>
-
   <Card href="/api-reference/models/deberta-v3-small">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>deberta-v3-small</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>deberta-v3-small</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>deberta-v3-small</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>142M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.04 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.10 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Classification</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>142M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>400 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     Microsoft's DeBERTa-v3-small is a fast, lightweight zero-shot text classifier for high-volume routing, filtering, and tagging. Hand it any text alongside your own candidate labels and it returns a…
   </Card>
-
   <Card href="/api-reference/models/lfm2-5-1-2b-thinking">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Thinking</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Thinking</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Thinking</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>1.2B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>32,768 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.02 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.10 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>1.2B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>32,768 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     Liquid AI's LFM2.5-1.2B-Thinking is a compact reasoning model that works through a problem step by step before it answers. Built by Liquid AI, it generates an explicit chain-of-thought trace so for…
   </Card>
-
   <Card href="/api-reference/models/lfm2-5-1-2b-instruct">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Instruct</div>
+    </div>
 
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Instruct</div>
-</div>
-
-    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
-  <img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
-
-  <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>LFM2.5-1.2B-Instruct</div>
-</div>
-
-    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>1.2B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>32,768 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.02 in /1M</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>$0.10 out /1M</span></div>
-
-    <div style={{marginTop:"0.45rem"}} />
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Generation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>1.2B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>32,768 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
 
     Liquid AI's LFM2.5-1.2B-Instruct is a hybrid architecture model purpose-built for on-device deployment, trained on 28 trillion tokens with multi-stage reinforcement learning. It delivers…
   </Card>
@@ -232,19 +133,15 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
   <Card title="Ad Tech" icon="bullhorn" href="/docs/ad-tech">
     3 models: `zlm-v1-iab-classify-edge`, `zlm-v1-iab-classify-edge-enriched`, `zlm-v1-iab-domain-classifier`
   </Card>
-
   <Card title="Text Classification" icon="tags" href="/docs/text-classification">
     4 models: `zlm-v1-iab-classify-edge-enriched`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier`, `deberta-v3-small`
   </Card>
-
   <Card title="Text Generation" icon="wand-magic-sparkles" href="/docs/text-generation">
     3 models: `zlm-v1-followup-questions-edge`, `LFM2.5-1.2B-Thinking`, `LFM2.5-1.2B-Instruct`
   </Card>
-
   <Card title="PII" icon="user-shield" href="/docs/pii">
     2 models: `gliner-multi-pii-v1`, `gliner2-base-v1`
   </Card>
-
   <Card title="Summarization" icon="file-lines" href="/docs/summarization">
     1 model: `llama-3.1-8b-instruct-fast`
   </Card>
