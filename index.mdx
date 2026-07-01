@@ -68,21 +68,30 @@ resp = client.responses.create(
 ## What you can run
 
 <Columns cols={4}>
-  <Card title="Text classification" icon="tags" href="/docs/text-classification" />
-  <Card title="Text generation" icon="pen-nib" href="/docs/text-generation" />
-  <Card title="PII detection" icon="user-secret" href="/docs/pii" />
-  <Card title="Summarization" icon="align-left" href="/docs/summarization" />
+  <Card title="Text classification" icon="tags" href="/docs/text-classification">
+  </Card>
+
+  <Card title="Text generation" icon="pen-nib" href="/docs/text-generation">
+  </Card>
+
+  <Card title="PII detection" icon="user-secret" href="/docs/pii">
+  </Card>
+
+  <Card title="Summarization" icon="align-left" href="/docs/summarization">
+  </Card>
 </Columns>
 
 ## What you get
 
 <Columns cols={3}>
   <Card title="Lower cost and latency" icon="gauge-high">
-    Specialized small and nano models on distributed compute. ~10x faster and 50%+ cheaper on production tasks.
+    Specialized small and nano models on distributed compute. ~10x faster and 50%\+ cheaper on production tasks.
   </Card>
+
   <Card title="One OpenAI-compatible API" icon="plug">
     `POST /v1/responses`; integrate with minimal code changes.
   </Card>
+
   <Card title="Built for production" icon="chart-line">
     Token usage, latency, and volume per request, with project isolation for dev, staging, and production.
   </Card>
@@ -90,13 +99,32 @@ resp = client.responses.create(
 
 ## How it works
 
+<Steps>
+  <Step title="Create a project">
+    One organization, multiple projects. Each gets its own API key and dashboard.
+  </Step>
+  <Step title="Send requests">
+    POST to `/v1/responses` with your key, project ID, and model. Response comes back as structured JSON.
+  </Step>
+  <Step title="Monitor everything">
+    Token usage, request volume, latency, error rates: all visible in the dashboard. Debug individual requests in Logs.
+  </Step>
+</Steps>
+
 Workload analysis → Model selection → Edge orchestration. ZeroGPU classifies each task, picks the fastest viable model, and routes it to the right compute. See [How ZeroGPU works](/docs/how-zerogpu-works) for the full picture.
 
 ## Go deeper
 
 <Columns cols={3}>
-  <Card title="Quickstart" icon="play" href="/docs/quickstart" />
-  <Card title="How ZeroGPU works" icon="diagram-project" href="/docs/how-zerogpu-works" />
-  <Card title="Model Catalog" icon="table-list" href="/docs/model-catalog" />
-  <Card title="API Reference" icon="terminal" href="/api-reference/responses" />
+  <Card title="Quickstart" icon="play" href="/docs/quickstart">
+  </Card>
+
+  <Card title="How ZeroGPU works" icon="diagram-project" href="/docs/how-zerogpu-works">
+  </Card>
+
+  <Card title="Model Catalog" icon="table-list" href="/docs/model-catalog">
+  </Card>
+
+  <Card title="API Reference" icon="terminal" href="/api-reference/responses">
+  </Card>
 </Columns>
