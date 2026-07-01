@@ -6,13 +6,13 @@ description: "Multilingual PII detection, redaction, and schema-driven extractio
 PII models detect, redact, and extract personally identifiable information and other structured entities from text. Both models below run on CPU for privacy-preserving workflows and select a behavior through the `metadata.usecase` field. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
 | Model | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | ---: | ---: | ---: |
-| <a href="/api-reference/models/gliner-multi-pii-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="22" height="22" noZoom /> <code>gliner-multi-pii-v1</code></a> | 300M | 800 | $0.05 | $0.40 |
-| <a href="/api-reference/models/gliner2-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="22" height="22" noZoom /> <code>gliner2-base-v1</code></a> | 205M | 800 | $0.05 | $0.40 |
+| --- | --- | --: | --: | --: |
+|  | 300M | 800 | \$0.02 | \$0.05 |
+|  | 205M | 800 | \$0.02 | \$0.05 |
 
 ## gliner-multi-pii-v1
 
-> GLiNER Multi PII is a multilingual PII detection and redaction model that supports on-prem deployments as well. It identifies 40+ personally identifiable entity types — identity, contact, government IDs, financial, medical and more. It works natively across six languages: English, French, German, Spanish, Italian, and Portuguese, so a single model covers multi-market and cross-border data without separate per-language pipelines. Built for zero-shot label, it accepts custom label sets at inference time and supports curated PII catalogues, redaction with label or character masks, and generic NER with user-supplied labels.
+> GLiNER Multi PII is a multilingual PII detection and redaction model that supports on-prem deployments as well. It identifies 40\+ personally identifiable entity types — identity, contact, government IDs, financial, medical and more. It works natively across six languages: English, French, German, Spanish, Italian, and Portuguese, so a single model covers multi-market and cross-border data without separate per-language pipelines. Built for zero-shot label, it accepts custom label sets at inference time and supports curated PII catalogues, redaction with label or character masks, and generic NER with user-supplied labels.
 
 **References:** [Model docs](https://github.com/fastino-ai/GLiNER2/blob/main/README.md) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
 
