@@ -165,6 +165,52 @@ What IAB category is this, using ZeroGPU?
 }
 ```
 
+### Classify a domain by name
+
+Map a bare domain to IAB categories, topics, and intent without fetching the page - the input is just the hostname, which keeps the payload tiny for bidstream and contextual targeting.
+
+- **Model:** `zlm-v1-iab-domain-classifier`
+- **Triggers on:** "what categories is this domain?", "classify indeed.com for targeting."
+
+```text
+Classify this domain with ZeroGPU:
+"indeed.com"
+```
+
+**Example output (returned after API call)**
+
+```json
+{
+  "domain": "indeed.com",
+  "categories": [
+    { "id": "IAB4", "name": "Careers", "confidence": 0.96 }
+  ]
+}
+```
+
+### Moderate content for safety
+
+Screen text for unsafe or policy-violating content and get OpenAI-style moderation signals back - useful as a lightweight safety layer in front of your app or another model.
+
+- **Model:** `zlm-v1-moderation-edge`
+- **Triggers on:** "moderate this", "is this safe?", "flag any harmful content."
+
+```text
+Moderate this with ZeroGPU:
+"I am so angry at this person that I want to hurt them. They are worthless and
+should be scared of what I might do next."
+```
+
+**Example output (returned after API call)**
+
+```json
+{
+  "flagged": true,
+  "categories": { "harassment": true, "violence": true, "hate": false },
+  "category_scores": { "harassment": 0.97, "violence": 0.92, "hate": 0.07 }
+}
+```
+
 ### Detect PII
 
 Find personally identifiable information and return it as structured data, without altering the source text.
@@ -236,6 +282,77 @@ Extract the name, email, and phone as JSON with ZeroGPU:
 }
 ```
 
+### Generate follow-up questions
+
+Turn any passage into a short set of natural questions a reader would ask next - ready to render as "what to ask next" prompts.
+
+- **Model:** `zlm-v1-followup-questions-edge`
+- **Triggers on:** "what should I ask next?", "suggest follow-up questions for this."
+
+```text
+Generate follow-up questions for this with ZeroGPU:
+"Electric vehicles are gaining popularity worldwide as battery costs drop and
+charging infrastructure expands. Most modern EVs offer a range of 250 to 350
+miles on a single charge, and fast-charging stations can replenish 80% of
+battery capacity in under 30 minutes."
+```
+
+**Example output (returned after API call)**
+
+```json
+{
+  "questions": [
+    "How well does an EV's range hold up in cold weather?",
+    "What happens to EV batteries at the end of their life?",
+    "How does charging cost compare to refueling a gas car?"
+  ]
+}
+```
+
+### Translate or reply conversationally
+
+A compact instruct model for short conversational replies, translation, and intent detection - pass an optional system instruction to set its role.
+
+- **Model:** `LFM2.5-1.2B-Instruct`
+- **Triggers on:** "translate this", "write a short reply", "draft an in-app message."
+
+```text
+Reply to this with ZeroGPU, as a friendly fitness-app assistant:
+"I just completed a 5K run in 28 minutes. Give me a short motivational follow-up
+message."
+```
+
+**Example output (returned after API call)**
+
+```text
+Nice work - a 28-minute 5K is a strong pace! Keep that momentum going and see if
+you can shave off a few seconds on your next run. You've got this.
+```
+
+### Reason through a decision
+
+A small reasoning model that thinks step by step before committing - useful for triage, routing, and multi-step decisions where you want to see the why, not just the answer.
+
+- **Model:** `LFM2.5-1.2B-Thinking`
+- **Triggers on:** "triage this ticket", "reason through this then decide", "route this request."
+
+```text
+Triage this support ticket with ZeroGPU - assign one team (Billing, Technical,
+Account, General) and one priority (Low, Medium, High):
+"Our whole team got locked out of the dashboard this morning after the payment
+failed. We have a product demo with a customer in 2 hours and cannot log in.
+Card on file should be valid."
+```
+
+**Example output (returned after API call)**
+
+```text
+The lockout follows a failed payment, so the root cause is billing rather than a
+technical fault. A customer demo in 2 hours makes this time-critical.
+
+Billing | High
+```
+
 ### Patterns and recipes
 
 **Sanitize before Claude keeps raw input.** Ask Claude to redact PII first when you don't want personal data captured in the conversation transcript or forwarded downstream. The PII spans never need to stay in plain text.
@@ -252,16 +369,49 @@ Extract the name, email, and phone as JSON with ZeroGPU:
 | Zero-shot classify | `deberta-v3-small` | "Classify this as positive, negative, or neutral with ZeroGPU: ..." |
 | Multi-axis classify | `gliner2-base-v1` | "Classify by sentiment and topic with ZeroGPU: ..." |
 | IAB classify | `zlm-v1-iab-classify-edge` | "What IAB category is this, using ZeroGPU? ..." |
+| Domain classify | `zlm-v1-iab-domain-classifier` | "Classify this domain with ZeroGPU: ..." |
+| Moderate content | `zlm-v1-moderation-edge` | "Moderate this with ZeroGPU: ..." |
 | Detect PII | `gliner-multi-pii-v1` | "Detect PII in this text with ZeroGPU: ..." |
 | Redact PII | `gliner-multi-pii-v1` | "Redact the PII in this with ZeroGPU: ..." |
 | Extract entities | `gliner2-base-v1` | "Extract the people and organizations with ZeroGPU: ..." |
 | Extract JSON | `gliner2-base-v1` | "Extract the name, email, and phone as JSON with ZeroGPU: ..." |
+| Follow-up questions | `zlm-v1-followup-questions-edge` | "Generate follow-up questions for this with ZeroGPU: ..." |
+| Translate / reply | `LFM2.5-1.2B-Instruct` | "Reply to this with ZeroGPU: ..." |
+| Reason / triage | `LFM2.5-1.2B-Thinking` | "Triage this ticket with ZeroGPU: ..." |
 
-## Notes
+## Troubleshooting
 
-- **An API key is required.** Claude will ask for your ZeroGPU API key before running any inference, and won't proceed without it.
-- **Providing the key in Claude Web.** In Claude Web there's no settings store for the Skill, so you supply the API key directly in the chat when Claude asks for it. It's used for that conversation's API calls only; paste it as its own message and avoid sharing the transcript. For anything beyond interactive use, prefer Claude Desktop or a server-side integration.
-- **No fabricated results.** Every result comes from a live API call to the real model. Claude won't guess a classification or invent extracted data before the call runs; if it can't make the call, it says so.
-- **Only real models.** The Skill pins Claude to the actual [model catalog](/docs/model-catalog). It won't reference models, parameters, or pricing that don't exist.
-- **Network access.** Make sure your machine can reach `api.zerogpu.ai`.
-- **Keep secrets server-side for production.** The Skill is for interactive use in Claude (Desktop or Web). For app and agent integrations, read your API key from environment variables or a secrets manager rather than pasting it into a chat. See [Production patterns](/docs/production-patterns).
+**Claude doesn't route the task to ZeroGPU** - the Skill activates on intent, so a request that reads like general chat may get answered directly. Add "with ZeroGPU" to the prompt, or confirm the Skill is installed and enabled (Claude Desktop: **Settings -> Skills**; Claude Web: re-attach `SKILL.md` and tell Claude to follow it).
+
+**Claude keeps asking for your API key** - no inference runs until the key is available. In Claude Web there's no settings store, so the key lives only in the current conversation; paste it again as its own message when Claude prompts. In Claude Desktop, re-add the Skill if the key didn't persist across sessions.
+
+**"Invalid API key" or the call is rejected** - the key must start with `zgpu-api-`. You've likely pasted a truncated key or a different credential; copy it again from the [dashboard](https://platform.zerogpu.ai/dashboard).
+
+**Network or "couldn't reach the API" errors** - the machine running Claude must be able to reach `api.zerogpu.ai`. Corporate proxies, VPNs, and firewalls are the usual blockers; allowlist the host or switch networks.
+
+**Claude references a model, parameter, or price that doesn't exist** - this shouldn't happen with the Skill active, since it pins Claude to the real [model catalog](/docs/model-catalog). If it does, the Skill probably isn't loaded - re-download `SKILL.md` from [zerogpu.ai/SKILL.md](https://zerogpu.ai/SKILL.md), re-upload it, and confirm Claude says it's following it.
+
+**Claude picks the wrong model for a task** - routing is driven by intent. Phrase the request with the task verb ("summarize", "redact PII", "classify by sentiment and topic", "moderate this") or name the model from the [model catalog](/docs/model-catalog) directly.
+
+**Empty or low-confidence results** - very short inputs (a word or two) score low across the board. Give the model more context, and check that the source-text language matches your labels - most label sets are English-tuned.
+
+**Rate limited, or a 429 / 5xx error** - back off and retry after a short delay. For bulk or offline workloads, move the job to the [Batch API](/docs/batch/index), which has separate quotas tuned for high-volume processing.
+
+## Conclusion
+
+The ZeroGPU Skill turns Claude into a smart router for the repeatable work small models do best - classification, IAB and domain tagging, PII detection and redaction, entity and JSON extraction, summarization, moderation, and lightweight reasoning - so Claude's own reasoning is spent only where it's needed and every result comes from a real API call. Install it once, keep your API key handy, and describe the task in plain language. For anything beyond interactive use, read your key from environment variables or a secrets manager rather than pasting it into a chat - see [Production patterns](/docs/production-patterns).
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model the Skill routes to and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/responses">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/index">
+    Worked examples for classification, extraction, and batch jobs.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>
