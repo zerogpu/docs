@@ -1,0 +1,304 @@
+---
+title: "🦞 Build a PII-Safe Inbox Summarizer with Your OpenClaw Assistant"
+description: "Forward messy messages to your OpenClaw assistant and have it redact PII, summarize the thread, and classify topic and urgency, offloading every cheap step to ZeroGPU's nano models."
+---
+
+This notebook demonstrates how to turn your OpenClaw assistant into a PII-safe inbox summarizer, so that any long or messy message you forward it comes back as a short, shareable summary with a topic and urgency label, and never drags raw personal data into your primary model's context. You send a wall-of-text support email, a forwarded thread, or a noisy group-chat recap to the assistant in whatever chat app you already use, and it replies with the gist plus a couple of labels, having redacted the names, emails, and phone numbers first. By combining OpenClaw's chat-app gateway with ZeroGPU's edge-optimized nano models, this notebook walks you through a practical pattern where OpenClaw handles the conversation while ZeroGPU does the high-volume, well-defined summarize, classify, and redact work for a fraction of a frontier-model call.
+
+For the full reference, see the [OpenClaw integration guide](/integrations/openclaw).
+
+In this notebook, you'll explore:
+
+- **OpenClaw**: A self-hosted, open-source personal AI assistant that connects the chat apps you already use - Telegram, Slack, Discord, WhatsApp, iMessage, and more - to AI agents and tools through a plugin system. Here it receives the messages you forward in your channel of choice and routes the cheap summarize, classify, and redact steps to ZeroGPU instead of your primary model.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+This setup not only demonstrates a practical application of privacy-safe message triage, but also provides a flexible framework that can be adapted to other real-world scenarios requiring fast, low-cost handling of high-volume, free-text messages.
+
+## 🎥 Watch the Video Guide
+
+Video walkthrough coming soon.
+
+## 📦 Installation
+
+This recipe assumes you already have an OpenClaw gateway installed (see the [OpenClaw docs](https://docs.openclaw.ai/)). You'll add the `zerogpu-router` plugin and the `zerogpu` CLI here, then connect a Telegram channel in a moment so you can actually talk to your assistant.
+
+First, install the CLI and confirm it's on your PATH:
+
+```bash
+npm install -g zerogpu-cli
+zerogpu --version
+```
+
+Next, log in once, then add the plugin from ClawHub. This is what exposes every ZeroGPU command as an OpenClaw skill your assistant can auto-invoke:
+
+```bash
+zerogpu login
+openclaw plugins install clawhub:zerogpu-router
+```
+
+A freshly installed plugin loads its skills on the next gateway start, so if your gateway is already running, restart it (a managed gateway with config reload restarts itself). In a self-hosted or containerized OpenClaw gateway, also make sure the `zerogpu` binary is available inside the same environment the assistant runs in, not just on your laptop. For the full setup, including how skills auto-invoke, see the [OpenClaw integration guide](/integrations/openclaw).
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your ZeroGPU credentials so every skill call works without re-prompting. This ensures your OpenClaw assistant can reach ZeroGPU's inference API securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
+
+Sign in once. `zerogpu login` takes just your API key - no Project ID required - and persists it to your config file so every skill call is authenticated:
+
+```bash
+zerogpu login
+```
+
+Before you forward anything, confirm the CLI is installed and you're signed in. `status` exits `0` and prints your masked API key when everything is wired up:
+
+```bash
+zerogpu --version     # CLI is on your PATH
+zerogpu status        # exits 0 and shows your masked API key when signed in
+```
+
+```
+ZeroGPU CLI 1.x.x
+Signed in ✓
+API key: zgpu-api-************XXXX
+```
+
+If `status` reports you're not signed in, ask your assistant to sign you in, or run `zerogpu login` again before continuing.
+
+## 💬 Connect a Telegram Channel
+
+OpenClaw talks to you through the chat apps you already use, and Telegram is the quickest to wire up: you create a bot, drop its token into your OpenClaw config, start the gateway, and approve a pairing code. Every message you send the bot from then on reaches your assistant, which is where the triage workflow runs. Here's the whole thing, start to finish.
+
+### Step 1: Create a bot with BotFather
+
+In Telegram, message [`@BotFather`](https://t.me/BotFather) (confirm the handle is exactly `@BotFather`), send `/newbot`, and follow the prompts to pick a display name and a username ending in `bot`. BotFather replies with a token. Copy it and keep it secret, since anyone with the token controls your bot.
+
+```text
+You:       /newbot
+BotFather: Alright, a new bot. How are we going to call it?
+You:       ZeroGPU Triage
+BotFather: Good. Now let's choose a username for your bot. It must end in `bot`.
+You:       zerogpu_triage_bot
+BotFather: Done! Use this token to access the HTTP API:
+           123456789:AAExampleTokenStringFromBotFather
+```
+
+### Step 2: Add the token to your OpenClaw config
+
+OpenClaw reads its config from `~/.openclaw/openclaw.json` (it's JSON5, so comments, unquoted keys, and trailing commas are all fine). If that file isn't there yet, create it, or run `openclaw configure` for a guided wizard. To keep config elsewhere, point `OPENCLAW_CONFIG_PATH` at the file. Open it and add a `channels.telegram` block with your token. `dmPolicy: "pairing"` means new direct-message senders have to be approved with a pairing code (Step 4), and `requireMention` keeps the bot quiet in groups unless it's mentioned:
+
+```json5
+{
+  channels: {
+    telegram: {
+      enabled: true,
+      botToken: "123456789:AAExampleTokenStringFromBotFather",
+      dmPolicy: "pairing",
+      groups: { "*": { requireMention: true } },
+    },
+  },
+}
+```
+
+Rather than hand-edit the file, you can set the same values from the CLI (or use the **Config** tab in the Control UI at `http://127.0.0.1:18789`):
+
+```bash
+openclaw config set channels.telegram.enabled true
+openclaw config set channels.telegram.botToken "123456789:AAExampleTokenStringFromBotFather"
+openclaw config set channels.telegram.dmPolicy pairing
+```
+
+Prefer to keep the token out of the config file? Set it as an environment variable instead (this resolves for the default account only):
+
+```bash
+export TELEGRAM_BOT_TOKEN="123456789:AAExampleTokenStringFromBotFather"
+```
+
+You can also point `tokenFile` at a file that holds the token if you'd rather not inline it.
+
+### Step 3: Start the gateway
+
+```bash
+openclaw gateway
+```
+
+This launches OpenClaw and connects your bot to Telegram. Leave it running, since it's the process that receives your messages and runs the skills.
+
+### Step 4: Pair your Telegram account
+
+Open Telegram, find your bot by its username, and send it any message, like `hi`. Because `dmPolicy` is `pairing`, OpenClaw holds that first request and prints a pairing code instead of replying. Approve it from another terminal:
+
+```bash
+openclaw pairing list telegram
+openclaw pairing approve telegram <CODE>
+```
+
+Pairing codes expire after 1 hour, so approve promptly. Once approved, your DMs reach the assistant and it starts replying.
+
+### Step 5: Triage a shared group (optional)
+
+To triage a shared support channel instead of your own DMs, add the bot to a Telegram group. With `requireMention` on, it only acts when someone mentions it, so it won't respond to every message in the group. To control who can invoke it, add your numeric Telegram user ID to `allowFrom`. The safest way to find that ID is to DM your bot and watch the logs:
+
+```bash
+openclaw logs --follow
+```
+
+Read the `from.id` value from your message. Group chat IDs are the negative numbers that start with `-100`.
+
+### Verify it works
+
+Send your bot a quick message in Telegram:
+
+```text
+hi
+```
+
+```
+Hi! I'm connected and ready. Forward me a message and I'll help you triage it. 🦞
+```
+
+Everything in the sections below happens right here in this Telegram chat: you message the assistant, it runs the ZeroGPU skills, and it replies inline.
+
+## 📨 Summarize a Message with ZeroGPU
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will summarize a single forwarded message as an example, so you can see exactly what comes back before wiring it into your assistant's inbox workflow.
+
+The `summarize` skill condenses a passage into a few sentences. It routes to `llama-3.1-8b-instruct-fast`. Send your assistant a message like this in your chat app:
+
+```text
+summarize this: Hey team, quick recap of today's sync. We agreed to push the mobile
+checkout redesign to the March release because the payments integration slipped a
+sprint. QA flagged two blocker bugs on Android that engineering will prioritize this
+week. Marketing still wants the new pricing page live before the end of the quarter,
+so we will revisit scope on Thursday. Please update your tickets before standup.
+```
+
+The assistant recognizes the intent, routes to the `summarize` skill, and replies:
+
+```
+Mobile checkout redesign moved to the March release after the payments integration
+slipped a sprint. QA found two Android blocker bugs for engineering to fix this week,
+and marketing still wants the pricing page live by quarter-end, with scope revisited
+Thursday. Everyone should update their tickets before standup.
+
+model: llama-3.1-8b-instruct-fast · 84 tokens in / 58 out
+```
+
+Notice the trailing `model:` line: the work ran on a nano model, not your primary one. That single call is the building block for the whole inbox workflow below.
+
+🎉 **ZeroGPU effortlessly turns a wall of text into a few clean lines in one call, providing a cheap, consistent summarization layer for AI integration!**
+
+## 🦞 Set Up an Automatic Triage Workflow
+
+_This is the recipe: you configure the triage workflow once by saving it to your assistant's memory, and from then on every message you forward is redacted, summarized, and labeled automatically on ZeroGPU's nano models. Set it up once, use it forever._
+
+The pattern is set-and-forget. Instead of describing the pipeline every time, you teach it to the assistant a single time as a standing rule. OpenClaw keeps that instruction in its memory for the channel, so future messages trigger the same redact-summarize-label workflow without you typing anything but the forward.
+
+### Step 1: Save the workflow to memory (once)
+
+Give your assistant the workflow as a standing instruction and ask it to remember it for this channel. You do this a single time:
+
+```text
+Remember this as my triage workflow for this channel: whenever I forward a message,
+first redact any PII, then summarize it in two or three lines, then label it by topic
+(account, billing, bug, feature-request, other) and urgency (low, medium, high).
+Reply with just the summary and the labels, nothing else.
+```
+
+The assistant confirms and stores the rule:
+
+```
+Saved. From now on, any message you forward to this channel will be redacted,
+summarized, and labeled automatically. 🦞
+```
+
+That's the whole setup. You never send that instruction again. (Exactly how a rule is persisted depends on your OpenClaw configuration; see the [OpenClaw docs](https://docs.openclaw.ai/).)
+
+### Step 2: Forward a message
+
+Day to day, you do just one thing: forward the raw message, with no instruction attached.
+
+```text
+Fwd: URGENT can't access my account -
+From: Daniel Okafor <daniel.okafor@brightwave.io>
+
+Hey, I've tried logging in like 10 times since this morning and it keeps saying
+"session expired". I even reset my password twice. This is really frustrating because
+I have a client demo at 2pm and all my files are locked in there. My number is
++1 206-555-0147 if it's faster to call. Account is under this email. Please help ASAP.
+Also btw the mobile app just spins forever on the loading screen. Thanks, Daniel
+```
+
+### Step 3: The saved workflow runs automatically
+
+The forward matches the rule you stored, so the assistant runs the three ZeroGPU skills in order on its own, each on a nano model. You don't send these; they are the tool calls it makes behind the scenes:
+
+1. **`redact-pii`** (`gliner-multi-pii-v1`) masks the personal data before anything else touches the text:
+
+```
+Hey, I've tried logging in ... My number is [PHONE_NUMBER] if it's faster to call.
+Account is under [EMAIL]. Also btw the mobile app just spins forever on the loading
+screen. Thanks, [PERSON]
+```
+
+2. **`summarize`** (`llama-3.1-8b-instruct-fast`) condenses the masked text:
+
+```
+Customer cannot log in since this morning ("session expired") despite two password
+resets, and the mobile app hangs on load. Time-sensitive: client demo at 2pm.
+```
+
+3. **`classify-structured`** (`gliner2-base-v1`) tags it against your label schema:
+
+```json
+{ "topic": "account", "urgency": "high" }
+```
+
+Because redaction runs first, the customer's name, email, and phone never enter the summary, the labels, or your primary model's context.
+
+### Step 4: The reply you get
+
+The assistant returns the finished result in a single message:
+
+```
+🧾 Support triage
+
+Summary: Customer cannot log in since this morning ("session expired") despite two
+password resets, and the mobile app hangs on load. Time-sensitive: client demo at 2pm.
+
+Topic: account   ·   Urgency: high
+PII redacted ✓ (name, email, phone)
+
+💰 ZeroGPU savings so far: ≈ $3 (24,100 frontier-model tokens offloaded)
+```
+
+One forward in, one clean result out - no instruction, because the workflow already lives in the assistant's memory. Your primary model only gets pulled in for the genuinely ambiguous cases.
+
+### Step 5: Go fully hands-off (optional)
+
+To remove even the forward, connect a shared support channel as an OpenClaw channel. The saved workflow then fires on every message that arrives, so the channel stays triaged with no action from you at all. Check the running savings any time:
+
+```text
+how much have I saved with ZeroGPU?
+```
+
+```
+ZeroGPU cost savings
+--------------------
+Calls offloaded:   312
+Tokens offloaded:  24,100
+Estimated savings: ≈ $3.00  (baseline: claude-opus-4-8)
+```
+
+🎉 You set the workflow up once, saved it to your assistant's memory, and now every forwarded message is redacted, summarized, and labeled automatically on ZeroGPU's nano models, with the customer's personal data never reaching your primary model.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running an OpenClaw workflow with ZeroGPU for triaging forwarded messages into PII-safe, labeled summaries. You can adapt and expand this example for various other scenarios requiring fast, low-cost handling of high-volume, free-text messages.
+
+Key tools utilized in this notebook include:
+
+- **OpenClaw**: A self-hosted, open-source personal AI assistant that connects the chat apps you already use - Telegram, Slack, Discord, WhatsApp, iMessage, and more - to AI agents and tools through a plugin system. Here it receives the messages you forward in your channel of choice and routes the cheap summarize, classify, and redact steps to ZeroGPU instead of your primary model.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring fast, low-cost handling of high-volume, free-text messages.
