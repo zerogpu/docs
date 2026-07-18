@@ -105,8 +105,7 @@
               "integrations/claude-code-plugin",
               "integrations/claude-skill",
               "integrations/langchain",
-              "integrations/mcp",
-              "integrations/openclaw"
+              "integrations/mcp"
             ]
           },
           {
@@ -184,8 +183,7 @@
               "cookbook/claude-code-csv-sanitizer",
               "cookbook/langchain-resume-screening",
               "cookbook/claude-iab-targeted-copy",
-              "cookbook/claude-support-ticket-routing",
-              "cookbook/openclaw-crm-note-workflow"
+              "cookbook/claude-support-ticket-routing"
             ]
           }
         ]

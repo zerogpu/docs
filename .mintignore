@@ -3,3 +3,6 @@
 
 # Generated YouTube video descriptions - not part of the published docs
 .youtube/
+
+# Internal research notes - not part of the published docs
+research/
