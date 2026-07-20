@@ -1,23 +1,25 @@
 ---
-title: "Skills + CLI (OpenClaw)"
-description: "Route OpenClaw agent tasks through ZeroGPU's nano language models via the local zerogpu CLI."
-icon: "paw"
+title: "OpenClaw"
+description: "Route your OpenClaw agent's routine tasks through ZeroGPU's nano language models with the ZeroGPU Router plugin."
+icon: "lobster"
 ---
 
-OpenClaw is an agent runtime that executes work through a plugin system of named skills, each of which the agent can auto-invoke when a user request matches its description. Skills run locally: they shell out to a command-line tool through the agent's Bash tools rather than calling a hosted service. The plugin registry lets teams install and share these skill bundles across projects. Because everything runs on the machine the agent already has, there is nothing to host, register, or expose to the network.
+OpenClaw is an agentic runtime that runs an AI agent with direct access to your shell, your files, and a plugin system for extending what the agent can do. Plugins install from the ClawHub marketplace with a single `openclaw plugins install` command, and each plugin bundles skills - Markdown instruction files the agent reads and auto-invokes whenever a request matches, or that you trigger by name. Because skills shell out through the agent's built-in Bash tools, a plugin can wire in any local CLI without hosting a server or registering an API. Teams use OpenClaw to automate multi-step work while keeping the heavy reasoning on their primary model and offloading the cheap, repetitive steps elsewhere.
 
 ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
 
 ## Overview
 
-This guide walks through installing `zerogpu-openclaw-plugin`, which exposes every ZeroGPU CLI command as an OpenClaw skill. You'll install the `zerogpu` CLI, authenticate once, install the plugin, and see how the agent auto-invokes a skill from plain language and runs the CLI locally. By the end you'll be able to offload cheap, well-defined NLP tasks (summarization, classification, entity and PII extraction, short chat) from your frontier model to ZeroGPU's edge-optimized models, and read a real dollar figure for what each offload saved. Every call happens through the local `zerogpu` CLI: no MCP server, no HTTP client in your code, no infrastructure to run.
+This guide walks through installing the `zerogpu-router` plugin, which turns every ZeroGPU CLI command into an OpenClaw skill your agent can call on its own. You'll install the `zerogpu` CLI, authenticate once, add the plugin from ClawHub, and try both auto-invoked and manual skills. By the end your OpenClaw agent can hand off cheap, well-defined NLP work - classification, entity and PII extraction, summarization, and short chat - to ZeroGPU's edge-optimized models, cutting token spend without changing the model that does your agent's reasoning.
 
 ## Cookbook
 
-For a runnable, end-to-end example, see [Process CRM call notes with OpenClaw and ZeroGPU](/cookbook/openclaw-crm-note-workflow). It takes a raw sales call note and, from a single natural-language prompt, has the agent redact PII, extract the contact and next step as JSON, classify the deal stage, and summarize the note, then reports the cumulative savings from offloading all four steps.
+For a runnable, real-world example, see [Build a PII-Safe Inbox Summarizer with Your OpenClaw Assistant](/cookbook/openclaw-inbox-summarizer). It walks through saving a triage workflow to your assistant once, then having it redact PII, summarize, and label every message you forward automatically, all on ZeroGPU's nano models.
 
 <Note>
-  Browse the [cookbook index](/cookbook/index) for more worked examples.
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
 </Note>
 
 ## Video walkthrough
@@ -28,553 +30,520 @@ Video walkthrough coming soon.
 
 ### Prerequisites
 
-- Node.js 20 or newer.
-- OpenClaw installed, with plugin support enabled.
-- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) and Project ID.
-- A model ID from the [model catalog](/docs/model-catalog) if you plan to call models by name.
+- An OpenClaw install with plugin API `2026.4.0` or newer.
+- Node.js 20 or newer. The `zerogpu` CLI that every skill shells out to runs on Node.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- Optional: a model ID from the [model catalog](/docs/model-catalog) if you want to call a model by name. The skills already route each task to the right model, so this is only needed for custom work.
 
 ### Get your ZeroGPU API key
 
 1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
 2. Open **API Keys** and click **Create key**.
-3. Copy the key (starts with `zgpu-api-`) and grab your Project ID (UUID) from the project settings page.
+3. Copy the key (it starts with `zgpu-api-`). No Project ID is required - `zerogpu login` takes just the key.
 
 ### Install the plugin
 
-First install the `zerogpu` CLI that every skill shells out to, then install the plugin into OpenClaw:
+The plugin does not provision the CLI on its own, so install and log in to `zerogpu` first, then add the plugin from ClawHub:
 
 ```bash
-# 1. Install the ZeroGPU CLI (skills shell out to it)
+# 1. Install the CLI the skills shell out to
 npm install -g zerogpu-cli
-zerogpu --version
 
-# 2. Sign in once so every skill call works without re-prompting
+# 2. Log in (prompts for your API key)
 zerogpu login
 
-# 3. Install the plugin
-openclaw plugins install zerogpu-openclaw-plugin
+# 3. Install the plugin from ClawHub
+openclaw plugins install clawhub:zerogpu-router
 ```
 
-`zerogpu login` prompts for your API key and Project ID and writes them to your config file. For CI or non-interactive setups, pass them as flags:
-
-```bash
-zerogpu login \
-  --api-key zgpu-api-XXXXXXXXXXXXXXXXXX \
-  --project-id 4ed3e5bb-c2ed-4d4a-8a66-2b161a27fd1a
-```
-
-To pin a release, install a specific version:
-
-```bash
-openclaw plugins install zerogpu-openclaw-plugin@1.4.0
-```
+Pin a specific release with `clawhub:zerogpu-router@2.1.2`. In sandboxed or Docker-based agents, make sure the `zerogpu` binary is present inside the container the agent actually runs in, not just on your host.
 
 ### Your first request
 
-Ask your OpenClaw agent in plain language. It picks the matching skill, runs the `zerogpu` CLI locally instead of the host model, and replies with the result plus a savings line:
+Ask your agent in plain language. It picks the matching skill, runs the `zerogpu` CLI locally instead of the host model, and replies with the result:
 
 ```text
-Redact the PII in this note: "Email John Smith at john@acme.com about invoice 12345."
+redact the PII in this note before I share it:
+"Email John Smith at john@acme.com about invoice 12345."
 ```
 
-The agent routes to the `redact-pii` skill, which runs `zerogpu redact_pii` on your machine and returns:
+Reply:
 
 ```text
 Email [PERSON] at [EMAIL] about invoice 12345.
 
 model: gliner-multi-pii-v1 · 2 spans masked
-💰 ZeroGPU savings so far: $0.07 (620 host-model tokens offloaded)
 ```
 
-The raw note never reaches your frontier model. The masked text and a `savings` figure come back instead.
+The raw PII never reaches your primary reasoning model - the small model does the masking, and only the scrubbed text comes back.
 
 ## Usage
 
-You do not call skills by a slash name. You describe the task, and the OpenClaw agent selects the skill whose description matches, then shells out to the corresponding `zerogpu` CLI command through its Bash tools. This section covers every skill in the plugin: what it does, the CLI command it runs, when the agent auto-invokes it, its argument surface, and the shape of the response you'll get back.
+Every inference skill auto-invokes when your OpenClaw agent detects a matching request, so you rarely name a skill directly: describe the task and the agent picks the route. Three skills (`signin`, `status`, and `cost-savings`) are manual-only and never auto-invoked - you trigger them yourself. This section covers every skill in the plugin: what it does, which ZeroGPU model it routes to, the CLI command it wraps, the arguments it accepts, and the shape of the reply you get back. Each skill returns a structured payload of `{ <task fields>, model, usage, savings }`, which the agent renders as the result plus a trailing `model: <name> · <usage>` line.
 
-Every inference skill returns an object of the form `{ <task fields>, model, usage, savings }`, so alongside the result you always get the model that ran, token usage, and a real `savings_usd` figure for that call.
+#### How the agent picks a skill
 
-### How the agent triggers skills
+Each skill ships with a description the OpenClaw agent reads when deciding whether to invoke it for a given message. You don't have to remember skill names: just phrase the task. The agent keys off intent words like "summarize", "redact", "scrub", "classify by", "extract", or "tag this as", and off the structure of the data you supply (a flat label list implies zero-shot classification; a JSON schema with category axes implies structured classification). Arbitrary user text is passed to the CLI verbatim through a heredoc, so newlines, quotes, parentheses, and other shell metacharacters in your input are handled safely.
 
-The plugin ships each skill with a description that the OpenClaw agent reads when deciding whether to invoke it for a given user message. You don't have to remember command names: just describe the task. The agent picks based on intent words like "redact", "scrub", "classify by", "summarize", "extract", or "tag this as", and on the structure of the data you supply (a flat label list implies zero-shot; a JSON schema with category axes implies structured classification). Once it picks a skill, it constructs the exact `zerogpu` command, runs it locally, and reports what the CLI returned. It does not fabricate model output.
-
-A short end-to-end run makes the flow concrete. You paste a raw CRM note and ask for several things at once:
+Occasionally a reply ends with a savings line:
 
 ```text
-Clean up this CRM note for me: redact the PII, pull out the contact and the
-next step as JSON, tag the deal stage, and give me a one-line summary.
-
-"Call with Daniel Okafor (daniel.okafor@brightwave.io, +1 206-555-0147) on Tue.
-He wants the enterprise quote sent to their AP team by Friday and is comparing us
-against two other vendors. Card on file ends 4412. Next step: send quote + book a
-technical demo for next week."
+💰 ZeroGPU savings so far: ≈ $2 (18,730 frontier-model tokens offloaded)
 ```
 
-The agent runs four skills in sequence, each shelling out to the CLI:
+This surfaces intermittently, not on every call, so a healthy total accumulates quietly in the background. To see the running figure on demand, use the `cost-savings` skill.
 
-```text
-1. redact-pii        → zerogpu redact_pii ...
-2. extract-json      → zerogpu extract_json ...
-3. classify-zero-shot → zerogpu classify_zero_shot ... -l prospecting -l negotiation -l closing
-4. summarize         → zerogpu summarize ...
-```
+If the agent picks the wrong skill for a request, rephrase to drop the ambiguous trigger word, or ask for the specific skill by name.
 
-And returns a combined result plus the running savings total:
+### Chat and summarization
 
-```text
-Redacted note:
-Call with [PERSON] ([EMAIL], [PHONE_NUMBER]) on Tue. He wants the enterprise quote
-sent to their AP team by Friday and is comparing us against two other vendors.
-Card on file ends 4412. Next step: send quote + book a technical demo for next week.
+#### chat
 
-Extracted:
-{ "contact": { "name": "Daniel Okafor", "email": "daniel.okafor@brightwave.io" },
-  "next_step": "Send enterprise quote and book a technical demo" }
-
-Deal stage: negotiation (0.88)
-
-Summary: Daniel Okafor wants the enterprise quote by Friday and is comparing
-vendors; next step is to send the quote and schedule a technical demo.
-
-💰 ZeroGPU savings so far: $0.41 (3,910 host-model tokens offloaded)
-```
-
-Note the card last-four `4412` is left untouched: the PII model covers standard categories (names, emails, phones, addresses), not project-specific identifiers. Strip those with your own layer or with `extract-entities` and custom labels.
-
-If you ever want to bypass the agent and run a skill's command yourself, every skill maps one-to-one to a `zerogpu` subcommand you can run in any terminal. Each entry below lists the exact command.
-
-### `signin`
-
-Sign in to ZeroGPU and persist your credentials so every subsequent skill call works without re-prompting. Manual only; the agent does not auto-invoke it.
-
-- **Runs:** `zerogpu login`
-
-**Synopsis**
-
-```bash
-zerogpu login [--api-key <key>] [--project-id <id>]
-```
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--api-key <key>` | optional | API key. Must start with `zgpu-api-`. If omitted, you'll be prompted (masked). |
-| `--project-id <id>` | optional | Project ID (UUID v4). If omitted, you'll be prompted. |
-
-On success the API key and Project ID are written to your config file so every other skill can pick them up.
-
-### `status`
-
-Show your current ZeroGPU sign-in status and the masked API key. Manual only.
-
-- **Runs:** `zerogpu status`
-
-Exit code is `0` when signed in, `1` when not. Use it in scripts that need a hard fail before running any inference skill.
-
-### `chat`
-
-Short, single-turn chat reply for things that don't need frontier-level reasoning or prior conversation context. Use it when you'd otherwise burn host-model tokens on a one-liner.
+Short, single-turn chat reply for things that don't need host-level reasoning or prior conversation context. Use it when you'd otherwise burn primary-model tokens on a one-liner.
 
 - **Model:** `LFM2.5-1.2B-Instruct`
-- **Runs:** `zerogpu chat`
-- **Auto-invokes on:** quick factual answers, one-liners, basic rephrasings where you've signalled "use a small model."
+- **Wraps:** `zerogpu chat`
+- **Auto-invokes on:** quick factual answers, one-liners, and basic rephrasings, especially when you've signalled "use a small model."
 
-**Synopsis**
+| Argument                      | Required | Description                                    |
+| ----------------------------- | -------- | ---------------------------------------------- |
+| `text`                        | yes      | The prompt to answer.                          |
+| `-i`, `--instructions <text>` | optional | System instructions to steer tone or behavior. |
 
-```bash
-zerogpu chat <text> [-i <instructions>]
+**Example prompt**
+
+```text
+using a small model, explain WebSockets in two sentences like a concise technical writer
 ```
 
-| Name | Required | Description |
-| --- | --- | --- |
-| `text` | yes | The user message / prompt (quoted). |
-| `-i`, `--instructions <instructions>` | optional | System instructions to steer behavior. |
+**Illustrative reply**
 
-**Example**
+```text
+WebSockets keep a single TCP connection open so a client and server can send messages
+to each other at any time, without repeating the HTTP request-response handshake. That
+makes them a good fit for live features like chat, notifications, and streaming updates.
 
-```bash
-zerogpu chat "Explain WebSockets in two sentences." -i "You are a concise technical writer."
+model: LFM2.5-1.2B-Instruct · 24 tokens in / 46 out
 ```
 
-Returns raw assistant text (or pretty-printed JSON if the model returned a structured object), alongside `model`, `usage`, and `savings`.
-
-### `chat-thinking`
+#### chat-thinking
 
 Same shape as `chat`, but the model returns its reasoning trace alongside the answer.
 
 - **Model:** `LFM2.5-1.2B-Thinking`
-- **Runs:** `zerogpu chat_thinking`
-- **Auto-invokes on:** short logic / math / word-problem questions where step-by-step reasoning is useful or explicitly requested.
+- **Wraps:** `zerogpu chat_thinking`
+- **Auto-invokes on:** short logic, math, or word-problem questions where step-by-step reasoning is useful or explicitly requested.
 
-**Example**
-
-```bash
-zerogpu chat_thinking "If a train leaves at 3 PM going 60 mph, when does it cover 150 miles?"
-```
-
-### `summarize`
-
-Condense a longer passage into a short summary. Use it when you need the gist of a report, ticket thread, transcript, or meeting note without spending host-model tokens on the read.
-
-- **Model:** `llama-3.1-8b-instruct-fast`
-- **Runs:** `zerogpu summarize`
-- **Auto-invokes on:** "summarize this", "give me the gist", "TL;DR this passage", "condense this into a few sentences."
-
-**Synopsis**
-
-```bash
-zerogpu summarize <text>
-```
-
-**Example**
-
-```bash
-zerogpu summarize "The board met Thursday to review Q3 results. Revenue rose 18% \
-year-over-year to $42M, driven mainly by enterprise renewals and a strong launch in the EU \
-market. Operating margin slipped to 11% from 14% as headcount grew 30% ahead of the new \
-data-center buildout. The CFO flagged rising cloud costs as the top risk for Q4."
-```
-
-**Illustrative output**
+**Example prompt**
 
 ```text
-Q3 revenue grew 18% YoY to $42M on enterprise renewals and EU growth, but operating margin
-fell to 11% due to a 30% headcount increase for the data-center buildout, with cloud costs
-flagged as the main Q4 risk.
+show your reasoning: if a train leaves at 3 PM going 60 mph, when does it cover 150 miles?
 ```
 
-### `classify-iab`
+The reply includes the intermediate reasoning steps before the final answer (5:30 PM).
 
-Classify text against the **IAB content / audience taxonomy** (standard ad-tech category labels).
+#### summarize
+
+Condense a longer passage into a short summary. Use it when you need the gist of a report, ticket thread, transcript, or document without spending primary-model tokens on the read.
+
+- **Model:** `llama-3.1-8b-instruct-fast`
+- **Wraps:** `zerogpu summarize`
+- **Auto-invokes on:** "summarize this", "give me the gist", "TL;DR this", "condense this into a few sentences."
+
+**Example prompt**
+
+```text
+summarize this: The board met Thursday to review Q3 results. Revenue rose 18%
+year-over-year to $42M, driven mainly by enterprise renewals and a strong launch in
+the EU market. Operating margin slipped to 11% from 14% as headcount grew 30% ahead of
+the new data-center buildout. The CFO flagged rising cloud costs as the top risk for Q4
+and proposed a hiring freeze on non-engineering roles until margins recover. The board
+approved the freeze and asked for a revised 2025 budget by mid-December.
+```
+
+**Illustrative reply**
+
+```text
+Q3 revenue grew 18% YoY to $42M on enterprise renewals and EU growth, but operating
+margin fell to 11% due to a 30% headcount increase for the data-center buildout. Citing
+cloud costs as the main Q4 risk, the board approved a hiring freeze on non-engineering
+roles and requested a revised 2025 budget by mid-December.
+
+model: llama-3.1-8b-instruct-fast · 118 tokens in / 61 out
+💰 ZeroGPU savings so far: ≈ $2 (18,730 frontier-model tokens offloaded)
+```
+
+For a file, run the CLI directly: `zerogpu summarize "$(cat article.txt)"`.
+
+### Classification
+
+#### classify-iab
+
+Classify text against the **IAB content and audience taxonomy** (standard ad-tech category labels).
 
 - **Model:** `zlm-v1-iab-classify-edge`
-- **Runs:** `zerogpu classify_iab`
+- **Wraps:** `zerogpu classify_iab`
 - **Auto-invokes on:** "what IAB category is this?", "tag this article for ad targeting", "give me the topic taxonomy."
 
-**Example**
+**Example prompt**
 
-```bash
-zerogpu classify_iab "The Lakers signed a new point guard ahead of the playoffs."
+```text
+what IAB category is this: The Lakers signed a new point guard ahead of the playoffs.
 ```
 
-**Illustrative output**
+**Illustrative reply**
 
 ```json
 {
-  "categories": [
-    { "id": "IAB17-44", "name": "Basketball", "confidence": 0.97 }
-  ]
+	"categories": [{ "id": "IAB17-44", "name": "Basketball", "confidence": 0.97 }]
 }
 ```
 
-### `classify-iab-enriched`
+#### classify-iab-enriched
 
 Enriched IAB classification that returns audience categories **plus** topics, keywords, and inferred user intent.
 
 - **Model:** `zlm-v2-iab-classify-edge-enriched`
-- **Runs:** `zerogpu classify_iab_enriched`
-- **Auto-invokes on:** "give me topics, keywords, and intent", any request asking for richer ad/audience signals than plain IAB labels.
+- **Wraps:** `zerogpu classify_iab_enriched`
+- **Auto-invokes on:** "give me topics, keywords, and intent", any request for richer ad or audience signals than plain IAB labels.
 
-**Example**
+**Example prompt**
 
-```bash
-zerogpu classify_iab_enriched "Compare the Tesla Model Y and the Hyundai Ioniq 5 for a family of four."
+```text
+give me topics, keywords, and intent for: Compare the Tesla Model Y and the Hyundai
+Ioniq 5 for a family of four.
 ```
 
-**Illustrative output**
+**Illustrative reply**
 
 ```json
 {
-  "categories": [{ "id": "IAB2-1", "name": "Auto Buyers", "confidence": 0.92 }],
-  "topics": ["electric vehicles", "family cars"],
-  "keywords": ["Tesla Model Y", "Hyundai Ioniq 5"],
-  "intent": "comparison-shopping"
+	"categories": [{ "id": "IAB2-1", "name": "Auto Buyers", "confidence": 0.92 }],
+	"topics": ["electric vehicles", "family cars"],
+	"keywords": ["Tesla Model Y", "Hyundai Ioniq 5"],
+	"intent": "comparison-shopping"
 }
 ```
 
-### `classify-zero-shot`
+#### classify-zero-shot
 
-Zero-shot classification against an arbitrary list of candidate labels you supply at call time. The model picks the single best fit and returns scores for all candidates.
+Zero-shot classification against an arbitrary list of candidate labels you supply at call time. The model scores every candidate and returns the best fit.
 
 - **Model:** `deberta-v3-small`
-- **Runs:** `zerogpu classify_zero_shot`
-- **Auto-invokes on:** "is this positive, negative, or neutral?", "tag this as bug, feature, or question", "which deal stage is this?"
+- **Wraps:** `zerogpu classify_zero_shot`
+- **Auto-invokes on:** "is this positive, negative, or neutral?", "tag this as bug, feature, or question", any ask that names its own flat label set.
 
-**Synopsis**
+| Argument                          | Required  | Default | Description                                                              |
+| --------------------------------- | --------- | ------- | ------------------------------------------------------------------------ |
+| `text`                            | yes       | -       | Text to classify.                                                        |
+| `-l <label>` / `--labels <a,b,c>` | yes (one) | -       | Candidate labels. Repeat `-l` or pass a comma-separated `--labels` list. |
+| `-t`, `--threshold <number>`      | optional  | -       | Confidence floor in `[0, 1]` for multi-label output.                     |
 
-```bash
-zerogpu classify_zero_shot <text> (-l <label>...) | (--labels a,b,c)
+**Example prompt**
+
+```text
+classify this as billing, bug, feature-request, or account:
+"I was charged twice for my October subscription, and the second charge is a different
+amount than my plan. Please refund the duplicate and explain the difference."
 ```
 
-| Name | Required | Description |
-| --- | --- | --- |
-| `text` | yes | Text to classify (quoted). |
-| `-l <label>` | one of `-l` / `--labels` | A single label. Repeatable. |
-| `--labels <a,b,c>` | one of `-l` / `--labels` | Comma-separated label list. |
-
-**Example**
-
-```bash
-zerogpu classify_zero_shot "I love how fast this laptop boots up." -l positive -l negative -l neutral
-```
-
-**Illustrative output**
+**Illustrative reply**
 
 ```json
-{ "label": "positive", "scores": { "positive": 0.94, "neutral": 0.04, "negative": 0.02 } }
+[
+	{ "label": "billing", "score": 0.94 },
+	{ "label": "account", "score": 0.29 },
+	{ "label": "bug", "score": 0.07 },
+	{ "label": "feature-request", "score": 0.02 }
+]
 ```
 
-### `classify-structured`
+```text
+model: deberta-v3-small · 61 tokens in
+💰 ZeroGPU savings so far: ≈ $2 (19,180 frontier-model tokens offloaded)
+```
+
+#### classify-structured
 
 Schema-driven, multi-axis classification. You define each category and its allowed labels, and the model returns one chosen label per category.
 
 - **Model:** `gliner2-base-v1`
-- **Runs:** `zerogpu classify_structured`
+- **Wraps:** `zerogpu classify_structured`
 - **Auto-invokes on:** "classify by sentiment and topic", any request that names multiple classification dimensions with explicit label sets.
 
-**Synopsis**
+| Argument                | Required | Description                                                        |
+| ----------------------- | -------- | ------------------------------------------------------------------ |
+| `text`                  | yes      | Text to classify.                                                  |
+| `-s`, `--schema <json>` | yes      | Single-quoted JSON object mapping each axis to its allowed labels. |
 
-```bash
-zerogpu classify_structured <text> -s '<json schema>'
+**Example prompt**
+
+```text
+classify this by sentiment and topic - "Support replied quickly but the fix didn't work"
 ```
 
-| Name | Required | Description |
-| --- | --- | --- |
-| `text` | yes | Text to classify. |
-| `-s`, `--schema <json>` | yes | JSON object mapping each category to its allowed labels. |
+The agent synthesizes a schema such as `{"sentiment":["positive","negative","neutral"],"topic":["support","billing","product"]}` and calls the skill.
 
-**Example**
-
-```bash
-zerogpu classify_structured "Support replied quickly but the fix didn't work." \
-  -s '{"sentiment":["positive","negative","neutral"],"topic":["support","billing","product"]}'
-```
-
-**Illustrative output**
+**Illustrative reply**
 
 ```json
 { "sentiment": "negative", "topic": "support" }
 ```
 
-### `extract-entities`
+### Extraction
+
+#### extract-entities
 
 Custom-label named-entity recognition. You define the entity labels; the model finds matching spans with confidence scores.
 
 - **Model:** `gliner2-base-v1`
-- **Runs:** `zerogpu extract_entities`
-- **Auto-invokes on:** "extract all people, organizations, and locations from this", "find every product mention."
+- **Wraps:** `zerogpu extract_entities`
+- **Auto-invokes on:** "extract all people, organizations, and locations", "find every product mention."
 
-**Synopsis**
+| Argument                          | Required  | Default | Description                     |
+| --------------------------------- | --------- | ------- | ------------------------------- |
+| `text`                            | yes       | -       | Source text.                    |
+| `-l <label>` / `--labels <a,b,c>` | yes (one) | -       | Entity labels to extract.       |
+| `-t`, `--threshold <number>`      | optional  | `0.3`   | Minimum confidence in `[0, 1]`. |
 
-```bash
-zerogpu extract_entities <text> (-l <label>... | --labels a,b,c) [-t <0..1>]
-```
-
-| Name | Required | Default | Description |
-| --- | --- | --- | --- |
-| `text` | yes | - | Source text. |
-| `-l <label>` / `--labels <a,b,c>` | yes (one) | - | Entity labels to extract. |
-| `-t`, `--threshold <number>` | optional | `0.3` | Minimum confidence in `[0, 1]`. |
-
-**Example**
-
-```bash
-zerogpu extract_entities "Apple CEO Tim Cook met with Sundar Pichai in Cupertino on Monday." \
-  --labels person,organization,location -t 0.4
-```
-
-**Illustrative output**
-
-```json
-[
-  { "label": "organization", "text": "Apple",         "score": 0.98 },
-  { "label": "person",       "text": "Tim Cook",      "score": 0.97 },
-  { "label": "person",       "text": "Sundar Pichai", "score": 0.96 },
-  { "label": "location",     "text": "Cupertino",     "score": 0.91 }
-]
-```
-
-### `extract-pii`
-
-Extract personally identifiable information entities, grouped by category, **without modifying the source text**. Use it when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
-
-- **Model:** `gliner-multi-pii-v1`
-- **Runs:** `zerogpu extract_pii`
-- **Auto-invokes on:** "find all PII", "what personal info is in this?", "list emails/phones/names."
-
-**Synopsis**
-
-```bash
-zerogpu extract_pii <text> [-t <threshold>] [(-c | --categories) <list>]
-```
-
-| Name | Required | Default | Description |
-| --- | --- | --- | --- |
-| `text` | yes | - | Source text. |
-| `-t`, `--threshold <number>` | optional | `0.5` | Minimum confidence. |
-| `-c`, `--categories <list>` | optional | `identity,contact` | Comma-separated. Other values: `financial`, `medical`, `credentials`. |
-
-**Example**
-
-```bash
-zerogpu extract_pii "Contact Jane Doe at jane@example.com or +1 (415) 555-1212." -t 0.6 -c identity,contact
-```
-
-**Illustrative output**
-
-```json
-[
-  { "category": "identity", "label": "person", "text": "Jane Doe",          "score": 0.96 },
-  { "category": "contact",  "label": "email",  "text": "jane@example.com",  "score": 0.99 },
-  { "category": "contact",  "label": "phone",  "text": "+1 (415) 555-1212", "score": 0.95 }
-]
-```
-
-If you want to **mask** PII inline rather than extract it, use `redact-pii`.
-
-### `redact-pii`
-
-Detect PII and replace each span in-line with a `[LABEL]` placeholder. Use it before sharing or logging sensitive text, or before forwarding user input to another model you don't want to expose raw PII to.
-
-- **Model:** `gliner-multi-pii-v1` (with `mask: "label"`)
-- **Runs:** `zerogpu redact_pii`
-- **Auto-invokes on:** "redact", "scrub", "mask", "anonymize", or "sanitize this for sharing."
-
-**Example**
-
-```bash
-zerogpu redact_pii "Email John Smith at john@acme.com about invoice 12345."
-```
-
-**Output**
+**Example prompt**
 
 ```text
-Email [PERSON] at [EMAIL] about invoice 12345.
+extract the people, organizations, and locations from:
+"Apple CEO Tim Cook met with Sundar Pichai in Cupertino on Monday."
 ```
 
-`12345` is not masked: only spans the model recognizes as PII are replaced. Domain-specific identifiers (account numbers, internal ticket IDs) should be handled by your own redaction layer or by `extract-entities` with custom labels.
+**Illustrative reply**
 
-### `extract-json`
+```json
+[
+	{ "label": "organization", "text": "Apple", "score": 0.98 },
+	{ "label": "person", "text": "Tim Cook", "score": 0.97 },
+	{ "label": "person", "text": "Sundar Pichai", "score": 0.96 },
+	{ "label": "location", "text": "Cupertino", "score": 0.91 }
+]
+```
+
+#### extract-json
 
 Pull specific named fields out of free text into a structured JSON object, defined by a per-field schema. Each field is declared as `name::type::description`.
 
 - **Model:** `gliner2-base-v1`
-- **Runs:** `zerogpu extract_json`
+- **Wraps:** `zerogpu extract_json`
 - **Auto-invokes on:** "extract the contact info as JSON", "parse this invoice", "pull these fields out."
 
-**Synopsis**
+| Argument                | Required | Description                                                                       |
+| ----------------------- | -------- | --------------------------------------------------------------------------------- |
+| `text`                  | yes      | Source text.                                                                      |
+| `-s`, `--schema <json>` | yes      | Single-quoted JSON. Each field is `name::type::description`, grouped under a key. |
 
-```bash
-zerogpu extract_json <text> -s '<json schema>'
+**Example prompt**
+
+```text
+pull the name, email, and phone out of this as JSON:
+"Reach Maria Lopez at maria.lopez@acme.io or 415-555-0188."
 ```
 
-**Example**
+The agent builds a schema like `{"contact":["name::str::Full name","email::str::Email address","phone::str::Phone number"]}`.
 
-```bash
-zerogpu extract_json "Reach Maria Lopez at maria.lopez@acme.io or 415-555-0188." \
-  -s '{"contact":["name::str::Full name","email::str::Email address","phone::str::Phone number"]}'
-```
-
-**Illustrative output**
+**Illustrative reply**
 
 ```json
 {
-  "contact": {
-    "name": "Maria Lopez",
-    "email": "maria.lopez@acme.io",
-    "phone": "415-555-0188"
-  }
+	"contact": {
+		"name": "Maria Lopez",
+		"email": "maria.lopez@acme.io",
+		"phone": "415-555-0188"
+	}
 }
 ```
 
-### `cost-savings`
+### PII handling
 
-Report the cumulative dollars and host-model tokens you've offloaded to ZeroGPU across every skill call. Manual only; the agent surfaces the running figure after inference skills, and you can ask for the total explicitly.
+#### extract-pii
 
-- **Runs:** `zerogpu cost-savings`
+Extract personally identifiable information entities, grouped by category, **without modifying the source text**. Use it when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
 
-**Example**
+- **Model:** `gliner-multi-pii-v1`
+- **Wraps:** `zerogpu extract_pii`
+- **Auto-invokes on:** "find all PII", "what personal info is in this?", "list emails, phones, and names."
 
-```bash
-zerogpu cost-savings
-```
+| Argument                     | Required | Default            | Description                                                           |
+| ---------------------------- | -------- | ------------------ | --------------------------------------------------------------------- |
+| `text`                       | yes      | -                  | Source text.                                                          |
+| `-t`, `--threshold <number>` | optional | `0.5`              | Minimum confidence.                                                   |
+| `-c`, `--categories <list>`  | optional | `identity,contact` | Comma-separated. Other values: `financial`, `medical`, `credentials`. |
 
-**Illustrative output**
+**Example prompt**
 
 ```text
-💰 ZeroGPU savings so far: $2.28 (19,650 host-model tokens offloaded)
-across 41 calls · top skill: redact-pii ($0.91)
+find the PII in this, including financial:
+"Contact Jane Doe at jane@example.com or +1 (415) 555-1212."
 ```
 
-### Skills reference table
+**Illustrative reply**
+
+```json
+[
+	{
+		"category": "identity",
+		"label": "person",
+		"text": "Jane Doe",
+		"score": 0.96
+	},
+	{
+		"category": "contact",
+		"label": "email",
+		"text": "jane@example.com",
+		"score": 0.99
+	},
+	{
+		"category": "contact",
+		"label": "phone",
+		"text": "+1 (415) 555-1212",
+		"score": 0.95
+	}
+]
+```
+
+To mask PII in-line rather than extract it, use `redact-pii`.
+
+#### redact-pii
+
+Detect PII and replace each span in-line with a `[LABEL]` placeholder. Use it before sharing or logging sensitive text, or before forwarding user input to another model you don't want to expose raw PII to.
+
+- **Model:** `gliner-multi-pii-v1`
+- **Wraps:** `zerogpu redact_pii`
+- **Auto-invokes on:** "redact", "scrub", "mask", "anonymize", or "sanitize this for sharing."
+
+**Example prompt**
+
+```text
+redact the PII in this CRM note before I share it with the vendor -
+"Call with Daniel Okafor (daniel.okafor@brightwave.io, +1 206-555-0147) on Tue.
+Send the enterprise quote to their AP team at 400 Pine St, Seattle, WA 98101.
+Card on file ends 4412 - do not reference it in email."
+```
+
+**Illustrative reply**
+
+```text
+Call with [PERSON] ([EMAIL], [PHONE_NUMBER]) on Tue. Send the enterprise quote to their
+AP team at [ADDRESS]. Card on file ends 4412 - do not reference it in email.
+
+model: gliner-multi-pii-v1 · 5 spans masked
+```
+
+The card last-four is left untouched: only spans the model recognizes as PII are replaced. Project-specific identifiers (account numbers, internal ticket IDs) should be handled by your own redaction layer or by `extract-entities` with custom labels.
+
+### Account and savings
+
+These three skills are **manual-only**. The agent never auto-invokes them - trigger them yourself when you need them.
+
+#### signin
+
+Sign in to ZeroGPU and persist your API key so every subsequent skill call works without re-prompting.
+
+- **Wraps:** `zerogpu login`
+
+| Flag              | Required | Description                                                                                |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `--api-key <key>` | optional | API key (must start with `zgpu-api-`). If omitted, you're prompted interactively (masked). |
+
+With no arguments the CLI prompts for the key. For non-interactive setups (CI), pass `--api-key zgpu-api-…`. On success the key is written to the local config file and `ZEROGPU_API_KEY` is upserted into your shell profile so other tools can pick it up. Ask your agent to sign you in, or run `zerogpu login` directly in your terminal.
+
+#### status
+
+Show your current ZeroGPU sign-in status and the masked API key.
+
+- **Wraps:** `zerogpu status`
+
+Exit code is `0` when signed in, `1` when not - handy as a hard fail in scripts before running any inference skill. Ask "am I signed in to ZeroGPU?" or run `zerogpu status`.
+
+#### cost-savings
+
+Show how much you've saved by routing tasks to ZeroGPU instead of the host model - cumulative dollars and tokens offloaded.
+
+- **Wraps:** `zerogpu cost_savings`
+
+Token counts are actual (from the API); the dollar figure estimates what the same work would have cost on the host model. The baseline defaults to `claude-opus-4-8` and is overridable with the `ZEROGPU_SAVINGS_MODEL` env var. Pass `--json` for raw data or `--reset` to clear the history. Ask "how much have I saved with ZeroGPU?" to see the summary.
+
+### Skills reference
 
 Every skill at a glance.
 
-| Skill | Runs | Backing model | Purpose |
-| --- | --- | --- | --- |
-| `signin` | `zerogpu login` | - | Sign in and persist API key + Project ID (manual only) |
-| `status` | `zerogpu status` | - | Show current sign-in status (manual only) |
-| `chat` | `zerogpu chat` | `LFM2.5-1.2B-Instruct` | Short chat reply |
-| `chat-thinking` | `zerogpu chat_thinking` | `LFM2.5-1.2B-Thinking` | Chat with a visible reasoning trace |
-| `summarize` | `zerogpu summarize` | `llama-3.1-8b-instruct-fast` | Condense a longer passage |
-| `classify-iab` | `zerogpu classify_iab` | `zlm-v1-iab-classify-edge` | IAB taxonomy classification |
-| `classify-iab-enriched` | `zerogpu classify_iab_enriched` | `zlm-v2-iab-classify-edge-enriched` | IAB + topics/keywords/intent |
-| `classify-zero-shot` | `zerogpu classify_zero_shot` | `deberta-v3-small` | Zero-shot against custom labels |
-| `classify-structured` | `zerogpu classify_structured` | `gliner2-base-v1` | Schema-based multi-axis classification |
-| `extract-entities` | `zerogpu extract_entities` | `gliner2-base-v1` | Custom-label NER |
-| `extract-pii` | `zerogpu extract_pii` | `gliner-multi-pii-v1` | Extract PII entities (returns JSON) |
-| `redact-pii` | `zerogpu redact_pii` | `gliner-multi-pii-v1` | Mask PII in-line with `[LABEL]` placeholders |
-| `extract-json` | `zerogpu extract_json` | `gliner2-base-v1` | Schema-driven JSON extraction |
-| `cost-savings` | `zerogpu cost-savings` | - | Cumulative dollars and tokens offloaded |
+| Skill                   | Workload                                     | Backing model                       | Invocation |
+| ----------------------- | -------------------------------------------- | ----------------------------------- | ---------- |
+| `chat`                  | Short small-model chat replies               | `LFM2.5-1.2B-Instruct`              | auto       |
+| `chat-thinking`         | Short chat with a visible reasoning trace    | `LFM2.5-1.2B-Thinking`              | auto       |
+| `summarize`             | TL;DRs, abstracts, meeting summaries         | `llama-3.1-8b-instruct-fast`        | auto       |
+| `classify-iab`          | IAB topic classification                     | `zlm-v1-iab-classify-edge`          | auto       |
+| `classify-iab-enriched` | IAB categories plus topics, keywords, intent | `zlm-v2-iab-classify-edge-enriched` | auto       |
+| `classify-zero-shot`    | Classify against a flat label list           | `deberta-v3-small`                  | auto       |
+| `classify-structured`   | Multi-axis schema classification             | `gliner2-base-v1`                   | auto       |
+| `extract-entities`      | Custom-label named-entity recognition        | `gliner2-base-v1`                   | auto       |
+| `extract-json`          | Pull structured fields into grouped JSON     | `gliner2-base-v1`                   | auto       |
+| `extract-pii`           | Extract PII grouped by category              | `gliner-multi-pii-v1`               | auto       |
+| `redact-pii`            | Mask PII in-line with `[LABEL]` placeholders | `gliner-multi-pii-v1`               | auto       |
+| `signin`                | Sign in and persist your API key             | -                                   | manual     |
+| `status`                | Show current sign-in status                  | -                                   | manual     |
+| `cost-savings`          | Cumulative dollars and tokens offloaded      | -                                   | manual     |
 
-For full flag reference on any command, run `zerogpu <command> --help` in your terminal.
+For the full flag reference on any command, run `zerogpu <command> --help` in your terminal outside the agent session.
 
 ### Patterns and recipes
 
-**Sanitize before your frontier model sees raw input.** Route untrusted text through `redact-pii` first when you don't want personal data captured in the agent's transcript or sent to a downstream model. Pair it with `extract-pii` when you also need an audit log of what was masked.
+**Sanitize before the host model sees raw input.** Ask the agent to `redact-pii` untrusted text first when you don't want personal data captured in your primary model's transcript or forwarded to a downstream LLM. Pair it with `extract-pii` when you also need an audit log of exactly what was masked.
 
-**Cheap router in front of the host model.** Use `classify-zero-shot` or `classify-structured` to triage an incoming message (bug / feature / question, urgent / normal, in-scope / out-of-scope) and only escalate the hard cases to your frontier model. The classifier call costs orders of magnitude less than a host-model turn, and the difference shows up in `cost-savings`.
+**Cheap router in front of your reasoning model.** Use `classify-zero-shot` or `classify-structured` to triage an incoming message (bug / feature / question, urgent / normal, in-scope / out-of-scope) and only escalate the hard cases to your primary model. The classifier call costs orders of magnitude less than a full reasoning turn.
 
-**Structured extraction over free-form parsing.** For semi-structured text (signatures, invoices, CRM notes, contact blocks), prefer `extract-json` over asking your frontier model to "parse this into JSON." It's deterministic on the schema, faster, and cheaper. Keep field descriptions short and specific; the description is what the model uses to find the span.
+**Structured extraction over free-form parsing.** For semi-structured text (signatures, invoices, contact blocks), prefer `extract-json` over asking your host model to "parse this into JSON." It's deterministic on the schema, faster, and cheaper. Keep field descriptions short and specific - the description is what the model uses to locate the span.
 
-**Confidence thresholds.** For NER and PII extraction, the default thresholds (`0.3` and `0.5` respectively) are tuned for recall. Raise `-t` to `0.6` or higher when you need precision (for example compliance-grade redaction lists); lower it when you'd rather over-extract and filter downstream.
+**Tune thresholds for the job.** For NER and PII extraction the defaults (`0.3` and `0.5`) favor recall. Raise `-t` to `0.6` or higher when you need precision (compliance-grade redaction lists); lower it when you'd rather over-extract and filter downstream.
 
 ## Troubleshooting
 
-**`zerogpu: command not found`** - the CLI isn't installed or isn't on your `PATH`. Run `npm install -g zerogpu-cli` and restart your shell. If you use a Node version manager (nvm, fnm, volta), make sure the shell that launched OpenClaw has the same Node version active, since the plugin shells out to whichever `zerogpu` that shell resolves.
+**`zerogpu: command not found`** - the CLI isn't installed or isn't on your `PATH`. Run `npm install -g zerogpu-cli` and restart your shell. If you use a Node version manager (nvm, fnm, volta), make sure the shell that launched OpenClaw has the same Node version active.
 
-**Skill returns "You're not signed in yet."** - no credentials on disk. Run `zerogpu login` in your terminal (or ask the agent to run the `signin` skill), then confirm with `zerogpu status`.
+**A sandboxed or Docker agent can't find `zerogpu`** - the CLI has to exist inside the container the agent runs in, not just on your host. Add `npm install -g zerogpu-cli` to your image build, or mount the binary into the sandbox.
 
-**Skills don't appear / the agent won't invoke them.** - the plugin isn't installed or enabled. Run `openclaw plugins list` to confirm `zerogpu-openclaw-plugin` is present and enabled; reinstall with `openclaw plugins install zerogpu-openclaw-plugin` if it's missing.
+**Skill returns "You're not signed in yet."** - no credentials on disk. Run the `signin` skill, or `zerogpu login` in your terminal, then confirm with the `status` skill (`zerogpu status`).
 
-**`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run `zerogpu login`. Keys must start with `zgpu-api-`.
+**The agent won't use the plugin's skills** - the plugin may not be installed or enabled. Re-run `openclaw plugins install clawhub:zerogpu-router` and confirm it's enabled in your OpenClaw plugin settings. Pin a known-good release with `clawhub:zerogpu-router@2.1.2` if a newer build misbehaves.
 
-**`Request failed with status 403`** - the key is valid but doesn't have access to the project, or the project doesn't have access to the requested model. Confirm your Project ID matches the project that owns the key.
+**`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run the `signin` skill. Keys must start with `zgpu-api-`.
 
-**`Request failed with status 429`** - you're being rate-limited. Back off and retry with exponential delay, or move bulk jobs to the [Batch API](/docs/batch), which has separate quotas tuned for offline work.
+**`Request failed with status 403`** - the key is valid but doesn't have access to the requested project or model. Confirm the key belongs to a project that owns the model you're routing to.
 
-**Wrong skill auto-invoked for a request.** The agent picks based on phrasing. If a skill keeps getting chosen when you don't want it, rephrase to drop the trigger words ("redact", "classify", "extract"), or run the exact `zerogpu` command yourself to bypass the agent's routing.
+**`Request failed with status 429`** - you're being rate-limited. Back off and retry with exponential delay, or move heavy workloads to the [Batch API](/docs/batch), which has separate quotas tuned for bulk jobs.
 
-**Schema parsing errors on `classify-structured` / `extract-json`.** The `-s` flag expects a single-quoted JSON string. On Windows PowerShell, escape inner double quotes or use a here-string. Run the CLI directly to isolate quoting issues from the agent's routing.
+**The wrong skill was auto-invoked** - the agent picks based on phrasing. Rephrase to drop the ambiguous trigger word ("redact", "classify", "extract"), or ask for the specific skill by name.
 
-**Empty or low-confidence results.** Lower `-t` to surface more candidates, or check that the label set you supplied matches the language of the source text (the underlying models are English-tuned for most label sets). For very short inputs (one or two words), expect lower confidence across the board.
+**Schema quoting errors on `classify-structured` / `extract-json`** - the `-s` flag expects a single-quoted JSON string. On Windows PowerShell, escape inner double quotes or use a here-string. Run the CLI directly (`zerogpu classify_structured … -s '…'`) to isolate quoting issues from the agent.
 
-**`cost-savings` shows `$0.00`.** No inference skills have run yet under the current credentials, or you re-authenticated into a different project. The counter is per project; run any inference skill and check again.
+**Empty or low-confidence results** - lower `-t` to surface more candidates, or check that the labels match the language of the source text (the underlying models are English-tuned for most label sets). Very short inputs return lower confidence across the board.
+
+**No savings line appears** - it's intentionally occasional, not shown on every call. Trigger the `cost-savings` skill (`zerogpu cost_savings`) any time to see the cumulative dollars and tokens offloaded.
 
 ## Conclusion
 
-The `zerogpu-openclaw-plugin` turns ZeroGPU's nano language models into first-class OpenClaw skills, so the agent can hand off classification, extraction, and short chat to a cheaper, faster model without leaving the local session or standing up any infrastructure. It's a fast way to keep raw PII out of your frontier model's context, cut token spend on well-defined NLP work, and see exactly what each offload saved.
+The `zerogpu-router` plugin turns ZeroGPU's nano language models into first-class OpenClaw skills, so your agent can hand off classification, extraction, and short chat to a cheaper, faster model without changing the model that does its reasoning. It's a fast way to keep raw PII out of your primary model's context, cut token spend on well-defined NLP work, and watch the savings add up per call.
 
 <CardGroup cols={2}>
-  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
-    Browse every model the plugin can route to.
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/responses">
-    Explore the full OpenAI-compatible API surface.
-  </Card>
-  <Card title="Cookbook" icon="book" href="/cookbook/openclaw-crm-note-workflow">
-    Process CRM call notes end-to-end with the OpenClaw plugin.
-  </Card>
-  <Card title="Join Discord" icon="discord" href="https://discord.gg/58XZuxKyq6">
-    Ask questions and share what you're building.
-  </Card>
+	<Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+		Browse every model the plugin can route to.
+	</Card>
+	<Card title="API Reference" icon="code" href="/api-reference/responses">
+		Explore the full OpenAI-compatible API surface.
+	</Card>
+	<Card title="Cookbook" icon="book" href="/cookbook/index">
+		Worked examples for classification, extraction, and batch jobs.
+	</Card>
+	<Card
+		title="Join Discord"
+		icon="discord"
+		href="https://discord.gg/58XZuxKyq6"
+	>
+		Ask questions and share what you're building.
+	</Card>
 </CardGroup>
