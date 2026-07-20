@@ -192,6 +192,9 @@
           },
           "429": {
             "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -449,6 +452,9 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid limit"
+          },
           "401": {
             "description": "Missing authentication headers"
           },
@@ -457,6 +463,9 @@
           },
           "429": {
             "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }

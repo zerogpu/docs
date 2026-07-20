@@ -72,7 +72,8 @@ Catch <code>429</code> for both quota exhaustion (<code>error.type:
 ```
 
 **Cause:** `x-api-key` was not sent.
-**Fix:** Send both headers on every request.
+**Fix:** Send the required `x-api-key` header on every request. `x-project-id`
+is optional, and only needed to scope the request to a specific project.
 
 ### `403 Forbidden`, invalid credentials
 

@@ -44,7 +44,7 @@ The cURL examples below also use `jq` to pretty-print JSON responses. For the fu
 
 ## 🔑 Setting Up API Keys
 
-You'll need to set up your ZeroGPU API key and Project ID so that every Batch API call authenticates. This ensures the upload, create, poll, and download calls can reach ZeroGPU securely.
+You'll need to set up your ZeroGPU API key so that every Batch API call authenticates. This ensures the upload, create, poll, and download calls can reach ZeroGPU securely. A Project ID is optional: supply one only if you want to scope the batch to a specific project.
 
 You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
 
@@ -52,31 +52,37 @@ You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key an
 import os
 from getpass import getpass
 
-# Prompt for the ZeroGPU API key and Project ID securely
+# Prompt for the ZeroGPU API key securely
 zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
 os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
 
-zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
-os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
+# Optional: press Enter to skip and run unscoped
+zerogpu_project_id = getpass('Enter your ZeroGPU Project ID (optional): ')
+if zerogpu_project_id:
+    os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
 ```
 
-This cookbook calls the raw REST surface with the `x-api-key` and `x-project-id` headers (`x-project-id` is optional - it scopes requests to a project). If you use an SDK client, authentication is handled for you. The cURL examples read the same two values from your shell environment:
+This cookbook calls the raw REST surface with the `x-api-key` and `x-project-id` headers (`x-project-id` is optional - it scopes requests to a project). If you use an SDK client, authentication is handled for you. The cURL examples read the same values from your shell environment, and you can leave `ZEROGPU_PROJECT_ID` unset:
 
 ```bash
 export ZEROGPU_API_KEY="zgpu-api-..."
-export ZEROGPU_PROJECT_ID="your-project-uuid"
+export ZEROGPU_PROJECT_ID="your-project-uuid"   # optional
 ```
 
 ```python Python
 import os, requests
 
+headers = {
+    "x-api-key":    os.environ["ZEROGPU_API_KEY"],
+    "content-type": "application/json",
+}
+# x-project-id is optional; send it only when scoping to a project
+if os.environ.get("ZEROGPU_PROJECT_ID"):
+    headers["x-project-id"] = os.environ["ZEROGPU_PROJECT_ID"]
+
 resp = requests.post(
     "https://api.zerogpu.ai/v1/chat/completions",
-    headers={
-        "x-api-key":    os.environ["ZEROGPU_API_KEY"],
-        "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
-        "content-type": "application/json",
-    },
+    headers=headers,
     json={
         "model":       "LFM2.5-1.2B-Instruct",
         "temperature": 0,
@@ -189,10 +195,10 @@ curl -X POST https://api.zerogpu.ai/v1/batches \
 import os, requests
 
 BASE    = "https://api.zerogpu.ai"
-HEADERS = {
-    "x-api-key":    os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
-}
+HEADERS = {"x-api-key": os.environ["ZEROGPU_API_KEY"]}
+# x-project-id is optional; send it only when scoping to a project
+if os.environ.get("ZEROGPU_PROJECT_ID"):
+    HEADERS["x-project-id"] = os.environ["ZEROGPU_PROJECT_ID"]
 
 # 1. Upload
 with open("input.jsonl", "rb") as f:
@@ -264,10 +270,10 @@ import time
 import requests
 
 BASE    = "https://api.zerogpu.ai"
-HEADERS = {
-    "x-api-key":    os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
-}
+HEADERS = {"x-api-key": os.environ["ZEROGPU_API_KEY"]}
+# x-project-id is optional; send it only when scoping to a project
+if os.environ.get("ZEROGPU_PROJECT_ID"):
+    HEADERS["x-project-id"] = os.environ["ZEROGPU_PROJECT_ID"]
 MODEL = "LFM2.5-1.2B-Instruct"
 
 SYSTEM_PROMPT = (
@@ -546,10 +552,10 @@ import os
 import requests
 
 BASE    = "https://api.zerogpu.ai"
-HEADERS = {
-    "x-api-key":    os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
-}
+HEADERS = {"x-api-key": os.environ["ZEROGPU_API_KEY"]}
+# x-project-id is optional; send it only when scoping to a project
+if os.environ.get("ZEROGPU_PROJECT_ID"):
+    HEADERS["x-project-id"] = os.environ["ZEROGPU_PROJECT_ID"]
 
 
 def errored_ids(error_file_id: str) -> set[str]:
