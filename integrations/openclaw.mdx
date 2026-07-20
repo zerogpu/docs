@@ -270,7 +270,7 @@ zerogpu classify_iab "The Lakers signed a new point guard ahead of the playoffs.
 
 Enriched IAB classification that returns audience categories **plus** topics, keywords, and inferred user intent.
 
-- **Model:** `zlm-v1-iab-classify-edge-enriched`
+- **Model:** `zlm-v2-iab-classify-edge-enriched`
 - **Runs:** `zerogpu classify_iab_enriched`
 - **Auto-invokes on:** "give me topics, keywords, and intent", any request asking for richer ad/audience signals than plain IAB labels.
 
@@ -517,7 +517,7 @@ Every skill at a glance.
 | `chat-thinking` | `zerogpu chat_thinking` | `LFM2.5-1.2B-Thinking` | Chat with a visible reasoning trace |
 | `summarize` | `zerogpu summarize` | `llama-3.1-8b-instruct-fast` | Condense a longer passage |
 | `classify-iab` | `zerogpu classify_iab` | `zlm-v1-iab-classify-edge` | IAB taxonomy classification |
-| `classify-iab-enriched` | `zerogpu classify_iab_enriched` | `zlm-v1-iab-classify-edge-enriched` | IAB + topics/keywords/intent |
+| `classify-iab-enriched` | `zerogpu classify_iab_enriched` | `zlm-v2-iab-classify-edge-enriched` | IAB + topics/keywords/intent |
 | `classify-zero-shot` | `zerogpu classify_zero_shot` | `deberta-v3-small` | Zero-shot against custom labels |
 | `classify-structured` | `zerogpu classify_structured` | `gliner2-base-v1` | Schema-based multi-axis classification |
 | `extract-entities` | `zerogpu extract_entities` | `gliner2-base-v1` | Custom-label NER |

@@ -45,7 +45,7 @@ issues to support so the call can be located in logs.
 | `200` | Success. |
 | `204` | Success with no body (CORS preflight). |
 | `400` | Your request is malformed or fails validation. Fix and retry. |
-| `401` | Missing `x-api-key` or `x-project-id` header. |
+| `401` | Missing `x-api-key` header. |
 | `403` | Headers were supplied but credentials are invalid, inactive, or don't belong to the supplied project. |
 | `404` | The resource doesn't exist, or doesn't belong to your project. Both cases return `404` to avoid leaking cross-project information. |
 | `413` | Uploaded file is larger than 100 MB. |
@@ -71,7 +71,7 @@ Catch <code>429</code> for both quota exhaustion (<code>error.type:
 { "error": { "message": "Missing authentication headers" } }
 ```
 
-**Cause:** Either `x-api-key` or `x-project-id` was not sent.
+**Cause:** `x-api-key` was not sent.
 **Fix:** Send both headers on every request.
 
 ### `403 Forbidden`, invalid credentials

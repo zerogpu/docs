@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU Batch & Files API",
     "version": "1.0",
-    "description": "JSONL file storage (`/v1/files`) and asynchronous batch inference (`/v1/batches`). Wire-compatible with OpenAI's files and batch APIs. Auth: `x-api-key` and `x-project-id` on every request."
+    "description": "JSONL file storage (`/v1/files`) and asynchronous batch inference (`/v1/batches`). Wire-compatible with OpenAI's files and batch APIs. Auth: `x-api-key` on every request; `x-project-id` is optional."
   },
   "servers": [
     {
@@ -13,8 +13,7 @@
   ],
   "security": [
     {
-      "ApiKey": [],
-      "ProjectId": []
+      "ApiKey": []
     }
   ],
   "paths": {
@@ -23,18 +22,25 @@
         "operationId": "uploadFile",
         "summary": "Upload a file",
         "description": "Upload a JSONL file with `purpose=batch` (max 100 MB). Use the returned `id` as `input_file_id` when creating a batch.",
-        "tags": ["Files"],
+        "tags": [
+          "Files"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["purpose", "file"],
+                "required": [
+                  "purpose",
+                  "file"
+                ],
                 "properties": {
                   "purpose": {
                     "type": "string",
-                    "enum": ["batch"],
+                    "enum": [
+                      "batch"
+                    ],
                     "default": "batch",
                     "description": "Must be `batch` for batch input uploads."
                   },
@@ -53,7 +59,9 @@
             "description": "File uploaded",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/File" },
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                },
                 "examples": {
                   "default": {
                     "value": {
@@ -71,26 +79,63 @@
               }
             }
           },
-          "400": { "description": "Invalid multipart, purpose, or empty file" },
-          "401": { "description": "Missing authentication headers" },
-          "403": { "description": "Invalid credentials" },
-          "413": { "description": "File exceeds 100 MB" },
-          "429": { "description": "Insufficient quota" },
-          "500": { "description": "Internal server error" }
-        }
+          "400": {
+            "description": "Invalid multipart, purpose, or empty file"
+          },
+          "401": {
+            "description": "Missing authentication headers"
+          },
+          "403": {
+            "description": "Invalid credentials"
+          },
+          "413": {
+            "description": "File exceeds 100 MB"
+          },
+          "429": {
+            "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       },
       "get": {
         "operationId": "listFiles",
         "summary": "List files",
         "description": "List project files, newest first by default. Use `last_id` as `after` to page.",
-        "tags": ["Files"],
+        "tags": [
+          "Files"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "purpose",
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["batch", "batch_output"]
+              "enum": [
+                "batch",
+                "batch_output"
+              ]
             },
             "description": "Filter by purpose. `batch_output` includes success and error output files (`is_error` on each object)."
           },
@@ -99,14 +144,19 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["desc", "asc"],
+              "enum": [
+                "desc",
+                "asc"
+              ],
               "default": "desc"
             }
           },
           {
             "name": "after",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Cursor: file `id` from the previous page (or `last_id` from the prior response)."
           },
           {
@@ -125,14 +175,24 @@
             "description": "File list",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/FileList" }
+                "schema": {
+                  "$ref": "#/components/schemas/FileList"
+                }
               }
             }
           },
-          "400": { "description": "Invalid limit" },
-          "401": { "description": "Missing authentication headers" },
-          "403": { "description": "Invalid credentials" },
-          "429": { "description": "Insufficient quota" }
+          "400": {
+            "description": "Invalid limit"
+          },
+          "401": {
+            "description": "Missing authentication headers"
+          },
+          "403": {
+            "description": "Invalid credentials"
+          },
+          "429": {
+            "description": "Insufficient quota"
+          }
         }
       }
     },
@@ -141,13 +201,26 @@
         "operationId": "retrieveFile",
         "summary": "Retrieve a file",
         "description": "File metadata without downloading the JSONL body.",
-        "tags": ["Files"],
+        "tags": [
+          "Files"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "file_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "file-abc123..."
           }
         ],
@@ -156,24 +229,41 @@
             "description": "File object",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/File" }
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                }
               }
             }
           },
-          "404": { "description": "File not found" }
+          "404": {
+            "description": "File not found"
+          }
         }
       },
       "delete": {
         "operationId": "deleteFile",
         "summary": "Delete a file",
         "description": "Soft-delete. The file returns 404 on list, retrieve, and content afterward.",
-        "tags": ["Files"],
+        "tags": [
+          "Files"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "file_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "file-abc123..."
           }
         ],
@@ -182,11 +272,15 @@
             "description": "File deleted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/FileDeleted" }
+                "schema": {
+                  "$ref": "#/components/schemas/FileDeleted"
+                }
               }
             }
           },
-          "404": { "description": "File not found" }
+          "404": {
+            "description": "File not found"
+          }
         }
       }
     },
@@ -195,13 +289,26 @@
         "operationId": "downloadFileContent",
         "summary": "Download file content",
         "description": "Stream the raw JSONL body (`Content-Type: application/jsonl`).",
-        "tags": ["Files"],
+        "tags": [
+          "Files"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "file_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "file-out789..."
           }
         ],
@@ -210,11 +317,16 @@
             "description": "JSONL body",
             "content": {
               "application/jsonl": {
-                "schema": { "type": "string", "format": "binary" }
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
               }
             }
           },
-          "404": { "description": "File not found" }
+          "404": {
+            "description": "File not found"
+          }
         }
       }
     },
@@ -223,12 +335,16 @@
         "operationId": "createBatch",
         "summary": "Create a batch",
         "description": "Submit a batch from an uploaded JSONL input file. Returns immediately with `status: in_progress`.",
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateBatchRequest" },
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchRequest"
+              },
               "examples": {
                 "chatCompletions": {
                   "summary": "Chat completions batch",
@@ -236,7 +352,9 @@
                     "input_file_id": "file-abc123",
                     "endpoint": "/v1/chat/completions",
                     "completion_window": "24h",
-                    "metadata": { "job": "docs-playground" }
+                    "metadata": {
+                      "job": "docs-playground"
+                    }
                   }
                 }
               }
@@ -248,32 +366,75 @@
             "description": "Batch accepted",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Batch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Batch"
+                }
               }
             }
           },
-          "400": { "description": "Invalid request or JSONL validation failed" },
-          "401": { "description": "Missing authentication headers" },
-          "403": { "description": "Invalid credentials" },
-          "404": { "description": "Input file not found" },
-          "429": { "description": "Insufficient quota" },
-          "500": { "description": "Internal server error" }
-        }
+          "400": {
+            "description": "Invalid request or JSONL validation failed"
+          },
+          "401": {
+            "description": "Missing authentication headers"
+          },
+          "403": {
+            "description": "Invalid credentials"
+          },
+          "404": {
+            "description": "Input file not found"
+          },
+          "429": {
+            "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       },
       "get": {
         "operationId": "listBatches",
         "summary": "List batches",
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "limit",
             "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
           },
           {
             "name": "after",
             "in": "query",
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Cursor: `last_id` from the previous page"
           }
         ],
@@ -282,13 +443,21 @@
             "description": "Batch list",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/BatchList" }
+                "schema": {
+                  "$ref": "#/components/schemas/BatchList"
+                }
               }
             }
           },
-          "401": { "description": "Missing authentication headers" },
-          "403": { "description": "Invalid credentials" },
-          "429": { "description": "Insufficient quota" }
+          "401": {
+            "description": "Missing authentication headers"
+          },
+          "403": {
+            "description": "Invalid credentials"
+          },
+          "429": {
+            "description": "Insufficient quota"
+          }
         }
       }
     },
@@ -297,13 +466,26 @@
         "operationId": "retrieveBatch",
         "summary": "Retrieve a batch",
         "description": "Poll batch status and live `request_counts` while in progress.",
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "batch_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "batch_01HZX..."
           }
         ],
@@ -312,11 +494,15 @@
             "description": "Batch object",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Batch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Batch"
+                }
               }
             }
           },
-          "404": { "description": "Batch not found" }
+          "404": {
+            "description": "Batch not found"
+          }
         }
       }
     },
@@ -325,13 +511,26 @@
         "operationId": "cancelBatch",
         "summary": "Cancel a batch",
         "description": "Request cancellation while `status` is `in_progress` or `validating`.",
-        "tags": ["Batches"],
+        "tags": [
+          "Batches"
+        ],
         "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          },
           {
             "name": "batch_id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "example": "batch_01HZX..."
           }
         ],
@@ -340,12 +539,18 @@
             "description": "Batch cancellation requested",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Batch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Batch"
+                }
               }
             }
           },
-          "404": { "description": "Batch not found" },
-          "409": { "description": "Batch already terminal" }
+          "404": {
+            "description": "Batch not found"
+          },
+          "409": {
+            "description": "Batch already terminal"
+          }
         }
       }
     }
@@ -356,33 +561,53 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
-      },
-      "ProjectId": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-project-id"
       }
     },
     "schemas": {
       "File": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "description": "Prefixed with `file-`." },
-          "object": { "type": "string", "enum": ["file"] },
-          "bytes": { "type": "integer" },
-          "created_at": { "type": "integer" },
-          "filename": { "type": "string" },
+          "id": {
+            "type": "string",
+            "description": "Prefixed with `file-`."
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "file"
+            ]
+          },
+          "bytes": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "filename": {
+            "type": "string"
+          },
           "purpose": {
             "type": "string",
-            "enum": ["batch", "batch_output"],
+            "enum": [
+              "batch",
+              "batch_output"
+            ],
             "description": "Uploads use `batch`; batch results use `batch_output`."
           },
           "status": {
             "type": "string",
-            "enum": ["uploaded", "processed", "error"]
+            "enum": [
+              "uploaded",
+              "processed",
+              "error"
+            ]
           },
-          "status_details": { "type": "string" },
-          "expires_at": { "type": "integer" },
+          "status_details": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "integer"
+          },
           "is_error": {
             "type": "boolean",
             "description": "ZeroGPU extension. `true` on batch error output files only."
@@ -392,27 +617,57 @@
       "FileList": {
         "type": "object",
         "properties": {
-          "object": { "type": "string", "enum": ["list"] },
+          "object": {
+            "type": "string",
+            "enum": [
+              "list"
+            ]
+          },
           "data": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/File" }
+            "items": {
+              "$ref": "#/components/schemas/File"
+            }
           },
-          "first_id": { "type": "string", "nullable": true },
-          "last_id": { "type": "string", "nullable": true },
-          "has_more": { "type": "boolean" }
+          "first_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
         }
       },
       "FileDeleted": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "object": { "type": "string", "enum": ["file"] },
-          "deleted": { "type": "boolean", "enum": [true] }
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "file"
+            ]
+          },
+          "deleted": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
         }
       },
       "CreateBatchRequest": {
         "type": "object",
-        "required": ["input_file_id", "endpoint"],
+        "required": [
+          "input_file_id",
+          "endpoint"
+        ],
         "properties": {
           "input_file_id": {
             "type": "string",
@@ -420,13 +675,17 @@
           },
           "endpoint": {
             "type": "string",
-            "enum": ["/v1/chat/completions"],
+            "enum": [
+              "/v1/chat/completions"
+            ],
             "default": "/v1/chat/completions",
             "description": "Must match the `url` on every JSONL line."
           },
           "completion_window": {
             "type": "string",
-            "enum": ["24h"],
+            "enum": [
+              "24h"
+            ],
             "default": "24h"
           },
           "metadata": {
@@ -439,9 +698,18 @@
       "Batch": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "object": { "type": "string", "enum": ["batch"] },
-          "endpoint": { "type": "string" },
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "batch"
+            ]
+          },
+          "endpoint": {
+            "type": "string"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -455,34 +723,72 @@
               "cancelled"
             ]
           },
-          "input_file_id": { "type": "string" },
-          "output_file_id": { "type": "string", "nullable": true },
-          "error_file_id": { "type": "string", "nullable": true },
-          "completion_window": { "type": "string" },
-          "created_at": { "type": "integer" },
-          "expires_at": { "type": "integer" },
+          "input_file_id": {
+            "type": "string"
+          },
+          "output_file_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "error_file_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "completion_window": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "expires_at": {
+            "type": "integer"
+          },
           "request_counts": {
             "type": "object",
             "properties": {
-              "total": { "type": "integer" },
-              "completed": { "type": "integer" },
-              "failed": { "type": "integer" }
+              "total": {
+                "type": "integer"
+              },
+              "completed": {
+                "type": "integer"
+              },
+              "failed": {
+                "type": "integer"
+              }
             }
           },
-          "metadata": { "type": "object", "additionalProperties": true }
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       },
       "BatchList": {
         "type": "object",
         "properties": {
-          "object": { "type": "string", "enum": ["list"] },
+          "object": {
+            "type": "string",
+            "enum": [
+              "list"
+            ]
+          },
           "data": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Batch" }
+            "items": {
+              "$ref": "#/components/schemas/Batch"
+            }
           },
-          "first_id": { "type": "string", "nullable": true },
-          "last_id": { "type": "string", "nullable": true },
-          "has_more": { "type": "boolean" }
+          "first_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
         }
       }
     }

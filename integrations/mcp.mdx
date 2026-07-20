@@ -34,7 +34,7 @@ Watch the full demo here:
 
 ### Connect the server
 
-The ZeroGPU MCP server authenticates with two headers on every request: `x-api-key` (your API key) and `x-project-id` (your Project ID). Most clients let you declare a remote server with custom headers in a config file. Using placeholders:
+The ZeroGPU MCP server authenticates with the `x-api-key` header (your API key) on every request; the `x-project-id` header (your Project ID) is optional. Most clients let you declare a remote server with custom headers in a config file. Using placeholders:
 
 ```json
 {
@@ -138,7 +138,7 @@ Returns `summary`, the `model` used, a `usage` token breakdown, and a `savings` 
 
 Classify text into the IAB (Interactive Advertising Bureau) ad-tech taxonomy: news articles, pages, ad creative, or blog posts. Cheaper and purpose-built compared to reasoning topics out with the host model.
 
-- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v1-iab-classify-edge-enriched` when `enriched=true`).
+- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v2-iab-classify-edge-enriched` when `enriched=true`).
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
@@ -387,7 +387,7 @@ Every tool at a glance.
 
 ## Troubleshooting
 
-**`missing required headers: x-api-key and x-project-id`** - the request reached the server without both auth headers. Make sure your client config sets `x-api-key` and `x-project-id`, and that they're sent on the `initialize` call as well as every later request.
+**`missing required headers: x-api-key and x-project-id`** - the request reached the server without the required auth header. Make sure your client config sets `x-api-key` (and `x-project-id` if you scope requests to a project), and that it's sent on the `initialize` call as well as every later request.
 
 **`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and update your client config. Keys must start with `zgpu-api-`.
 

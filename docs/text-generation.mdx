@@ -3,13 +3,190 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers conversational and reasoning models from Liquid AI, plus an edge model that generates contextual follow-up questions. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Text generation models produce new text from an input prompt. ZeroGPU offers OpenAI's open-weight gpt-oss-120b and Alibaba's qwen3-30b-a3b-fp8 for heavyweight reasoning and tool use, conversational and reasoning models from Liquid AI, plus an edge model that generates contextual follow-up questions. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, which is Chat Completions only.
 
-| Model | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | ---: | ---: | ---: |
-| <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | 1.2B | 32,768 | $0.02 | $0.05 |
-| <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | 1.2B | 32,768 | $0.02 | $0.05 |
-| <a href="/api-reference/models/zlm-v1-followup-questions-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="22" height="22" noZoom /> <code>zlm-v1-followup-questions-edge</code></a> | 120M | 400 | $0.02 | $0.05 |
+| Model | Input /1M | Output /1M | Params | Max tokens |
+| --- | ---: | ---: | --- | ---: |
+| <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.03 | $0.10 | 117B | 131,072 |
+| <a href="/api-reference/models/qwen3-30b-a3b-fp8" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/qwen3-30b-a3b-fp8/qwen3-30b-a3b-fp8.png" alt="qwen3-30b-a3b-fp8" width="22" height="22" noZoom /> <code>qwen3-30b-a3b-fp8</code></a> | $0.02 | $0.05 | 30.5B | 32,768 |
+| <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | 1.2B | 32,768 |
+| <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | 1.2B | 32,768 |
+| <a href="/api-reference/models/zlm-v1-followup-questions-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="22" height="22" noZoom /> <code>zlm-v1-followup-questions-edge</code></a> | $0.02 | $0.05 | 120M | 400 |
+
+## gpt-oss-120b
+
+> OpenAI's gpt-oss-120b is an open-weight Mixture-of-Experts model with 117B total parameters (5.1B active per token), served on ZeroGPU for general text generation. It reasons through a problem before answering and returns that reasoning trace alongside the final answer, and it supports function calling, batch tasks, and a 131,072-token context window. When a task needs frontier-level reasoning or tool use beyond what the smaller edge models cover, this is the model.
+
+**References:** [Model docs](https://huggingface.co/openai/gpt-oss-120b) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Name my WiFi network something that will make my neighbors laugh. Give me your top 3 with a one-line reason each.",
+  "model": "gpt-oss-120b",
+  "max_tokens": 800,
+  "instructions": "You are a witty naming consultant. Be brief."
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gpt-oss-120b",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a witty naming consultant. Be brief."
+    },
+    {
+      "role": "user",
+      "content": "Name my WiFi network something that will make my neighbors laugh. Give me your top 3 with a one-line reason each."
+    }
+  ],
+  "max_tokens": 800
+}'
+```
+
+</CodeGroup>
+
+The model reasons before it answers and returns the trace alongside the final text — a `reasoning` output item in Responses, and a `reasoning` field on the message in Chat Completions.
+
+<CodeGroup>
+
+```json Responses API
+{
+  "id": "id-1784318124857",
+  "object": "response",
+  "created_at": 1784318124,
+  "model": "gpt-oss-120b",
+  "status": "completed",
+  "instructions": "You are a witty naming consultant. Be brief.",
+  "output": [
+    {
+      "id": "rs_8d4dc6f3f33d0d28",
+      "type": "reasoning",
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "We need to respond with a top 3 WiFi names that will make neighbors laugh, each with a one-line reason. Be witty. Keep brief."
+        }
+      ]
+    },
+    {
+      "id": "msg_9c3dfbf63445d80a",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "**1. “FBI Surveillance Van #42”** – Neighbors will double-check the street before they even think about streaming.\n\n**2. “Drop It Like It’s Hotspot”** – A pun that’s so cheesy it’ll have the whole block groaning and giggling.\n\n**3. “Tell My Wi-Fi I Love You”** – Because nothing says “I’m caring” like a reminder that even your router needs affection."
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  }
+}
+```
+
+```json Chat Completions
+{
+  "id": "id-1784318142640",
+  "object": "chat.completion",
+  "created": 1784318142,
+  "model": "gpt-oss-120b",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "**1. “Drop It Like It’s Hotspot”** – A cheeky nod to the song that’ll make anyone pause and grin while they log in.\n\n**2. “FBI Surveillance Van #42”** – The classic prank that’ll have neighbors double-checking their curtains.\n\n**3. “Tell My Wi-Fi I’m Sorry”** – Because we all know the neighbor who borrows bandwidth—now they’ll feel the love (and the guilt).",
+        "reasoning": "We need to give top 3 witty WiFi network names that will make neighbors laugh, with one-line reason each. Be brief.",
+        "tool_calls": []
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 107,
+    "completion_tokens": 160,
+    "total_tokens": 267
+  }
+}
+```
+
+</CodeGroup>
+
+## qwen3-30b-a3b-fp8
+
+<Note>
+	This model supports the Chat Completions API only — the Responses endpoint
+	(`/v1/responses`) is not available for this model.
+</Note>
+
+> Alibaba's Qwen3-30B-A3B is an open-weight Mixture-of-Experts model with 30.5B total parameters (3.3B active per token), served on ZeroGPU as an FP8 build for efficient inference. It thinks through a problem before answering and returns that reasoning alongside the final text, and it supports function calling, streaming, batch tasks, and 100+ languages with a 32,768-token context window. When you want frontier-style reasoning and tool use in a lighter, multilingual package, this is the model.
+
+**References:** [Model docs](https://huggingface.co/Qwen/Qwen3-30B-A3B-FP8) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+  "model": "qwen3-30b-a3b-fp8",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a pragmatic senior engineer. Be brief."
+    },
+    {
+      "role": "user",
+      "content": "My API is getting rate-limited by a third party. Give me 3 battle-tested strategies to handle it, one line each."
+    }
+  ],
+  "max_tokens": 800
+}'
+```
+
+The model reasons before it answers and returns the trace alongside the final text as a `reasoning` field on the message.
+
+```json Response
+{
+  "id": "id-1784324156320",
+  "object": "chat.completion",
+  "created": 1784324156,
+  "model": "qwen3-30b-a3b-fp8",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "**1. Exponential backoff with jitter** – Retry on 429s with doubling delays plus randomness so your retries don't stampede in sync.\n\n**2. Client-side token bucket** – Throttle your own outbound rate just below the provider's limit so you never hit the wall in the first place.\n\n**3. Cache and coalesce** – Cache hot responses and merge duplicate in-flight requests so repeat calls never reach the third party at all.",
+        "reasoning": "The user's API is being rate-limited by a third party and wants 3 battle-tested strategies, one line each. The classic answers: exponential backoff with jitter, client-side throttling below the limit, and caching plus request coalescing. Keep each to one line.",
+        "tool_calls": []
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 52,
+    "completion_tokens": 143,
+    "total_tokens": 195
+  }
+}
+```
 
 ## LFM2.5-1.2B-Instruct
 

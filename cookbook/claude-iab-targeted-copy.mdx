@@ -36,7 +36,7 @@ Keep both values handy for the next step. The classifier is reached through the 
 
 ## 🔌 Connect the ZeroGPU MCP Server in Claude Desktop
 
-The ZeroGPU MCP server is hosted at `https://mcp.zerogpu.ai/mcp` and authenticates with two headers on every request: `x-api-key` (your API key) and `x-project-id` (your Project ID). To make its tools available to Claude, add the server to Claude Desktop's MCP configuration.
+The ZeroGPU MCP server is hosted at `https://mcp.zerogpu.ai/mcp` and authenticates with the `x-api-key` header (your API key) on every request; the `x-project-id` header (your Project ID) is optional. To make its tools available to Claude, add the server to Claude Desktop's MCP configuration.
 
 In Claude Desktop, open **Settings → Developer → Edit Config**, then add the `zerogpu` entry to `mcpServers` (substitute your real key and Project ID):
 

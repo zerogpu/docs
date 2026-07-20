@@ -60,7 +60,7 @@ zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
 os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
 ```
 
-This cookbook calls the raw REST surface with the `x-api-key` and `x-project-id` headers. If you use an SDK client, authentication is handled for you. The cURL examples read the same two values from your shell environment:
+This cookbook calls the raw REST surface with the `x-api-key` and `x-project-id` headers (`x-project-id` is optional - it scopes requests to a project). If you use an SDK client, authentication is handled for you. The cURL examples read the same two values from your shell environment:
 
 ```bash
 export ZEROGPU_API_KEY="zgpu-api-..."

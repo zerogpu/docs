@@ -3,7 +3,7 @@
   "info": {
     "title": "zlm-v1-iab-domain-classifier playground",
     "version": "1.0",
-    "description": "Interactive playground for **zlm-v1-iab-domain-classifier**.\nModel is always `zlm-v1-iab-domain-classifier` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **zlm-v1-iab-domain-classifier**.\nModel is always `zlm-v1-iab-domain-classifier` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -13,8 +13,7 @@
   ],
   "security": [
     {
-      "ApiKey": [],
-      "ProjectId": []
+      "ApiKey": []
     }
   ],
   "paths": {
@@ -108,7 +107,15 @@
                           "score": 0.6533
                         }
                       ],
-                      "keywords": ["news", "politics", "world", "business", "opinion", "media", "journalism"],
+                      "keywords": [
+                        "news",
+                        "politics",
+                        "world",
+                        "business",
+                        "opinion",
+                        "media",
+                        "journalism"
+                      ],
                       "user_intent": {
                         "name": "reading news and current events",
                         "category": "informational",
@@ -142,7 +149,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     },
     "/chat/completions": {
@@ -240,7 +258,15 @@
                           "score": 0.6533
                         }
                       ],
-                      "keywords": ["news", "politics", "world", "business", "opinion", "media", "journalism"],
+                      "keywords": [
+                        "news",
+                        "politics",
+                        "world",
+                        "business",
+                        "opinion",
+                        "media",
+                        "journalism"
+                      ],
                       "user_intent": {
                         "name": "reading news and current events",
                         "category": "informational",
@@ -274,7 +300,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     }
   },
@@ -284,11 +321,6 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
-      },
-      "ProjectId": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-project-id"
       }
     },
     "schemas": {

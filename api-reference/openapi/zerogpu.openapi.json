@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU API",
     "version": "1.0",
-    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses `x-api-key` and `x-project-id` headers on every request.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** are listed on [Model playgrounds](/api-reference/models) with request examples for each model's use cases.\nThese endpoint pages show a generic shape only."
+    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses the `x-api-key` header on every request. The `x-project-id` header is optional.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** are listed on [Model playgrounds](/api-reference/models) with request examples for each model's use cases.\nThese endpoint pages show a generic shape only."
   },
   "servers": [
     {
@@ -13,8 +13,7 @@
   ],
   "security": [
     {
-      "ApiKey": [],
-      "ProjectId": []
+      "ApiKey": []
     }
   ],
   "paths": {
@@ -101,7 +100,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     },
     "/chat/completions": {
@@ -198,7 +208,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     }
   },
@@ -209,12 +230,6 @@
         "in": "header",
         "name": "x-api-key",
         "description": "Your ZeroGPU API key. Create one in the dashboard under API keys. Send it on every request."
-      },
-      "ProjectId": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-project-id",
-        "description": "The UUID of the project the request is billed to. Find it in the dashboard project settings."
       }
     },
     "schemas": {
@@ -232,12 +247,13 @@
               "llama-3.1-8b-instruct-fast",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",
+              "gpt-oss-120b",
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
               "zlm-v1-followup-questions-edge",
               "zlm-v1-iab-classify-edge",
-              "zlm-v1-iab-classify-edge-enriched",
+              "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier"
             ],
             "example": "llama-3.1-8b-instruct-fast"
@@ -290,12 +306,14 @@
               "llama-3.1-8b-instruct-fast",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",
+              "gpt-oss-120b",
+              "qwen3-30b-a3b-fp8",
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
               "zlm-v1-followup-questions-edge",
               "zlm-v1-iab-classify-edge",
-              "zlm-v1-iab-classify-edge-enriched",
+              "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier"
             ],
             "example": "llama-3.1-8b-instruct-fast"
