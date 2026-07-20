@@ -1,0 +1,224 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "qwen3-30b-a3b-fp8 playground",
+    "version": "1.0",
+    "description": "Interactive playground for **qwen3-30b-a3b-fp8**.\nModel is always `qwen3-30b-a3b-fp8` on this page (shown in the form, not editable).\nThis model supports the Chat Completions API only — the Responses endpoint is not available.\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion_qwen3-30b-a3b-fp8",
+        "summary": "qwen3-30b-a3b-fp8: Chat completions",
+        "tags": [
+          "qwen3-30b-a3b-fp8"
+        ],
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "qwen3-30b-a3b-fp8",
+                        "default": "qwen3-30b-a3b-fp8",
+                        "example": "qwen3-30b-a3b-fp8",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "model": "qwen3-30b-a3b-fp8",
+                    "messages": [
+                      {
+                        "role": "system",
+                        "content": "You are a pragmatic senior engineer. Be brief."
+                      },
+                      {
+                        "role": "user",
+                        "content": "My API is getting rate-limited by a third party. Give me 3 battle-tested strategies to handle it, one line each."
+                      }
+                    ],
+                    "max_tokens": 800
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "id": "id-1784324156320",
+                      "object": "chat.completion",
+                      "created": 1784324156,
+                      "model": "qwen3-30b-a3b-fp8",
+                      "choices": [
+                        {
+                          "index": 0,
+                          "finish_reason": "stop",
+                          "message": {
+                            "role": "assistant",
+                            "content": "**1. Exponential backoff with jitter** – Retry on 429s with doubling delays plus randomness so your retries don't stampede in sync.\n\n**2. Client-side token bucket** – Throttle your own outbound rate just below the provider's limit so you never hit the wall in the first place.\n\n**3. Cache and coalesce** – Cache hot responses and merge duplicate in-flight requests so repeat calls never reach the third party at all.",
+                            "reasoning": "The user's API is being rate-limited by a third party and wants 3 battle-tested strategies, one line each. The classic answers: exponential backoff with jitter, client-side throttling below the limit, and caching plus request coalescing. Keep each to one line.",
+                            "tool_calls": []
+                          }
+                        }
+                      ],
+                      "usage": {
+                        "prompt_tokens": 52,
+                        "completion_tokens": 143,
+                        "total_tokens": 195
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "qwen3-30b-a3b-fp8",
+            "default": "qwen3-30b-a3b-fp8",
+            "example": "qwen3-30b-a3b-fp8",
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 800,
+            "description": "Maximum number of tokens to generate in the response."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 32768,
+            "description": "Message text."
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

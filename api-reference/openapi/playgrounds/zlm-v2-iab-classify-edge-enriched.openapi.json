@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "zlm-v1-iab-classify-edge-enriched playground",
+    "title": "zlm-v2-iab-classify-edge-enriched playground",
     "version": "1.0",
-    "description": "Interactive playground for **zlm-v1-iab-classify-edge-enriched**.\nModel is always `zlm-v1-iab-classify-edge-enriched` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **zlm-v2-iab-classify-edge-enriched**.\nModel is always `zlm-v2-iab-classify-edge-enriched` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -13,17 +13,16 @@
   ],
   "security": [
     {
-      "ApiKey": [],
-      "ProjectId": []
+      "ApiKey": []
     }
   ],
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse_zlm-v1-iab-classify-edge-enriched",
-        "summary": "zlm-v1-iab-classify-edge-enriched: Responses",
+        "operationId": "createResponse_zlm-v2-iab-classify-edge-enriched",
+        "summary": "zlm-v2-iab-classify-edge-enriched: Responses",
         "tags": [
-          "zlm-v1-iab-classify-edge-enriched"
+          "zlm-v2-iab-classify-edge-enriched"
         ],
         "requestBody": {
           "required": true,
@@ -39,9 +38,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "zlm-v1-iab-classify-edge-enriched",
-                        "default": "zlm-v1-iab-classify-edge-enriched",
-                        "example": "zlm-v1-iab-classify-edge-enriched",
+                        "const": "zlm-v2-iab-classify-edge-enriched",
+                        "default": "zlm-v2-iab-classify-edge-enriched",
+                        "example": "zlm-v2-iab-classify-edge-enriched",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -53,7 +52,7 @@
                   "summary": "Default",
                   "value": {
                     "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-                    "model": "zlm-v1-iab-classify-edge-enriched"
+                    "model": "zlm-v2-iab-classify-edge-enriched"
                   }
                 }
               }
@@ -168,15 +167,26 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_zlm-v1-iab-classify-edge-enriched",
-        "summary": "zlm-v1-iab-classify-edge-enriched: Chat completions",
+        "operationId": "createChatCompletion_zlm-v2-iab-classify-edge-enriched",
+        "summary": "zlm-v2-iab-classify-edge-enriched: Chat completions",
         "tags": [
-          "zlm-v1-iab-classify-edge-enriched"
+          "zlm-v2-iab-classify-edge-enriched"
         ],
         "requestBody": {
           "required": true,
@@ -192,9 +202,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "zlm-v1-iab-classify-edge-enriched",
-                        "default": "zlm-v1-iab-classify-edge-enriched",
-                        "example": "zlm-v1-iab-classify-edge-enriched",
+                        "const": "zlm-v2-iab-classify-edge-enriched",
+                        "default": "zlm-v2-iab-classify-edge-enriched",
+                        "example": "zlm-v2-iab-classify-edge-enriched",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -205,7 +215,7 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "model": "zlm-v1-iab-classify-edge-enriched",
+                    "model": "zlm-v2-iab-classify-edge-enriched",
                     "messages": [
                       {
                         "role": "user",
@@ -319,7 +329,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     }
   },
@@ -329,11 +350,6 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
-      },
-      "ProjectId": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-project-id"
       }
     },
     "schemas": {
@@ -346,9 +362,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "zlm-v1-iab-classify-edge-enriched",
-            "default": "zlm-v1-iab-classify-edge-enriched",
-            "example": "zlm-v1-iab-classify-edge-enriched",
+            "const": "zlm-v2-iab-classify-edge-enriched",
+            "default": "zlm-v2-iab-classify-edge-enriched",
+            "example": "zlm-v2-iab-classify-edge-enriched",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -369,9 +385,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "zlm-v1-iab-classify-edge-enriched",
-            "default": "zlm-v1-iab-classify-edge-enriched",
-            "example": "zlm-v1-iab-classify-edge-enriched",
+            "const": "zlm-v2-iab-classify-edge-enriched",
+            "default": "zlm-v2-iab-classify-edge-enriched",
+            "example": "zlm-v2-iab-classify-edge-enriched",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {

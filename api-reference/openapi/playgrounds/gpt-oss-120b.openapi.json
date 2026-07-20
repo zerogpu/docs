@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "deberta-v3-small playground",
+    "title": "gpt-oss-120b playground",
     "version": "1.0",
-    "description": "Interactive playground for **deberta-v3-small**.\nModel is always `deberta-v3-small` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **gpt-oss-120b**.\nModel is always `gpt-oss-120b` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -19,10 +19,10 @@
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse_deberta-v3-small",
-        "summary": "deberta-v3-small: Responses",
+        "operationId": "createResponse_gpt-oss-120b",
+        "summary": "gpt-oss-120b: Responses",
         "tags": [
-          "deberta-v3-small"
+          "gpt-oss-120b"
         ],
         "requestBody": {
           "required": true,
@@ -38,9 +38,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "deberta-v3-small",
-                        "default": "deberta-v3-small",
-                        "example": "deberta-v3-small",
+                        "const": "gpt-oss-120b",
+                        "default": "gpt-oss-120b",
+                        "example": "gpt-oss-120b",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -51,9 +51,10 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "input": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks.",
-                    "model": "deberta-v3-small",
-                    "instructions": "[sports, finance, politics]"
+                    "input": "Name my WiFi network something that will make my neighbors laugh. Give me your top 3 with a one-line reason each.",
+                    "model": "gpt-oss-120b",
+                    "max_tokens": 800,
+                    "instructions": "You are a witty naming consultant. Be brief."
                   }
                 }
               }
@@ -72,10 +73,41 @@
                   "default": {
                     "summary": "Default",
                     "value": {
-                      "technology": 0.971784,
-                      "politics": 0.011858,
-                      "sports": 0.01175,
-                      "finance": 0.004608
+                      "id": "id-1784318124857",
+                      "object": "response",
+                      "created_at": 1784318124,
+                      "model": "gpt-oss-120b",
+                      "status": "completed",
+                      "instructions": "You are a witty naming consultant. Be brief.",
+                      "output": [
+                        {
+                          "id": "rs_8d4dc6f3f33d0d28",
+                          "type": "reasoning",
+                          "content": [
+                            {
+                              "type": "reasoning_text",
+                              "text": "We need to respond with a top 3 WiFi names that will make neighbors laugh, each with a one-line reason. Be witty. Keep brief."
+                            }
+                          ]
+                        },
+                        {
+                          "id": "msg_9c3dfbf63445d80a",
+                          "type": "message",
+                          "role": "assistant",
+                          "status": "completed",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "**1. “FBI Surveillance Van #42”** – Neighbors will double-check the street before they even think about streaming.\n\n**2. “Drop It Like It’s Hotspot”** – A pun that’s so cheesy it’ll have the whole block groaning and giggling.\n\n**3. “Tell My Wi-Fi I Love You”** – Because nothing says “I’m caring” like a reminder that even your router needs affection."
+                            }
+                          ]
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "total_tokens": 0
+                      }
                     }
                   }
                 }
@@ -120,10 +152,10 @@
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_deberta-v3-small",
-        "summary": "deberta-v3-small: Chat completions",
+        "operationId": "createChatCompletion_gpt-oss-120b",
+        "summary": "gpt-oss-120b: Chat completions",
         "tags": [
-          "deberta-v3-small"
+          "gpt-oss-120b"
         ],
         "requestBody": {
           "required": true,
@@ -139,9 +171,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "deberta-v3-small",
-                        "default": "deberta-v3-small",
-                        "example": "deberta-v3-small",
+                        "const": "gpt-oss-120b",
+                        "default": "gpt-oss-120b",
+                        "example": "gpt-oss-120b",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -152,17 +184,18 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "model": "deberta-v3-small",
+                    "model": "gpt-oss-120b",
                     "messages": [
                       {
                         "role": "system",
-                        "content": "[Sports,Politics,Technology,Finance,Entertainment]"
+                        "content": "You are a witty naming consultant. Be brief."
                       },
                       {
                         "role": "user",
-                        "content": "Apple is expected to unveil its next-generation M5 chip at WWDC this June, promising a 40% boost in GPU performance and a new dedicated AI core for on-device machine learning tasks."
+                        "content": "Name my WiFi network something that will make my neighbors laugh. Give me your top 3 with a one-line reason each."
                       }
-                    ]
+                    ],
+                    "max_tokens": 800
                   }
                 }
               }
@@ -181,10 +214,27 @@
                   "default": {
                     "summary": "Default",
                     "value": {
-                      "technology": 0.971784,
-                      "politics": 0.011858,
-                      "sports": 0.01175,
-                      "finance": 0.004608
+                      "id": "id-1784318142640",
+                      "object": "chat.completion",
+                      "created": 1784318142,
+                      "model": "gpt-oss-120b",
+                      "choices": [
+                        {
+                          "index": 0,
+                          "finish_reason": "stop",
+                          "message": {
+                            "role": "assistant",
+                            "content": "**1. “Drop It Like It’s Hotspot”** – A cheeky nod to the song that’ll make anyone pause and grin while they log in.\n\n**2. “FBI Surveillance Van #42”** – The classic prank that’ll have neighbors double-checking their curtains.\n\n**3. “Tell My Wi-Fi I’m Sorry”** – Because we all know the neighbor who borrows bandwidth—now they’ll feel the love (and the guilt).",
+                            "reasoning": "We need to give top 3 witty WiFi network names that will make neighbors laugh, with one-line reason each. Be brief.",
+                            "tool_calls": []
+                          }
+                        }
+                      ],
+                      "usage": {
+                        "prompt_tokens": 107,
+                        "completion_tokens": 160,
+                        "total_tokens": 267
+                      }
                     }
                   }
                 }
@@ -239,9 +289,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "deberta-v3-small",
-            "default": "deberta-v3-small",
-            "example": "deberta-v3-small",
+            "const": "gpt-oss-120b",
+            "default": "gpt-oss-120b",
+            "example": "gpt-oss-120b",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -252,9 +302,17 @@
             "description": "Multi-line text or document content to send to the model."
           },
           "instructions": {
-            "type": "string",
-            "example": "[sports, finance, politics]",
-            "description": "Candidate categories for zero-shot classification, passed as a comma-separated array (e.g. `[sports, finance, politics]`). A maximum of 10 categories is supported; response time increases with the number of categories provided."
+            "type": "string"
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 800,
+            "description": "Maximum number of tokens to generate in the response."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       },
@@ -267,9 +325,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "deberta-v3-small",
-            "default": "deberta-v3-small",
-            "example": "deberta-v3-small",
+            "const": "gpt-oss-120b",
+            "default": "gpt-oss-120b",
+            "example": "gpt-oss-120b",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {
@@ -278,6 +336,16 @@
             "items": {
               "$ref": "#/components/schemas/ChatMessage"
             }
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 800,
+            "description": "Maximum number of tokens to generate in the response."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
           }
         }
       },

@@ -74,12 +74,12 @@ Rules of thumb:
 
 ## Authentication
 
-Every request needs two headers: `x-api-key` (your API key) and `x-project-id` (the project the request runs in). A `401` means a bad API key; a `403` means a bad project ID.
+Every request needs the `x-api-key` header (your API key). The `x-project-id` header (the project the request runs in) is optional - include it to scope the request to a specific project. A `401` means a bad API key; a `403` means a bad project ID.
 
 | Header | Value |
 |--------|-------|
 | `x-api-key` | Your API key from the dashboard |
-| `x-project-id` | Your project UUID from the dashboard |
+| `x-project-id` | Optional - your project UUID from the dashboard |
 | `content-type` | `application/json` |
 
 ```bash wrap

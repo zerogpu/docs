@@ -17,7 +17,9 @@ This guide walks through installing the `zerogpu-router` plugin, which turns eve
 For a runnable, real-world example, see [Build a PII-Safe Inbox Summarizer with Your OpenClaw Assistant](/cookbook/openclaw-inbox-summarizer). It walks through saving a triage workflow to your assistant once, then having it redact PII, summarize, and label every message you forward automatically, all on ZeroGPU's nano models.
 
 <Note>
-	For more worked examples, browse the [cookbook index](/cookbook/index) for end-to-end walkthroughs of classification, extraction, and PII workflows on ZeroGPU's small models.
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
 </Note>
 
 ## Video walkthrough
@@ -201,7 +203,7 @@ what IAB category is this: The Lakers signed a new point guard ahead of the play
 
 Enriched IAB classification that returns audience categories **plus** topics, keywords, and inferred user intent.
 
-- **Model:** `zlm-v1-iab-classify-edge-enriched`
+- **Model:** `zlm-v2-iab-classify-edge-enriched`
 - **Wraps:** `zerogpu classify_iab_enriched`
 - **Auto-invokes on:** "give me topics, keywords, and intent", any request for richer ad or audience signals than plain IAB labels.
 
@@ -476,7 +478,7 @@ Every skill at a glance.
 | `chat-thinking`         | Short chat with a visible reasoning trace    | `LFM2.5-1.2B-Thinking`              | auto       |
 | `summarize`             | TL;DRs, abstracts, meeting summaries         | `llama-3.1-8b-instruct-fast`        | auto       |
 | `classify-iab`          | IAB topic classification                     | `zlm-v1-iab-classify-edge`          | auto       |
-| `classify-iab-enriched` | IAB categories plus topics, keywords, intent | `zlm-v1-iab-classify-edge-enriched` | auto       |
+| `classify-iab-enriched` | IAB categories plus topics, keywords, intent | `zlm-v2-iab-classify-edge-enriched` | auto       |
 | `classify-zero-shot`    | Classify against a flat label list           | `deberta-v3-small`                  | auto       |
 | `classify-structured`   | Multi-axis schema classification             | `gliner2-base-v1`                   | auto       |
 | `extract-entities`      | Custom-label named-entity recognition        | `gliner2-base-v1`                   | auto       |

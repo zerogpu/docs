@@ -1,7 +1,7 @@
 ---
 title: "zlm-v1-iab-classify-edge"
 sidebarTitle: "IAB Classifier"
-description: "Model details for zlm-v1-iab-classify-edge."
+description: "Model details for zlm-v1-iab-classify-edge. Supports 50+ languages."
 openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.json POST /responses"
 ---
 
@@ -10,6 +10,6 @@ openapi: "api-reference/openapi/playgrounds/zlm-v1-iab-classify-edge.openapi.jso
 	directly to the IAB Content Taxonomy, so you only need to send input
 </Note>
 
-> ZeroGPU's IAB classifier maps any text to the industry-standard IAB Content Taxonomy in a single, fast inference call. Each call returns categories across both the 1.0 and 2.2 taxonomies plus matched audience segments, every result scored for confidence. At 90M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge. When you need clean category and audience signals on every request, this is the model — and when you need the full profile, reach for the enriched variant.
+> ZeroGPU's IAB classifier maps any text to the industry-standard IAB Content Taxonomy in a single, fast inference call. Each call returns categories across both the 1.0 and 2.2 taxonomies plus matched audience segments, every result scored for confidence. With support for 50+ languages, it classifies multilingual content without a translation step. At 90M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge. When you need clean category and audience signals on every request, this is the model — and when you need the full profile, reach for the enriched variant.
 
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

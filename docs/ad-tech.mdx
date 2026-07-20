@@ -5,15 +5,15 @@ description: "Edge IAB classifiers that map content to taxonomy, audience, and i
 
 Ad tech models map content to the IAB Content Taxonomy and the audience signals that programmatic advertising runs on. ZeroGPU offers a base IAB classifier tuned for real-time categorization at the edge plus an enriched variant that adds topics, keywords, and inferred intent. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
-| Model | Params | Max tokens | Input /1M | Output /1M |
-| --- | --- | ---: | ---: | ---: |
-| <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | 90M | 400 | $0.02 | $0.05 |
-| <a href="/api-reference/models/zlm-v1-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge-enriched</code></a> | 90M | 400 | $0.02 | $0.05 |
-| <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | 149M | 100 | $0.02 | $0.05 |
+| Model | Input /1M | Output /1M | Params | Max tokens |
+| --- | ---: | ---: | --- | ---: |
+| <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | $0.02 | $0.05 | 90M | 400 |
+| <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.02 | $0.05 | 90M | 400 |
+| <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 149M | 100 |
 
 ## zlm-v1-iab-classify-edge
 
-> ZeroGPU's IAB classifier maps any text to the industry-standard IAB Content Taxonomy in a single, fast inference call. Each call returns categories across both the 1.0 and 2.2 taxonomies plus matched audience segments, every result scored for confidence. At 90M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge. When you need clean category and audience signals on every request, this is the model — and when you need the full profile, reach for the enriched variant.
+> ZeroGPU's IAB classifier maps any text to the industry-standard IAB Content Taxonomy in a single, fast inference call. Each call returns categories across both the 1.0 and 2.2 taxonomies plus matched audience segments, every result scored for confidence. With support for 50+ languages, it classifies multilingual content without a translation step. At 90M parameters on ONNX, it's built for the high-volume, sub-millisecond classification that ad tech and content platforms demand, right at the edge. When you need clean category and audience signals on every request, this is the model — and when you need the full profile, reach for the enriched variant.
 
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
 
@@ -71,9 +71,9 @@ Returns IAB `audience` categories plus `content` matches across taxonomy version
 }
 ```
 
-## zlm-v1-iab-classify-edge-enriched
+## zlm-v2-iab-classify-edge-enriched
 
-> The enriched variant of ZeroGPU's IAB classifier turns a single inference call into a full content-intelligence profile not just a label, but everything a contextual pipeline needs to act on. Each call returns IAB categories across both the 1.0 and 2.2 taxonomies (down to tier-3), audience and interest segments, topics, keywords, and user-intent classification — all with confidence scores with edge-native, sub-millisecond speeds. Built for contextual ad targeting, brand-safety scoring, publisher content categorization, and signal pipelines that need full metadata on every request.
+> The enriched variant of ZeroGPU's IAB classifier turns a single inference call into a full content-intelligence profile not just a label, but everything a contextual pipeline needs to act on. Each call returns IAB categories across both the 1.0 and 2.2 taxonomies (down to tier-3), audience and interest segments, topics, keywords, and user-intent classification — all with confidence scores with edge-native, sub-millisecond speeds. With support for 50+ languages, it delivers the same full profile on multilingual content without a translation step. Built for contextual ad targeting, brand-safety scoring, publisher content categorization, and signal pipelines that need full metadata on every request.
 
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
 
@@ -86,7 +86,7 @@ curl https://api.zerogpu.ai/v1/responses \
   -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
   "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-  "model": "zlm-v1-iab-classify-edge-enriched"
+  "model": "zlm-v2-iab-classify-edge-enriched"
 }'
 ```
 
@@ -96,7 +96,7 @@ curl https://api.zerogpu.ai/v1/chat/completions \
   -H "x-api-key: YOUR_API_KEY" \
   -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
-  "model": "zlm-v1-iab-classify-edge-enriched",
+  "model": "zlm-v2-iab-classify-edge-enriched",
   "messages": [
     {
       "role": "user",
@@ -159,7 +159,7 @@ In addition to scored `audience` and `content` categories, the enriched model re
 
 ### Domain-level classification
 
-Page-level classifiers like `zlm-v1-iab-classify-edge` and `zlm-v1-iab-classify-edge-enriched` take the full body of an article or page as input and map that content to the taxonomy. `zlm-v1-iab-domain-classifier` works one level up: it takes only the raw domain name (for example `nytimes.com`) and infers the categories, topics, keywords, and intent that characterize the site as a whole.
+Page-level classifiers like `zlm-v1-iab-classify-edge` and `zlm-v2-iab-classify-edge-enriched` take the full body of an article or page as input and map that content to the taxonomy. `zlm-v1-iab-domain-classifier` works one level up: it takes only the raw domain name (for example `nytimes.com`) and infers the categories, topics, keywords, and intent that characterize the site as a whole.
 
 That shift has two practical effects:
 

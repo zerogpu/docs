@@ -3,7 +3,7 @@
   "info": {
     "title": "gliner-multi-pii-v1 playground",
     "version": "1.0",
-    "description": "Interactive playground for **gliner-multi-pii-v1**.\nModel is always `gliner-multi-pii-v1` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` and `x-project-id`."
+    "description": "Interactive playground for **gliner-multi-pii-v1**.\nModel is always `gliner-multi-pii-v1` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -13,8 +13,7 @@
   ],
   "security": [
     {
-      "ApiKey": [],
-      "ProjectId": []
+      "ApiKey": []
     }
   ],
   "paths": {
@@ -201,7 +200,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     },
     "/chat/completions": {
@@ -390,7 +400,18 @@
           "500": {
             "description": "Internal server error"
           }
-        }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
       }
     }
   },
@@ -400,11 +421,6 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
-      },
-      "ProjectId": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "x-project-id"
       }
     },
     "schemas": {

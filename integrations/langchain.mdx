@@ -212,7 +212,7 @@ print(tool.invoke({"text": "The Lakers signed a new point guard ahead of the pla
 Enriched IAB classification: categories plus topics, keywords, and inferred user intent. Use when you need richer ad / audience signals than plain IAB labels.
 
 - **Tool name:** `zerogpu_classify_iab_enriched`
-- **Model:** `zlm-v1-iab-classify-edge-enriched`
+- **Model:** `zlm-v2-iab-classify-edge-enriched`
 - **Returns:** parsed JSON (`dict`) with categories, topics, keywords, and intent
 
 | Argument | Required | Default | Description |
@@ -522,7 +522,7 @@ Every tool at a glance.
 | `ZeroGPUChatThinkingTool` | `zerogpu_chat_thinking` | `LFM2.5-1.2B-Thinking` | Chat with a visible reasoning trace | `str` |
 | `ZeroGPUSummarizeTool` | `zerogpu_summarize` | `llama-3.1-8b-instruct-fast` | Condense a passage | `str` |
 | `ZeroGPUClassifyIABTool` | `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` | IAB taxonomy classification | JSON |
-| `ZeroGPUClassifyIABEnrichedTool` | `zerogpu_classify_iab_enriched` | `zlm-v1-iab-classify-edge-enriched` | IAB + topics / keywords / intent | JSON |
+| `ZeroGPUClassifyIABEnrichedTool` | `zerogpu_classify_iab_enriched` | `zlm-v2-iab-classify-edge-enriched` | IAB + topics / keywords / intent | JSON |
 | `ZeroGPUClassifyZeroShotTool` | `zerogpu_classify_zero_shot` | `deberta-v3-small` | Zero-shot vs. custom labels | JSON |
 | `ZeroGPUClassifyStructuredTool` | `zerogpu_classify_structured` | `gliner2-base-v1` | Multi-axis schema classification | JSON |
 | `ZeroGPUExtractEntitiesTool` | `zerogpu_extract_entities` | `gliner2-base-v1` | Custom-label NER | JSON |
