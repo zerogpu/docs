@@ -1,0 +1,834 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ZeroGPU Orchestration API \u2014 ZeroClick endpoints",
+    "version": "1.0.0",
+    "description": "OpenAPI specification for the ZeroClick-authenticated orchestration endpoints\n(`/zeroclick/v1/*`).\n\nZeroClick sits in front of the ZeroGPU Orchestration API as the\nagent-payment layer. A buying agent calls ZeroClick's hosted pay URL;\nZeroClick then proxies the request to these endpoints, signing the raw\nrequest bytes with an HMAC in the `zc-signature` header. From this API's\nperspective, a request is authenticated **only** by a valid `zc-signature`\n\u2014 there is no `x-api-key` on these routes.\n\nThese endpoints mirror the standard `/v1/chat/completions` and\n`/v1/responses` orchestration endpoints (same request/response bodies,\nsame model routing), differing only in:\n  * **Authentication** \u2014 the `zc-signature` HMAC is verified over the raw\n    request bytes instead of an API key.\n  * **Authorization** \u2014 a ZeroClick allowance check runs before any\n    billable work. It fails *open* on a transient ZeroClick outage (the\n    signature has already verified), but never for a missing/invalid\n    signature.\n  * **Metering** \u2014 actual token usage is reported back to ZeroClick via the\n    `zc-usage` response header on success. Stripe metering is intentionally\n    bypassed; ZeroClick is the sole biller.\n"
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "ZeroClick",
+      "description": "ZeroClick agent-payment authenticated orchestration endpoints."
+    }
+  ],
+  "paths": {
+    "/zeroclick/v1/chat/completions": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateChatCompletion",
+        "summary": "Create a chat completion (ZeroClick-authenticated)",
+        "description": "OpenAI-style Chat Completions endpoint, authenticated by verifying the\n`zc-signature` HMAC over the raw request bytes. The request is routed by\n`model` using model metadata, and the same orchestration as\n`/v1/chat/completions` runs behind it.\n\nOn success, actual token usage is settled with ZeroClick and reported\nvia the `zc-usage` response header.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatCompletionRequest"
+              },
+              "examples": {
+                "summary": {
+                  "summary": "Summarization request",
+                  "value": {
+                    "model": "LFM2.5-1.2B-Instruct",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "Summarize the following article: ..."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI Chat Completions response. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-inference-type": {
+                "$ref": "#/components/headers/XInferenceType"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "420": {
+            "$ref": "#/components/responses/ContextLengthExceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/responses": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateResponse",
+        "summary": "Create a response (ZeroClick-authenticated)",
+        "description": "OpenAI-style Responses endpoint, authenticated by verifying the\n`zc-signature` HMAC over the raw request bytes. The request is routed by\n`model` using model metadata, and the same orchestration as\n`/v1/responses` runs behind it.\n\nOn success, actual token usage is settled with ZeroClick and reported\nvia the `zc-usage` response header.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponsesRequest"
+              },
+              "examples": {
+                "basic": {
+                  "summary": "Basic responses request",
+                  "value": {
+                    "model": "LFM2.5-1.2B-Instruct",
+                    "instructions": "You are a concise assistant.",
+                    "input": "Summarize the following article: ..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI Responses `response` object. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-inference-type": {
+                "$ref": "#/components/headers/XInferenceType"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ResponsesBadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "420": {
+            "$ref": "#/components/responses/ResponsesContextLengthExceeded"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ZeroClickSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "zc-signature",
+        "description": "HMAC signature minted by ZeroClick over the raw request bytes, of the\nform `t=<unix-seconds>,kid=<key-id>,v1=<hex-hmac>`. Verified by the\n`@zeroclickai/sellers` SDK against the seller's signing secret keyed by\n`kid`. A missing or invalid signature is rejected with `401`\n`invalid_zeroclick_signature`; this is never failed open.\n"
+      }
+    },
+    "parameters": {
+      "ZcRequestId": {
+        "name": "zc-request-id",
+        "in": "header",
+        "required": false,
+        "description": "ZeroClick request id, echoed in logs for correlation. Set by ZeroClick when it proxies the request.",
+        "schema": {
+          "type": "string",
+          "example": "zcreq_1"
+        }
+      },
+      "ZcAgentId": {
+        "name": "zc-agent-id",
+        "in": "header",
+        "required": false,
+        "description": "Identifier of the buying agent. Used to partition logs/analytics by agent; becomes the synthesized caller identity.",
+        "schema": {
+          "type": "string",
+          "example": "agt_1"
+        }
+      }
+    },
+    "headers": {
+      "ZcUsage": {
+        "description": "Usage report settled with ZeroClick, present on `200` responses. Encodes\nthe actual `input_tokens` and `output_tokens` metered against the\nrequest's ZeroClick service slug.\n",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XRequestId": {
+        "description": "Correlation id for this request, present on every response.",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "XInferenceType": {
+        "description": "Where inference executed (e.g. `cloud` or an on-device route). Absent when inference ran neither on the edge nor in the cloud.",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "responses": {
+      "ZeroClickUnauthorized": {
+        "description": "The `zc-signature` was missing or invalid, or ZeroClick is not configured\nfor this environment. Unsigned/unverifiable traffic is treated as\nunauthenticated.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ZeroClickSignatureError"
+            },
+            "example": {
+              "error": "invalid_zeroclick_signature"
+            }
+          }
+        }
+      },
+      "PaymentRequired": {
+        "description": "The ZeroClick allowance check denied the request (e.g. insufficient\nallowance or a stale signature timestamp). Body follows ZeroClick's\n`payment_required` schema as returned by the SDK.\n",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PaymentRequiredError"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid request \u2014 malformed JSON, or a missing/invalid required field such as `model` or `messages`.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "examples": {
+              "invalidJson": {
+                "value": {
+                  "error": {
+                    "message": "Invalid JSON body",
+                    "type": "invalid_request_error"
+                  }
+                }
+              },
+              "missingModel": {
+                "value": {
+                  "error": {
+                    "message": "model is required",
+                    "type": "invalid_request_error",
+                    "param": "model"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ContextLengthExceeded": {
+        "description": "Input token count exceeds the resolved model's `max_tokens` and the model is configured to error rather than truncate.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": {
+                "message": "Input exceeds max_tokens (4096) for model: LFM2.5-1.2B-Instruct",
+                "type": "invalid_request_error",
+                "param": "messages",
+                "code": "context_length_exceeded"
+              }
+            }
+          }
+        }
+      },
+      "ResponsesBadRequest": {
+        "description": "Invalid request \u2014 malformed JSON, or a missing/invalid required field such as `model` or `input`. Errors use the Responses error envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ResponsesResponse"
+            }
+          }
+        }
+      },
+      "ResponsesContextLengthExceeded": {
+        "description": "Input token count exceeds the resolved model's `max_tokens` and the model is configured to error rather than truncate. Returned in the Responses error envelope.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ResponsesResponse"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected server error.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": {
+                "message": "Internal error",
+                "type": "internal_error"
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model id; routes the request via model metadata. Kebab-cased into a ZeroClick service slug for metering.",
+            "example": "LFM2.5-1.2B-Instruct"
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "description": "Candidate labels for text-classification models. May also be supplied via a system-role message.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "multilingual": {
+            "type": "boolean",
+            "description": "Forwarded to the IAB cloud inference API only when the resolved model supports it."
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Task-specific options. For GLiNER models this carries `usecase`,\n`schema`, `labels`, `threshold`, `mask`, and `replacement_char`. For\nmoderation, `threshold`; for signal-extract, `max_keywords`.\n",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "A `developer` role is normalized to `system`; unrecognized roles are treated as `user`.",
+            "enum": [
+              "system",
+              "user",
+              "assistant",
+              "tool",
+              "developer"
+            ]
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "description": "OpenAI Chat Completions response. For classification models, `choices[0].message.content` is a JSON-stringified classification result.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "chat.completion"
+          },
+          "created": {
+            "type": "integer"
+          },
+          "model": {
+            "type": "string"
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "type": "integer"
+                },
+                "finish_reason": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "const": "assistant"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "annotations": {
+                      "type": "array",
+                      "items": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ChatUsage"
+          }
+        },
+        "additionalProperties": true
+      },
+      "ChatUsage": {
+        "type": "object",
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer"
+          },
+          "completion_tokens": {
+            "type": "integer"
+          },
+          "total_tokens": {
+            "type": "integer"
+          },
+          "prompt_tokens_details": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "completion_tokens_details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ResponsesRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "model": {
+            "type": "string",
+            "example": "LFM2.5-1.2B-Instruct"
+          },
+          "input": {
+            "type": "string",
+            "description": "Prompt text. Combined with `instructions` (as a system message) to form the model input."
+          },
+          "instructions": {
+            "type": "string",
+            "description": "System-style instructions prepended to the input. Classification models may pass comma-separated or bracketed candidate labels here."
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "nullable": true
+          },
+          "parallel_tool_calls": {
+            "type": "boolean",
+            "default": true
+          },
+          "previous_response_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "store": {
+            "type": "boolean",
+            "default": true
+          },
+          "temperature": {
+            "type": "number",
+            "nullable": true
+          },
+          "top_p": {
+            "type": "number",
+            "nullable": true
+          },
+          "truncation": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "disabled"
+            ],
+            "default": "auto"
+          },
+          "categories": {
+            "type": "array",
+            "description": "Candidate labels for text-classification models.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "multilingual": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Up to 16 string key/value pairs echoed back in the response envelope. Also carries GLiNER usecase options (`usecase`, `schema`, `labels`, `threshold`, `mask`, `replacement_char`), which are consumed and not necessarily echoed.",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "text": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "description": "Output format. `text` is supported; `json` is currently rejected.",
+                    "enum": [
+                      "text"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResponsesResponse": {
+        "type": "object",
+        "description": "OpenAI Responses `response` object. On error, `status` is `failed` and `error` is populated.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "object": {
+            "type": "string",
+            "const": "response"
+          },
+          "created_at": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "failed"
+            ]
+          },
+          "completed_at": {
+            "type": "integer",
+            "nullable": true
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ResponsesError"
+              }
+            ]
+          },
+          "incomplete_details": {
+            "nullable": true
+          },
+          "instructions": {
+            "type": "string",
+            "nullable": true
+          },
+          "max_output_tokens": {
+            "type": "integer",
+            "nullable": true
+          },
+          "model": {
+            "type": "string"
+          },
+          "output": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "message"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "const": "assistant"
+                },
+                "content": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "const": "output_text"
+                      },
+                      "text": {
+                        "type": "string"
+                      },
+                      "annotations": {
+                        "type": "array",
+                        "items": {}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "parallel_tool_calls": {
+            "type": "boolean"
+          },
+          "previous_response_id": {
+            "type": "string",
+            "nullable": true
+          },
+          "reasoning": {
+            "type": "object",
+            "properties": {
+              "effort": {
+                "nullable": true
+              },
+              "summary": {
+                "nullable": true
+              }
+            }
+          },
+          "store": {
+            "type": "boolean"
+          },
+          "temperature": {
+            "type": "number",
+            "nullable": true
+          },
+          "text": {
+            "type": "object",
+            "properties": {
+              "format": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "tool_choice": {
+            "type": "string"
+          },
+          "tools": {
+            "type": "array",
+            "items": {}
+          },
+          "top_p": {
+            "type": "number",
+            "nullable": true
+          },
+          "truncation": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "disabled"
+            ]
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ResponsesUsage"
+          },
+          "user": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "ResponsesUsage": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "input_tokens": {
+            "type": "integer"
+          },
+          "input_tokens_details": {
+            "type": "object",
+            "properties": {
+              "cached_tokens": {
+                "type": "integer"
+              }
+            }
+          },
+          "output_tokens": {
+            "type": "integer"
+          },
+          "output_tokens_details": {
+            "type": "object",
+            "properties": {
+              "reasoning_tokens": {
+                "type": "integer"
+              }
+            }
+          },
+          "total_tokens": {
+            "type": "integer"
+          }
+        }
+      },
+      "ResponsesError": {
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "description": "Error attached to a Responses envelope. OpenAI's ResponseError carries\n`code` and `message`; `type` and `param` are also emitted by some error\nsites on this endpoint.\n",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "param": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "param": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ZeroClickSignatureError": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "description": "Returned when the `zc-signature` is missing/invalid or ZeroClick is unconfigured.",
+        "properties": {
+          "error": {
+            "type": "string",
+            "const": "invalid_zeroclick_signature"
+          }
+        }
+      },
+      "PaymentRequiredError": {
+        "type": "object",
+        "description": "ZeroClick `payment_required` denial body, produced by the `@zeroclickai/sellers` SDK.",
+        "additionalProperties": true
+      }
+    }
+  }
+}
