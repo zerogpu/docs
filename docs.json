@@ -149,6 +149,13 @@
             ]
           },
           {
+            "group": "ZeroClick",
+            "pages": [
+              "api-reference/zeroclick-responses",
+              "api-reference/zeroclick-chat-completions"
+            ]
+          },
+          {
             "group": "Batch API",
             "pages": [
               "api-reference/upload-file",

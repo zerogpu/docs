@@ -1,0 +1,14 @@
+---
+title: "Chat completions (ZeroClick)"
+description: "OpenAI-style chat inference authenticated by a ZeroClick HMAC signature instead of an API key."
+sidebarTitle: "Chat completions"
+openapi: "api-reference/openapi/zeroclick.openapi.json POST /zeroclick/v1/chat/completions"
+---
+
+This is the [Chat completions](/api-reference/chat-completions) endpoint behind **ZeroClick**, ZeroGPU's agent-payment layer. Same request/response bodies and same model routing as `/v1/chat/completions` — only authentication, authorization, and metering differ.
+
+- **Authentication** — no `x-api-key`. A buying agent calls ZeroClick's hosted pay URL; ZeroClick proxies the request and signs the raw request bytes with an HMAC in the `zc-signature` header. A request is authenticated **only** by a valid signature.
+- **Authorization** — a ZeroClick allowance check runs before any billable work. It fails *open* on a transient ZeroClick outage (the signature has already verified), but never for a missing or invalid signature.
+- **Metering** — actual token usage is settled with ZeroClick and reported via the `zc-usage` response header. Stripe metering is bypassed; ZeroClick is the sole biller.
+
+Response JSON shape depends on the model; handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).
