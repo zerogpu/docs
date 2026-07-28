@@ -308,6 +308,8 @@
               "LFM2.5-1.2B-Thinking",
               "gpt-oss-120b",
               "qwen3-30b-a3b-fp8",
+              "glm-5.2",
+              "deepseek-v4-flash",
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",

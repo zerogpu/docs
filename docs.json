@@ -134,6 +134,8 @@
                 "pages": [
                   "api-reference/models/gpt-oss-120b",
                   "api-reference/models/qwen3-30b-a3b-fp8",
+                  "api-reference/models/glm-5-2",
+                  "api-reference/models/deepseek-v4-flash",
                   "api-reference/models/deberta-v3-small",
                   "api-reference/models/gliner-multi-pii-v1",
                   "api-reference/models/gliner2-base-v1",
