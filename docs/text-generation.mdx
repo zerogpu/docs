@@ -3,7 +3,7 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, Z.ai's glm-5.2, and DeepSeek's deepseek-v4-flash — for reasoning and tool use, conversational and reasoning models from Liquid AI, plus an edge model that generates contextual follow-up questions. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, Z.ai's glm-5.2, and DeepSeek's deepseek-v4-flash — for reasoning and tool use, plus conversational and reasoning models from Liquid AI. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Params | Max tokens |
 | --- | ---: | ---: | --- | ---: |
@@ -13,7 +13,6 @@ Text generation models produce new text from an input prompt. ZeroGPU offers ope
 | <a href="/api-reference/models/deepseek-v4-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4-flash" width="22" height="22" noZoom /> <code>deepseek-v4-flash</code></a> | $0.07 | $0.14 | 284B | 1,048,576 |
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | 1.2B | 32,768 |
 | <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | 1.2B | 32,768 |
-| <a href="/api-reference/models/zlm-v1-followup-questions-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-followup-questions-edge/logo_dark.png" alt="zlm-v1-followup-questions-edge" width="22" height="22" noZoom /> <code>zlm-v1-followup-questions-edge</code></a> | $0.02 | $0.05 | 120M | 400 |
 
 ## gpt-oss-120b
 
@@ -406,49 +405,4 @@ The capital of Japan is **Tokyo**.
 **Reasoning:**
 1. Japan's political, cultural, and economic center is located in Tokyo.
 2. Historically, Tokyo has served as Japan's...
-```
-
-## zlm-v1-followup-questions-edge
-
-> ZeroGPU's follow-up question generator takes any piece of content — an article, an answer, a chat turn and returns a short set of natural questions a reader would actually ask next. Where a general-purpose model has to be coaxed into this with prompting, this one is purpose built: every output is a ready-to-render question, no parsing or cleanup. Small enough to run inline at the edge, it adds a "what to ask next" layer to any surface for a fraction of a cent per call. When you want to turn a dead end into the next click, this is the model.
-
-**References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
-
-<CodeGroup>
-
-```bash Responses API
-curl https://api.zerogpu.ai/v1/responses \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-  "input": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption.",
-  "model": "zlm-v1-followup-questions-edge"
-}'
-```
-
-```bash Chat Completions
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
-  -d '{
-  "model": "zlm-v1-followup-questions-edge",
-  "messages": [
-    {
-      "role": "user",
-      "content": "Electric vehicles are gaining popularity worldwide as battery costs drop and charging infrastructure expands. Most modern EVs offer a range of 250 to 350 miles on a single charge, and fast-charging stations can replenish 80% of battery capacity in under 30 minutes. However, concerns around battery disposal, rare earth mineral sourcing, and grid capacity continue to shape the debate around large-scale EV adoption."
-    }
-  ]
-}'
-```
-
-</CodeGroup>
-
-The model returns follow-up questions a reader might naturally ask next.
-
-```text Response
-How long does an EV battery typically last before it needs to be replaced?
-What happens to electric vehicle batteries at the end of their life, and how recyclable are they?
-Is the current power grid ready to handle widespread EV charging demand?
 ```

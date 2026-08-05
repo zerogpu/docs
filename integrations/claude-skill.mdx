@@ -190,7 +190,7 @@ Classify this domain with ZeroGPU:
 
 ### Moderate content for safety
 
-Screen text for unsafe or policy-violating content and get OpenAI-style moderation signals back - useful as a lightweight safety layer in front of your app or another model.
+Screen text for unsafe or policy-violating content and get OpenAI-style moderation signals back - useful as a lightweight safety layer in front of your app or another model. See the [moderation benchmark](https://zerogpu.ai/benchmarks/moderation-edge) for accuracy and latency results.
 
 - **Model:** `zlm-v1-moderation-edge`
 - **Triggers on:** "moderate this", "is this safe?", "flag any harmful content."
@@ -282,33 +282,6 @@ Extract the name, email, and phone as JSON with ZeroGPU:
 }
 ```
 
-### Generate follow-up questions
-
-Turn any passage into a short set of natural questions a reader would ask next - ready to render as "what to ask next" prompts.
-
-- **Model:** `zlm-v1-followup-questions-edge`
-- **Triggers on:** "what should I ask next?", "suggest follow-up questions for this."
-
-```text
-Generate follow-up questions for this with ZeroGPU:
-"Electric vehicles are gaining popularity worldwide as battery costs drop and
-charging infrastructure expands. Most modern EVs offer a range of 250 to 350
-miles on a single charge, and fast-charging stations can replenish 80% of
-battery capacity in under 30 minutes."
-```
-
-**Example output (returned after API call)**
-
-```json
-{
-  "questions": [
-    "How well does an EV's range hold up in cold weather?",
-    "What happens to EV batteries at the end of their life?",
-    "How does charging cost compare to refueling a gas car?"
-  ]
-}
-```
-
 ### Translate or reply conversationally
 
 A compact instruct model for short conversational replies, translation, and intent detection - pass an optional system instruction to set its role.
@@ -375,7 +348,6 @@ Billing | High
 | Redact PII | `gliner-multi-pii-v1` | "Redact the PII in this with ZeroGPU: ..." |
 | Extract entities | `gliner2-base-v1` | "Extract the people and organizations with ZeroGPU: ..." |
 | Extract JSON | `gliner2-base-v1` | "Extract the name, email, and phone as JSON with ZeroGPU: ..." |
-| Follow-up questions | `zlm-v1-followup-questions-edge` | "Generate follow-up questions for this with ZeroGPU: ..." |
 | Translate / reply | `LFM2.5-1.2B-Instruct` | "Reply to this with ZeroGPU: ..." |
 | Reason / triage | `LFM2.5-1.2B-Thinking` | "Triage this ticket with ZeroGPU: ..." |
 
