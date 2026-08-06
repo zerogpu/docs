@@ -19,6 +19,7 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 | <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.02 | $0.05 | Text Classification | 90M | 400 |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | $0.02 | $0.05 | Text Classification | 90M | 400 |
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | Text Classification | 149M | 100 |
+| <a href="/api-reference/models/zlm-v1-moderation-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-moderation-edge" width="22" height="22" noZoom /> <code>zlm-v1-moderation-edge</code></a> | $0.02 | $0.05 | Text Moderation | 86M | 4,000 |
 | <a href="/api-reference/models/gliner-multi-pii-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="22" height="22" noZoom /> <code>gliner-multi-pii-v1</code></a> | $0.02 | $0.05 | PII | 300M | 800 |
 | <a href="/api-reference/models/gliner2-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2-base-v1" width="22" height="22" noZoom /> <code>gliner2-base-v1</code></a> | $0.02 | $0.05 | PII | 205M | 800 |
 | <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | $0.02 | $0.05 | Text Classification | 142M | 400 |
@@ -108,6 +109,16 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 
     ZeroGPU's Domain IAB Classifier maps a raw domain name straight to the IAB Content Taxonomy, returning content categories, topics, keywords, and user-intent signals. It needs only the domain as input, cutting payload size by up to 10x versus page-level…
   </Card>
+  <Card href="/api-reference/models/zlm-v1-moderation-edge">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-moderation-edge" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>zlm-v1-moderation-edge</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text Moderation</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>OpenAI-compatible</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>86M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>4,000 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M output</span></div>
+
+    ZeroGPU's moderation model returns the complete OpenAI 13-category taxonomy — a flagged verdict, category booleans, and calibrated scores — as a drop-in for omni-moderation-latest. In head-to-head benchmarks it wins the binary safe/unsafe decision (0.899 vs 0.853 F1) and 9 of 13 harm categories, and returns verdicts 1.2–1.8× faster on production-range…
+  </Card>
   <Card href="/api-reference/models/gliner-multi-pii-v1">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
       <img src="https://models-favicon.zerogpu.ai/gliner-multi-pii-v1/fastino.png" alt="gliner-multi-pii-v1" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
@@ -168,6 +179,9 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
   </Card>
   <Card title="Text Classification" icon="tags" href="/docs/text-classification">
     4 models: `zlm-v2-iab-classify-edge-enriched`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier`, `deberta-v3-small`
+  </Card>
+  <Card title="Moderation" icon="shield-halved" href="/docs/moderation">
+    1 model: `zlm-v1-moderation-edge`
   </Card>
   <Card title="Text Generation" icon="wand-magic-sparkles" href="/docs/text-generation">
     6 models: `gpt-oss-120b`, `qwen3-30b-a3b-fp8`, `glm-5.2`, `deepseek-v4-flash`, `LFM2.5-1.2B-Thinking`, `LFM2.5-1.2B-Instruct`

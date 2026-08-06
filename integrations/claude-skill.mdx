@@ -205,9 +205,43 @@ should be scared of what I might do next."
 
 ```json
 {
-  "flagged": true,
-  "categories": { "harassment": true, "violence": true, "hate": false },
-  "category_scores": { "harassment": 0.97, "violence": 0.92, "hate": 0.07 }
+  "model": "zlm-v1-moderation-edge",
+  "results": [
+    {
+      "flagged": true,
+      "unsafe_score": 1,
+      "categories": {
+        "hate": false,
+        "hate/threatening": false,
+        "harassment": true,
+        "harassment/threatening": true,
+        "self-harm": false,
+        "self-harm/intent": false,
+        "self-harm/instructions": false,
+        "sexual": false,
+        "sexual/minors": false,
+        "violence": true,
+        "violence/graphic": false,
+        "illicit": true,
+        "illicit/violent": true
+      },
+      "category_scores": {
+        "hate": 0.21574,
+        "hate/threatening": 0.168273,
+        "harassment": 0.82545,
+        "harassment/threatening": 0.957703,
+        "self-harm": 0.015232,
+        "self-harm/intent": 0.017179,
+        "self-harm/instructions": 0.01807,
+        "sexual": 0.035671,
+        "sexual/minors": 0.094207,
+        "violence": 0.665897,
+        "violence/graphic": 0.198346,
+        "illicit": 0.732167,
+        "illicit/violent": 0.780693
+      }
+    }
+  ]
 }
 ```
 

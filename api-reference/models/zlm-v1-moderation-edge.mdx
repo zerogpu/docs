@@ -1,0 +1,18 @@
+---
+title: "zlm-v1-moderation-edge"
+sidebarTitle: "Moderation"
+description: "Model details for zlm-v1-moderation-edge. OpenAI-compatible moderation, benchmarked against omni-moderation-latest."
+openapi: "api-reference/openapi/playgrounds/zlm-v1-moderation-edge.openapi.json POST /responses"
+---
+
+<Note>
+	The `instructions` field is not needed for this model. Send only the text to
+	moderate. The verdict arrives as a JSON string in the response's output text —
+	an OpenAI-moderations-style envelope of `{"model": ..., "results": [...]}` —
+	so parse that string to read `flagged`, `unsafe_score`, `categories`, and
+	`category_scores`.
+</Note>
+
+> ZeroGPU's moderation model screens text for unsafe, harmful, or policy-sensitive content and returns the complete OpenAI 13-category taxonomy — a `flagged` verdict, per-category booleans, and calibrated `category_scores` — so it drops into any pipeline written against `omni-moderation-latest`. Under the hood it's an 86M-parameter DeBERTa encoder with a shared trunk feeding one binary safe/unsafe head and 13 category heads, with per-category thresholds calibrated on held-out validation data. In [head-to-head benchmarks](https://zerogpu.ai/benchmarks/moderation-edge) against OpenAI omni-moderation it wins the binary safe/unsafe decision (0.899 vs 0.853 F1) and 9 of 13 harm categories — with the largest gains on graphic violence, illicit content, and self-harm — while returning verdicts 1.2–1.8× faster at the median on production-range inputs, because inference is co-located at the edge instead of a round trip to a central API. Moderation sits inline in front of every response your app serves; this is the model that's fast and accurate enough to live there.
+
+**References:** [Moderation benchmark](https://zerogpu.ai/benchmarks/moderation-edge) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

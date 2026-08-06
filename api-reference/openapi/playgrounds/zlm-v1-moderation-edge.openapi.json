@@ -1,0 +1,415 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "zlm-v1-moderation-edge playground",
+    "version": "1.0",
+    "description": "Interactive playground for **zlm-v1-moderation-edge**.\nModel is always `zlm-v1-moderation-edge` on this page (shown in the form, not editable).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "operationId": "createResponse_zlm-v1-moderation-edge",
+        "summary": "zlm-v1-moderation-edge: Responses",
+        "tags": [
+          "zlm-v1-moderation-edge"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-moderation-edge",
+                        "default": "zlm-v1-moderation-edge",
+                        "example": "zlm-v1-moderation-edge",
+                        "description": "Model identifier (fixed for this playground)."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "input": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next.",
+                    "model": "zlm-v1-moderation-edge"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "id": "6b644bea-ed4a-43e6-b2ed-6a462c79c4e0",
+                      "object": "response",
+                      "created_at": 1786030511,
+                      "status": "completed",
+                      "completed_at": 1786030511,
+                      "error": null,
+                      "incomplete_details": null,
+                      "instructions": null,
+                      "max_output_tokens": null,
+                      "model": "zlm-v1-moderation-edge",
+                      "output": [
+                        {
+                          "type": "message",
+                          "id": "6b644bea-ed4a-43e6-b2ed-6a462c79c4e0",
+                          "status": "completed",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "{\"model\":\"zlm-v1-moderation-edge\",\"results\":[{\"flagged\":true,\"unsafe_score\":1,\"categories\":{\"hate\":false,\"hate/threatening\":false,\"harassment\":true,\"harassment/threatening\":true,\"self-harm\":false,\"self-harm/intent\":false,\"self-harm/instructions\":false,\"sexual\":false,\"sexual/minors\":false,\"violence\":true,\"violence/graphic\":false,\"illicit\":true,\"illicit/violent\":true},\"category_scores\":{\"hate\":0.21574,\"hate/threatening\":0.168273,\"harassment\":0.82545,\"harassment/threatening\":0.957703,\"self-harm\":0.015232,\"self-harm/intent\":0.017179,\"self-harm/instructions\":0.01807,\"sexual\":0.035671,\"sexual/minors\":0.094207,\"violence\":0.665897,\"violence/graphic\":0.198346,\"illicit\":0.732167,\"illicit/violent\":0.780693}}]}",
+                              "annotations": []
+                            }
+                          ]
+                        }
+                      ],
+                      "parallel_tool_calls": true,
+                      "previous_response_id": null,
+                      "reasoning": {
+                        "effort": null,
+                        "summary": null
+                      },
+                      "store": true,
+                      "temperature": 1,
+                      "text": {
+                        "format": {
+                          "type": "text"
+                        }
+                      },
+                      "tool_choice": "auto",
+                      "tools": [],
+                      "top_p": 1,
+                      "truncation": "auto",
+                      "usage": {
+                        "input_tokens": 30,
+                        "input_tokens_details": {
+                          "cached_tokens": 0
+                        },
+                        "output_tokens": 177,
+                        "output_tokens_details": {
+                          "reasoning_tokens": 0
+                        },
+                        "total_tokens": 207
+                      },
+                      "user": null,
+                      "metadata": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    },
+    "/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion_zlm-v1-moderation-edge",
+        "summary": "zlm-v1-moderation-edge: Chat completions",
+        "tags": [
+          "zlm-v1-moderation-edge"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-moderation-edge",
+                        "default": "zlm-v1-moderation-edge",
+                        "example": "zlm-v1-moderation-edge",
+                        "description": "Model identifier (fixed for this playground)."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "model": "zlm-v1-moderation-edge",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "id": "20cb788a-ba05-4543-a2b3-e80f8e814e49",
+                      "object": "chat.completion",
+                      "created": 1786030403,
+                      "model": "zlm-v1-moderation-edge",
+                      "choices": [
+                        {
+                          "index": 0,
+                          "message": {
+                            "role": "assistant",
+                            "content": "{\"model\":\"zlm-v1-moderation-edge\",\"results\":[{\"flagged\":true,\"unsafe_score\":1,\"categories\":{\"hate\":false,\"hate/threatening\":false,\"harassment\":true,\"harassment/threatening\":true,\"self-harm\":false,\"self-harm/intent\":false,\"self-harm/instructions\":false,\"sexual\":false,\"sexual/minors\":false,\"violence\":true,\"violence/graphic\":false,\"illicit\":true,\"illicit/violent\":true},\"category_scores\":{\"hate\":0.21574,\"hate/threatening\":0.168273,\"harassment\":0.82545,\"harassment/threatening\":0.957703,\"self-harm\":0.015232,\"self-harm/intent\":0.017179,\"self-harm/instructions\":0.01807,\"sexual\":0.035671,\"sexual/minors\":0.094207,\"violence\":0.665897,\"violence/graphic\":0.198346,\"illicit\":0.732167,\"illicit/violent\":0.780693}}]}",
+                            "refusal": null,
+                            "annotations": []
+                          },
+                          "logprobs": null,
+                          "finish_reason": "stop"
+                        }
+                      ],
+                      "usage": {
+                        "prompt_tokens": 30,
+                        "completion_tokens": 177,
+                        "total_tokens": 207,
+                        "prompt_tokens_details": {
+                          "cached_tokens": 0,
+                          "audio_tokens": 0
+                        },
+                        "completion_tokens_details": {
+                          "reasoning_tokens": 0,
+                          "audio_tokens": 0,
+                          "accepted_prediction_tokens": 0,
+                          "rejected_prediction_tokens": 0
+                        }
+                      },
+                      "service_tier": "default"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-moderation-edge",
+            "default": "zlm-v1-moderation-edge",
+            "example": "zlm-v1-moderation-edge",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "The text to moderate, as a plain string."
+          }
+        }
+      },
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-moderation-edge",
+            "default": "zlm-v1-moderation-edge",
+            "example": "zlm-v1-moderation-edge",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "InputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

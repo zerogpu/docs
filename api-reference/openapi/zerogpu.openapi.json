@@ -253,7 +253,8 @@
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier"
+              "zlm-v1-iab-domain-classifier",
+              "zlm-v1-moderation-edge"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -314,7 +315,8 @@
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier"
+              "zlm-v1-iab-domain-classifier",
+              "zlm-v1-moderation-edge"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },

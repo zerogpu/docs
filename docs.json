@@ -67,6 +67,7 @@
               "docs/text-classification",
               "docs/text-generation",
               "docs/pii",
+              "docs/moderation",
               "docs/summarization"
             ]
           },
@@ -144,7 +145,8 @@
                   "api-reference/models/llama-3-1-8b-instruct-fast",
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v2-iab-classify-edge-enriched",
-                  "api-reference/models/zlm-v1-iab-domain-classifier"
+                  "api-reference/models/zlm-v1-iab-domain-classifier",
+                  "api-reference/models/zlm-v1-moderation-edge"
                 ]
               }
             ]
