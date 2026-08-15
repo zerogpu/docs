@@ -3,7 +3,7 @@
   "info": {
     "title": "zlm-v1-moderation-edge playground",
     "version": "1.0",
-    "description": "Interactive playground for **zlm-v1-moderation-edge**.\nModel is always `zlm-v1-moderation-edge` on this page (shown in the form, not editable).\nMitigation models are routable only on `/v1/moderations` — they 400 on `/v1/responses` and `/v1/chat/completions`.\nThe response is OpenAI's moderations envelope (`{ id, model, results[] }`).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **zlm-v1-moderation-edge**.\nModel is always `zlm-v1-moderation-edge` on this page (shown in the form, not editable).\nModeration models are routable only on `/v1/moderations` — they 400 on `/v1/responses` and `/v1/chat/completions`.\nThe response is OpenAI's moderations envelope (`{ id, model, results[] }`).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
