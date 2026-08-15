@@ -1,0 +1,12 @@
+---
+title: "Moderations"
+description: "Classify text against OpenAI's safety categories."
+sidebarTitle: "Moderations"
+openapi: "api-reference/openapi/zerogpu.openapi.json POST /moderations"
+---
+
+Send text as `input` and get back OpenAI's moderations envelope: an `id`, the resolved `model`, and a `results` array with per-category booleans (`categories`) and confidence scores (`category_scores`) across all 13 safety categories. It is drop-in compatible with OpenAI's Moderations API — OpenAI model ids (`omni-moderation-latest`, `text-moderation-stable`) are accepted and mapped. See the [Moderation](/docs/moderation) guide for a prefilled example, or the [model page](/api-reference/models/zlm-v1-moderation-edge) for an interactive playground.
+
+Moderation models are routable **only** on this endpoint — a `/responses` or `/chat/completions` call with a moderation model returns `400`. Pass `input` as a string, an array of strings (one result per element), or an array of `{ "type": "text", "text": "…" }` content parts forming one multi-modal input.
+
+Install the official SDK from [npm](https://www.npmjs.com/package/zerogpu-api) or [PyPI](https://pypi.org/project/zerogpu-api/) (`pip install zerogpu-api`). Source: [zerogpu/SDK](https://github.com/zerogpu/SDK). Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).

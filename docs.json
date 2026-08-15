@@ -130,6 +130,7 @@
             "pages": [
               "api-reference/responses",
               "api-reference/chat-completions",
+              "api-reference/moderations",
               {
                 "group": "By model",
                 "pages": [
