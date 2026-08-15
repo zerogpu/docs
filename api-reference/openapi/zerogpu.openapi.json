@@ -221,6 +221,143 @@
           }
         ]
       }
+    },
+    "/moderations": {
+      "post": {
+        "operationId": "createModeration",
+        "summary": "Create moderation",
+        "tags": [
+          "Moderations"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModerationRequest"
+              },
+              "example": {
+                "model": "zlm-v1-moderation-edge",
+                "input": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationResponse"
+                },
+                "example": {
+                  "id": "modr-0a1b2c3d4e5f60718293a4b5c6d7e8f90",
+                  "model": "zlm-v1-moderation-edge",
+                  "results": [
+                    {
+                      "flagged": true,
+                      "categories": {
+                        "harassment": true,
+                        "harassment/threatening": true,
+                        "hate": false,
+                        "hate/threatening": false,
+                        "illicit": false,
+                        "illicit/violent": false,
+                        "self-harm": false,
+                        "self-harm/intent": false,
+                        "self-harm/instructions": false,
+                        "sexual": false,
+                        "sexual/minors": false,
+                        "violence": true,
+                        "violence/graphic": false
+                      },
+                      "category_scores": {
+                        "harassment": 0.9412,
+                        "harassment/threatening": 0.9016,
+                        "hate": 0.0231,
+                        "hate/threatening": 0.0104,
+                        "illicit": 0.0057,
+                        "illicit/violent": 0.0039,
+                        "self-harm": 0.0021,
+                        "self-harm/intent": 0.0012,
+                        "self-harm/instructions": 0.0008,
+                        "sexual": 0.0006,
+                        "sexual/minors": 0.0002,
+                        "violence": 0.8774,
+                        "violence/graphic": 0.0311
+                      },
+                      "category_applied_input_types": {
+                        "harassment": [
+                          "text"
+                        ],
+                        "harassment/threatening": [
+                          "text"
+                        ],
+                        "hate": [
+                          "text"
+                        ],
+                        "hate/threatening": [
+                          "text"
+                        ],
+                        "illicit": [
+                          "text"
+                        ],
+                        "illicit/violent": [
+                          "text"
+                        ],
+                        "self-harm": [
+                          "text"
+                        ],
+                        "self-harm/intent": [
+                          "text"
+                        ],
+                        "self-harm/instructions": [
+                          "text"
+                        ],
+                        "sexual": [
+                          "text"
+                        ],
+                        "sexual/minors": [
+                          "text"
+                        ],
+                        "violence": [
+                          "text"
+                        ],
+                        "violence/graphic": [
+                          "text"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid body)"
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing API key)"
+          },
+          "403": {
+            "description": "Forbidden (invalid project ID or permissions)"
+          },
+          "420": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -545,6 +682,351 @@
                 "description": "Human-readable description of the error.",
                 "example": "You have insufficient quota to complete this request."
               }
+            }
+          }
+        }
+      },
+      "CreateModerationRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "default": "zlm-v1-moderation-edge",
+            "example": "zlm-v1-moderation-edge",
+            "description": "Moderation model to use. Defaults to the configured moderation model; OpenAI ids (`omni-moderation-latest`, `text-moderation-stable`) are accepted and mapped to it."
+          },
+          "input": {
+            "description": "Text to classify. A single string, an array of strings (one result per element), or an array of content parts (`{ \"type\": \"text\", \"text\": \"...\" }`) forming one multi-modal input.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ModerationCategories": {
+        "type": "object",
+        "description": "Per-category boolean verdicts. All 13 categories are always present, in OpenAI's order.",
+        "properties": {
+          "harassment": {
+            "type": "boolean",
+            "description": "Content that expresses, incites, or promotes harassing language towards any target.",
+            "example": true
+          },
+          "harassment/threatening": {
+            "type": "boolean",
+            "description": "Harassment that also includes violence or serious harm towards any target.",
+            "example": true
+          },
+          "hate": {
+            "type": "boolean",
+            "description": "Content that expresses, incites, or promotes hate based on a protected attribute.",
+            "example": false
+          },
+          "hate/threatening": {
+            "type": "boolean",
+            "description": "Hateful content that also includes violence or serious harm towards a protected group.",
+            "example": false
+          },
+          "illicit": {
+            "type": "boolean",
+            "description": "Content that gives advice or instruction on how to commit a wrongdoing.",
+            "example": false
+          },
+          "illicit/violent": {
+            "type": "boolean",
+            "description": "Illicit content that also references violence or procuring a weapon.",
+            "example": false
+          },
+          "self-harm": {
+            "type": "boolean",
+            "description": "Content that promotes, encourages, or depicts acts of self-harm.",
+            "example": false
+          },
+          "self-harm/intent": {
+            "type": "boolean",
+            "description": "Content where the speaker expresses that they are engaging or intend to engage in self-harm.",
+            "example": false
+          },
+          "self-harm/instructions": {
+            "type": "boolean",
+            "description": "Content that provides instructions or advice on how to commit acts of self-harm.",
+            "example": false
+          },
+          "sexual": {
+            "type": "boolean",
+            "description": "Content meant to arouse sexual excitement or that promotes sexual services.",
+            "example": false
+          },
+          "sexual/minors": {
+            "type": "boolean",
+            "description": "Sexual content that includes an individual under 18 years old.",
+            "example": false
+          },
+          "violence": {
+            "type": "boolean",
+            "description": "Content that depicts death, violence, or physical injury.",
+            "example": true
+          },
+          "violence/graphic": {
+            "type": "boolean",
+            "description": "Content that depicts death, violence, or physical injury in graphic detail.",
+            "example": false
+          }
+        }
+      },
+      "ModerationCategoryScores": {
+        "type": "object",
+        "description": "Per-category confidence scores in [0, 1]. All 13 categories are always present, in OpenAI's order.",
+        "properties": {
+          "harassment": {
+            "type": "number",
+            "description": "Confidence score for `harassment`.",
+            "example": 0.9412
+          },
+          "harassment/threatening": {
+            "type": "number",
+            "description": "Confidence score for `harassment/threatening`.",
+            "example": 0.9016
+          },
+          "hate": {
+            "type": "number",
+            "description": "Confidence score for `hate`.",
+            "example": 0.0231
+          },
+          "hate/threatening": {
+            "type": "number",
+            "description": "Confidence score for `hate/threatening`.",
+            "example": 0.0104
+          },
+          "illicit": {
+            "type": "number",
+            "description": "Confidence score for `illicit`.",
+            "example": 0.0057
+          },
+          "illicit/violent": {
+            "type": "number",
+            "description": "Confidence score for `illicit/violent`.",
+            "example": 0.0039
+          },
+          "self-harm": {
+            "type": "number",
+            "description": "Confidence score for `self-harm`.",
+            "example": 0.0021
+          },
+          "self-harm/intent": {
+            "type": "number",
+            "description": "Confidence score for `self-harm/intent`.",
+            "example": 0.0012
+          },
+          "self-harm/instructions": {
+            "type": "number",
+            "description": "Confidence score for `self-harm/instructions`.",
+            "example": 0.0008
+          },
+          "sexual": {
+            "type": "number",
+            "description": "Confidence score for `sexual`.",
+            "example": 0.0006
+          },
+          "sexual/minors": {
+            "type": "number",
+            "description": "Confidence score for `sexual/minors`.",
+            "example": 0.0002
+          },
+          "violence": {
+            "type": "number",
+            "description": "Confidence score for `violence`.",
+            "example": 0.8774
+          },
+          "violence/graphic": {
+            "type": "number",
+            "description": "Confidence score for `violence/graphic`.",
+            "example": 0.0311
+          }
+        }
+      },
+      "ModerationAppliedInputTypes": {
+        "type": "object",
+        "description": "Which input modality triggered each category. This is a text-only model, so every category maps to [\"text\"].",
+        "properties": {
+          "harassment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "harassment/threatening": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "hate": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "hate/threatening": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "illicit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "illicit/violent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm/intent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm/instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "sexual": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "sexual/minors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "violence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "violence/graphic": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          }
+        }
+      },
+      "ModerationResult": {
+        "type": "object",
+        "description": "A single entry of the `results` array — the verdict for one input.",
+        "properties": {
+          "flagged": {
+            "type": "boolean",
+            "description": "True when the model flagged the input in one or more categories.",
+            "example": true
+          },
+          "categories": {
+            "$ref": "#/components/schemas/ModerationCategories"
+          },
+          "category_scores": {
+            "$ref": "#/components/schemas/ModerationCategoryScores"
+          },
+          "category_applied_input_types": {
+            "$ref": "#/components/schemas/ModerationAppliedInputTypes"
+          }
+        }
+      },
+      "ModerationResponse": {
+        "type": "object",
+        "description": "OpenAI-compatible moderations envelope. One `results` entry per input.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the moderation request.",
+            "example": "modr-0a1b2c3d4e5f60718293a4b5c6d7e8f90"
+          },
+          "model": {
+            "type": "string",
+            "description": "The model used for classification.",
+            "example": "zlm-v1-moderation-edge"
+          },
+          "results": {
+            "type": "array",
+            "description": "Moderation verdicts, one per input (a string input yields a single-element array).",
+            "items": {
+              "$ref": "#/components/schemas/ModerationResult"
             }
           }
         }
