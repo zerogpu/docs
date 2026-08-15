@@ -3,7 +3,7 @@
   "info": {
     "title": "llama-3.1-8b-instruct-fast playground",
     "version": "1.0",
-    "description": "Interactive playground for **llama-3.1-8b-instruct-fast**.\nModel is always `llama-3.1-8b-instruct-fast` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **llama-3.1-8b-instruct-fast**.\nModel is always `llama-3.1-8b-instruct-fast` on this page (shown in the form, not editable).\nThis model uses the **Chat Completions** route (`POST /v1/chat/completions`); it does not support `/v1/responses`.\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -17,101 +17,6 @@
     }
   ],
   "paths": {
-    "/responses": {
-      "post": {
-        "operationId": "createResponse_llama-3_1-8b-instruct-fast",
-        "summary": "llama-3.1-8b-instruct-fast: Responses",
-        "tags": [
-          "llama-3.1-8b-instruct-fast"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "allOf": [
-                  {
-                    "$ref": "#/components/schemas/CreateResponseRequest"
-                  },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "type": "string",
-                        "const": "llama-3.1-8b-instruct-fast",
-                        "default": "llama-3.1-8b-instruct-fast",
-                        "example": "llama-3.1-8b-instruct-fast",
-                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
-                      }
-                    }
-                  }
-                ]
-              },
-              "examples": {
-                "default": {
-                  "summary": "Default",
-                  "value": {
-                    "input": "The global semiconductor industry is undergoing one of its most significant structural shifts in decades, driven by a combination of geopolitical tensions, surging demand from artificial intelligence workloads, and a wave of government-backed industrial policy across the United States, Europe, and Asia. At the center of this transformation is a race to onshore chip manufacturing capacity that had, for thirty years, been quietly concentrated in Taiwan and South Korea. The United States CHIPS and Science Act, signed into law in 2022, allocated over $52 billion in subsidies to incentivize domestic semiconductor fabrication. Since then, companies including TSMC, Intel, Samsung, and Micron have announced or broken ground on new fabs in Arizona, Ohio, Texas, and Idaho. However, construction timelines have slipped, costs have ballooned, and a shortage of skilled workers has prompted some manufacturers to bring in engineers from overseas, a move that has drawn political scrutiny even as it addresses a genuine talent gap. Meanwhile, the explosion of AI model training and inference has fundamentally altered the demand profile for chips. Graphics processing units originally designed for gaming, particularly those made by NVIDIA, have become the primary compute substrate for large language models. NVIDIA's H100 and successor Blackwell-series GPUs now trade at significant premiums on secondary markets, with some hyperscalers reporting lead times of over a year for large cluster orders. This bottleneck has accelerated investment in custom silicon: Google's Tensor Processing Units, Amazon's Trainium and Inferentia chips, and Meta's MTIA accelerators are all attempts to reduce dependence on third-party GPU supply chains. On the geopolitical front, the United States has progressively tightened export controls on advanced chips and chip-making equipment destined for China, with the most recent rules targeting gate-all-around transistor technology and high-bandwidth memory. China, in response, has dramatically increased state investment in its domestic semiconductor ecosystem, with companies like SMIC and Huawei making incremental but closely watched progress at advanced nodes. Analysts remain divided on how quickly China can close the gap, with estimates ranging from five to fifteen years depending on assumptions about technology transfer, equipment access, and the pace of indigenous innovation. The equipment layer, often overlooked in public discourse, may prove to be the most consequential chokepoint. ASML, the Dutch company that holds a near-monopoly on extreme ultraviolet lithography machines, has become a focal point of both trade diplomacy and industrial strategy. Without EUV tools, fabricating chips below 7 nanometers at scale is effectively impossible, giving ASML and its supply chain extraordinary leverage in a world where nations are suddenly treating semiconductor access as a matter of national security.",
-                    "model": "llama-3.1-8b-instruct-fast"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Response"
-                },
-                "examples": {
-                  "default": {
-                    "summary": "Default",
-                    "value": "The global semiconductor industry is undergoing a significant transformation driven by geopolitical tensions, surging demand from artificial intelligence workloads, and government-backed industrial policies. A race to onshore chip manufacturing capacity is underway, with the US, Europe, and Asia investing heavily in domestic fabrication, while companies like TSMC, Intel, and Samsung are building new fabs in the US. However, construction timelines have slipped, costs have increased, and a shortage of skilled workers has prompted some manufacturers to bring in overseas engineers. The demand for chips has also changed, with AI model training and inference driving a shortage of graphics processing units, particularly those made by NVIDIA. In response, companies like Google, Amazon, and Meta are investing in custom silicon to reduce dependence on third-party supply chains. The US has tightened export controls on advanced chips and equipment destined for China, which has responded with increased state investment in its domestic semiconductor ecosystem. The equipment layer, particularly ASML's near-monopoly on extreme ultraviolet lithography machines, may prove to be the most consequential chokepoint in the industry."
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "420": {
-            "description": "Insufficient quota",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error"
-          }
-        },
-        "parameters": [
-          {
-            "name": "x-project-id",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Optional project identifier. Scopes the request to a specific project when provided."
-          }
-        ]
-      }
-    },
     "/chat/completions": {
       "post": {
         "operationId": "createChatCompletion_llama-3_1-8b-instruct-fast",
@@ -215,29 +120,6 @@
       }
     },
     "schemas": {
-      "CreateResponseRequest": {
-        "type": "object",
-        "required": [
-          "model",
-          "input"
-        ],
-        "properties": {
-          "model": {
-            "type": "string",
-            "const": "llama-3.1-8b-instruct-fast",
-            "default": "llama-3.1-8b-instruct-fast",
-            "example": "llama-3.1-8b-instruct-fast",
-            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
-          },
-          "input": {
-            "type": "string",
-            "minLength": 1,
-            "format": "textarea",
-            "maxLength": 131072,
-            "description": "Multi-line text or document content to send to the model."
-          }
-        }
-      },
       "CreateChatCompletionRequest": {
         "type": "object",
         "required": [
@@ -286,37 +168,6 @@
         }
       },
       "ChatCompletionResponse": {
-        "type": "object",
-        "additionalProperties": true
-      },
-      "InputMessage": {
-        "type": "object",
-        "required": [
-          "role",
-          "content"
-        ],
-        "properties": {
-          "role": {
-            "type": "string",
-            "enum": [
-              "user",
-              "system"
-            ]
-          },
-          "content": {
-            "type": "string",
-            "minLength": 1,
-            "format": "textarea",
-            "maxLength": 131072,
-            "description": "Message text."
-          }
-        }
-      },
-      "Response": {
-        "type": "object",
-        "additionalProperties": true
-      },
-      "ErrorResponse": {
         "type": "object",
         "additionalProperties": true
       }
