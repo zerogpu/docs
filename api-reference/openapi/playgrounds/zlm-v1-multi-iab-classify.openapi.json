@@ -1,0 +1,613 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "zlm-v1-multi-iab-classify playground",
+    "version": "1.0",
+    "description": "Interactive playground for **zlm-v1-multi-iab-classify**.\nModel is always `zlm-v1-multi-iab-classify` on this page (shown in the form, not editable).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "operationId": "createResponse_zlm-v1-multi-iab-classify",
+        "summary": "zlm-v1-multi-iab-classify: Responses",
+        "tags": [
+          "zlm-v1-multi-iab-classify"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-multi-iab-classify",
+                        "default": "zlm-v1-multi-iab-classify",
+                        "example": "zlm-v1-multi-iab-classify",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "input": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud.",
+                    "model": "zlm-v1-multi-iab-classify"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "id": 419,
+                          "parent_id": 415,
+                          "name": "Physical Therapy",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Wellness",
+                          "score": 0.6441585183644298
+                        },
+                        {
+                          "id": 406,
+                          "parent_id": 206,
+                          "name": "Healthy Living",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "score": 0.5809985325902359
+                        },
+                        {
+                          "id": 410,
+                          "parent_id": 408,
+                          "name": "Running and Jogging",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Fitness and Exercise",
+                          "score": 0.537299056216946
+                        },
+                        {
+                          "id": 408,
+                          "parent_id": 406,
+                          "name": "Fitness and Exercise",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Fitness and Exercise",
+                          "score": 0.5202761720147232
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "code": "IAB7-1",
+                            "name": "Exercise",
+                            "tier": 2,
+                            "parent_code": "IAB7",
+                            "score": 0.8641673687946894
+                          },
+                          {
+                            "code": "IAB7-36",
+                            "name": "Physical Therapy",
+                            "tier": 2,
+                            "parent_code": "IAB7",
+                            "score": 0.759118804822501
+                          },
+                          {
+                            "code": "IAB7",
+                            "name": "Health & Fitness",
+                            "tier": 1,
+                            "parent_code": null,
+                            "score": 0.661015418108041
+                          }
+                        ],
+                        "iab_2_2": [
+                          {
+                            "id": 225,
+                            "parent_id": 223,
+                            "name": "Fitness and Exercise",
+                            "tier1_name": "Healthy Living",
+                            "tier2_name": "Fitness and Exercise",
+                            "score": 0.8641673687946894
+                          },
+                          {
+                            "id": 236,
+                            "parent_id": 232,
+                            "name": "Physical Therapy",
+                            "tier1_name": "Healthy Living",
+                            "tier2_name": "Wellness",
+                            "tier3_name": "Physical Therapy",
+                            "score": 0.759118804822501
+                          },
+                          {
+                            "id": 286,
+                            "parent_id": 0,
+                            "name": "Medical Health",
+                            "tier1_name": "Medical Health",
+                            "score": 0.661015418108041
+                          },
+                          {
+                            "id": 223,
+                            "parent_id": 0,
+                            "name": "Healthy Living",
+                            "tier1_name": "Healthy Living",
+                            "score": 0.6522893285516443
+                          },
+                          {
+                            "id": 298,
+                            "parent_id": 287,
+                            "name": "Injuries",
+                            "tier1_name": "Medical Health",
+                            "tier2_name": "Diseases and Conditions",
+                            "tier3_name": "Injuries",
+                            "score": 0.5958264131933557
+                          }
+                        ]
+                      },
+                      "topics": [
+                        {
+                          "name": "fitness and exercise",
+                          "score": 0.8641673687946894
+                        },
+                        {
+                          "name": "physical therapy",
+                          "score": 0.759118804822501
+                        },
+                        {
+                          "name": "medical health",
+                          "score": 0.661015418108041
+                        },
+                        {
+                          "name": "healthy living",
+                          "score": 0.6522893285516443
+                        },
+                        {
+                          "name": "injuries",
+                          "score": 0.5958264131933557
+                        }
+                      ],
+                      "keywords": [
+                        "conceptos",
+                        "ejercicio",
+                        "aptitud",
+                        "regular",
+                        "mejores",
+                        "sicos",
+                        "cosas",
+                        "puede",
+                        "hacer",
+                        "sica"
+                      ],
+                      "user_intent": {
+                        "name": "insights on les son los conceptos sicos del",
+                        "category": "informational",
+                        "score": 0.5
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    },
+    "/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion_zlm-v1-multi-iab-classify",
+        "summary": "zlm-v1-multi-iab-classify: Chat completions",
+        "tags": [
+          "zlm-v1-multi-iab-classify"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "zlm-v1-multi-iab-classify",
+                        "default": "zlm-v1-multi-iab-classify",
+                        "example": "zlm-v1-multi-iab-classify",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "model": "zlm-v1-multi-iab-classify",
+                    "messages": [
+                      {
+                        "role": "user",
+                        "content": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "audience": [
+                        {
+                          "id": 419,
+                          "parent_id": 415,
+                          "name": "Physical Therapy",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Wellness",
+                          "score": 0.6441585183644298
+                        },
+                        {
+                          "id": 406,
+                          "parent_id": 206,
+                          "name": "Healthy Living",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "score": 0.5809985325902359
+                        },
+                        {
+                          "id": 410,
+                          "parent_id": 408,
+                          "name": "Running and Jogging",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Fitness and Exercise",
+                          "score": 0.537299056216946
+                        },
+                        {
+                          "id": 408,
+                          "parent_id": 406,
+                          "name": "Fitness and Exercise",
+                          "tier1_name": "Interest",
+                          "tier2_name": "Healthy Living",
+                          "tier3_name": "Fitness and Exercise",
+                          "score": 0.5202761720147232
+                        }
+                      ],
+                      "content": {
+                        "iab_1_0": [
+                          {
+                            "code": "IAB7-1",
+                            "name": "Exercise",
+                            "tier": 2,
+                            "parent_code": "IAB7",
+                            "score": 0.8641673687946894
+                          },
+                          {
+                            "code": "IAB7-36",
+                            "name": "Physical Therapy",
+                            "tier": 2,
+                            "parent_code": "IAB7",
+                            "score": 0.759118804822501
+                          },
+                          {
+                            "code": "IAB7",
+                            "name": "Health & Fitness",
+                            "tier": 1,
+                            "parent_code": null,
+                            "score": 0.661015418108041
+                          }
+                        ],
+                        "iab_2_2": [
+                          {
+                            "id": 225,
+                            "parent_id": 223,
+                            "name": "Fitness and Exercise",
+                            "tier1_name": "Healthy Living",
+                            "tier2_name": "Fitness and Exercise",
+                            "score": 0.8641673687946894
+                          },
+                          {
+                            "id": 236,
+                            "parent_id": 232,
+                            "name": "Physical Therapy",
+                            "tier1_name": "Healthy Living",
+                            "tier2_name": "Wellness",
+                            "tier3_name": "Physical Therapy",
+                            "score": 0.759118804822501
+                          },
+                          {
+                            "id": 286,
+                            "parent_id": 0,
+                            "name": "Medical Health",
+                            "tier1_name": "Medical Health",
+                            "score": 0.661015418108041
+                          },
+                          {
+                            "id": 223,
+                            "parent_id": 0,
+                            "name": "Healthy Living",
+                            "tier1_name": "Healthy Living",
+                            "score": 0.6522893285516443
+                          },
+                          {
+                            "id": 298,
+                            "parent_id": 287,
+                            "name": "Injuries",
+                            "tier1_name": "Medical Health",
+                            "tier2_name": "Diseases and Conditions",
+                            "tier3_name": "Injuries",
+                            "score": 0.5958264131933557
+                          }
+                        ]
+                      },
+                      "topics": [
+                        {
+                          "name": "fitness and exercise",
+                          "score": 0.8641673687946894
+                        },
+                        {
+                          "name": "physical therapy",
+                          "score": 0.759118804822501
+                        },
+                        {
+                          "name": "medical health",
+                          "score": 0.661015418108041
+                        },
+                        {
+                          "name": "healthy living",
+                          "score": 0.6522893285516443
+                        },
+                        {
+                          "name": "injuries",
+                          "score": 0.5958264131933557
+                        }
+                      ],
+                      "keywords": [
+                        "conceptos",
+                        "ejercicio",
+                        "aptitud",
+                        "regular",
+                        "mejores",
+                        "sicos",
+                        "cosas",
+                        "puede",
+                        "hacer",
+                        "sica"
+                      ],
+                      "user_intent": {
+                        "name": "insights on les son los conceptos sicos del",
+                        "category": "informational",
+                        "score": 0.5
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-multi-iab-classify",
+            "default": "zlm-v1-multi-iab-classify",
+            "example": "zlm-v1-multi-iab-classify",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "The text to classify, as a plain string, in any supported language. Inputs are truncated at 400 tokens."
+          }
+        }
+      },
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v1-multi-iab-classify",
+            "default": "zlm-v1-multi-iab-classify",
+            "example": "zlm-v1-multi-iab-classify",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "InputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

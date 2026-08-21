@@ -1,0 +1,19 @@
+---
+title: "zlm-v1-multi-iab-classify"
+sidebarTitle: "Multilingual IAB"
+description: "Model details for zlm-v1-multi-iab-classify. IAB content and audience classification for non-English text."
+openapi: "api-reference/openapi/playgrounds/zlm-v1-multi-iab-classify.openapi.json POST /responses"
+---
+
+<Note>
+	The `instructions` field is not needed for this model. Send only the text to
+	classify. The result arrives as a JSON string in the response's output text,
+	so parse that string to read `audience`, `content` (`iab_1_0` and `iab_2_2`),
+	`topics`, `keywords`, and `user_intent`.
+</Note>
+
+> The multilingual variant of ZeroGPU's IAB classifier returns the same full content-intelligence profile as the enriched edge model, for text that is not in English. One call gives you IAB categories across both the 1.0 and 2.2 taxonomies, audience and interest segments, topics, keywords, and user intent, every result scored for confidence. At 90M parameters it keeps the sub-millisecond profile the bidstream needs, so a multi-market publisher can run one classification pipeline instead of one per language. When your inventory spans languages and you still need clean IAB signals on every request, this is the model.
+
+Supports batch processing through the [Batch API](/docs/batch/index). This model is a sibling of [zlm-v2-iab-classify-edge-enriched](/api-reference/models/zlm-v2-iab-classify-edge-enriched); reach for that one when the text is English.
+
+**References:** [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

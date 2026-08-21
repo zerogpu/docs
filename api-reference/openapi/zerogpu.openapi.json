@@ -369,6 +369,98 @@
           }
         ]
       }
+    },
+    "/embeddings": {
+      "post": {
+        "operationId": "createEmbedding",
+        "summary": "Create embedding",
+        "tags": [
+          "Embeddings"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingRequest"
+              },
+              "example": {
+                "model": "all-minilm-l6-v2",
+                "input": "ZeroGPU runs high-volume inference tasks on small models at the edge."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "embedding",
+                      "index": 0,
+                      "embedding": [
+                        0.012601,
+                        -0.072932,
+                        0.043332,
+                        0.028129,
+                        0.033064,
+                        -0.078302,
+                        -0.153619,
+                        -0.011621
+                      ]
+                    }
+                  ],
+                  "model": "all-MiniLM-L6-v2",
+                  "usage": {
+                    "prompt_tokens": 18,
+                    "total_tokens": 18
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid body)"
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing API key)"
+          },
+          "403": {
+            "description": "Forbidden (invalid project ID or permissions)"
+          },
+          "420": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -401,7 +493,9 @@
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier"
+              "zlm-v1-iab-domain-classifier",
+              "t5-small",
+              "zlm-v1-multi-iab-classify"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -462,7 +556,9 @@
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier"
+              "zlm-v1-iab-domain-classifier",
+              "t5-small",
+              "zlm-v1-multi-iab-classify"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -1037,6 +1133,100 @@
             "items": {
               "$ref": "#/components/schemas/ModerationResult"
             }
+          }
+        }
+      },
+      "CreateEmbeddingRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Embedding model to use. Embedding models are routable only on this endpoint.",
+            "enum": [
+              "all-minilm-l6-v2",
+              "bge-small-en-v1.5"
+            ],
+            "example": "all-minilm-l6-v2"
+          },
+          "input": {
+            "description": "Text to embed. A single string, or an array of strings (one vector per element). Inputs are truncated at the model's max token length.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Embedding": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "embedding"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Position of the input this vector was produced from.",
+            "example": 0
+          },
+          "embedding": {
+            "type": "array",
+            "description": "The embedding vector. 384 dimensions for both models.",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "EmbeddingUsage": {
+        "type": "object",
+        "description": "Embeddings are billed on input tokens only; there are no output tokens.",
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "example": 18
+          },
+          "total_tokens": {
+            "type": "integer",
+            "example": 18
+          }
+        }
+      },
+      "EmbeddingResponse": {
+        "type": "object",
+        "description": "An OpenAI-compatible embedding list.",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Embedding"
+            }
+          },
+          "model": {
+            "type": "string",
+            "description": "The resolved model id.",
+            "example": "all-MiniLM-L6-v2"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/EmbeddingUsage"
           }
         }
       }

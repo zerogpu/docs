@@ -11,6 +11,7 @@ Text classification models map a passage to predefined labels or categories. Zer
 | <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.02 | $0.05 | 90M | 400 |
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 149M | 100 |
 | <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | $0.02 | $0.05 | 142M | 400 |
+| <a href="/api-reference/models/zlm-v1-multi-iab-classify" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-multi-iab-classify" width="22" height="22" noZoom /> <code>zlm-v1-multi-iab-classify</code></a> | $0.05 | $0.40 | 90M | 400 |
 
 ## zlm-v1-iab-classify-edge
 
@@ -267,5 +268,131 @@ Returns each candidate label with a probability score.
   "politics": 0.011858,
   "sports": 0.01175,
   "finance": 0.004608
+}
+```
+
+## zlm-v1-multi-iab-classify
+
+> The multilingual variant of ZeroGPU's IAB classifier returns the same full content-intelligence profile as the enriched edge model, for text that is not in English. One call gives you IAB categories across both the 1.0 and 2.2 taxonomies, audience and interest segments, topics, keywords, and user intent, every result scored for confidence. At 90M parameters it keeps the sub-millisecond profile the bidstream needs, so a multi-market publisher can run one classification pipeline instead of one per language. When your inventory spans languages and you still need clean IAB signals on every request, this is the model.
+
+**References:** [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+Reach for [zlm-v2-iab-classify-edge-enriched](/api-reference/models/zlm-v2-iab-classify-edge-enriched) when the text is English. Supports batch processing through the [Batch API](/docs/batch/index).
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-multi-iab-classify",
+  "input": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud."
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-multi-iab-classify",
+  "messages": [
+    {
+      "role": "user",
+      "content": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud."
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The result arrives as a JSON string in the output text. Parsed, and trimmed here to the first entries of each list:
+
+```json Response
+{
+  "audience": [
+    {
+      "id": 419,
+      "parent_id": 415,
+      "name": "Physical Therapy",
+      "tier1_name": "Interest",
+      "tier2_name": "Healthy Living",
+      "tier3_name": "Wellness",
+      "score": 0.6441585183644298
+    },
+    {
+      "id": 406,
+      "parent_id": 206,
+      "name": "Healthy Living",
+      "tier1_name": "Interest",
+      "tier2_name": "Healthy Living",
+      "score": 0.5809985325902359
+    }
+  ],
+  "content": {
+    "iab_1_0": [
+      {
+        "code": "IAB7-1",
+        "name": "Exercise",
+        "tier": 2,
+        "parent_code": "IAB7",
+        "score": 0.8641673687946894
+      },
+      {
+        "code": "IAB7-36",
+        "name": "Physical Therapy",
+        "tier": 2,
+        "parent_code": "IAB7",
+        "score": 0.759118804822501
+      }
+    ],
+    "iab_2_2": [
+      {
+        "id": 225,
+        "parent_id": 223,
+        "name": "Fitness and Exercise",
+        "tier1_name": "Healthy Living",
+        "tier2_name": "Fitness and Exercise",
+        "score": 0.8641673687946894
+      },
+      {
+        "id": 236,
+        "parent_id": 232,
+        "name": "Physical Therapy",
+        "tier1_name": "Healthy Living",
+        "tier2_name": "Wellness",
+        "tier3_name": "Physical Therapy",
+        "score": 0.759118804822501
+      }
+    ]
+  },
+  "topics": [
+    {
+      "name": "fitness and exercise",
+      "score": 0.8641673687946894
+    },
+    {
+      "name": "physical therapy",
+      "score": 0.759118804822501
+    },
+    {
+      "name": "medical health",
+      "score": 0.661015418108041
+    }
+  ],
+  "keywords": [
+    "conceptos",
+    "ejercicio",
+    "aptitud"
+  ],
+  "user_intent": {
+    "name": "insights on les son los conceptos sicos del",
+    "category": "informational",
+    "score": 0.5
+  }
 }
 ```

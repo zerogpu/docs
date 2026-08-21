@@ -1,0 +1,69 @@
+---
+title: "Embeddings"
+description: "384-dimensional text embeddings for semantic search, RAG, clustering, and deduplication."
+---
+
+Embedding models turn text into a vector so that distance between vectors tracks closeness in meaning. That is what powers semantic search, retrieval-augmented generation, deduplication, clustering, and recommendation. Call the dedicated [Embeddings API](/api-reference/embeddings) (`POST /v1/embeddings`). An embedding model is routable only on this endpoint and returns OpenAI's native embeddings envelope, so an existing client only needs its base URL and model id changed.
+
+| Model | Input /1M | Output /1M | Params | Max tokens |
+| --- | ---: | ---: | --- | ---: |
+| <a href="/api-reference/models/all-minilm-l6-v2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/all-minilm-l6-v2/all-minilm-l6-v2.png" alt="all-minilm-l6-v2" width="22" height="22" noZoom /> <code>all-minilm-l6-v2</code></a> | $0.50 | Not billed | 22.7M | 256 |
+| <a href="/api-reference/models/bge-small-en-v1-5" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>bge-small-en-v1.5</code></a> | $0.50 | Not billed | 33.4M | 512 |
+
+Both models return **384-dimensional** vectors, so they are interchangeable in an existing index. Embeddings are billed on input tokens only.
+
+## all-minilm-l6-v2
+
+> Sentence-Transformers' all-MiniLM-L6-v2 is the default workhorse of semantic search. It maps a sentence or short paragraph to a 384-dimensional vector, trained with contrastive learning on more than a billion sentence pairs, so cosine distance between two vectors tracks how close the two texts are in meaning. At 22.7M parameters it embeds fast and cheap enough to index a whole corpus and re-embed it whenever your content changes. Inputs are truncated at 256 tokens, so embed chunks rather than whole documents.
+
+**References:** [Model card](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+```bash Embeddings API
+curl https://api.zerogpu.ai/v1/embeddings \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "all-minilm-l6-v2",
+  "input": "ZeroGPU runs high-volume inference tasks on small models at the edge."
+}'
+```
+
+```json Response
+{
+  "object": "list",
+  "data": [
+    {
+      "object": "embedding",
+      "index": 0,
+      "embedding": [0.012601, -0.072932, 0.043332, 0.028129, 0.033064, -0.078302, -0.153619, -0.011621]
+    }
+  ],
+  "model": "all-MiniLM-L6-v2",
+  "usage": { "prompt_tokens": 18, "total_tokens": 18 }
+}
+```
+
+The vector above is truncated for readability; a real response carries all 384 values. The `model` field reads `all-MiniLM-L6-v2`, the upstream capitalization of the id you send.
+
+## bge-small-en-v1.5
+
+> BAAI's BGE-small-en-v1.5 is a retrieval-first English embedding model and one of the strongest performers on the MTEB benchmark for its size. It produces the same 384-dimensional vectors as all-minilm-l6-v2, so it is a drop-in swap in an existing index, but it takes a 512-token window instead of 256 and is tuned specifically for dense retrieval rather than general sentence similarity. At 33.4M parameters it is the one to reach for when the job is ranking passages against a query.
+
+**References:** [Model card](https://huggingface.co/BAAI/bge-small-en-v1.5) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+Embed a batch by passing an array. Each `data[i].index` maps a vector back to its input.
+
+```bash Batch embeddings
+curl https://api.zerogpu.ai/v1/embeddings \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+  "model": "bge-small-en-v1.5",
+  "input": ["first text", "second text"]
+}'
+```
+
+## Which one to pick
+
+Start with `all-minilm-l6-v2` for general semantic similarity over short chunks. Move to `bge-small-en-v1.5` when the job is English retrieval, when your chunks run past 256 tokens, or when retrieval quality is the bottleneck. Both cost the same and return the same vector width, so switching is a one-line change plus a reindex.

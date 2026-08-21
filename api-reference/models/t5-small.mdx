@@ -1,0 +1,18 @@
+---
+title: "t5-small"
+sidebarTitle: "T5 Summarizer"
+description: "Model details for t5-small. Google's text-to-text encoder-decoder, served for cheap high-volume summarization."
+openapi: "api-reference/openapi/playgrounds/t5-small.openapi.json POST /responses"
+---
+
+<Note>
+	The `instructions` field is not needed for this model. Send only the text to
+	summarize and read the summary from the response's output text. Inputs are
+	truncated at 512 tokens, so chunk anything longer, or reach for
+	[llama-3.1-8b-instruct-fast](/api-reference/models/llama-3-1-8b-instruct-fast)
+	when the whole document has to land in one pass.
+</Note>
+
+> Google's T5-small introduced the text-to-text paradigm that changed how the industry thinks about NLP. At 60M parameters, it's the most versatile encoder-decoder model in its class, pre-trained on the Colossal Clean Crawled Corpus (C4) and fine-tunable for virtually any text task with minimal data. Its encoder-decoder architecture makes it especially strong at tasks that require both understanding and generation, like summarization and rewriting. A proven workhorse that's been battle-tested across millions of production deployments.
+
+**References:** [Model card](https://huggingface.co/google-t5/t5-small) • [License](https://github.com/google-research/text-to-text-transfer-transformer/blob/main/LICENSE) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
