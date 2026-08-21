@@ -1,0 +1,18 @@
+---
+title: "bge-small-en-v1.5"
+sidebarTitle: "BGE Embeddings"
+description: "Model details for bge-small-en-v1.5. 384-dimensional English retrieval embeddings with a 512-token window."
+openapi: "api-reference/openapi/playgrounds/bge-small-en-v1_5.openapi.json POST /embeddings"
+---
+
+<Note>
+	This model is routable only on `/v1/embeddings`. A `/responses` or
+	`/chat/completions` call with an embedding model returns `400`. Send `input`
+	as a string, or as an array of strings to embed a batch in one request.
+</Note>
+
+> BAAI's BGE-small-en-v1.5 is a retrieval-first English embedding model and one of the strongest performers on the MTEB benchmark for its size. Like [all-minilm-l6-v2](/api-reference/models/all-minilm-l6-v2) it produces 384-dimensional vectors, so it is a drop-in swap in an existing index, but it takes a 512-token window instead of 256 and is tuned specifically for dense retrieval rather than general sentence similarity. At 33.4M parameters it is the one to reach for when the job is ranking passages against a query: RAG retrieval, search over a document corpus, or reranking candidates before they reach a larger model.
+
+Embeddings are priced on input tokens only. There are no output tokens to bill, so a call costs $0.50 per 1M tokens embedded.
+
+**References:** [Model card](https://huggingface.co/BAAI/bge-small-en-v1.5) • [License](https://opensource.org/license/mit) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)

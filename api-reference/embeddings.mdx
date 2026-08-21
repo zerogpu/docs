@@ -1,0 +1,14 @@
+---
+title: "Embeddings"
+description: "Turn text into vectors for semantic search, RAG, clustering, and deduplication."
+sidebarTitle: "Embeddings"
+openapi: "api-reference/openapi/zerogpu.openapi.json POST /embeddings"
+---
+
+Send text as `input` and get back OpenAI's embeddings envelope: an `object` of `list`, a `data` array with one `{ object, index, embedding }` entry per input, the resolved `model`, and `usage`. It is drop-in compatible with OpenAI's Embeddings API, so an existing client only needs its base URL and model id changed. See the [Embeddings](/docs/embeddings) guide for a prefilled example, or a model page ([all-minilm-l6-v2](/api-reference/models/all-minilm-l6-v2), [bge-small-en-v1.5](/api-reference/models/bge-small-en-v1-5)) for an interactive playground.
+
+Embedding models are routable **only** on this endpoint. A `/responses` or `/chat/completions` call with an embedding model returns `400`. Pass `input` as a string, or as an array of strings to embed a batch in one request; `data[i].index` maps each vector back to its input. Both models return 384-dimensional vectors, so they are interchangeable in an existing index.
+
+Embeddings are billed on input tokens only. `usage` carries `prompt_tokens` and `total_tokens`, and there are no output tokens to bill.
+
+Install the official SDK from [npm](https://www.npmjs.com/package/zerogpu-api) or [PyPI](https://pypi.org/project/zerogpu-api/) (`pip install zerogpu-api`). Source: [zerogpu/SDK](https://github.com/zerogpu/SDK). Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).

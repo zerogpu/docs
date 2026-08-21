@@ -1,0 +1,188 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "bge-small-en-v1.5 playground",
+    "version": "1.0",
+    "description": "Interactive playground for **bge-small-en-v1.5**.\nModel is always `bge-small-en-v1.5` on this page (shown in the form, not editable).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/embeddings": {
+      "post": {
+        "operationId": "createEmbedding_bge-small-en-v1.5",
+        "summary": "bge-small-en-v1.5: Embeddings",
+        "tags": [
+          "bge-small-en-v1.5"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingRequest"
+              },
+              "examples": {
+                "default": {
+                  "summary": "Single text",
+                  "value": {
+                    "model": "bge-small-en-v1.5",
+                    "input": "ZeroGPU runs high-volume inference tasks on small models at the edge."
+                  }
+                },
+                "batch": {
+                  "summary": "Batch of texts",
+                  "value": {
+                    "model": "bge-small-en-v1.5",
+                    "input": [
+                      "first text",
+                      "second text"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "object": "list",
+                      "data": [
+                        {
+                          "object": "embedding",
+                          "index": 0,
+                          "embedding": [
+                            0.010229,
+                            0.026804,
+                            -0.00474,
+                            -0.025792,
+                            0.055778,
+                            0.047825,
+                            -0.044991,
+                            0.056061
+                          ]
+                        }
+                      ],
+                      "model": "bge-small-en-v1.5",
+                      "usage": {
+                        "prompt_tokens": 18,
+                        "total_tokens": 18
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateEmbeddingRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "bge-small-en-v1.5",
+            "default": "bge-small-en-v1.5",
+            "example": "bge-small-en-v1.5",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "input": {
+            "description": "Text to embed. A single string, or an array of strings for one vector per element. Inputs are truncated at 512 tokens.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "format": "textarea",
+                "maxLength": 131072
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "EmbeddingResponse": {
+        "type": "object",
+        "description": "An OpenAI-compatible embedding list. Vectors are truncated in this example; each has 384 dimensions.",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

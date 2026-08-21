@@ -68,7 +68,8 @@
               "docs/text-generation",
               "docs/pii",
               "docs/moderation",
-              "docs/summarization"
+              "docs/summarization",
+              "docs/embeddings"
             ]
           },
           {
@@ -131,6 +132,7 @@
               "api-reference/responses",
               "api-reference/chat-completions",
               "api-reference/moderations",
+              "api-reference/embeddings",
               {
                 "group": "By model",
                 "pages": [
@@ -147,7 +149,11 @@
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v2-iab-classify-edge-enriched",
                   "api-reference/models/zlm-v1-iab-domain-classifier",
-                  "api-reference/models/zlm-v1-moderation-edge"
+                  "api-reference/models/zlm-v1-moderation-edge",
+                  "api-reference/models/t5-small",
+                  "api-reference/models/zlm-v1-multi-iab-classify",
+                  "api-reference/models/all-minilm-l6-v2",
+                  "api-reference/models/bge-small-en-v1-5"
                 ]
               }
             ]
