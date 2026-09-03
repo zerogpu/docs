@@ -9,9 +9,9 @@ metadata:
 ---
 
 ## When to Use
-Fundraising outreach: find 5 investors who moved in the LAST 30 DAYS, score them,
-and create one personalized Gmail draft each - to a verified address where one
-exists, otherwise to the `Contact email` in company.md for review.
+Fundraising outreach: find 5 well-matched investors, score them, and create one
+personalized Gmail draft each - to a verified address where one exists, otherwise
+to the `Contact email` in company.md for review.
 Run on demand. Never sends. No scheduling.
 
 ## Tool names
@@ -24,11 +24,15 @@ unprefixed for readability.
 ## Procedure
 
 1. Read `/data/workspace/outreach/company.md`. Stop if missing.
-2. **Discover, recency-first** - Dappier real-time search, one query per sector
-   tag, scoped tight: "<tag> <stage> investors who led or announced a round in the
-   last 30 days". Recency is a HARD filter, not a preference: an investor with no
-   verifiable activity in the last 30 days is dropped, however good the thesis fit.
-   The whole point is that the hook says "you just did X", not "you invest in Y".
+2. **Discover, recent first** - Dappier real-time search, one query per sector
+   tag. Start narrow and widen only if results are thin:
+   a. "<tag> <stage> investors who led a round in the last 90 days"
+   b. if fewer than 5 candidates, drop to "in the last 12 months"
+   c. if still thin, search the fund by name for its most recent announced deal
+   Recency is a RANKING signal, not a filter - do not drop a good match for being
+   older. What matters is step 9: every hook must name a specific, dated event.
+   "You led Acme's seed in March" beats "you invest in AI infrastructure", even
+   when March was a while ago.
 3. **Structure** - for each result blob call `zerogpu_extract_json` with
    schema: {"investor": ["name::str::Partner full name",
                          "firm::str::Fund name",
@@ -64,8 +68,10 @@ unprefixed for readability.
    not invent a placeholder recipient.
    Record which path each investor took - this goes in the report.
 9. **Hook** - `zerogpu_summarize` on each `recent` blob, max_tokens 60, one
-   sentence out. It must name the specific recent event and its date. That sentence
-   is the only personalized line in the email.
+   sentence out. It MUST name a concrete event and its date - a round led, a
+   portfolio company, a public statement. Never a restatement of their thesis.
+   If no dated event can be found for an investor, drop them and say so; a
+   generic hook is worse than one fewer email.
 10. **Draft** - `zerogpu_chat` with model "deepseek-v4-flash", max_tokens 400.
     Subject <= 60 chars. Body <= 120 words. Structure: hook / what we do /
     traction / the ask / one-line close. No superlatives. Never open with
@@ -79,7 +85,7 @@ unprefixed for readability.
     - `review.md` - one row per investor with score, bucket, hook, subject, body,
       moderation verdict, source URL, the date of the recent event, the recipient
       address, and whether it was `verified` or `unaddressed`. List investors
-      dropped for staleness too.
+      dropped for having no dated event too.
     - `drafts.md` - the full drafted emails, as handed to the Gmail draft tool.
     - `savings.md` - the ZeroGPU vs frontier-model cost report. See below; this
       file is REQUIRED.
@@ -130,7 +136,8 @@ End the run by printing, in this order:
 1. **Run summary of drafts** - a table with one row per investor:
    firm, partner, subject line, the recent event and its date, moderation verdict,
    recipient, and whether the recipient was `verified` or `unaddressed`. Then the
-   counts: drafts created, split by recipient type, flagged, and dropped as stale.
+   counts: drafts created, split by recipient type, flagged, and dropped for
+   having no dated event.
 2. **The frontier savings headline** from `savings.md`, verbatim - ZeroGPU cost,
    frontier-baseline cost, multiple, percent saved, call count.
 3. **Cost per investor and the 10,000-investor extrapolation.**
@@ -157,9 +164,11 @@ partial or failed run, where it should report what was spent before the failure.
 - `zerogpu_extract_json` values are "field::type::desc" strings, not JSON types.
 - If the draft model returns prose around the JSON, re-prompt rather than
   regex-parsing it.
-- Fewer than 5 investors is a correct outcome only when discovery found fewer than
-  5 with activity in the last 30 days. A missing email address is NEVER a reason to
-  drop an investor - self-address the draft instead.
+- Fewer than 5 investors is a correct outcome when discovery cannot find 5 with a
+  dated event worth citing. A missing email address is NEVER a reason to drop an
+  investor - self-address the draft instead.
+- Do not spend many search rounds chasing a narrow date window. Widen the window
+  per step 2 rather than returning an empty run.
 - A missing `Contact email` in `company.md` is the one addressing problem that
   stops the run. Ask for it; never substitute an invented address.
 - `zerogpu_moderate` has returned transient 502s. Retry it; never skip the gate.
@@ -169,7 +178,7 @@ partial or failed run, where it should report what was spent before the failure.
 ## Verification
 All of the following must hold, or the run is incomplete:
 - `review.md` exists with 5 rows or fewer; every row carries a moderation verdict
-  and a recent-event date inside the last 30 days.
+  and a dated event in its hook.
 - `drafts.md` exists and has one email per row in `review.md`.
 - `savings.md` exists, opens with the frontier-comparison headline, and contains
   all six sections including the per-call table, the `price_table_version`, the
