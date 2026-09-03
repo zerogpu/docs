@@ -6,3 +6,6 @@
 
 # Internal research notes - not part of the published docs
 research/
+
+# Distributable Hermes Agent skills - installed via URL, not rendered as docs
+skills/
