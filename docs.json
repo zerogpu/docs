@@ -106,6 +106,7 @@
               "integrations/index",
               "integrations/claude-code-plugin",
               "integrations/claude-skill",
+              "integrations/hermes",
               "integrations/langchain",
               "integrations/mcp",
               "integrations/openclaw"
@@ -204,7 +205,8 @@
               "cookbook/langchain-resume-screening",
               "cookbook/claude-iab-targeted-copy",
               "cookbook/claude-support-ticket-routing",
-              "cookbook/openclaw-inbox-summarizer"
+              "cookbook/openclaw-inbox-summarizer",
+              "cookbook/hermes-investor-outreach"
             ]
           }
         ]

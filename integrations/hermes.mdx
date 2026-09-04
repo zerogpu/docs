@@ -1,0 +1,254 @@
+---
+title: "Hermes Agent"
+description: "Run Hermes Agent on ZeroGPU: set it as the model provider and connect the ZeroGPU MCP server for fourteen ready-made tools."
+icon: "robot"
+---
+
+Hermes Agent is an open-source agent from Nous Research that runs in your terminal, a TUI, a desktop app, or a self-hosted web UI. It ships with file, terminal, web, and memory toolsets, a skills system built on the `agentskills.io` standard, and a built-in MCP client that discovers and calls tools from any external MCP server at startup. Because Hermes lets you point it at any OpenAI-compatible endpoint, you can choose which model does the agent's reasoning and which models do everything else.
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+## Overview
+
+This guide wires ZeroGPU into Hermes Agent in two places. First as the **model provider**, so the agent's own reasoning runs on ZeroGPU instead of a frontier model. Second as an **MCP server**, so the agent gains fourteen task-specific tools for classification, extraction, PII handling, moderation, embeddings, and summarization. By the end, your Hermes agent will reason on ZeroGPU and hand every repeatable NLP step to a purpose-built small model, with a per-call cost comparison returned in every tool response.
+
+## Cookbook
+
+For a runnable, real-world example, see [Raise Your Seed Round with a Hermes Agent](/cookbook/hermes-investor-outreach). It walks through an agent that researches investors, ranks them against your one-liner, writes a personalized email for each, and saves them as Gmail drafts, with every step except the drafting running on a ZeroGPU nano model.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+Video walkthrough coming soon.
+
+## Quickstart
+
+### Prerequisites
+
+- Hermes Agent installed and running. See the [Hermes Agent docs](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart).
+- A ZeroGPU API key from the [dashboard](https://platform.zerogpu.ai/dashboard).
+- A model with at least 64,000 tokens of context. Hermes rejects anything smaller at startup. See the [model catalog](/docs/model-catalog) for the options.
+
+### Get your ZeroGPU API key
+
+Log in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard), open the API keys section, and copy your key. It starts with `zgpu-api-`.
+
+### Set ZeroGPU as the model provider
+
+Hermes reads secrets from `.env` and settings from `config.yaml` in its home directory. Run `hermes config path` to find yours. Set everything from the CLI:
+
+```bash
+hermes config set ZEROGPU_API_KEY 'zgpu-api-...'
+
+hermes config set providers.ZeroGPU.name 'ZeroGPU'
+hermes config set providers.ZeroGPU.api 'https://api.zerogpu.ai/v1'
+hermes config set providers.ZeroGPU.key_env 'ZEROGPU_API_KEY'
+hermes config set providers.ZeroGPU.transport 'chat_completions'
+hermes config set providers.ZeroGPU.default_model 'deepseek-v4-flash'
+hermes config set providers.ZeroGPU.context_length 1048576
+
+hermes config set model.default 'deepseek-v4-flash'
+hermes config set model.provider 'custom:ZeroGPU'
+```
+
+The equivalent `config.yaml` block, if you prefer editing the file:
+
+```yaml
+providers:
+  ZeroGPU:
+    name: ZeroGPU
+    api: https://api.zerogpu.ai/v1
+    key_env: ZEROGPU_API_KEY
+    transport: chat_completions
+    default_model: deepseek-v4-flash
+    context_length: 1048576
+
+model:
+  default: deepseek-v4-flash
+  provider: "custom:ZeroGPU"
+```
+
+The `custom:` prefix is required. It tells Hermes to look under `providers:` rather than in its built-in provider list.
+
+### Connect the ZeroGPU MCP server
+
+```bash
+hermes mcp add zerogpu --url "https://mcp.zerogpu.ai/mcp?apiKey=YOUR_ZEROGPU_KEY" --connect-timeout 60
+```
+
+The key can travel in the URL as `?apiKey=` or as an `x-api-key` header. The header keeps it out of logs and out of `hermes mcp list` output:
+
+```bash
+hermes mcp add zerogpu --url "https://mcp.zerogpu.ai/mcp" --auth header
+```
+
+### Your first request
+
+```bash
+hermes mcp test zerogpu
+hermes -z "Reply with exactly: ZEROGPU BRAIN OK"
+```
+
+The first prints fourteen tools. The second confirms the agent's own model is answering from ZeroGPU. Then ask for real work:
+
+```bash
+hermes -z "Use the ZeroGPU tools to pull the people, organizations, and funding rounds out of this: 'Index Ventures led a 40M dollar Series A last Tuesday, with partner Jan Hammer taking a board seat.' Show the entities and the savings block."
+```
+
+```json
+{
+  "entities": {
+    "person": ["Jan Hammer"],
+    "organization": ["Index Ventures"],
+    "funding round": ["40M dollar Series A"]
+  },
+  "model": "gliner2-base-v1",
+  "usage": { "input_tokens": 33, "output_tokens": 52 },
+  "savings": {
+    "zerogpu_cost_usd": 0.00000326,
+    "baseline_cost_usd": 0.000879,
+    "savings_usd": 0.00087574,
+    "price_table_version": "2026-08-21"
+  }
+}
+```
+
+## Usage
+
+### Choosing the agent's model
+
+Any ZeroGPU text-generation model with at least 64K context works as the agent's brain. Set it with `providers.ZeroGPU.default_model` and `model.default`.
+
+| Model | Context | Input / 1M | Output / 1M | Use it when |
+|---|---|---|---|---|
+| `deepseek-v4-flash` | 1,048,576 | $0.07 | $0.14 | Default. Agentic work with tool calling. |
+| `glm-5.2` | 1,048,576 | $1.10 | $3.50 | Hardest reasoning, long multi-step plans. |
+| `gpt-oss-120b` | 131,072 | $0.15 | $0.60 | Reasoning and function calling at mid cost. |
+| `qwen3-30b-a3b-fp8` | 32,768 | $0.05 | $0.30 | Below the 64K minimum. Not usable as the agent model. |
+
+Switch mid-session with `/model custom:ZeroGPU:glm-5.2`.
+
+### The fourteen MCP tools
+
+Hermes registers MCP tools as `mcp__<server>__<tool>`. Because this server's tools are already named `zerogpu_*`, the full name repeats the prefix, for example `mcp__zerogpu__zerogpu_summarize`. Run `hermes mcp list` to see the exact names on your install.
+
+| Tool | Model | Required arguments |
+|---|---|---|
+| `zerogpu_chat` | `LFM2.5-1.2B-Instruct`, or `LFM2.5-1.2B-Thinking` with `thinking` | `messages` |
+| `zerogpu_summarize` | `llama-3.1-8b-instruct-fast`, or `t5-small` with `compact` | `text` |
+| `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` and variants | `text` |
+| `zerogpu_classify_domain` | `zlm-v1-iab-domain-classifier` | `domain` |
+| `zerogpu_classify_zero_shot` | `deberta-v3-small` | `text`, `labels` |
+| `zerogpu_classify_structured` | `gliner2-base-v1` | `text`, `schema` |
+| `zerogpu_extract_entities` | `gliner2-base-v1` | `text`, `labels` |
+| `zerogpu_extract_json` | `gliner2-base-v1` | `text`, `schema` |
+| `zerogpu_extract_pii` | `gliner-multi-pii-v1` | `text` |
+| `zerogpu_redact_pii` | `gliner-multi-pii-v1` | `text` |
+| `zerogpu_moderate` | `zlm-v1-moderation-edge` | `input` |
+| `zerogpu_embed` | `all-minilm-l6-v2` or `bge-small-en-v1.5` | `input` |
+| `zerogpu_generate_followups` | `llama-3.1-8b-instruct-fast` | `text` |
+| `zerogpu_health` | none | none |
+
+Every model-backed tool returns `usage` and `savings` alongside its result. `savings.baseline_cost_usd` prices the identical tokens at a published frontier rate of $3.00 per 1M input and $15.00 per 1M output, so `savings_usd` is a like-for-like comparison rather than an estimate. For the full argument reference, see the [MCP server integration guide](/integrations/mcp).
+
+### Controlling which tools load
+
+Hermes can filter an MCP server's tools. `include` wins over `exclude`, so an allowlist is a hard boundary:
+
+```yaml
+mcp_servers:
+  zerogpu:
+    url: "https://mcp.zerogpu.ai/mcp?apiKey=..."
+    tools:
+      include: [zerogpu_summarize, zerogpu_redact_pii, zerogpu_classify_zero_shot]
+      prompts: false
+      resources: false
+```
+
+Or interactively:
+
+```bash
+hermes mcp configure zerogpu
+```
+
+### Installing a skill
+
+Hermes skills are Markdown procedures the agent loads on demand. Install one from any public URL:
+
+```bash
+hermes skills install https://raw.githubusercontent.com/zerogpu/docs/main/skills/investor-outreach/SKILL.md
+hermes skills list
+```
+
+Skills are also auto-discovered from the skills directory, so dropping a folder containing a `SKILL.md` into `<hermes-home>/skills/` works too. Trigger one in chat with `/<skill-name>`.
+
+### Patterns and recipes
+
+**Redact before you reason.** Run `zerogpu_redact_pii` over scraped or user-supplied text before it reaches the agent's context. Names, emails, and phone numbers never enter the reasoning model's prompt or the session transcript.
+
+**Rank without an LLM.** `zerogpu_embed` scores hundreds of candidates against a reference string using cosine similarity and no generative call at all. This is usually the cheapest step in an agent workflow and the one that replaces the most frontier tokens.
+
+**Gate before you act.** Put `zerogpu_moderate` between generation and any outward-facing action, such as sending a message or posting a comment. A flagged result stops the action rather than logging a warning after the fact.
+
+**Structure before you branch.** `zerogpu_extract_json` and `zerogpu_classify_structured` turn free text into fixed fields, so your agent branches on data instead of re-parsing prose on every turn.
+
+### At a glance
+
+| Task | Entry point | Where it lives |
+|---|---|---|
+| Agent reasoning | `model.provider: custom:ZeroGPU` | `config.yaml` |
+| Connect the tools | `hermes mcp add zerogpu --url ...` | `mcp_servers` |
+| Verify the tools | `hermes mcp test zerogpu` | CLI |
+| Limit the tools | `hermes mcp configure zerogpu` | `mcp_servers.<name>.tools` |
+| Install a procedure | `hermes skills install <url>` | skills directory |
+| Check spend | `hermes insights`, or `savings` on any tool result | CLI and tool output |
+
+## Troubleshooting
+
+**`hermes mcp test zerogpu` returns no tools.** The key is wrong or missing. The endpoint returns 401 with a plain-text body naming both accepted auth methods. Re-add the server with a valid `zgpu-api-` key.
+
+**The agent's model fails to authenticate while the MCP tools work.** These are two different endpoints with two different credentials. `api.zerogpu.ai` reads `providers.ZeroGPU.key_env` from `.env`; `mcp.zerogpu.ai` reads the key in the MCP URL or header. Fix whichever one is failing.
+
+**Hermes rejects the model at startup.** The context window is under 64,000 tokens. Use `deepseek-v4-flash`, `glm-5.2`, or `gpt-oss-120b`, and set `context_length` explicitly if auto-detection fails.
+
+**A tool call returns an error inside a normal-looking result.** ZeroGPU MCP failures come back as `isError: true` in the payload, not as a transport error. Check the tool output, not just the HTTP status.
+
+**`zerogpu_embed` rejects the model name.** The `model` argument is a strict, case-sensitive enum: `bge-small-en-v1.5` or `all-minilm-l6-v2`. `BGE-Small-EN-v1.5` fails schema validation before the call is made.
+
+**Summaries are truncated.** `compact: true` routes to `t5-small`, which reads only the first 512 tokens. Drop `compact` for long inputs.
+
+**A new server or skill does not appear in an open chat.** Hermes loads MCP servers and skills at session start. Run `/reload-mcp` in the session, or start a new chat.
+
+**A skill never shows up in `hermes skills list`.** The YAML frontmatter failed to parse, usually a stray tab or an unquoted colon. There is no lint command; the listing is the check.
+
+**429 responses under load.** You are being rate limited. Honor `Retry-After`, and move bulk work to the [Batch API](/docs/batch/index), which accepts 50,000 requests per 24-hour window and sidesteps per-request limits.
+
+**Costs look higher than expected.** Check which model actually served each call. If a fallback provider is configured, it may be answering some requests, and those carry no ZeroGPU savings. `hermes fallback list` shows the chain.
+
+## Conclusion
+
+Hermes gives you an agent whose reasoning model and tool models are chosen independently. Pointing both at ZeroGPU means the frontier-priced work shrinks to the handful of steps that genuinely need judgment, while classification, extraction, ranking, redaction, and moderation run on models built for exactly those jobs. Every tool call returns what it cost and what the same tokens would have cost at frontier pricing, so the tradeoff stays visible rather than assumed.
+
+<CardGroup cols={2}>
+	<Card title="Model catalog" icon="layers" href="/docs/model-catalog">
+		Every model, its task, context window, and price.
+	</Card>
+	<Card title="MCP server" icon="plug" href="/integrations/mcp">
+		Full argument reference for all fourteen tools.
+	</Card>
+	<Card
+		title="Cookbook"
+		icon="book-open"
+		href="/cookbook/hermes-investor-outreach"
+	>
+		Build an investor outreach agent end to end.
+	</Card>
+	<Card title="Discord" icon="discord" href="https://discord.gg/zerogpu">
+		Ask questions and share what you built.
+	</Card>
+</CardGroup>

@@ -1,0 +1,277 @@
+---
+title: "🏛️ Raise Your Seed Round with a Hermes Agent"
+description: "Point Hermes Agent at ZeroGPU, then let it research investors, rank them against your pitch, write a personalized email for each, and save them all as Gmail drafts for a fraction of a frontier-model run."
+---
+
+This notebook demonstrates how to turn Hermes Agent into a fundraising research assistant, so that a single sentence produces five researched investors and five personalized email drafts sitting in your Gmail, ready for you to review and send. The agent reads your company profile, searches the live web for funds that match, pulls the messy prose into structured rows, ranks every candidate against your one-liner, writes an email that opens with something specific and true about each investor, and screens the copy before anything reaches your mailbox. By combining Hermes Agent with ZeroGPU's edge-optimized models, this notebook walks you through a workflow where the only step that needs a capable generative model is the writing, and everything around it - extraction, ranking, classification, summarization, moderation - runs on purpose-built small models at a fraction of the cost.
+
+For the full reference, see the [Hermes Agent integration guide](/integrations/hermes).
+
+In this notebook, you'll explore:
+
+- **Hermes Agent**: An open-source agent from Nous Research that runs in your terminal, a TUI, or a self-hosted web UI. It brings file, terminal, and memory toolsets, a skills system for reusable procedures, and a built-in MCP client that picks up tools from any external server at startup. Here it orchestrates the whole outreach run and decides which tool to reach for at each step.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **Dappier**: A real-time web and licensed-data search layer exposed over MCP. It supplies the live investor news that the workflow reasons over, since ZeroGPU runs models rather than a search index.
+- **Zapier MCP**: A hosted MCP endpoint that turns any of Zapier's app actions into a tool your agent can call. Here it exposes exactly one action, Gmail create draft, so the agent can write drafts and cannot send mail.
+
+This setup not only demonstrates a practical application of agent-driven fundraising research, but also provides a flexible framework that can be adapted to other real-world scenarios requiring high-volume research, ranking, and personalized outbound writing.
+
+## 🎥 Watch the Video Guide
+
+Video walkthrough coming soon.
+
+## 📦 Installation
+
+This recipe assumes you already have Hermes Agent running, either locally or on a host like Hostinger. See the [Hermes Agent quickstart](https://hermes-agent.nousresearch.com/docs/getting-started/quickstart) if you do not.
+
+Everything else is one script. Download it, fill in your keys, and run it:
+
+```bash
+curl -O https://raw.githubusercontent.com/zerogpu/docs/main/skills/investor-outreach/zerogpu-setup.sh
+```
+
+Open the file and set the three values at the top. Only the first is required:
+
+```bash
+ZEROGPU_API_KEY=""          # required - from platform.zerogpu.ai, starts with zgpu-api-
+DAPPIER_API_KEY=""          # optional - real-time web search, from dappier.com
+ZAPIER_MCP_URL=""           # optional - your personal Zapier MCP URL
+```
+
+Then run it:
+
+```bash
+bash zerogpu-setup.sh
+```
+
+```
+── Preflight ──
+  ok  hermes Hermes Agent v0.20.4 (2026.8.18)
+  ok  ZeroGPU key present (zgpu-api-...)
+  ok  config: /data/config.yaml
+
+── Model provider → ZeroGPU ──
+  ok  provider configured - model deepseek-v4-flash
+  ok  config check passed
+
+── MCP servers ──
+  ok  zerogpu connected (all tools enabled)
+  ok  dappier connected (all tools enabled)
+  ok  zapier connected (all tools enabled)
+
+── Verify ──
+    Provider:
+      provider : custom:ZeroGPU
+      model    : deepseek-v4-flash
+      endpoint : https://api.zerogpu.ai/v1
+
+    Testing the model provider...
+  ok  model provider is live on ZeroGPU
+
+── Done ──
+    Model    : deepseek-v4-flash via custom:ZeroGPU
+```
+
+The agent's own reasoning now runs on ZeroGPU's `deepseek-v4-flash`, and fourteen ZeroGPU tools are available to it. For what the script does line by line, see the [Hermes Agent integration guide](/integrations/hermes).
+
+## 🔑 Setting Up API Keys
+
+You'll need keys for ZeroGPU, Dappier, and Zapier.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+
+The setup script writes your ZeroGPU key to Hermes' own `.env` and puts the other two into their MCP URLs. If you would rather set them by hand:
+
+```bash
+hermes config set ZEROGPU_API_KEY 'zgpu-api-...'
+hermes config get ZEROGPU_API_KEY
+```
+
+For Dappier, create a key at [dappier.com](https://dappier.com) and pass it as a query parameter:
+
+```bash
+hermes mcp add dappier --url "https://mcp.dappier.com/mcp?apiKey=YOUR_DAPPIER_KEY" --connect-timeout 60
+```
+
+For Zapier, create a server at [mcp.zapier.com](https://mcp.zapier.com) and enable **only** the Gmail create-draft action. Your personal URL carries its own token:
+
+```bash
+hermes mcp add zapier --url "YOUR_ZAPIER_MCP_URL" --connect-timeout 60
+hermes mcp test zapier
+```
+
+<Note>
+	Read that tool list before continuing. Scoping the Zapier server to a single
+	draft action in the Zapier console is what makes this workflow unable to send
+	mail, no matter what the agent decides to do. It is a stronger boundary than a
+	prompt instruction, because no configuration change on the agent side can
+	widen it.
+</Note>
+
+## 🧠 Install the Outreach Skill
+
+A Hermes skill is a Markdown procedure the agent loads on demand. This one encodes the whole workflow, which ZeroGPU tool runs at each step, what the email may and may not say, and what the run has to report at the end.
+
+```bash
+hermes skills install https://raw.githubusercontent.com/zerogpu/docs/main/skills/investor-outreach/SKILL.md
+hermes skills list
+```
+
+```
+  investor-outreach    Research, rank and draft investor outreach using ZeroGPU
+```
+
+If the skill does not appear, the YAML frontmatter failed to parse, usually a stray tab or an unquoted colon. There is no lint command, so the listing is the check.
+
+## 📄 Add Your Company Profile
+
+The agent needs to know what it is pitching. Download the template, fill it in, and save it where the skill expects:
+
+```bash
+curl -O https://raw.githubusercontent.com/zerogpu/docs/main/skills/investor-outreach/company.md
+```
+
+```markdown
+# Dappier
+
+One-liner: AI monetization and licensing infrastructure for publishers - lets content owners get paid when their data, articles, and media are used by AI agents, chatbots, and LLMs.
+
+Stage: seed                              Raising: not publicly disclosed
+
+Traction:
+- Founded 2023 in Austin, TX; ~12-17 employees as of 2026
+- $2M seed raised from Silverton Partners and Render Capital
+- $440K revenue in 2025 with consistent quarter-over-quarter growth
+
+Sector tags: ai-monetization, ad-tech, content-licensing, publisher-tools, agentic-commerce
+
+Geo: Austin, TX (US); remote-friendly
+
+Contact email: hello@dappier.com
+
+Anti-targets: existing investors; funds with a competing portfolio company
+```
+
+The one-liner matters more than anything else in the file. It is the string the ranking step embeds, so a vague sentence produces a vague shortlist.
+
+Save it to `/data/workspace/outreach/company.md` on your Hermes host. In the web UI, paste this into a new chat followed by the file contents:
+
+```
+Create the file /data/workspace/outreach/company.md, creating the directory if needed, with exactly this content:
+```
+
+## 🔎 Run the Workflow
+
+Load the skill and give it one instruction:
+
+```
+/investor-outreach
+```
+
+```
+Use ZeroGPU tools to find 5 investors for /data/workspace/outreach/company.md - funds backing ad-tech, publisher tools or agentic commerce - then draft an email to each in Gmail. Show each tool call.
+```
+
+The agent works through the skill's procedure. Watch the tool calls scroll:
+
+```
+mcp__dappier__ask_ai              searching: ad-tech seed investors, recent rounds
+mcp__zerogpu__zerogpu_extract_json      → 11 investor rows from 6 articles
+mcp__zerogpu__zerogpu_extract_entities  → organizations, people, funding rounds
+mcp__zerogpu__zerogpu_redact_pii        → scrubbed 4 scraped blobs
+mcp__zerogpu__zerogpu_embed             → ranked 11 candidates against the one-liner
+mcp__zerogpu__zerogpu_classify_structured → stage / geo_fit / warmth
+mcp__zerogpu__zerogpu_summarize         → 5 personalization hooks
+mcp__zerogpu__zerogpu_chat              → 5 subject lines and bodies
+mcp__zerogpu__zerogpu_moderate          → 5 clean, 0 flagged
+mcp__zapier__gmail_create_draft         → 5 drafts created
+```
+
+Dappier finds the raw material. Every step that turns it into something useful is a ZeroGPU model, and each one is chosen for its job: a 205M-parameter extractor for pulling fields out of prose, a 384-dimension embedding model for ranking with no generative call at all, an 8B model for one-sentence hooks, and `deepseek-v4-flash` only for the writing.
+
+🎉 **ZeroGPU handled nine of the ten steps on small models, leaving the frontier-priced work to the one step that actually needed it.**
+
+<Note>
+	If the agent finishes the research but stops short of creating drafts, tell it
+	explicitly: `Now create the Gmail drafts using the Zapier MCP tool.` Agents
+	sometimes treat an external write as needing confirmation, which is reasonable
+	behavior when the action leaves the machine.
+</Note>
+
+## 💌 Check the Drafts
+
+Open Gmail and go to **Drafts**. Five emails, each opening with something specific about that investor rather than a restatement of their thesis:
+
+```
+Subject: Publisher monetization, $440K ARR on a 4-person team
+
+Hi Sarah,
+
+Saw Foundry led Monda's round in March - the publisher-side
+monetization thesis lines up almost exactly with what we're building.
+
+Dappier is the payment and access-control layer between publisher
+content and the AI agents that want to use it. Nearly 100 publisher
+sites are testing our interactive ad unit, and we did $440K in 2025
+on a team of four.
+
+We're raising a seed round and would value 20 minutes.
+
+- Dan
+```
+
+Now open **Sent**. It is empty, and it stays empty. The Zapier server exposes no send action, so the agent has no way to mail anyone. A human approves every one.
+
+## 💰 What It Cost
+
+Every ZeroGPU tool returns a `savings` block, and the skill rolls them into `savings.md` at the end of the run:
+
+```
+This run cost $0.0042 on ZeroGPU. The same work on a frontier model
+would have cost $0.66345 - 158 times cheaper, 99.4% saved, across 24 calls.
+
+Baseline: published frontier rate of $3.00/1M input, $15.00/1M output
+Price table version: 2026-08-21
+
+Per-model subtotal
+  gliner2-base-v1          9 calls    $0.00019
+  bge-small-en-v1.5        3 calls    $0.00047
+  llama-3.1-8b-fast        5 calls    $0.00031
+  deepseek-v4-flash        5 calls    $0.00318
+  zlm-v1-moderation-edge   2 calls    $0.00005
+
+Totals
+  ZeroGPU        $0.00420
+  Frontier       $0.66345
+  Saved          $0.65925
+  Calls          24
+
+Cost per investor drafted
+  ZeroGPU        $0.00084
+  Frontier       $0.13269
+```
+
+That last pair is the number that scales. Five investors is a rounding error either way; the shape of the run is what matters:
+
+| Investors | ZeroGPU | Frontier baseline |
+|---|---|---|
+| 5 | $0.0042 | $0.66 |
+| 1,000 | $0.84 | $132.69 |
+| 10,000 | $8.40 | $1,326.90 |
+
+The comparison is not a benchmark. `baseline_cost_usd` prices the exact same token counts at a published frontier rate, so it is a like-for-like measurement of the same work done two ways.
+
+🎉 **Twenty-four model calls, five researched and drafted investors, and less than half a cent of inference.**
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running a Hermes Agent workflow with ZeroGPU for investor research and personalized outreach. You can adapt and expand this example for various other scenarios requiring high-volume research, ranking, and personalized outbound writing.
+
+Key tools utilized in this notebook include:
+
+- **Hermes Agent**: An open-source agent from Nous Research that runs in your terminal, a TUI, or a self-hosted web UI. It brings file, terminal, and memory toolsets, a skills system for reusable procedures, and a built-in MCP client that picks up tools from any external server at startup. Here it orchestrates the whole outreach run and decides which tool to reach for at each step.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **Dappier**: A real-time web and licensed-data search layer exposed over MCP. It supplies the live investor news that the workflow reasons over, since ZeroGPU runs models rather than a search index.
+- **Zapier MCP**: A hosted MCP endpoint that turns any of Zapier's app actions into a tool your agent can call. Here it exposes exactly one action, Gmail create draft, so the agent can write drafts and cannot send mail.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring high-volume research, ranking, and personalized outbound writing.
