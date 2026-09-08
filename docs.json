@@ -63,13 +63,13 @@
             "group": "Models",
             "pages": [
               "docs/model-catalog",
-              "docs/ad-tech",
-              "docs/text-classification",
+              "docs/open-weight",
               "docs/text-generation",
-              "docs/pii",
+              "docs/text-classification",
               "docs/moderation",
-              "docs/summarization",
-              "docs/embeddings"
+              "docs/embeddings",
+              "docs/pii",
+              "docs/ad-tech"
             ]
           },
           {
@@ -151,7 +151,6 @@
                   "api-reference/models/zlm-v2-iab-classify-edge-enriched",
                   "api-reference/models/zlm-v1-iab-domain-classifier",
                   "api-reference/models/zlm-v1-moderation-edge",
-                  "api-reference/models/t5-small",
                   "api-reference/models/zlm-v1-multi-iab-classify",
                   "api-reference/models/all-minilm-l6-v2",
                   "api-reference/models/bge-small-en-v1-5"
@@ -438,6 +437,14 @@
     {
       "source": "/platform/security",
       "destination": "/docs/platform#api-keys"
+    },
+    {
+      "source": "/docs/summarization",
+      "destination": "/docs/text-generation"
+    },
+    {
+      "source": "/api-reference/models/t5-small",
+      "destination": "/docs/model-catalog"
     }
   ],
   "footer": {

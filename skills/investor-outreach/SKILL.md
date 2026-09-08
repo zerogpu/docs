@@ -157,8 +157,6 @@ partial or failed run, where it should report what was spent before the failure.
   or "all-minilm-l6-v2". "BGE-Small-EN-v1.5" is rejected at schema validation.
 - `zerogpu_embed` caps input at 512 tokens for bge-small-en-v1.5. Embed the
   `thesis` field, not a whole article.
-- Do not pass `compact` to `zerogpu_summarize` on long blobs - it routes to
-  t5-small, which reads only the first 512 tokens.
 - `zerogpu_moderate` returns no `savings` block. Count it in the call count but
   skip it in the cost totals, and note the omission in `savings.md`.
 - `zerogpu_extract_json` values are "field::type::desc" strings, not JSON types.

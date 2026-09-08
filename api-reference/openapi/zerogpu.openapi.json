@@ -494,7 +494,6 @@
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier",
-              "t5-small",
               "zlm-v1-multi-iab-classify"
             ],
             "example": "llama-3.1-8b-instruct-fast"
@@ -557,7 +556,6 @@
               "zlm-v1-iab-classify-edge",
               "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier",
-              "t5-small",
               "zlm-v1-multi-iab-classify"
             ],
             "example": "llama-3.1-8b-instruct-fast"

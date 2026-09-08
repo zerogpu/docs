@@ -125,13 +125,12 @@ Returns an object with a top-level `status` and a `components` map (`worker`, `r
 
 Summarize, condense, shorten, recap, or TL;DR any text passage (articles, emails, meeting notes, transcripts, docs, chat logs). Runs on a fast small instruct model on the ZeroGPU edge, far cheaper than summarizing the text with the host model.
 
-- **Backed by:** `llama-3.1-8b-instruct-fast` (`t5-small` when `compact=true`).
+- **Backed by:** `llama-3.1-8b-instruct-fast`.
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
 | `text` | yes | - | The passage to summarize (non-empty). |
 | `max_tokens` | optional | model default | Upper bound on summary length, `1` to `2048`. |
-| `compact` | optional | `false` | Route to `t5-small`, the cheapest summarizer. It reads only the first 512 tokens, so leave this off for longer passages. |
 
 Returns `summary`, the `model` used, a `usage` token breakdown, and a `savings` object comparing ZeroGPU cost to a frontier-model baseline. See the full worked example below.
 
