@@ -46,8 +46,9 @@ unprefixed for readability.
 5. **Scrub** - `zerogpu_redact_pii` with mask "label" over every scraped blob
    BEFORE it is written to disk or quoted in an email. Keep the extracted `email`
    field from step 3 outside this pass - redacting it would destroy the address.
-6. **Rank** - `zerogpu_embed` with model "bge-small-en-v1.5" on the company
-   one-liner and on each investor `thesis`. Cosine-rank. Keep the top 5.
+6. **Rank** - `zerogpu_classify_zero_shot` on each investor `thesis`, with
+   labels ["strong fit for {company one-liner}", "weak fit for {company
+   one-liner}"]. Sort by the "strong fit" score, descending. Keep the top 5.
 7. **Bucket** - `zerogpu_classify_structured` with
    schema: {"stage": ["pre-seed","seed","series-a","growth"],
             "geo_fit": ["yes","no"],
@@ -153,10 +154,9 @@ partial or failed run, where it should report what was spent before the failure.
   container restart.
 - ZeroGPU MCP failures return `isError: true` inside a normal-looking result, not
   an HTTP error. Check the payload before trusting a step.
-- `zerogpu_embed`'s `model` is a strict enum, case-sensitive: "bge-small-en-v1.5"
-  or "all-minilm-l6-v2". "BGE-Small-EN-v1.5" is rejected at schema validation.
-- `zerogpu_embed` caps input at 512 tokens for bge-small-en-v1.5. Embed the
-  `thesis` field, not a whole article.
+- `zerogpu_classify_zero_shot` scores each label independently, so a `thesis`
+  that is a weak match for everything still returns a "strong fit" score -
+  rank relative to the other candidates, not against an absolute threshold.
 - `zerogpu_moderate` returns no `savings` block. Count it in the call count but
   skip it in the cost totals, and note the omission in `savings.md`.
 - `zerogpu_extract_json` values are "field::type::desc" strings, not JSON types.

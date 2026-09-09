@@ -67,7 +67,6 @@
               "docs/text-generation",
               "docs/text-classification",
               "docs/moderation",
-              "docs/embeddings",
               "docs/pii",
               "docs/ad-tech"
             ]
@@ -133,7 +132,6 @@
               "api-reference/responses",
               "api-reference/chat-completions",
               "api-reference/moderations",
-              "api-reference/embeddings",
               {
                 "group": "By model",
                 "pages": [
@@ -150,10 +148,7 @@
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v2-iab-classify-edge-enriched",
                   "api-reference/models/zlm-v1-iab-domain-classifier",
-                  "api-reference/models/zlm-v1-moderation-edge",
-                  "api-reference/models/zlm-v1-multi-iab-classify",
-                  "api-reference/models/all-minilm-l6-v2",
-                  "api-reference/models/bge-small-en-v1-5"
+                  "api-reference/models/zlm-v1-moderation-edge"
                 ]
               }
             ]
@@ -444,6 +439,26 @@
     },
     {
       "source": "/api-reference/models/t5-small",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/zlm-v1-multi-iab-classify",
+      "destination": "/docs/text-classification"
+    },
+    {
+      "source": "/api-reference/models/all-minilm-l6-v2",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/bge-small-en-v1-5",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/docs/embeddings",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/embeddings",
       "destination": "/docs/model-catalog"
     }
   ],

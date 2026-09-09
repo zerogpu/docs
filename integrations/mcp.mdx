@@ -10,7 +10,7 @@ ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agen
 
 ## Overview
 
-This guide connects an MCP client to the hosted ZeroGPU MCP server at `https://mcp.zerogpu.ai/mcp`. The server speaks the streamable HTTP transport and exposes ZeroGPU's edge models (summarization, classification, entity and PII extraction, safety moderation, embeddings, short chat, and more) as MCP tools, so a host model like Claude can offload cheap, well-defined NLP work instead of doing it itself. By the end you'll be able to authenticate, list the available tools, and call any of them, including a worked example for the `zerogpu_summarize` tool.
+This guide connects an MCP client to the hosted ZeroGPU MCP server at `https://mcp.zerogpu.ai/mcp`. The server speaks the streamable HTTP transport and exposes ZeroGPU's edge models (summarization, classification, entity and PII extraction, safety moderation, short chat, and more) as MCP tools, so a host model like Claude can offload cheap, well-defined NLP work instead of doing it itself. By the end you'll be able to authenticate, list the available tools, and call any of them, including a worked example for the `zerogpu_summarize` tool.
 
 ## Video walkthrough
 
@@ -105,7 +105,7 @@ Inside the tool result you'll get back overall and per-component status:
 
 ## Usage
 
-The server exposes 14 tools. Every tool name is prefixed with `zerogpu_`, takes a JSON `arguments` object, and returns a single text content block whose body is a JSON string. The list below is the live tool catalog discovered from the server's `tools/list` response; each entry shows what the tool does, which ZeroGPU model or endpoint backs it, its full argument surface, and the shape of the response.
+The server exposes 13 tools. Every tool name is prefixed with `zerogpu_`, takes a JSON `arguments` object, and returns a single text content block whose body is a JSON string. The list below is the live tool catalog discovered from the server's `tools/list` response; each entry shows what the tool does, which ZeroGPU model or endpoint backs it, its full argument surface, and the shape of the response.
 
 Throughout this section, "client" means any MCP host (Claude, Cursor, your own runtime). When a tool auto-invokes, the host model picks it based on the intent words in your request; you can also call any tool explicitly by name through your client's tool-call interface.
 
@@ -138,13 +138,12 @@ Returns `summary`, the `model` used, a `usage` token breakdown, and a `savings` 
 
 Classify text into the IAB (Interactive Advertising Bureau) ad-tech taxonomy: news articles, pages, ad creative, or blog posts. Cheaper and purpose-built compared to reasoning topics out with the host model.
 
-- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v2-iab-classify-edge-enriched` when `enriched=true`, `zlm-v1-multi-iab-classify` when `multilingual=true`).
+- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v2-iab-classify-edge-enriched` when `enriched=true`).
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
 | `text` | yes | - | Text to classify (non-empty). |
 | `enriched` | optional | `false` | Pass `true` for the richer, more granular taxonomy (topics, keywords, intent). |
-| `multilingual` | optional | `false` | Pass `true` when the text is not in English. Returns the same enriched shape, and wins over `enriched`, which is English-only. |
 
 Returns the predicted IAB category, with scores when available.
 
@@ -320,23 +319,6 @@ Returns `any_flagged` for a quick gate, a `results` array with one entry per inp
 { "name": "zerogpu_moderate", "arguments": { "input": "I will find you and make you regret this." } }
 ```
 
-#### `zerogpu_embed`
-
-Turn text into vectors for semantic search, RAG retrieval, clustering, deduplication, or similarity scoring.
-
-- **Backed by:** `all-minilm-l6-v2` (`bge-small-en-v1.5` when `model` is set), on the [Embeddings](/api-reference/embeddings) endpoint.
-
-| Name | Required | Default | Description |
-| --- | --- | --- | --- |
-| `input` | yes | - | Text to embed. A single string, or an array of strings for one vector per element. |
-| `model` | optional | `all-minilm-l6-v2` | Either `all-minilm-l6-v2` (22.7M, fastest) or `bge-small-en-v1.5` (33.4M, 512-token context, stronger on retrieval). |
-
-Returns an `embeddings` array (each entry an `index` and its `embedding`), the `count`, the vector `dimensions`, and `usage`. Both models return 384 dimensions, so they are interchangeable in an existing index, but don't mix them within one index. Embeddings bill on input tokens only.
-
-```json
-{ "name": "zerogpu_embed", "arguments": { "input": ["ZeroGPU runs inference at the edge.", "Frontier models are expensive."] } }
-```
-
 #### `zerogpu_chat`
 
 Short, self-contained generative reply for quick rephrasing, simple Q&A, drafting a short message, or light brainstorming, anything that does not need code, workspace context, or multi-step reasoning. Prefer this over answering the turn with the host model when host-model capability isn't required.
@@ -435,7 +417,6 @@ Every tool at a glance.
 | `zerogpu_extract_pii` | Detect PII grouped by category | `text` |
 | `zerogpu_generate_followups` | Suggest follow-up questions | `text` |
 | `zerogpu_moderate` | Safety-check text across 13 categories | `input` |
-| `zerogpu_embed` | Embed text as 384-dim vectors | `input` |
 | `zerogpu_chat` | Short small-model chat reply | `messages` |
 
 ## Troubleshooting
