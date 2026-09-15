@@ -1,14 +1,9 @@
 ---
 title: "llama-guard-4-12b"
-sidebarTitle: "Safety Classification"
+sidebarTitle: "llama-guard-4-12b"
 description: "Model details for llama-guard-4-12b. Multimodal safety classification for prompts and responses."
-openapi: "api-reference/openapi/playgrounds/llama-guard-4-12b.openapi.json POST /responses"
+openapi: "api-reference/openapi/playgrounds/llama-guard-4-12b.openapi.json POST /moderations"
 ---
-
-<Note>
-	This model supports the Responses API only — the Chat Completions endpoint
-	(`/v1/chat/completions`) is not available for this model.
-</Note>
 
 > Meta's Llama Guard 4 12B is a multimodal safety classification model for moderating text, images, and mixed text-image inputs. It evaluates both incoming prompts and generated responses, returning a safe or unsafe classification along with the policy categories a violation falls under. It handles multilingual text and multiple images in one call, which makes it a fit for chat moderation, prompt and response filtering, policy enforcement, and agent guardrails. Built on a dense 12B architecture derived from Llama 4 Scout, it is designed as a dedicated safety layer in front of a production model rather than as a general-purpose generator.
 

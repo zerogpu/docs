@@ -18,6 +18,8 @@ Moderation models screen text for unsafe, harmful, or policy-sensitive content b
 
 Send the text to classify as `input` — a string, an array of strings (one verdict per element), or an array of `{ "type": "text", "text": "…" }` content parts.
 
+<CodeGroup>
+
 ```bash Moderations API
 curl https://api.zerogpu.ai/v1/moderations \
   -H "content-type: application/json" \
@@ -29,7 +31,25 @@ curl https://api.zerogpu.ai/v1/moderations \
 }'
 ```
 
-The response is OpenAI's native moderations envelope — an `id`, the resolved `model`, and a `results` array (one entry per input). Each result carries a `flagged` verdict, per-category `categories` booleans, `category_scores` in `[0, 1]`, and `category_applied_input_types` (always `["text"]` for this text-only model), with all 13 categories present in OpenAI's order:
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-moderation-edge",
+  "messages": [
+    {
+      "role": "user",
+      "content": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+On `/v1/moderations` the response is OpenAI's native moderations envelope — an `id`, the resolved `model`, and a `results` array (one entry per input). Each result carries a `flagged` verdict, per-category `categories` booleans, `category_scores` in `[0, 1]`, and `category_applied_input_types` (always `["text"]` for this text-only model), with all 13 categories present in OpenAI's order:
 
 ```json Response
 {
@@ -90,16 +110,38 @@ The response is OpenAI's native moderations envelope — an `id`, the resolved `
 
 ## llama-guard-4-12b
 
-<Note>
-	This model supports the Responses API only — the Chat Completions endpoint
-	(`/v1/chat/completions`) is not available for this model.
-</Note>
-
 > Meta's Llama Guard 4 12B is a multimodal safety classification model for moderating text, images, and mixed text-image inputs. It evaluates both incoming prompts and generated responses, returning a safe or unsafe classification along with the policy categories a violation falls under. It handles multilingual text and multiple images in one call, which makes it a fit for chat moderation, prompt and response filtering, policy enforcement, and agent guardrails. Built on a dense 12B architecture derived from Llama 4 Scout, it is designed as a dedicated safety layer in front of a production model rather than as a general-purpose generator.
 
 **References:** [Model docs](https://huggingface.co/meta-llama/Llama-Guard-4-12B) • [Terms](https://huggingface.co/meta-llama/Llama-Guard-4-12B) • [Privacy](https://huggingface.co/meta-llama/Llama-Guard-4-12B)
 
 <CodeGroup>
+
+```bash Moderations API
+curl https://api.zerogpu.ai/v1/moderations \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "llama-guard-4-12b",
+  "input": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "llama-guard-4-12b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+    }
+  ]
+}'
+```
 
 ```bash Responses API
 curl https://api.zerogpu.ai/v1/responses \
@@ -119,4 +161,4 @@ curl https://api.zerogpu.ai/v1/responses \
 
 </CodeGroup>
 
-The classification is returned as `output[].content[].text` — `safe`, or `unsafe` followed by the violated policy categories.
+On `/v1/moderations` the response is OpenAI's moderations envelope, the same shape `zlm-v1-moderation-edge` returns. On the Responses and Chat Completions endpoints the verdict comes back as the output text — `safe`, or `unsafe` followed by the violated policy categories.

@@ -313,9 +313,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "zlm-v1-iab-classify-edge",
-            "default": "zlm-v1-iab-classify-edge",
-            "example": "zlm-v1-iab-classify-edge",
+            "const": "zlm-v1-signal-extract",
+            "default": "zlm-v1-signal-extract",
+            "example": "zlm-v1-signal-extract",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -336,9 +336,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "zlm-v1-iab-classify-edge",
-            "default": "zlm-v1-iab-classify-edge",
-            "example": "zlm-v1-iab-classify-edge",
+            "const": "zlm-v1-signal-extract",
+            "default": "zlm-v1-signal-extract",
+            "example": "zlm-v1-signal-extract",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {
