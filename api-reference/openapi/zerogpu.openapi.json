@@ -485,6 +485,7 @@
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "enum": [
               "llama-3.1-8b-instruct-fast",
+              "llama-guard-4-12b",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",
               "gpt-oss-120b",
@@ -492,9 +493,9 @@
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
+              "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier",
-              "zlm-v1-multi-iab-classify"
+              "zlm-v1-iab-domain-classifier"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -549,14 +550,14 @@
               "gpt-oss-120b",
               "qwen3-30b-a3b-fp8",
               "glm-5.2",
-              "deepseek-v4-flash",
+              "deepseek-v4-flash-0731",
               "deberta-v3-small",
               "gliner2-base-v1",
               "gliner-multi-pii-v1",
               "zlm-v1-iab-classify-edge",
+              "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
-              "zlm-v1-iab-domain-classifier",
-              "zlm-v1-multi-iab-classify"
+              "zlm-v1-iab-domain-classifier"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -1093,7 +1094,7 @@
       },
       "ModerationResult": {
         "type": "object",
-        "description": "A single entry of the `results` array — the verdict for one input.",
+        "description": "A single entry of the `results` array \u2014 the verdict for one input.",
         "properties": {
           "flagged": {
             "type": "boolean",

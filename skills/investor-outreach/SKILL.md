@@ -72,7 +72,7 @@ unprefixed for readability.
    portfolio company, a public statement. Never a restatement of their thesis.
    If no dated event can be found for an investor, drop them and say so; a
    generic hook is worse than one fewer email.
-10. **Draft** - `zerogpu_chat` with model "deepseek-v4-flash", max_tokens 400.
+10. **Draft** - `zerogpu_chat` with model "deepseek-v4-flash-0731", max_tokens 400.
     Subject <= 60 chars. Body <= 120 words. Structure: hook / what we do /
     traction / the ask / one-line close. No superlatives. Never open with
     "I hope this finds you well."

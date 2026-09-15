@@ -1,0 +1,247 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "llama-guard-4-12b playground",
+    "version": "1.0",
+    "description": "Interactive playground for **llama-guard-4-12b**.\nModel is always `llama-guard-4-12b` on this page (shown in the form, not editable).\nSend the text to classify in `input`; the model returns a safe/unsafe verdict with policy categories."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "operationId": "createResponse_llama-guard-4-12b",
+        "summary": "llama-guard-4-12b: Responses",
+        "tags": [
+          "llama-guard-4-12b"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "llama-guard-4-12b",
+                        "default": "llama-guard-4-12b",
+                        "example": "llama-guard-4-12b",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "model": "llama-guard-4-12b",
+                    "input": [
+                      {
+                        "type": "text",
+                        "text": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                },
+                "examples": {
+                  "default": {
+                    "summary": "Default",
+                    "value": {
+                      "technology": 0.971784,
+                      "politics": 0.011858,
+                      "sports": 0.01175,
+                      "finance": 0.004608
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "deberta-v3-small",
+            "default": "deberta-v3-small",
+            "example": "deberta-v3-small",
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Multi-line text or document content to send to the model."
+          },
+          "instructions": {
+            "type": "string",
+            "example": "[sports, finance, politics]",
+            "description": "Candidate categories for zero-shot classification, passed as a comma-separated array (e.g. `[sports, finance, politics]`). A maximum of 10 categories is supported; response time increases with the number of categories provided."
+          }
+        }
+      },
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "deberta-v3-small",
+            "default": "deberta-v3-small",
+            "example": "deberta-v3-small",
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "InputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}

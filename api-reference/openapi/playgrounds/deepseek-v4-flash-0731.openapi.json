@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "deepseek-v4-flash playground",
+    "title": "deepseek-v4-flash-0731 playground",
     "version": "1.0",
-    "description": "Interactive playground for **deepseek-v4-flash**.\nModel is always `deepseek-v4-flash` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **deepseek-v4-flash-0731**.\nModel is always `deepseek-v4-flash-0731` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -19,10 +19,10 @@
   "paths": {
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_deepseek-v4-flash",
-        "summary": "deepseek-v4-flash: Chat completions",
+        "operationId": "createChatCompletion_deepseek-v4-flash-0731",
+        "summary": "deepseek-v4-flash-0731: Chat completions",
         "tags": [
-          "deepseek-v4-flash"
+          "deepseek-v4-flash-0731"
         ],
         "parameters": [
           {
@@ -49,9 +49,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "deepseek-v4-flash",
-                        "default": "deepseek-v4-flash",
-                        "example": "deepseek-v4-flash",
+                        "const": "deepseek-v4-flash-0731",
+                        "default": "deepseek-v4-flash-0731",
+                        "example": "deepseek-v4-flash-0731",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -62,7 +62,7 @@
                 "default": {
                   "summary": "Default",
                   "value": {
-                    "model": "deepseek-v4-flash",
+                    "model": "deepseek-v4-flash-0731",
                     "messages": [
                       {
                         "role": "system",
@@ -95,7 +95,7 @@
                       "id": "id-1785523944762",
                       "object": "chat.completion",
                       "created": 1785523944,
-                      "model": "deepseek-v4-flash",
+                      "model": "deepseek-v4-flash-0731",
                       "choices": [
                         {
                           "index": 0,
@@ -156,9 +156,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "deepseek-v4-flash",
-            "default": "deepseek-v4-flash",
-            "example": "deepseek-v4-flash",
+            "const": "deepseek-v4-flash-0731",
+            "default": "deepseek-v4-flash-0731",
+            "example": "deepseek-v4-flash-0731",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {

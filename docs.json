@@ -140,18 +140,19 @@
                   "api-reference/models/gpt-oss-120b",
                   "api-reference/models/qwen3-30b-a3b-fp8",
                   "api-reference/models/glm-5-2",
-                  "api-reference/models/deepseek-v4-flash",
+                  "api-reference/models/deepseek-v4-flash-0731",
                   "api-reference/models/deberta-v3-small",
                   "api-reference/models/gliner-multi-pii-v1",
                   "api-reference/models/gliner2-base-v1",
                   "api-reference/models/lfm2-5-1-2b-instruct",
                   "api-reference/models/lfm2-5-1-2b-thinking",
                   "api-reference/models/llama-3-1-8b-instruct-fast",
+                  "api-reference/models/llama-guard-4-12b",
                   "api-reference/models/zlm-v1-iab-classify-edge",
                   "api-reference/models/zlm-v2-iab-classify-edge-enriched",
                   "api-reference/models/zlm-v1-iab-domain-classifier",
+                  "api-reference/models/zlm-v1-signal-extract",
                   "api-reference/models/zlm-v1-moderation-edge",
-                  "api-reference/models/zlm-v1-multi-iab-classify",
                   "api-reference/models/all-minilm-l6-v2",
                   "api-reference/models/bge-small-en-v1-5"
                 ]
@@ -445,6 +446,14 @@
     {
       "source": "/api-reference/models/t5-small",
       "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/deepseek-v4-flash",
+      "destination": "/api-reference/models/deepseek-v4-flash-0731"
+    },
+    {
+      "source": "/api-reference/models/zlm-v1-multi-iab-classify",
+      "destination": "/docs/text-classification"
     }
   ],
   "footer": {
