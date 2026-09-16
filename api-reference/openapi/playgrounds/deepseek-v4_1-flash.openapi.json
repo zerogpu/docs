@@ -1,0 +1,341 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "deepseek-v4.1-flash playground",
+    "version": "1.0",
+    "description": "Interactive playground for **deepseek-v4.1-flash**.\nModel is always `deepseek-v4.1-flash` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/responses": {
+      "post": {
+        "operationId": "createResponse_deepseek-v4_1-flash",
+        "summary": "deepseek-v4.1-flash: Responses",
+        "tags": [
+          "deepseek-v4.1-flash"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateResponseRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "deepseek-v4.1-flash",
+                        "default": "deepseek-v4.1-flash",
+                        "example": "deepseek-v4.1-flash",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "input": "Hello!",
+                    "model": "deepseek-v4.1-flash"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    },
+    "/chat/completions": {
+      "post": {
+        "operationId": "createChatCompletion_deepseek-v4_1-flash",
+        "summary": "deepseek-v4.1-flash: Chat completions",
+        "tags": [
+          "deepseek-v4.1-flash"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateChatCompletionRequest"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "type": "string",
+                        "const": "deepseek-v4.1-flash",
+                        "default": "deepseek-v4.1-flash",
+                        "example": "deepseek-v4.1-flash",
+                        "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+                      }
+                    }
+                  }
+                ]
+              },
+              "examples": {
+                "default": {
+                  "summary": "Default",
+                  "value": {
+                    "model": "deepseek-v4.1-flash",
+                    "messages": [
+                      {
+                        "role": "system",
+                        "content": "You are a support triage analyst. Be concise."
+                      },
+                      {
+                        "role": "user",
+                        "content": "Classify this ticket by urgency (low/medium/high) and category, then summarize it in one line: 'Our checkout page has been throwing intermittent 502 errors since this morning's deploy. Roughly 1 in 5 customers can't complete payment, and abandoned carts are spiking. Rolling back didn't help."
+                      }
+                    ],
+                    "max_tokens": 800
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatCompletionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "420": {
+            "description": "Insufficient quota"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "parameters": [
+          {
+            "name": "x-project-id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Optional project identifier. Scopes the request to a specific project when provided."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "CreateResponseRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "deepseek-v4.1-flash",
+            "default": "deepseek-v4.1-flash",
+            "example": "deepseek-v4.1-flash",
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Multi-line text or document content to send to the model."
+          },
+          "instructions": {
+            "type": "string"
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 800,
+            "description": "Maximum number of tokens to generate in the response."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "CreateChatCompletionRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "messages"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "deepseek-v4.1-flash",
+            "default": "deepseek-v4.1-flash",
+            "example": "deepseek-v4.1-flash",
+            "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
+          },
+          "messages": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
+          },
+          "max_tokens": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 800,
+            "description": "Maximum number of tokens to generate in the response."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "system",
+              "user",
+              "assistant"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "ChatCompletionResponse": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "InputMessage": {
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "format": "textarea",
+            "maxLength": 131072,
+            "description": "Message text."
+          }
+        }
+      },
+      "Response": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}
