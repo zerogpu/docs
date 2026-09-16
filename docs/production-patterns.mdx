@@ -30,11 +30,57 @@ Branch on the status code. Authentication and authorization errors are permanent
 | `401` | Bad API key | Check `x-api-key`. Do **not** retry. |
 | `403` | Bad project ID | Check `x-project-id` and permissions. Do **not** retry. |
 | `420` | Input over token limit | Shorten the input. Do **not** retry unchanged. |
-| `429` | Rate limited | Back off and retry. Honor `Retry-After`. |
+| `429` | Rate limit reached | Wait at least `Retry-After` seconds, then retry. See [Rate limits](#rate-limits). |
 | `5xx` | Server error | Retry with exponential backoff. |
 
 <Note>
   Treat `408` (request timeout) and `409` (conflict) the same as `5xx` for retry purposes. Network errors and client-side timeouts are retriable too.
+</Note>
+
+## Rate limits
+
+Your organization has limits for each model, shared by all of its API keys:
+
+- **Requests per minute**
+- **Tokens per minute** - counted when a request is accepted: the estimated input tokens plus `max_tokens` (`max_completion_tokens`, or `max_output_tokens` on the Responses API) for each of `n` choices. Tokens a response doesn't use are not given back, so set `max_tokens` close to the size of the response you expect.
+- **Concurrent requests** - requests still in progress, including open streams.
+
+Counts reset at the start of each minute. Audio endpoints have request and concurrency limits, but no token limit.
+
+Responses carry your limits in headers. A header is left out when that limit doesn't apply.
+
+| Header | Example | Meaning |
+|--------|---------|---------|
+| `x-ratelimit-limit-requests` | `300` | Requests allowed per minute |
+| `x-ratelimit-remaining-requests` | `295` | Requests left this minute |
+| `x-ratelimit-reset-requests` | `37s` | Time until the request count resets |
+| `x-ratelimit-limit-tokens` | `500000` | Tokens allowed per minute |
+| `x-ratelimit-remaining-tokens` | `499000` | Tokens left this minute |
+| `x-ratelimit-reset-tokens` | `37s` | Time until the token count resets |
+| `x-ratelimit-limit-concurrent-requests` | `16` | Requests allowed in progress at once |
+| `x-ratelimit-remaining-concurrent-requests` | `15` | Requests you can start right now |
+
+A request over a limit is rejected with `429` before it runs, and `error.code` says which limit it hit:
+
+```json
+{
+  "error": {
+    "message": "Rate limit reached for deepseek-v4-flash in organization 3f2c... on requests per min (RPM): Limit 300, Used 300, Requested 1. Please try again in 37s.",
+    "type": "rate_limit_error",
+    "param": null,
+    "code": "requests_per_minute_exceeded"
+  }
+}
+```
+
+| `error.code` | What happened | What to do |
+|--------------|---------------|------------|
+| `requests_per_minute_exceeded` | Too many requests this minute | Wait for `Retry-After`, then retry. |
+| `tokens_per_minute_exceeded` | Too many tokens this minute | Wait for `Retry-After`, then retry. If there is no `Retry-After`, this request alone is over your limit: reduce the input or `max_tokens`. |
+| `concurrency_limit_exceeded` | Too many requests in progress | Retry after `Retry-After`, or when one of your requests finishes. |
+
+<Note>
+  Rejected requests still count toward your requests per minute, so retrying in a tight loop keeps you limited. Batch jobs use the same limits as your synchronous calls. To raise a limit, contact support.
 </Note>
 
 ## Set timeouts and retries
