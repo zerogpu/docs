@@ -3,13 +3,14 @@ title: "Ad Tech"
 description: "Edge IAB classifiers that map content to taxonomy, audience, and intent signals for programmatic advertising."
 ---
 
-Ad tech models map content to the IAB Content Taxonomy and the audience signals that programmatic advertising runs on. ZeroGPU offers a base IAB classifier tuned for real-time categorization at the edge plus an enriched variant that adds topics, keywords, and inferred intent. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Ad tech models map content to the IAB Content Taxonomy and the audience signals that programmatic advertising runs on. ZeroGPU offers a base IAB classifier tuned for real-time categorization at the edge, an enriched variant that adds topics, keywords, and inferred intent, and a signal extractor that turns free text into structured targeting signals. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
 | Model | Input /1M | Output /1M | Max tokens |
 | --- | ---: | ---: | ---: |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | $0.02 | $0.05 | 400 |
-| <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.02 | $0.05 | 400 |
+| <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.025 | $0.15 | 800 |
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 100 |
+| <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.02 | $0.05 | 400 |
 
 ## zlm-v1-iab-classify-edge
 
@@ -221,6 +222,70 @@ Returns scored `content` categories across taxonomy versions plus `topics`, `key
     "name": "reading news and current events",
     "category": "informational",
     "score": 0.5
+  }
+}
+```
+
+## zlm-v1-signal-extract
+
+> ZeroGPU's signal extractor turns unstructured text into structured signals that downstream systems can act on. One inference call returns topics, keywords, intent, and other contextual attributes as structured output, so content enrichment, contextual intelligence, ad targeting, agent routing, recommendation systems, and analytics pipelines all read from the same pass. At 80M parameters it is built for high-volume workloads where a general-purpose LLM is more machinery than the job needs.
+
+**References:** [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+Pass the signal categories you want in `categories`; `max_keywords` caps how many keywords come back.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-signal-extract",
+  "input": "How can I pay using my credit card?",
+  "categories": [
+    "signals"
+  ]
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-signal-extract",
+  "messages": [
+    {
+      "role": "user",
+      "content": "How can I pay using my credit card?"
+    }
+  ],
+  "categories": [
+    "signals"
+  ],
+  "max_keywords": 6
+}'
+```
+
+</CodeGroup>
+
+The signals arrive as a JSON string in the output text. Parsed:
+
+```json Response
+{
+  "keywords": [
+    "credit card",
+    "login",
+    "official website",
+    "account access"
+  ],
+  "user_intent": {
+    "name": "pay using credit card",
+    "category": "navigational",
+    "score": 0.95
   }
 }
 ```

@@ -138,13 +138,13 @@ Returns `summary`, the `model` used, a `usage` token breakdown, and a `savings` 
 
 Classify text into the IAB (Interactive Advertising Bureau) ad-tech taxonomy: news articles, pages, ad creative, or blog posts. Cheaper and purpose-built compared to reasoning topics out with the host model.
 
-- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v2-iab-classify-edge-enriched` when `enriched=true`, `zlm-v1-multi-iab-classify` when `multilingual=true`).
+- **Backed by:** `zlm-v1-iab-classify-edge` (`zlm-v2-iab-classify-edge-enriched` when `enriched=true` or `multilingual=true`).
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
 | `text` | yes | - | Text to classify (non-empty). |
 | `enriched` | optional | `false` | Pass `true` for the richer, more granular taxonomy (topics, keywords, intent). |
-| `multilingual` | optional | `false` | Pass `true` when the text is not in English. Returns the same enriched shape, and wins over `enriched`, which is English-only. |
+| `multilingual` | optional | `false` | Pass `true` when the text is not in English. Returns the same enriched shape. |
 
 Returns the predicted IAB category, with scores when available.
 

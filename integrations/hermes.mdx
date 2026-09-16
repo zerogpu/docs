@@ -49,10 +49,10 @@ hermes config set providers.ZeroGPU.name 'ZeroGPU'
 hermes config set providers.ZeroGPU.api 'https://api.zerogpu.ai/v1'
 hermes config set providers.ZeroGPU.key_env 'ZEROGPU_API_KEY'
 hermes config set providers.ZeroGPU.transport 'chat_completions'
-hermes config set providers.ZeroGPU.default_model 'deepseek-v4-flash'
+hermes config set providers.ZeroGPU.default_model 'deepseek-v4-flash-0731'
 hermes config set providers.ZeroGPU.context_length 1048576
 
-hermes config set model.default 'deepseek-v4-flash'
+hermes config set model.default 'deepseek-v4-flash-0731'
 hermes config set model.provider 'custom:ZeroGPU'
 ```
 
@@ -65,11 +65,11 @@ providers:
     api: https://api.zerogpu.ai/v1
     key_env: ZEROGPU_API_KEY
     transport: chat_completions
-    default_model: deepseek-v4-flash
+    default_model: deepseek-v4-flash-0731
     context_length: 1048576
 
 model:
-  default: deepseek-v4-flash
+  default: deepseek-v4-flash-0731
   provider: "custom:ZeroGPU"
 ```
 
@@ -126,7 +126,7 @@ Any ZeroGPU text-generation model with at least 64K context works as the agent's
 
 | Model | Context | Input / 1M | Output / 1M | Use it when |
 |---|---|---|---|---|
-| `deepseek-v4-flash` | 1,048,576 | $0.07 | $0.14 | Default. Agentic work with tool calling. |
+| `deepseek-v4-flash-0731` | 1,048,576 | $0.07 | $0.14 | Default. Agentic work with tool calling. |
 | `glm-5.2` | 1,048,576 | $1.10 | $3.50 | Hardest reasoning, long multi-step plans. |
 | `gpt-oss-120b` | 131,072 | $0.15 | $0.60 | Reasoning and function calling at mid cost. |
 | `qwen3-30b-a3b-fp8` | 32,768 | $0.05 | $0.30 | Below the 64K minimum. Not usable as the agent model. |
@@ -214,7 +214,7 @@ Skills are also auto-discovered from the skills directory, so dropping a folder 
 
 **The agent's model fails to authenticate while the MCP tools work.** These are two different endpoints with two different credentials. `api.zerogpu.ai` reads `providers.ZeroGPU.key_env` from `.env`; `mcp.zerogpu.ai` reads the key in the MCP URL or header. Fix whichever one is failing.
 
-**Hermes rejects the model at startup.** The context window is under 64,000 tokens. Use `deepseek-v4-flash`, `glm-5.2`, or `gpt-oss-120b`, and set `context_length` explicitly if auto-detection fails.
+**Hermes rejects the model at startup.** The context window is under 64,000 tokens. Use `deepseek-v4-flash-0731`, `glm-5.2`, or `gpt-oss-120b`, and set `context_length` explicitly if auto-detection fails.
 
 **A tool call returns an error inside a normal-looking result.** ZeroGPU MCP failures come back as `isError: true` in the payload, not as a transport error. Check the tool output, not just the HTTP status.
 

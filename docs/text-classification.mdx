@@ -8,10 +8,10 @@ Text classification models map a passage to predefined labels or categories. Zer
 | Model | Input /1M | Output /1M | Max tokens |
 | --- | ---: | ---: | ---: |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | $0.02 | $0.05 | 400 |
-| <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.02 | $0.05 | 400 |
+| <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.025 | $0.15 | 800 |
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 100 |
 | <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | $0.02 | $0.05 | 400 |
-| <a href="/api-reference/models/zlm-v1-multi-iab-classify" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v1-multi-iab-classify" width="22" height="22" noZoom /> <code>zlm-v1-multi-iab-classify</code></a> | $0.05 | $0.40 | 400 |
+| <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.02 | $0.05 | 400 |
 
 ## zlm-v1-iab-classify-edge
 
@@ -271,13 +271,13 @@ Returns each candidate label with a probability score.
 }
 ```
 
-## zlm-v1-multi-iab-classify
+## zlm-v1-signal-extract
 
-> The multilingual variant of ZeroGPU's IAB classifier returns the same full content-intelligence profile as the enriched edge model, for text that is not in English. One call gives you IAB categories across both the 1.0 and 2.2 taxonomies, audience and interest segments, topics, keywords, and user intent, every result scored for confidence. At 90M parameters it keeps the sub-millisecond profile the bidstream needs, so a multi-market publisher can run one classification pipeline instead of one per language. When your inventory spans languages and you still need clean IAB signals on every request, this is the model.
+> ZeroGPU's signal extractor turns unstructured text into structured signals that downstream systems can act on. One inference call returns topics, keywords, intent, and other contextual attributes as structured output, so content enrichment, contextual intelligence, ad targeting, agent routing, recommendation systems, and analytics pipelines all read from the same pass. At 80M parameters it is built for high-volume workloads where a general-purpose LLM is more machinery than the job needs.
 
 **References:** [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
 
-Reach for [zlm-v2-iab-classify-edge-enriched](/api-reference/models/zlm-v2-iab-classify-edge-enriched) when the text is English. Supports batch processing through the [Batch API](/docs/batch/index).
+Pass the signal categories you want in `categories`; `max_keywords` caps how many keywords come back.
 
 <CodeGroup>
 
@@ -287,8 +287,11 @@ curl https://api.zerogpu.ai/v1/responses \
   -H "x-api-key: YOUR_API_KEY" \
   -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
-  "model": "zlm-v1-multi-iab-classify",
-  "input": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud."
+  "model": "zlm-v1-signal-extract",
+  "input": "How can I pay using my credit card?",
+  "categories": [
+    "signals"
+  ]
 }'
 ```
 
@@ -298,101 +301,36 @@ curl https://api.zerogpu.ai/v1/chat/completions \
   -H "x-api-key: YOUR_API_KEY" \
   -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
-  "model": "zlm-v1-multi-iab-classify",
+  "model": "zlm-v1-signal-extract",
   "messages": [
     {
       "role": "user",
-      "content": "¿Cuáles son los conceptos básicos del ejercicio y la aptitud física? El ejercicio regular es una de las mejores cosas que puede hacer por su salud."
+      "content": "How can I pay using my credit card?"
     }
-  ]
+  ],
+  "categories": [
+    "signals"
+  ],
+  "max_keywords": 6
 }'
 ```
 
 </CodeGroup>
 
-The result arrives as a JSON string in the output text. Parsed, and trimmed here to the first entries of each list:
+The signals arrive as a JSON string in the output text. Parsed:
 
 ```json Response
 {
-  "audience": [
-    {
-      "id": 419,
-      "parent_id": 415,
-      "name": "Physical Therapy",
-      "tier1_name": "Interest",
-      "tier2_name": "Healthy Living",
-      "tier3_name": "Wellness",
-      "score": 0.6441585183644298
-    },
-    {
-      "id": 406,
-      "parent_id": 206,
-      "name": "Healthy Living",
-      "tier1_name": "Interest",
-      "tier2_name": "Healthy Living",
-      "score": 0.5809985325902359
-    }
-  ],
-  "content": {
-    "iab_1_0": [
-      {
-        "code": "IAB7-1",
-        "name": "Exercise",
-        "tier": 2,
-        "parent_code": "IAB7",
-        "score": 0.8641673687946894
-      },
-      {
-        "code": "IAB7-36",
-        "name": "Physical Therapy",
-        "tier": 2,
-        "parent_code": "IAB7",
-        "score": 0.759118804822501
-      }
-    ],
-    "iab_2_2": [
-      {
-        "id": 225,
-        "parent_id": 223,
-        "name": "Fitness and Exercise",
-        "tier1_name": "Healthy Living",
-        "tier2_name": "Fitness and Exercise",
-        "score": 0.8641673687946894
-      },
-      {
-        "id": 236,
-        "parent_id": 232,
-        "name": "Physical Therapy",
-        "tier1_name": "Healthy Living",
-        "tier2_name": "Wellness",
-        "tier3_name": "Physical Therapy",
-        "score": 0.759118804822501
-      }
-    ]
-  },
-  "topics": [
-    {
-      "name": "fitness and exercise",
-      "score": 0.8641673687946894
-    },
-    {
-      "name": "physical therapy",
-      "score": 0.759118804822501
-    },
-    {
-      "name": "medical health",
-      "score": 0.661015418108041
-    }
-  ],
   "keywords": [
-    "conceptos",
-    "ejercicio",
-    "aptitud"
+    "credit card",
+    "login",
+    "official website",
+    "account access"
   ],
   "user_intent": {
-    "name": "insights on les son los conceptos sicos del",
-    "category": "informational",
-    "score": 0.5
+    "name": "pay using credit card",
+    "category": "navigational",
+    "score": 0.95
   }
 }
 ```
