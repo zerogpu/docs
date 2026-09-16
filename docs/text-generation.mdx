@@ -3,13 +3,14 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4-flash-0731, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 — for reasoning and tool use, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash-0731`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash and deepseek-v4-flash-0731, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 — for reasoning and tool use, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash-0731`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
 | <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.15 | $0.60 | — | 131,072 |
 | <a href="/api-reference/models/qwen3-30b-a3b-fp8" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/qwen3-30b-a3b-fp8/qwen3-30b-a3b-fp8.png" alt="qwen3-30b-a3b-fp8" width="22" height="22" noZoom /> <code>qwen3-30b-a3b-fp8</code></a> | $0.05 | $0.30 | — | 32,768 |
 | <a href="/api-reference/models/glm-5-2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/z.ai/z.jpeg" alt="glm-5.2" width="22" height="22" noZoom /> <code>glm-5.2</code></a> | $1.10 | $3.50 | $0.40 | 262,144 |
+| <a href="/api-reference/models/deepseek-v4-1-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4.1-flash" width="22" height="22" noZoom /> <code>deepseek-v4.1-flash</code></a> | $0.30 | $1.20 | — | 1,048,576 |
 | <a href="/api-reference/models/deepseek-v4-flash-0731" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4-flash-0731" width="22" height="22" noZoom /> <code>deepseek-v4-flash-0731</code></a> | $0.16 | $0.38 | $0.006 | 1,048,576 |
 | <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | $0.02 | $0.05 | — | 131,072 |
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
@@ -249,6 +250,50 @@ The model reasons before it answers and returns the trace alongside the final te
   }
 }
 ```
+
+## deepseek-v4.1-flash
+
+> DeepSeek's DeepSeek-V4.1-Flash is an open-weight sparse Mixture-of-Experts model and the first built on DeepSeek's Causal Encoder-Decoder (CED) architecture, activating 8B parameters on input and 16B on output, served on ZeroGPU for general text generation. It keeps the 1,048,576-token (1M) context window of the V4 Flash line, which suits large codebases, long documents, extended conversations, and multi-step agent tasks, and supports function calling alongside both fast non-thinking replies and higher-effort reasoning.
+
+**References:** [Model docs](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash) • [Terms](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Hello!",
+  "model": "deepseek-v4.1-flash"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "deepseek-v4.1-flash",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a support triage analyst. Be concise."
+    },
+    {
+      "role": "user",
+      "content": "Classify this ticket by urgency (low/medium/high) and category, then summarize it in one line: '"'"'Our checkout page has been throwing intermittent 502 errors since this morning'"'"'s deploy. Roughly 1 in 5 customers can'"'"'t complete payment, and abandoned carts are spiking. Rolling back didn'"'"'t help."
+    }
+  ],
+  "max_tokens": 800
+}'
+```
+
+</CodeGroup>
+
+The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
 
 ## deepseek-v4-flash-0731
 
