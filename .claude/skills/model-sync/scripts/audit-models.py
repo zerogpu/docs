@@ -149,6 +149,20 @@ def fmt_money(v):
     return f"${v:.2f}" if round(v, 2) == v else f"${v:g}"
 
 
+def cached_rate(pricing):
+    """The billable cached-input rate, or None when the model has no cached pricing.
+
+    The payload carries `cached_input_per_1m_tokens` for every model, but it is only a
+    rate when it is positive. `null` means the dashboard stores nothing; `0` is how it
+    encodes "cache pricing does not apply to this model" — every classifier, embedding,
+    and moderation model reports 0, and none of them bills a separate cached rate. So 0
+    and null are both "no rate", documented as `—`, and neither is a disagreement with a
+    `—` cell. A positive value is a real price and the docs must state it.
+    """
+    v = pricing.get("cached_input_per_1m_tokens")
+    return float(v) if v else None
+
+
 def number(cell):
     if cell is None:
         return None
@@ -236,6 +250,7 @@ def check_prose(doc, mid, m):
     prices = {
         "input": pricing.get("input_per_1m_tokens"),
         "output": pricing.get("output_per_1m_tokens"),
+        "cached input": cached_rate(pricing),
     }
     for n in sorted(scope_lines(doc, mid)):
         line = doc.lines[n]
@@ -247,7 +262,7 @@ def check_prose(doc, mid, m):
             if max_tokens and val != max_tokens:
                 stale.append(f"{where}: pill says '{raw} {phrase}' — API says {max_tokens:,}")
         for raw, kind in PILL_PRICE.findall(line):
-            api = prices.get(kind)  # cached input is not in the API payload — skip it
+            api = prices.get(kind)  # None when the payload carries no rate for this kind
             if api is not None and abs(float(raw) - api) > 1e-9:
                 stale.append(
                     f"{where}: pill says '${raw} / 1M {kind}' — API says {fmt_money(api)}"
@@ -330,6 +345,20 @@ def check_table(doc, row, m, task_label, apply_fix):
     ]
     if task_label and row.index_of("Task") is not None:
         checks.append(("Task", (col(row, "Task") or "").strip(), task_label, "text"))
+
+    # Cached input is its own case: the column is often `—`, which money() reads as None.
+    # A `—` cell is correct only while the API carries no positive rate; once it does, the
+    # empty cell is drift like any other and --fix fills it in.
+    cached_api = cached_rate(pricing)
+    if row.index_of("Cached input") is not None:
+        cached_cell = (col(row, "Cached input") or "").strip()
+        cached_doc = money(cached_cell)
+        if cached_api is None and cached_doc is not None:
+            checks.append(("Cached input", cached_cell, "—", "text"))
+        elif cached_api is not None and cached_doc is None:
+            checks.append(("Cached input", cached_cell or "—", fmt_money(cached_api), "text"))
+        elif cached_api is not None and cached_doc is not None:
+            checks.append(("Cached input", cached_doc, cached_api, "money"))
 
     for header, doc_val, api_val, kind in checks:
         if doc_val is None or api_val is None:

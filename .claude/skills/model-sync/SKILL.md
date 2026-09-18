@@ -71,7 +71,7 @@ A model in the API but absent from the docs needs all seven surfaces. A half-add
 | <a href="/api-reference/models/<slug>" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="<favicon_url>" alt="<modelId>" width="22" height="22" noZoom /> <code><modelId></code></a> | $0.02 | $0.05 | — | <Task> | 400 |
 ```
 
-Columns: Input /1M, Output /1M, Cached input /1M (`—` when the API carries none), Task, Max tokens with thousands separators. Embedding models use `Not billed` for output. Omit the `<img>` when `favicon_url` is null. Insert by descending `displayPriority` relative to its neighbours; never reshuffle existing rows.
+Columns: Input /1M, Output /1M, Cached input /1M (`cached_input_per_1m_tokens` when positive, else `—`), Task, Max tokens with thousands separators. Embedding models use `Not billed` for output. Omit the `<img>` when `favicon_url` is null. Insert by descending `displayPriority` relative to its neighbours; never reshuffle existing rows.
 
 **Detailed model card** in the `<CardGroup cols={2}>`: 32×32 icon, pills for context window / input / output / cached input (`\$` escaped), then the blurb truncated with `…`.
 
@@ -161,6 +161,7 @@ There is no exemption list. A model the API does not return is not a ZeroGPU mod
 | `taskDisplayName` | Picks the task page and the catalog **Task** column via the mapping below — not verbatim. |
 | `maxTokens` | **Max tokens** column, context-window pill, and every context claim in prose. |
 | `pricing.input_per_1m_tokens` / `output_per_1m_tokens` | Price columns and pills, formatted `$0.02`, `$1.10`, `$0.006`. |
+| `pricing.cached_input_per_1m_tokens` | **Cached input /1M** column and pill, when positive — see the note below the table. |
 | `pricing.favicon_url` | `src` of the 22×22 table icon and the 32×32 card icon. |
 | `pricing.description` | Raw marketing copy. The source for a **new** blurb, rewritten in the repo's voice — never grounds for rewording an existing blurb. |
 | `pricing.model_doc_url`, `terms_url`, `privacy_service` | The `**References:**` line. When `model_doc_url` points back at `docs.zerogpu.ai`, link the upstream model card from `terms_url`'s host instead; when there is no upstream page, omit the `[Model docs]` link and keep the other two. |
@@ -169,7 +170,9 @@ There is no exemption list. A model the API does not return is not a ZeroGPU mod
 | `parameters`, `modelVersion`, `quantized`/`quantization` | Facts for the prose ("205M parameters", "served as an FP8 build"). |
 | `displayPriority` | The dashboard's descending order — where to insert a new row, nothing more. |
 
-**Cached input pricing is not in the payload.** Its absence is not a zero and not a disagreement: leave `$0.006 / 1M cached input` untouched. Same for embedding dimensions.
+**Cached input pricing is in the payload**, as `pricing.cached_input_per_1m_tokens`, and it is checked like any other price — but only a **positive** value is a rate. `0` is how the dashboard encodes "cache pricing does not apply here" (every classifier, embedding, and moderation model reports it) and `null` means it stores nothing; both are documented as `—` in the **Cached input /1M** column, with no pill, and neither disagrees with an existing `—`. A positive value must appear in the column and in the card pill on every page carrying one. Never write `$0.00` into the column — that asserts free cached input, which the payload does not say.
+
+**Embedding dimensions are still not in the payload.** Leave them untouched.
 
 ### Task mapping
 
