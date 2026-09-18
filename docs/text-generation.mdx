@@ -3,16 +3,20 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash and deepseek-v4-flash-0731, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 — for reasoning and tool use, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash-0731`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash and deepseek-v4-flash-0731, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 and glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash-0731`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
-| <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.15 | $0.60 | — | 131,072 |
-| <a href="/api-reference/models/qwen3-30b-a3b-fp8" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/qwen3-30b-a3b-fp8/qwen3-30b-a3b-fp8.png" alt="qwen3-30b-a3b-fp8" width="22" height="22" noZoom /> <code>qwen3-30b-a3b-fp8</code></a> | $0.05 | $0.30 | $0.05 | 32,768 |
+| <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.15 | $0.60 | $0.03 | 131,072 |
+| <a href="/api-reference/models/qwen3-30b-a3b-fp8" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/qwen3-30b-a3b-fp8/qwen3-30b-a3b-fp8.png" alt="qwen3-30b-a3b-fp8" width="22" height="22" noZoom /> <code>qwen3-30b-a3b-fp8</code></a> | $0.10 | $0.45 | $0.05 | 32,768 |
 | <a href="/api-reference/models/glm-5-2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/z.ai/z.jpeg" alt="glm-5.2" width="22" height="22" noZoom /> <code>glm-5.2</code></a> | $1.10 | $3.50 | $0.26 | 262,144 |
-| <a href="/api-reference/models/deepseek-v4-1-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4.1-flash" width="22" height="22" noZoom /> <code>deepseek-v4.1-flash</code></a> | $0.30 | $1.20 | $0.006 | 1,048,576 |
+| <a href="/api-reference/models/deepseek-v4-1-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4.1-flash" width="22" height="22" noZoom /> <code>deepseek-v4.1-flash</code></a> | $0.15 | $0.60 | $0.0025 | 1,048,576 |
+| <a href="/api-reference/models/glm-5-3-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/62dc173789b4cf157d36ebee/i_pxzM2ZDo3Ub-BEgIkE9.png" alt="glm-5.3-flash" width="22" height="22" noZoom /> <code>glm-5.3-flash</code></a> | $0.10 | $0.35 | $0.02 | 1,048,576 |
+| <a href="/api-reference/models/gpt-5-4-nano" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-5.4-nano" width="22" height="22" noZoom /> <code>gpt-5.4-nano</code></a> | $0.20 | $1.25 | $0.02 | 400,000 |
+| <a href="/api-reference/models/gpt-5-6-luna" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-5.6-luna" width="22" height="22" noZoom /> <code>gpt-5.6-luna</code></a> | $0.20 | $1.20 | $0.20 | 272,000 |
+| <a href="/api-reference/models/gpt-4-1-mini" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-4.1-mini" width="22" height="22" noZoom /> <code>gpt-4.1-mini</code></a> | $0.40 | $1.60 | $0.10 | 1,047,576 |
 | <a href="/api-reference/models/deepseek-v4-flash-0731" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4-flash-0731" width="22" height="22" noZoom /> <code>deepseek-v4-flash-0731</code></a> | $0.16 | $0.38 | $0.006 | 1,048,576 |
-| <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | $0.02 | $0.05 | — | 131,072 |
+| <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | $0.15 | $0.28 | $0.025 | 131,072 |
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | — | 32,768 |
 | <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | — | 32,768 |
@@ -295,6 +299,161 @@ curl https://api.zerogpu.ai/v1/chat/completions \
 
 The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
 
+## glm-5.3-flash
+
+> Z.ai's GLM-5.3-Flash is an efficient open-weight model for coding and long-horizon agent tasks, served on ZeroGPU for general text generation. Its hybrid sparse and linear attention keeps long-context behaviour accurate across a 1,048,576-token (1M) window while reducing compute, and it supports function calling and adjustable reasoning effort.
+
+**References:** [Model docs](https://huggingface.co/zai-org/GLM-5.3-Flash) • [Terms](https://huggingface.co/zai-org/GLM-5.3-Flash/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Hello!",
+  "model": "glm-5.3-flash"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "glm-5.3-flash",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello!"
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
+
+## gpt-5.4-nano
+
+> OpenAI's GPT-5.4 nano is the most cost-efficient model in the GPT-5.4 family, served on ZeroGPU for high-volume and latency-sensitive workloads such as classification, extraction, routing, and sub-agent tasks. It supports function calling and structured outputs across a 400,000-token context window.
+
+**References:** [Terms](https://openai.com/policies/services-agreement/) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Hello!",
+  "model": "gpt-5.4-nano"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gpt-5.4-nano",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello!"
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
+
+## gpt-5.6-luna
+
+> OpenAI's GPT-5.6 Luna is the cost-optimized model of the GPT-5.6 family, served on ZeroGPU for cost-sensitive, high-volume workloads. It supports adjustable reasoning effort, function calling, and structured outputs across a 272,000-token context window.
+
+**References:** [Terms](https://openai.com/policies/services-agreement/) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Hello!",
+  "model": "gpt-5.6-luna"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gpt-5.6-luna",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello!"
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
+
+## gpt-4.1-mini
+
+> OpenAI's GPT-4.1 mini is the fast, cost-efficient model of the GPT-4.1 family, served on ZeroGPU for general text generation. It excels at instruction following and tool calling, supports function calling and structured outputs, and works across a 1,047,576-token (1M) context window with low latency.
+
+**References:** [Terms](https://openai.com/policies/services-agreement/) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Hello!",
+  "model": "gpt-4.1-mini"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gpt-4.1-mini",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello!"
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
 ## deepseek-v4-flash-0731
 
 <Note>
