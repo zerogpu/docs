@@ -145,7 +145,6 @@
                   "api-reference/models/gpt-5-4-nano",
                   "api-reference/models/gpt-5-6-luna",
                   "api-reference/models/gpt-4-1-mini",
-                  "api-reference/models/deepseek-v4-flash-0731",
                   "api-reference/models/deberta-v3-small",
                   "api-reference/models/gliner-multi-pii-v1",
                   "api-reference/models/gliner2-base-v1",
@@ -454,7 +453,11 @@
     },
     {
       "source": "/api-reference/models/deepseek-v4-flash",
-      "destination": "/api-reference/models/deepseek-v4-flash-0731"
+      "destination": "/docs/text-generation"
+    },
+    {
+      "source": "/api-reference/models/deepseek-v4-flash-0731",
+      "destination": "/docs/text-generation"
     },
     {
       "source": "/api-reference/models/zlm-v1-multi-iab-classify",
