@@ -140,7 +140,7 @@ Hermes registers MCP tools as `mcp__<server>__<tool>`. Because this server's too
 | Tool | Model | Required arguments |
 |---|---|---|
 | `zerogpu_chat` | `LFM2.5-1.2B-Instruct`, or `LFM2.5-1.2B-Thinking` with `thinking` | `messages` |
-| `zerogpu_summarize` | `llama-3.1-8b-instruct-fast`, or `t5-small` with `compact` | `text` |
+| `zerogpu_summarize` | `llama-3.1-8b-instruct-fast` | `text` |
 | `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` and variants | `text` |
 | `zerogpu_classify_domain` | `zlm-v1-iab-domain-classifier` | `domain` |
 | `zerogpu_classify_zero_shot` | `deberta-v3-small` | `text`, `labels` |
@@ -219,8 +219,6 @@ Skills are also auto-discovered from the skills directory, so dropping a folder 
 **A tool call returns an error inside a normal-looking result.** ZeroGPU MCP failures come back as `isError: true` in the payload, not as a transport error. Check the tool output, not just the HTTP status.
 
 **`zerogpu_embed` rejects the model name.** The `model` argument is a strict, case-sensitive enum: `bge-small-en-v1.5` or `all-minilm-l6-v2`. `BGE-Small-EN-v1.5` fails schema validation before the call is made.
-
-**Summaries are truncated.** `compact: true` routes to `t5-small`, which reads only the first 512 tokens. Drop `compact` for long inputs.
 
 **A new server or skill does not appear in an open chat.** Hermes loads MCP servers and skills at session start. Run `/reload-mcp` in the session, or start a new chat.
 
