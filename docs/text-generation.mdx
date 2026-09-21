@@ -3,19 +3,18 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash and deepseek-v4-flash-0731, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 and glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, `glm-5.2`, and `deepseek-v4-flash-0731`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.2 and glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8` and `glm-5.2`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
 | <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.15 | $0.60 | $0.03 | 131,072 |
 | <a href="/api-reference/models/qwen3-30b-a3b-fp8" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/qwen3-30b-a3b-fp8/qwen3-30b-a3b-fp8.png" alt="qwen3-30b-a3b-fp8" width="22" height="22" noZoom /> <code>qwen3-30b-a3b-fp8</code></a> | $0.10 | $0.45 | $0.05 | 32,768 |
 | <a href="/api-reference/models/glm-5-2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/z.ai/z.jpeg" alt="glm-5.2" width="22" height="22" noZoom /> <code>glm-5.2</code></a> | $1.10 | $3.50 | $0.26 | 262,144 |
-| <a href="/api-reference/models/deepseek-v4-1-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4.1-flash" width="22" height="22" noZoom /> <code>deepseek-v4.1-flash</code></a> | $0.15 | $0.60 | $0.0025 | 1,048,576 |
-| <a href="/api-reference/models/glm-5-3-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/62dc173789b4cf157d36ebee/i_pxzM2ZDo3Ub-BEgIkE9.png" alt="glm-5.3-flash" width="22" height="22" noZoom /> <code>glm-5.3-flash</code></a> | $0.10 | $0.35 | $0.02 | 1,048,576 |
+| <a href="/api-reference/models/deepseek-v4-1-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4.1-flash" width="22" height="22" noZoom /> <code>deepseek-v4.1-flash</code></a> | $0.14 | $0.55 | $0.0025 | 1,048,576 |
+| <a href="/api-reference/models/glm-5-3-flash" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/62dc173789b4cf157d36ebee/i_pxzM2ZDo3Ub-BEgIkE9.png" alt="glm-5.3-flash" width="22" height="22" noZoom /> <code>glm-5.3-flash</code></a> | $0.10 | $0.35 | $0.015 | 1,048,576 |
 | <a href="/api-reference/models/gpt-5-4-nano" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-5.4-nano" width="22" height="22" noZoom /> <code>gpt-5.4-nano</code></a> | $0.20 | $1.25 | $0.02 | 400,000 |
 | <a href="/api-reference/models/gpt-5-6-luna" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-5.6-luna" width="22" height="22" noZoom /> <code>gpt-5.6-luna</code></a> | $0.20 | $1.20 | $0.20 | 272,000 |
 | <a href="/api-reference/models/gpt-4-1-mini" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-4.1-mini" width="22" height="22" noZoom /> <code>gpt-4.1-mini</code></a> | $0.40 | $1.60 | $0.10 | 1,047,576 |
-| <a href="/api-reference/models/deepseek-v4-flash-0731" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/deepseek-ai/deepseek-color.png" alt="deepseek-v4-flash-0731" width="22" height="22" noZoom /> <code>deepseek-v4-flash-0731</code></a> | $0.16 | $0.38 | $0.006 | 1,048,576 |
 | <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | $0.15 | $0.28 | $0.025 | 131,072 |
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | — | 32,768 |
@@ -454,65 +453,6 @@ curl https://api.zerogpu.ai/v1/chat/completions \
 </CodeGroup>
 
 The model returns its answer as the assistant message — an `output_text` item in Responses, the `message.content` field in Chat Completions — with `usage` token counts alongside it.
-## deepseek-v4-flash-0731
-
-<Note>
-	This model supports the Chat Completions API only — the Responses endpoint
-	(`/v1/responses`) is not available for this model.
-</Note>
-
-> DeepSeek's DeepSeek-V4-Flash is an open-weight Mixture-of-Experts model built for efficient reasoning, coding, and agentic workflows, with 284B total parameters activating only 13B per token, served on ZeroGPU for general text generation. It sustains a 1,048,576-token (1M) context well suited for analyzing large codebases, long documents, extensive conversations, and complex research tasks, and supports fast non-thinking responses as well as higher-effort reasoning modes for planning, problem-solving, and multi-step automation. MIT-licensed with no usage restrictions.
-
-**References:** [Model docs](https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
-
-```bash Chat Completions
-curl https://api.zerogpu.ai/v1/chat/completions \
-  -H "content-type: application/json" \
-  -H "x-api-key: YOUR_API_KEY" \
-  -d '{
-  "model": "deepseek-v4-flash-0731",
-  "messages": [
-    {
-      "role": "system",
-      "content": "You are a pragmatic staff engineer. Be concise."
-    },
-    {
-      "role": "user",
-      "content": "Plan the migration of a nightly cron-based ETL job to an event-driven pipeline. 4 steps max."
-    }
-  ],
-  "max_tokens": 800
-}'
-```
-
-The model reasons before it answers and returns the trace alongside the final text as a `reasoning` field on the message.
-
-```json Response
-{
-  "id": "id-1785523944762",
-  "object": "chat.completion",
-  "created": 1785523944,
-  "model": "deepseek-v4-flash-0731",
-  "choices": [
-    {
-      "index": 0,
-      "finish_reason": "stop",
-      "message": {
-        "role": "assistant",
-        "content": "**1. Inventory the job** – Document inputs, outputs, schedule, and every downstream consumer of the cron ETL so nothing breaks silently.\n\n**2. Define the events** – Pick the real trigger (file landing, DB change, message) and publish it to a queue or event bus with a versioned schema.\n\n**3. Run in parallel** – Build the event-driven consumer alongside cron, write to a shadow table, and diff outputs until they match.\n\n**4. Cut over with a rollback path** – Point consumers at the new output, keep cron paused (not deleted) for one cycle, then decommission.",
-        "reasoning": "Cron ETL to event-driven: inventory the current job first, define the trigger events, run the new pipeline in parallel against a shadow output, then cut over with a rollback path. Four steps, each actionable.",
-        "tool_calls": []
-      }
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 52,
-    "completion_tokens": 158,
-    "total_tokens": 210
-  }
-}
-```
-
 ## llama-3.1-8b-instruct-fast
 
 > Meta's Llama 3.1 Instruct, tuned for fast, low-cost summarization at scale on the ZeroGPU edge network. Its 128K-token context window takes in entire documents, long transcripts, and full email or chat threads in a single pass. No chunking, no stitching partial summaries back together. Built for the high-volume summarization that runs around your core product: condensing long reports and transcripts, summarizing email and chat threads, and processing articles in bulk. When context length matters and you're summarizing on every request, this is the model that keeps it fast and affordable.
