@@ -329,7 +329,7 @@ Turn text into vectors for semantic search, RAG retrieval, clustering, deduplica
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
 | `input` | yes | - | Text to embed. A single string, or an array of strings for one vector per element. |
-| `model` | optional | `all-minilm-l6-v2` | Either `all-minilm-l6-v2` (22.7M, fastest) or `bge-small-en-v1.5` (33.4M, 512-token context, stronger on retrieval). |
+| `model` | optional | `all-minilm-l6-v2` | Either `all-minilm-l6-v2` (22.7M, fastest) or `bge-small-en-v1.5` (33M, 512-token context, stronger on retrieval). |
 
 Returns an `embeddings` array (each entry an `index` and its `embedding`), the `count`, the vector `dimensions`, and `usage`. Both models return 384 dimensions, so they are interchangeable in an existing index, but don't mix them within one index. Embeddings bill on input tokens only.
 
