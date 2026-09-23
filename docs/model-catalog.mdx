@@ -34,6 +34,13 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 | <a href="/api-reference/models/all-minilm-l6-v2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/all-minilm-l6-v2/all-minilm-l6-v2.png" alt="all-minilm-l6-v2" width="22" height="22" noZoom /> <code>all-minilm-l6-v2</code></a> | $0.004 | Not billed | — | Text Embedding | 512 |
 | <a href="/api-reference/models/bge-small-en-v1-5" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/1664511063789-632c234f42c386ebd2710434.png" alt="bge-small-en-v1.5" width="22" height="22" noZoom /> <code>bge-small-en-v1.5</code></a> | $0.004 | Not billed | — | Text Embedding | 512 |
 
+[Audio models](/docs/audio) are called on `POST /v1/audio/transcriptions` and `POST /v1/audio/speech` rather than `/v1/responses`, and are billed per minute of audio instead of per token, rounded up to the next whole minute with a one-minute minimum.
+
+| Model | Price /min | Task | Limits |
+| --- | ---: | --- | --- |
+| <a href="/api-reference/models/whisper-tiny" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="whisper-tiny" width="22" height="22" noZoom /> <code>whisper-tiny</code></a> | $0.02 | Speech-to-Text | 25 MB, 10 minutes of audio |
+| <a href="/api-reference/models/chatterbox-nano" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox-nano" width="22" height="22" noZoom /> <code>chatterbox-nano</code></a> | $0.01 | Text-to-Speech | 2,000 characters |
+
 ## Detailed model cards
 
 <CardGroup cols={2}>
@@ -257,6 +264,26 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 
     BAAI's BGE-small-en-v1.5 is a retrieval-first English embedding model and one of the strongest performers on the MTEB benchmark for its size. It produces the same 384-dimensional vectors, with a 512-token window…
   </Card>
+  <Card href="/api-reference/models/whisper-tiny">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="whisper-tiny" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>whisper-tiny</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Speech-to-Text</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>39M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / minute</span></div>
+
+    OpenAI's Whisper Tiny is the smallest model in the Whisper family of speech recognition models, at 39M parameters. It is the multilingual checkpoint: it transcribes speech in the language it was spoken…
+  </Card>
+  <Card href="/api-reference/models/chatterbox-nano">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox-nano" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>chatterbox-nano</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text-to-Speech</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Voice cloning</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>110M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.01 / minute</span></div>
+
+    Resemble AI's Chatterbox Nano is a 110M-parameter English text-to-speech model built for fast, low-cost speech generation. It speaks your text in a built-in voice, or clones a speaker…
+  </Card>
 </CardGroup>
 
 ## Model library by task
@@ -267,6 +294,9 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
   </Card>
   <Card title="Text Generation" icon="wand-magic-sparkles" href="/docs/text-generation">
     12 models: `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-4.1-mini`, `gpt-oss-120b`, `qwen3-30b-a3b-fp8`, `glm-5.2`, `llama-3.1-8b-instruct-fast`, `llama-guard-4-12b`, `LFM2.5-1.2B-Thinking`, `LFM2.5-1.2B-Instruct`
+  </Card>
+  <Card title="Audio Models" icon="microphone" href="/docs/audio">
+    2 models: `whisper-tiny`, `chatterbox-nano`
   </Card>
   <Card title="Text Classification" icon="tags" href="/docs/text-classification">
     5 models: `zlm-v2-iab-classify-edge-enriched`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier`, `deberta-v3-small`, `zlm-v1-signal-extract`

@@ -461,6 +461,316 @@
           }
         ]
       }
+    },
+    "/audio/transcriptions": {
+      "post": {
+        "operationId": "createTranscription",
+        "summary": "Create transcription",
+        "tags": [
+          "Audio"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTranscriptionRequest"
+              },
+              "example": {
+                "model": "whisper-tiny"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The transcript, in the requested `response_format`.",
+            "headers": {
+              "x-audio-duration-seconds": {
+                "description": "Audio length in seconds: the uploaded audio for a transcription, the generated audio for speech.",
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                },
+                "examples": {
+                  "json": {
+                    "summary": "json (default)",
+                    "value": {
+                      "text": "the quick brown fox jumps over the lazy dog."
+                    }
+                  },
+                  "verbose_json": {
+                    "summary": "verbose_json",
+                    "value": {
+                      "task": "transcribe",
+                      "language": "english",
+                      "duration": 1.76,
+                      "text": "Hello from Zero GPU.",
+                      "segments": [
+                        {
+                          "id": 0,
+                          "seek": 0,
+                          "start": 0.0,
+                          "end": 2.0,
+                          "text": " Hello from Zero GPU.",
+                          "tokens": [
+                            50364,
+                            2425,
+                            490,
+                            17182,
+                            18407,
+                            13,
+                            50464
+                          ],
+                          "temperature": 0.0,
+                          "avg_logprob": -0.797803,
+                          "compression_ratio": 0.724138,
+                          "no_speech_prob": 0.023181
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "the quick brown fox jumps over the lazy dog.\n"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid or missing field, or a body that is not the expected content type)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "'file' is required",
+                    "type": "invalid_request_error",
+                    "param": "file",
+                    "code": "file_required"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing API key). Plain-text body."
+          },
+          "402": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "You exceeded your current quota, please check your plan and billing details.",
+                    "type": "insufficient_quota",
+                    "param": null,
+                    "code": "insufficient_quota"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (invalid API key). Plain-text body."
+          },
+          "404": {
+            "description": "Unknown model (model_not_found)"
+          },
+          "413": {
+            "description": "File over 25 MB (file_too_large) or audio over 10 minutes (audio_too_long)"
+          },
+          "429": {
+            "description": "Rate limit reached. Wait at least `Retry-After` seconds, then retry."
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "503": {
+            "description": "Model warming up (model_unavailable) or every slot busy (server_busy). Retry with backoff."
+          }
+        }
+      }
+    },
+    "/audio/speech": {
+      "post": {
+        "operationId": "createSpeech",
+        "summary": "Create speech",
+        "tags": [
+          "Audio"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpeechMultipartRequest"
+              },
+              "example": {
+                "model": "chatterbox-nano",
+                "input": "Testing model to generate voice. Hey how are you today?",
+                "response_format": "mp3",
+                "seed": 1234
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpeechRequest"
+              },
+              "example": {
+                "model": "chatterbox-nano",
+                "input": "Testing model to generate voice. Hey how are you today?",
+                "voice": "alloy",
+                "response_format": "mp3"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The audio file, with a content type matching `response_format`.",
+            "headers": {
+              "x-audio-duration-seconds": {
+                "description": "Audio length in seconds: the uploaded audio for a transcription, the generated audio for speech.",
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/ogg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/aac": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/flac": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/wav": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/pcm": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid or missing field, or a body that is not the expected content type)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "'input' is required",
+                    "type": "invalid_request_error",
+                    "param": "input",
+                    "code": "input_required"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing API key). Plain-text body."
+          },
+          "402": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "You exceeded your current quota, please check your plan and billing details.",
+                    "type": "insufficient_quota",
+                    "param": null,
+                    "code": "insufficient_quota"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (invalid API key). Plain-text body."
+          },
+          "404": {
+            "description": "Unknown model (model_not_found)"
+          },
+          "413": {
+            "description": "Reference clip over 10 MB (voice_sample_too_large) or over 30 seconds (voice_sample_too_long)"
+          },
+          "429": {
+            "description": "Rate limit reached. Wait at least `Retry-After` seconds, then retry."
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "503": {
+            "description": "Model warming up (model_unavailable) or every slot busy (server_busy). Retry with backoff."
+          },
+          "422": {
+            "description": "Reference clip could not be used to clone a voice (voice_conditioning_failed), no audio was produced (empty_audio), or the format cannot be encoded (response_format_unavailable)"
+          },
+          "504": {
+            "description": "Generation timed out (timeout)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -470,6 +780,11 @@
         "in": "header",
         "name": "x-api-key",
         "description": "Your ZeroGPU API key. Create one in the dashboard under API keys. Send it on every request."
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI-compatible: send your ZeroGPU API key as `Authorization: Bearer <key>`."
       }
     },
     "schemas": {
@@ -1236,6 +1551,285 @@
           },
           "usage": {
             "$ref": "#/components/schemas/EmbeddingUsage"
+          }
+        }
+      },
+      "CreateTranscriptionRequest": {
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The audio file to transcribe."
+          },
+          "model": {
+            "type": "string",
+            "enum": [
+              "whisper-tiny"
+            ],
+            "default": "whisper-tiny",
+            "example": "whisper-tiny",
+            "description": "Model identifier. The endpoint serves `whisper-tiny`."
+          },
+          "language": {
+            "type": "string",
+            "example": "en",
+            "description": "ISO-639-1 code, such as `en`. Detected automatically when omitted."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Text to guide spelling and style, such as names or jargon."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "srt",
+              "verbose_json",
+              "vtt"
+            ],
+            "default": "json",
+            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "description": "Sampling temperature."
+          },
+          "timestamp_granularities[]": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "segment",
+                "word"
+              ]
+            },
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
+          }
+        }
+      },
+      "TranscriptionResponse": {
+        "type": "object",
+        "description": "`json` returns `{ text }`. `verbose_json` adds `task`, `language`, `duration`, and `segments` and/or `words`.",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The transcript."
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateSpeechRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "description": "JSON body, as the OpenAI SDKs send it. Use `multipart/form-data` to attach a `voice_sample`.",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "chatterbox-nano"
+            ],
+            "default": "chatterbox-nano",
+            "example": "chatterbox-nano",
+            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "format": "textarea",
+            "example": "Testing model to generate voice. Hey how are you today?",
+            "description": "The text to speak. Inline tags such as `[laugh]` and `[cough]` add paralinguistic cues."
+          },
+          "voice": {
+            "type": "string",
+            "enum": [
+              "default",
+              "builtin",
+              "chatterbox",
+              "alloy",
+              "ash",
+              "ballad",
+              "cedar",
+              "coral",
+              "echo",
+              "fable",
+              "marin",
+              "nova",
+              "onyx",
+              "sage",
+              "shimmer",
+              "verse"
+            ],
+            "default": "default",
+            "example": "default",
+            "description": "OpenAI voice names are accepted and all map to the built-in voice."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "mp3",
+              "opus",
+              "aac",
+              "flac",
+              "wav",
+              "pcm"
+            ],
+            "default": "mp3",
+            "example": "mp3",
+            "description": "`pcm` is raw 16-bit little-endian mono at 24 kHz."
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "example": 1234,
+            "description": "Pins sampling for repeatable output (best-effort)."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0.8,
+            "description": "Sampling temperature."
+          },
+          "top_p": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.95,
+            "description": "Nucleus sampling."
+          },
+          "top_k": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 1000,
+            "description": "Top-k sampling."
+          },
+          "repetition_penalty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1.2,
+            "description": "Penalty on repeated speech tokens."
+          }
+        }
+      },
+      "CreateSpeechMultipartRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "description": "Multipart form, required for voice cloning.",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "chatterbox-nano"
+            ],
+            "default": "chatterbox-nano",
+            "example": "chatterbox-nano",
+            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "format": "textarea",
+            "example": "Testing model to generate voice. Hey how are you today?",
+            "description": "The text to speak. Inline tags such as `[laugh]` and `[cough]` add paralinguistic cues."
+          },
+          "voice": {
+            "type": "string",
+            "enum": [
+              "default",
+              "builtin",
+              "chatterbox",
+              "alloy",
+              "ash",
+              "ballad",
+              "cedar",
+              "coral",
+              "echo",
+              "fable",
+              "marin",
+              "nova",
+              "onyx",
+              "sage",
+              "shimmer",
+              "verse"
+            ],
+            "default": "default",
+            "example": "default",
+            "description": "OpenAI voice names are accepted and all map to the built-in voice."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "mp3",
+              "opus",
+              "aac",
+              "flac",
+              "wav",
+              "pcm"
+            ],
+            "default": "mp3",
+            "example": "mp3",
+            "description": "`pcm` is raw 16-bit little-endian mono at 24 kHz."
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "example": 1234,
+            "description": "Pins sampling for repeatable output (best-effort)."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0.8,
+            "description": "Sampling temperature."
+          },
+          "top_p": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.95,
+            "description": "Nucleus sampling."
+          },
+          "top_k": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 1000,
+            "description": "Top-k sampling."
+          },
+          "repetition_penalty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1.2,
+            "description": "Penalty on repeated speech tokens."
+          },
+          "voice_sample": {
+            "type": "string",
+            "format": "binary",
+            "description": "Reference clip to clone a voice from. Overrides `voice`. Not stored."
           }
         }
       }

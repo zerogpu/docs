@@ -1,0 +1,94 @@
+---
+title: "Transcriptions"
+description: "Transcribe audio into text with whisper-tiny."
+sidebarTitle: "Transcriptions"
+openapi: "api-reference/openapi/zerogpu.openapi.json POST /audio/transcriptions"
+---
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| File size | 25 MB |
+| Audio duration | 10 minutes |
+| Formats | flac, m4a, mp3, mp4, mpeg, mpga, oga, ogg, wav, webm |
+
+To translate speech into English, send the same form to `POST /v1/audio/translations`, without `language`.
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/audio/transcriptions' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="whisper-tiny"' \
+  --form 'file=@"/path/to/audio.mp3"'
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with open("/path/to/audio.mp3", "rb") as audio:
+    transcript = client.audio.transcriptions.create(
+        model="whisper-tiny",
+        file=audio,
+    )
+
+print(transcript.text)
+```
+
+```javascript JavaScript
+import fs from "node:fs";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.zerogpu.ai/v1",
+  apiKey: "YOUR_API_KEY", // sent as Authorization: Bearer
+});
+
+const transcript = await client.audio.transcriptions.create({
+  model: "whisper-tiny",
+  file: fs.createReadStream("/path/to/audio.mp3"),
+});
+
+console.log(transcript.text);
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json json
+{
+  "text": "the quick brown fox jumps over the lazy dog."
+}
+```
+
+```json verbose_json
+{
+  "task": "transcribe",
+  "language": "english",
+  "duration": 1.76,
+  "text": "Hello from Zero GPU.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Hello from Zero GPU.",
+      "tokens": [50364, 2425, 490, 17182, 18407, 13, 50464],
+      "temperature": 0.0,
+      "avg_logprob": -0.797803,
+      "compression_ratio": 0.724138,
+      "no_speech_prob": 0.023181
+    }
+  ]
+}
+```
+
+</ResponseExample>

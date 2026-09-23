@@ -1,0 +1,101 @@
+---
+title: "whisper-tiny"
+sidebarTitle: "whisper-tiny"
+description: "Model details for whisper-tiny. Multilingual speech-to-text."
+openapi: "api-reference/openapi/playgrounds/whisper-tiny.openapi.json POST /audio/transcriptions"
+---
+
+<Note>
+	This model is routable only on `/v1/audio/transcriptions`, and on
+	`/v1/audio/translations` to translate speech into English.
+</Note>
+
+> OpenAI's Whisper Tiny is the smallest model in the Whisper family of speech recognition models, at 39M parameters. It is the multilingual checkpoint: it transcribes speech in the language it was spoken, detecting that language on its own when you don't name it, and it can translate speech into English. Its size makes it fast and cheap enough for high-volume transcription where throughput and cost matter more than the accuracy of the larger Whisper models: voice agents, meeting notes, subtitles, podcasts, and audio indexing.
+
+**References:** [Model card](https://huggingface.co/openai/whisper-tiny) • [License](https://github.com/openai/whisper/blob/main/LICENSE) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| File size | 25 MB |
+| Audio duration | 10 minutes |
+| Formats | flac, m4a, mp3, mp4, mpeg, mpga, oga, ogg, wav, webm |
+
+<RequestExample>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/audio/transcriptions' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="whisper-tiny"' \
+  --form 'file=@"/path/to/audio.mp3"'
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with open("/path/to/audio.mp3", "rb") as audio:
+    transcript = client.audio.transcriptions.create(
+        model="whisper-tiny",
+        file=audio,
+    )
+
+print(transcript.text)
+```
+
+```javascript JavaScript
+import fs from "node:fs";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.zerogpu.ai/v1",
+  apiKey: "YOUR_API_KEY", // sent as Authorization: Bearer
+});
+
+const transcript = await client.audio.transcriptions.create({
+  model: "whisper-tiny",
+  file: fs.createReadStream("/path/to/audio.mp3"),
+});
+
+console.log(transcript.text);
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json json
+{
+  "text": "the quick brown fox jumps over the lazy dog."
+}
+```
+
+```json verbose_json
+{
+  "task": "transcribe",
+  "language": "english",
+  "duration": 1.76,
+  "text": "Hello from Zero GPU.",
+  "segments": [
+    {
+      "id": 0,
+      "seek": 0,
+      "start": 0.0,
+      "end": 2.0,
+      "text": " Hello from Zero GPU.",
+      "tokens": [50364, 2425, 490, 17182, 18407, 13, 50464],
+      "temperature": 0.0,
+      "avg_logprob": -0.797803,
+      "compression_ratio": 0.724138,
+      "no_speech_prob": 0.023181
+    }
+  ]
+}
+```
+
+</ResponseExample>

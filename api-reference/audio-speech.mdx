@@ -1,0 +1,92 @@
+---
+title: "Speech"
+description: "Generate speech from text with chatterbox-nano, with optional voice cloning from a reference clip."
+sidebarTitle: "Speech"
+openapi: "api-reference/openapi/zerogpu.openapi.json POST /audio/speech"
+---
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| `input` length | 2,000 characters, English only. Requests near the limit can time out with `524`. |
+| `voice_sample` duration | 6 to 30 seconds |
+| `voice_sample` size | 10 MB |
+| `voice_sample` formats | mp3, m4a, wav, flac, ogg, webm, mp4 |
+| Unsupported parameters | `instructions`, `exaggeration`, `cfg_weight`, `min_p`, and `speed` other than `1.0` return `400` |
+
+<RequestExample>
+
+```bash cURL (voice cloning)
+curl --location 'https://api.zerogpu.ai/v1/audio/speech' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="chatterbox-nano"' \
+  --form 'input="Testing model to generate voice. Hey how are you today?"' \
+  --form 'response_format="mp3"' \
+  --form 'seed="1234"' \
+  --form 'voice_sample=@"/path/to/file"' \
+  --output speech.mp3
+```
+
+```bash cURL (JSON)
+curl --location 'https://api.zerogpu.ai/v1/audio/speech' \
+  --header 'content-type: application/json' \
+  --header 'Authorization: Bearer YOUR_API_KEY' \
+  --data '{
+  "model": "chatterbox-nano",
+  "input": "Hello from ZeroGPU.",
+  "voice": "alloy",
+  "response_format": "mp3"
+}' \
+  --output speech.mp3
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with client.audio.speech.with_streaming_response.create(
+    model="chatterbox-nano",
+    voice="alloy",  # OpenAI voice names map to the built-in voice
+    input="Hello from ZeroGPU.",
+    response_format="mp3",
+) as response:
+    response.stream_to_file("speech.mp3")
+```
+
+```javascript JavaScript
+import fs from "node:fs";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.zerogpu.ai/v1",
+  apiKey: "YOUR_API_KEY", // sent as Authorization: Bearer
+});
+
+const speech = await client.audio.speech.create({
+  model: "chatterbox-nano",
+  voice: "alloy", // OpenAI voice names map to the built-in voice
+  input: "Hello from ZeroGPU.",
+  response_format: "mp3",
+});
+
+fs.writeFileSync("speech.mp3", Buffer.from(await speech.arrayBuffer()));
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```text 200
+HTTP/2 200
+content-type: audio/mpeg
+x-audio-duration-seconds: 1.76
+
+<binary MP3 audio>
+```
+
+</ResponseExample>
