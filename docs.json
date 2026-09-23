@@ -65,6 +65,7 @@
               "docs/model-catalog",
               "docs/open-weight",
               "docs/text-generation",
+              "docs/audio",
               "docs/text-classification",
               "docs/moderation",
               "docs/embeddings",
@@ -158,9 +159,18 @@
                   "api-reference/models/zlm-v1-signal-extract",
                   "api-reference/models/zlm-v1-moderation-edge",
                   "api-reference/models/all-minilm-l6-v2",
-                  "api-reference/models/bge-small-en-v1-5"
+                  "api-reference/models/bge-small-en-v1-5",
+                  "api-reference/models/whisper-tiny",
+                  "api-reference/models/chatterbox-nano"
                 ]
               }
+            ]
+          },
+          {
+            "group": "Audio Models",
+            "pages": [
+              "api-reference/audio-transcriptions",
+              "api-reference/audio-speech"
             ]
           },
           {

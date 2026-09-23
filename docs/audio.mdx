@@ -1,0 +1,132 @@
+---
+title: "Audio Models"
+description: "Open-weight speech-to-text and text-to-speech models on ZeroGPU, billed per minute of audio."
+---
+
+ZeroGPU serves two open-weight audio models on OpenAI-compatible endpoints: `whisper-tiny` for speech-to-text on [`POST /v1/audio/transcriptions`](/api-reference/audio-transcriptions), and `chatterbox-nano` for text-to-speech, with voice cloning, on [`POST /v1/audio/speech`](/api-reference/audio-speech). Authenticate with `x-api-key` or `Authorization: Bearer`, so the OpenAI SDKs work with only the base URL and API key changed.
+
+## At a glance
+
+| Model | Price /min | Task |
+| --- | ---: | --- |
+| <a href="/api-reference/models/whisper-tiny" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="whisper-tiny" width="22" height="22" noZoom /> <code>whisper-tiny</code></a> | $0.02 | Speech-to-Text |
+| <a href="/api-reference/models/chatterbox-nano" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox-nano" width="22" height="22" noZoom /> <code>chatterbox-nano</code></a> | $0.01 | Text-to-Speech |
+
+Audio is billed per minute, rounded up to the next whole minute with a one-minute minimum: uploaded audio for `whisper-tiny`, generated audio for `chatterbox-nano`. The billed length is returned in the `x-audio-duration-seconds` header.
+
+## Model cards
+
+<CardGroup cols={2}>
+  <Card href="/api-reference/models/whisper-tiny">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="whisper-tiny" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>whisper-tiny</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Speech-to-Text</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>39M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.02 / minute</span></div>
+
+    OpenAI's Whisper Tiny is the smallest model in the Whisper family of speech recognition models, at 39M parameters. It is the multilingual checkpoint: it transcribes speech in the language it was spoken…
+  </Card>
+  <Card href="/api-reference/models/chatterbox-nano">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox-nano" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>chatterbox-nano</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text-to-Speech</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Voice cloning</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>110M params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.01 / minute</span></div>
+
+    Resemble AI's Chatterbox Nano is a 110M-parameter English text-to-speech model built for fast, low-cost speech generation. It speaks your text in a built-in voice, or clones a speaker…
+  </Card>
+</CardGroup>
+
+## whisper-tiny
+
+> OpenAI's Whisper Tiny is the smallest model in the Whisper family of speech recognition models, at 39M parameters. It is the multilingual checkpoint: it transcribes speech in the language it was spoken, detecting that language on its own when you don't name it, and it can translate speech into English. Its size makes it fast and cheap enough for high-volume transcription where throughput and cost matter more than the accuracy of the larger Whisper models: voice agents, meeting notes, subtitles, podcasts, and audio indexing.
+
+**References:** [Model card](https://huggingface.co/openai/whisper-tiny) • [License](https://github.com/openai/whisper/blob/main/LICENSE) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash cURL
+curl --location 'https://api.zerogpu.ai/v1/audio/transcriptions' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="whisper-tiny"' \
+  --form 'file=@"/path/to/audio.mp3"'
+```
+
+```python OpenAI SDK
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with open("/path/to/audio.mp3", "rb") as audio:
+    transcript = client.audio.transcriptions.create(
+        model="whisper-tiny",
+        file=audio,
+    )
+
+print(transcript.text)
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "text": "the quick brown fox jumps over the lazy dog."
+}
+```
+
+See [Transcriptions](/api-reference/audio-transcriptions) for all fields, response formats, and limits.
+
+## chatterbox-nano
+
+> Resemble AI's Chatterbox Nano is a 110M-parameter English text-to-speech model built for fast, low-cost speech generation. It speaks your text in a built-in voice, or clones a speaker from a short reference clip you upload with the request, and inline tags such as `[laugh]`, `[chuckle]`, and `[cough]` add paralinguistic cues. Its compact size keeps generation cheap enough for high-volume work: voice agents, conversational AI, gaming, accessibility, audiobooks, and content creation.
+
+**References:** [Model card](https://huggingface.co/ResembleAI/chatterbox-nano) • [License](https://github.com/resemble-ai/chatterbox/blob/master/LICENSE) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash cURL (voice cloning)
+curl --location 'https://api.zerogpu.ai/v1/audio/speech' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="chatterbox-nano"' \
+  --form 'input="Testing model to generate voice. Hey how are you today?"' \
+  --form 'response_format="mp3"' \
+  --form 'seed="1234"' \
+  --form 'voice_sample=@"/path/to/file"' \
+  --output speech.mp3
+```
+
+```python OpenAI SDK
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with client.audio.speech.with_streaming_response.create(
+    model="chatterbox-nano",
+    voice="alloy",  # OpenAI voice names map to the built-in voice
+    input="Hello from ZeroGPU.",
+    response_format="mp3",
+) as response:
+    response.stream_to_file("speech.mp3")
+```
+
+</CodeGroup>
+
+Response from a test run of the SDK request above:
+
+```text Response
+HTTP/2 200
+content-type: audio/mpeg
+x-audio-duration-seconds: 1.76
+
+<binary MP3 audio>
+```
+
+To clone a voice, attach a 6 to 30 second reference clip as `voice_sample` in a `multipart/form-data` request, as in the cURL example. The OpenAI SDKs send JSON and can't attach a clip. See [Speech](/api-reference/audio-speech) for all fields and limits.

@@ -1,0 +1,270 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "whisper-tiny playground",
+    "version": "1.0",
+    "description": "Interactive playground for **whisper-tiny**.\nModel is always `whisper-tiny` on this page (shown in the form, not editable).\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header."
+  },
+  "servers": [
+    {
+      "url": "https://api.zerogpu.ai/v1",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    },
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/audio/transcriptions": {
+      "post": {
+        "operationId": "createTranscription_whisper-tiny",
+        "summary": "whisper-tiny: Transcriptions",
+        "tags": [
+          "whisper-tiny"
+        ],
+        "security": [
+          {
+            "ApiKey": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTranscriptionRequest"
+              },
+              "example": {
+                "model": "whisper-tiny"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The transcript, in the requested `response_format`.",
+            "headers": {
+              "x-audio-duration-seconds": {
+                "description": "Audio length in seconds: the uploaded audio for a transcription, the generated audio for speech.",
+                "schema": {
+                  "type": "number"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                },
+                "examples": {
+                  "json": {
+                    "summary": "json (default)",
+                    "value": {
+                      "text": "the quick brown fox jumps over the lazy dog."
+                    }
+                  },
+                  "verbose_json": {
+                    "summary": "verbose_json",
+                    "value": {
+                      "task": "transcribe",
+                      "language": "english",
+                      "duration": 1.76,
+                      "text": "Hello from Zero GPU.",
+                      "segments": [
+                        {
+                          "id": 0,
+                          "seek": 0,
+                          "start": 0.0,
+                          "end": 2.0,
+                          "text": " Hello from Zero GPU.",
+                          "tokens": [
+                            50364,
+                            2425,
+                            490,
+                            17182,
+                            18407,
+                            13,
+                            50464
+                          ],
+                          "temperature": 0.0,
+                          "avg_logprob": -0.797803,
+                          "compression_ratio": 0.724138,
+                          "no_speech_prob": 0.023181
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "the quick brown fox jumps over the lazy dog.\n"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request (invalid or missing field, or a body that is not the expected content type)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "'file' is required",
+                    "type": "invalid_request_error",
+                    "param": "file",
+                    "code": "file_required"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing API key). Plain-text body."
+          },
+          "402": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "message": "You exceeded your current quota, please check your plan and billing details.",
+                    "type": "insufficient_quota",
+                    "param": null,
+                    "code": "insufficient_quota"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden (invalid API key). Plain-text body."
+          },
+          "404": {
+            "description": "Unknown model (model_not_found)"
+          },
+          "413": {
+            "description": "File over 25 MB (file_too_large) or audio over 10 minutes (audio_too_long)"
+          },
+          "429": {
+            "description": "Rate limit reached. Wait at least `Retry-After` seconds, then retry."
+          },
+          "500": {
+            "description": "Internal server error"
+          },
+          "503": {
+            "description": "Model warming up (model_unavailable) or every slot busy (server_busy). Retry with backoff."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI-compatible: send your ZeroGPU API key as `Authorization: Bearer <key>`."
+      }
+    },
+    "schemas": {
+      "CreateTranscriptionRequest": {
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The audio file to transcribe."
+          },
+          "model": {
+            "type": "string",
+            "const": "whisper-tiny",
+            "default": "whisper-tiny",
+            "example": "whisper-tiny",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "language": {
+            "type": "string",
+            "example": "en",
+            "description": "ISO-639-1 code, such as `en`. Detected automatically when omitted."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Text to guide spelling and style, such as names or jargon."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "srt",
+              "verbose_json",
+              "vtt"
+            ],
+            "default": "json",
+            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "description": "Sampling temperature."
+          },
+          "timestamp_granularities[]": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "segment",
+                "word"
+              ]
+            },
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
+          }
+        }
+      },
+      "TranscriptionResponse": {
+        "type": "object",
+        "description": "`json` returns `{ text }`. `verbose_json` adds `task`, `language`, `duration`, and `segments` and/or `words`.",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The transcript."
+          }
+        },
+        "additionalProperties": true
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  }
+}
