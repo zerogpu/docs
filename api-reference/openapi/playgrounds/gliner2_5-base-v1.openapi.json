@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "gliner2-base-v1 playground",
+    "title": "gliner2.5-base-v1 playground",
     "version": "1.0",
-    "description": "Interactive playground for **gliner2-base-v1**.\nModel is always `gliner2-base-v1` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **gliner2.5-base-v1**.\nModel is always `gliner2.5-base-v1` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (NER, JSON, classification).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
   },
   "servers": [
     {
@@ -19,10 +19,10 @@
   "paths": {
     "/responses": {
       "post": {
-        "operationId": "createResponse_gliner2-base-v1",
-        "summary": "gliner2-base-v1: Responses",
+        "operationId": "createResponse_gliner2_5-base-v1",
+        "summary": "gliner2.5-base-v1: Responses",
         "tags": [
-          "gliner2-base-v1"
+          "gliner2.5-base-v1"
         ],
         "requestBody": {
           "required": true,
@@ -38,9 +38,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "gliner2-base-v1",
-                        "default": "gliner2-base-v1",
-                        "example": "gliner2-base-v1",
+                        "const": "gliner2.5-base-v1",
+                        "default": "gliner2.5-base-v1",
+                        "example": "gliner2.5-base-v1",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -52,7 +52,7 @@
                   "summary": "Entity Extraction",
                   "value": {
                     "input": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC.",
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "metadata": {
                       "labels": [
                         "programming language",
@@ -69,7 +69,7 @@
                   "summary": "Structured Data Extraction",
                   "value": {
                     "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "metadata": {
                       "schema": {
                         "contact": [
@@ -89,7 +89,7 @@
                   "summary": "Text Classification",
                   "value": {
                     "input": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful.",
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "metadata": {
                       "schema": {
                         "sentiment": [
@@ -113,54 +113,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
-                },
-                "examples": {
-                  "ner": {
-                    "summary": "Entity Extraction",
-                    "value": {
-                      "entities": {
-                        "programming language": [
-                          "Python 3.11"
-                        ],
-                        "database": [
-                          "PostgreSQL 15"
-                        ],
-                        "technology": [
-                          "Kubernetes",
-                          "Docker",
-                          "gRPC"
-                        ],
-                        "protocol": [
-                          "gRPC"
-                        ]
-                      }
-                    }
-                  },
-                  "json": {
-                    "summary": "Structured Data Extraction",
-                    "value": {
-                      "data": {
-                        "contact": [
-                          {
-                            "name": "John Smith",
-                            "title": "Senior Software Engineer",
-                            "company": "Acme Corp",
-                            "phone": "(555) 123-4567",
-                            "email": "john.smith@acme.com",
-                            "address": null
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "classification": {
-                    "summary": "Text Classification",
-                    "value": {
-                      "classification": {
-                        "sentiment": "positive"
-                      }
-                    }
-                  }
                 }
               }
             }
@@ -203,10 +155,10 @@
     },
     "/chat/completions": {
       "post": {
-        "operationId": "createChatCompletion_gliner2-base-v1",
-        "summary": "gliner2-base-v1: Chat completions",
+        "operationId": "createChatCompletion_gliner2_5-base-v1",
+        "summary": "gliner2.5-base-v1: Chat completions",
         "tags": [
-          "gliner2-base-v1"
+          "gliner2.5-base-v1"
         ],
         "requestBody": {
           "required": true,
@@ -222,9 +174,9 @@
                     "properties": {
                       "model": {
                         "type": "string",
-                        "const": "gliner2-base-v1",
-                        "default": "gliner2-base-v1",
-                        "example": "gliner2-base-v1",
+                        "const": "gliner2.5-base-v1",
+                        "default": "gliner2.5-base-v1",
+                        "example": "gliner2.5-base-v1",
                         "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
                       }
                     }
@@ -235,7 +187,7 @@
                 "ner": {
                   "summary": "Entity Extraction",
                   "value": {
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "messages": [
                       {
                         "role": "user",
@@ -257,7 +209,7 @@
                 "json": {
                   "summary": "Structured Data Extraction",
                   "value": {
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "messages": [
                       {
                         "role": "user",
@@ -282,7 +234,7 @@
                 "classification": {
                   "summary": "Text Classification",
                   "value": {
-                    "model": "gliner2-base-v1",
+                    "model": "gliner2.5-base-v1",
                     "messages": [
                       {
                         "role": "user",
@@ -312,54 +264,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChatCompletionResponse"
-                },
-                "examples": {
-                  "ner": {
-                    "summary": "Entity Extraction",
-                    "value": {
-                      "entities": {
-                        "programming language": [
-                          "Python 3.11"
-                        ],
-                        "database": [
-                          "PostgreSQL 15"
-                        ],
-                        "technology": [
-                          "Kubernetes",
-                          "Docker",
-                          "gRPC"
-                        ],
-                        "protocol": [
-                          "gRPC"
-                        ]
-                      }
-                    }
-                  },
-                  "json": {
-                    "summary": "Structured Data Extraction",
-                    "value": {
-                      "data": {
-                        "contact": [
-                          {
-                            "name": "John Smith",
-                            "title": "Senior Software Engineer",
-                            "company": "Acme Corp",
-                            "phone": "(555) 123-4567",
-                            "email": "john.smith@acme.com",
-                            "address": null
-                          }
-                        ]
-                      }
-                    }
-                  },
-                  "classification": {
-                    "summary": "Text Classification",
-                    "value": {
-                      "classification": {
-                        "sentiment": "positive"
-                      }
-                    }
-                  }
                 }
               }
             }
@@ -412,9 +316,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "gliner2-base-v1",
-            "default": "gliner2-base-v1",
-            "example": "gliner2-base-v1",
+            "const": "gliner2.5-base-v1",
+            "default": "gliner2.5-base-v1",
+            "example": "gliner2.5-base-v1",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "input": {
@@ -426,7 +330,7 @@
           },
           "metadata": {
             "type": "object",
-            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` — extract entities for the given `labels`.\n- `json` — extract structured fields defined by a `schema`.\n- `classification` — assign labels from candidate sets defined by a `schema`.",
+            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` \u2014 extract entities for the given `labels`.\n- `json` \u2014 extract structured fields defined by a `schema`.\n- `classification` \u2014 assign labels from candidate sets defined by a `schema`.",
             "additionalProperties": true,
             "properties": {
               "usecase": {
@@ -457,7 +361,7 @@
                 "minimum": 0,
                 "maximum": 1,
                 "default": 0.5,
-                "description": "Minimum confidence score (0–1) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
+                "description": "Minimum confidence score (0\u20131) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
               },
               "schema": {
                 "type": "object",
@@ -489,9 +393,9 @@
         "properties": {
           "model": {
             "type": "string",
-            "const": "gliner2-base-v1",
-            "default": "gliner2-base-v1",
-            "example": "gliner2-base-v1",
+            "const": "gliner2.5-base-v1",
+            "default": "gliner2.5-base-v1",
+            "example": "gliner2.5-base-v1",
             "description": "Model identifier (fixed for this playground). Use request examples to change use cases."
           },
           "messages": {
@@ -503,7 +407,7 @@
           },
           "metadata": {
             "type": "object",
-            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` — extract entities for the given `labels`.\n- `json` — extract structured fields defined by a `schema`.\n- `classification` — assign labels from candidate sets defined by a `schema`.",
+            "description": "Use-case options for the model. Three use cases are supported:\n- `ner` \u2014 extract entities for the given `labels`.\n- `json` \u2014 extract structured fields defined by a `schema`.\n- `classification` \u2014 assign labels from candidate sets defined by a `schema`.",
             "additionalProperties": true,
             "properties": {
               "usecase": {
@@ -534,7 +438,7 @@
                 "minimum": 0,
                 "maximum": 1,
                 "default": 0.5,
-                "description": "Minimum confidence score (0–1) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
+                "description": "Minimum confidence score (0\u20131) an entity must reach to be returned (used with `ner`). Lower values surface more, lower-confidence matches."
               },
               "schema": {
                 "type": "object",

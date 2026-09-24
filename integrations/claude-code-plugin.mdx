@@ -294,7 +294,7 @@ Zero-shot classification against an arbitrary list of candidate labels you suppl
 
 Schema-driven, multi-axis classification. You define each category and its allowed labels, and the model returns one chosen label per category.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu classify_structured`
 - **When Claude auto-invokes:** "classify by sentiment and topic", any request that names multiple classification dimensions with explicit label sets.
 
@@ -326,7 +326,7 @@ Schema-driven, multi-axis classification. You define each category and its allow
 
 Custom-label named-entity recognition. You define the entity labels; the model finds matching spans with confidence scores.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu extract_entities`
 - **When Claude auto-invokes:** "extract all people, organizations, and locations from this", "find every product mention."
 
@@ -364,7 +364,7 @@ Custom-label named-entity recognition. You define the entity labels; the model f
 
 Extract personally identifiable information entities, grouped by category, **without modifying the source text**. Use when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
 
-- **Model:** `gliner-multi-pii-v1`
+- **Model:** `gliner2.5-multi-v1`
 - **Wraps:** `zerogpu extract_pii`
 - **When Claude auto-invokes:** "find all PII", "what personal info is in this?", "list emails/phones/names."
 
@@ -402,7 +402,7 @@ If you want to **mask** PII inline rather than extract it, use `/zerogpu-router:
 
 Detect PII and replace each span in-line with a `[LABEL]` placeholder. Use this before sharing or logging sensitive text, or before forwarding user input to another LLM that you don't want to expose raw PII to.
 
-- **Model:** `gliner-multi-pii-v1` (with `mask: "label"`)
+- **Model:** `gliner2.5-multi-v1` (with `mask: "label"`)
 - **Wraps:** `zerogpu redact_pii`
 - **When Claude auto-invokes:** "redact", "scrub", "mask", "anonymize", or "sanitize this for sharing."
 
@@ -424,7 +424,7 @@ Note that `12345` is not masked: only spans the model recognizes as PII are repl
 
 Pull specific named fields out of free text into a structured JSON object, defined by a per-field schema. Each field is declared as `name::type::description`.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu extract_json`
 - **When Claude auto-invokes:** "extract the contact info as JSON", "parse this invoice", "pull these fields out."
 

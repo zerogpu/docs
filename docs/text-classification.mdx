@@ -3,7 +3,7 @@ title: "Text Classification"
 description: "Edge models that map text to labels, IAB taxonomy, and audience signals."
 ---
 
-Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech plus a general zero-shot classifier where you supply the candidate labels. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech, a general zero-shot classifier where you supply the candidate labels, and the schema-based GLiNER2.5 models, which classify, extract entities, and fill a JSON schema from the same request. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
 | Model | Input /1M | Output /1M | Max tokens |
 | --- | ---: | ---: | ---: |
@@ -12,6 +12,8 @@ Text classification models map a passage to predefined labels or categories. Zer
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 100 |
 | <a href="/api-reference/models/deberta-v3-small" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/nli-deberta-v3-small/icons8-microsoft-96.png" alt="deberta-v3-small" width="22" height="22" noZoom /> <code>deberta-v3-small</code></a> | $0.02 | $0.05 | 400 |
 | <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.02 | $0.05 | 400 |
+| <a href="/api-reference/models/gliner2-5-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-base-v1" width="22" height="22" noZoom /> <code>gliner2.5-base-v1</code></a> | $0.02 | $0.05 | — |
+| <a href="/api-reference/models/gliner2-5-multi-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-multi-v1" width="22" height="22" noZoom /> <code>gliner2.5-multi-v1</code></a> | $0.02 | $0.05 | — |
 
 ## zlm-v1-iab-classify-edge
 
@@ -334,3 +336,357 @@ The signals arrive as a JSON string in the output text. Parsed:
   }
 }
 ```
+
+## gliner2.5-base-v1
+
+> Fastino's GLiNER2.5 Base is an English schema-based information extraction model built on DeBERTa-v3-base. A single model covers entity extraction, text classification, structured record extraction, relation extraction, and span-level attributes — you supply a label set or a schema at inference time instead of fine-tuning one model per task. It fits GTM workflows such as parsing inbound leads, extracting company and contact details, classifying sales conversations, identifying relationships between people and companies, structuring CRM notes, and enriching customer or account data.
+
+**References:** [Model docs](https://huggingface.co/fastino/gliner2.5-base-v1) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
+
+### Entity Extraction
+
+Set `metadata.usecase` to `ner` and pass your own `labels` to extract named entities. `threshold` sets the minimum confidence for a span to be returned.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC.",
+  "model": "gliner2.5-base-v1",
+  "metadata": {
+    "labels": [
+      "programming language",
+      "database",
+      "technology",
+      "protocol"
+    ],
+    "usecase": "ner",
+    "threshold": 0.3
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-base-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC."
+    }
+  ],
+  "metadata": {
+    "labels": [
+      "programming language",
+      "database",
+      "technology",
+      "protocol"
+    ],
+    "usecase": "ner",
+    "threshold": 0.3
+  }
+}'
+```
+
+</CodeGroup>
+
+### Structured Data Extraction
+
+Set `metadata.usecase` to `json` and define a `schema` of `field::type::description` entries to pull structured records out of free text.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
+  "model": "gliner2.5-base-v1",
+  "metadata": {
+    "schema": {
+      "contact": [
+        "name::str::Full name",
+        "title::str::Job title",
+        "company::str::Company name",
+        "phone::str::Phone number",
+        "email::str::Email address",
+        "address::str::Office address"
+      ]
+    },
+    "usecase": "json"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-base-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105"
+    }
+  ],
+  "metadata": {
+    "schema": {
+      "contact": [
+        "name::str::Full name",
+        "title::str::Job title",
+        "company::str::Company name",
+        "phone::str::Phone number",
+        "email::str::Email address",
+        "address::str::Office address"
+      ]
+    },
+    "usecase": "json"
+  }
+}'
+```
+
+</CodeGroup>
+
+### Text Classification
+
+Set `metadata.usecase` to `classification` and supply a `schema` mapping each axis to its allowed labels.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful.",
+  "model": "gliner2.5-base-v1",
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-base-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful."
+    }
+  ],
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+</CodeGroup>
+
+## gliner2.5-multi-v1
+
+> Fastino's GLiNER2.5 Multi is a 287M-parameter multilingual information extraction model built on mDeBERTa-v3-base. It supports zero-shot named entity recognition, text classification, and structured JSON extraction across multiple languages, so it can pull people, organizations, locations, attributes, and other custom entities out of text without task-specific retraining.
+
+**References:** [Model docs](https://huggingface.co/fastino/gliner2.5-multi-v1) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
+
+### Entity Extraction
+
+Set `metadata.usecase` to `ner` and pass your own `labels` to extract named entities. `threshold` sets the minimum confidence for a span to be returned.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC.",
+  "model": "gliner2.5-multi-v1",
+  "metadata": {
+    "labels": [
+      "programming language",
+      "database",
+      "technology",
+      "protocol"
+    ],
+    "usecase": "ner",
+    "threshold": 0.3
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-multi-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The application is built with Python 3.11 and uses PostgreSQL 15 for storage. It runs on Kubernetes with Docker containers and communicates via gRPC."
+    }
+  ],
+  "metadata": {
+    "labels": [
+      "programming language",
+      "database",
+      "technology",
+      "protocol"
+    ],
+    "usecase": "ner",
+    "threshold": 0.3
+  }
+}'
+```
+
+</CodeGroup>
+
+### Structured Data Extraction
+
+Set `metadata.usecase` to `json` and define a `schema` of `field::type::description` entries to pull structured records out of free text.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105",
+  "model": "gliner2.5-multi-v1",
+  "metadata": {
+    "schema": {
+      "contact": [
+        "name::str::Full name",
+        "title::str::Job title",
+        "company::str::Company name",
+        "phone::str::Phone number",
+        "email::str::Email address",
+        "address::str::Office address"
+      ]
+    },
+    "usecase": "json"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-multi-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Best regards, John Smith, Senior Software Engineer at Acme Corp. Phone: (555) 123-4567, Email: john.smith@acme.com, Office: 123 Main Street, Suite 400, San Francisco, CA 94105"
+    }
+  ],
+  "metadata": {
+    "schema": {
+      "contact": [
+        "name::str::Full name",
+        "title::str::Job title",
+        "company::str::Company name",
+        "phone::str::Phone number",
+        "email::str::Email address",
+        "address::str::Office address"
+      ]
+    },
+    "usecase": "json"
+  }
+}'
+```
+
+</CodeGroup>
+
+### Text Classification
+
+Set `metadata.usecase` to `classification` and supply a `schema` mapping each axis to its allowed labels.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful.",
+  "model": "gliner2.5-multi-v1",
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-multi-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful."
+    }
+  ],
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+</CodeGroup>

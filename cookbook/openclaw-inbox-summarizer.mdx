@@ -233,7 +233,7 @@ Also btw the mobile app just spins forever on the loading screen. Thanks, Daniel
 
 The forward matches the rule you stored, so the assistant runs the three ZeroGPU skills in order on its own, each on a nano model. You don't send these; they are the tool calls it makes behind the scenes:
 
-1. **`redact-pii`** (`gliner-multi-pii-v1`) masks the personal data before anything else touches the text:
+1. **`redact-pii`** (`gliner2.5-multi-v1`) masks the personal data before anything else touches the text:
 
 ```
 Hey, I've tried logging in ... My number is [PHONE_NUMBER] if it's faster to call.
@@ -248,7 +248,7 @@ Customer cannot log in since this morning ("session expired") despite two passwo
 resets, and the mobile app hangs on load. Time-sensitive: client demo at 2pm.
 ```
 
-3. **`classify-structured`** (`gliner2-base-v1`) tags it against your label schema:
+3. **`classify-structured`** (`gliner2.5-base-v1`) tags it against your label schema:
 
 ```json
 { "topic": "account", "urgency": "high" }

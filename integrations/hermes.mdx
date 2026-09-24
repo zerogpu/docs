@@ -107,7 +107,7 @@ hermes -z "Use the ZeroGPU tools to pull the people, organizations, and funding 
     "organization": ["Index Ventures"],
     "funding round": ["40M dollar Series A"]
   },
-  "model": "gliner2-base-v1",
+  "model": "gliner2.5-base-v1",
   "usage": { "input_tokens": 33, "output_tokens": 52 },
   "savings": {
     "zerogpu_cost_usd": 0.00000326,
@@ -126,12 +126,11 @@ Any ZeroGPU text-generation model with at least 64K context works as the agent's
 
 | Model | Context | Input / 1M | Output / 1M | Use it when |
 |---|---|---|---|---|
-| `deepseek-v4.1-flash` | 1,048,576 | $0.14 | $0.57 | Default. Agentic work with tool calling. |
-| `glm-5.2` | 262,144 | $1.10 | $3.50 | Hardest reasoning, long multi-step plans. |
+| `deepseek-v4.1-flash` | 1,048,576 | $0.30 | $1.20 | Default. Agentic work with tool calling. |
 | `gpt-oss-120b` | 131,072 | $0.15 | $0.60 | Reasoning and function calling at mid cost. |
 | `qwen3-30b-a3b-fp8` | 32,768 | $0.10 | $0.45 | Below the 64K minimum. Not usable as the agent model. |
 
-Switch mid-session with `/model custom:ZeroGPU:glm-5.2`.
+Switch mid-session with `/model custom:ZeroGPU:gpt-oss-120b`.
 
 ### The fourteen MCP tools
 
@@ -144,11 +143,11 @@ Hermes registers MCP tools as `mcp__<server>__<tool>`. Because this server's too
 | `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` and variants | `text` |
 | `zerogpu_classify_domain` | `zlm-v1-iab-domain-classifier` | `domain` |
 | `zerogpu_classify_zero_shot` | `deberta-v3-small` | `text`, `labels` |
-| `zerogpu_classify_structured` | `gliner2-base-v1` | `text`, `schema` |
-| `zerogpu_extract_entities` | `gliner2-base-v1` | `text`, `labels` |
-| `zerogpu_extract_json` | `gliner2-base-v1` | `text`, `schema` |
-| `zerogpu_extract_pii` | `gliner-multi-pii-v1` | `text` |
-| `zerogpu_redact_pii` | `gliner-multi-pii-v1` | `text` |
+| `zerogpu_classify_structured` | `gliner2.5-base-v1` | `text`, `schema` |
+| `zerogpu_extract_entities` | `gliner2.5-base-v1` | `text`, `labels` |
+| `zerogpu_extract_json` | `gliner2.5-base-v1` | `text`, `schema` |
+| `zerogpu_extract_pii` | `gliner2.5-multi-v1` | `text` |
+| `zerogpu_redact_pii` | `gliner2.5-multi-v1` | `text` |
 | `zerogpu_moderate` | `zlm-v1-moderation-edge` | `input` |
 | `zerogpu_embed` | `all-minilm-l6-v2` or `bge-small-en-v1.5` | `input` |
 | `zerogpu_generate_followups` | `llama-3.1-8b-instruct-fast` | `text` |
@@ -214,7 +213,7 @@ Skills are also auto-discovered from the skills directory, so dropping a folder 
 
 **The agent's model fails to authenticate while the MCP tools work.** These are two different endpoints with two different credentials. `api.zerogpu.ai` reads `providers.ZeroGPU.key_env` from `.env`; `mcp.zerogpu.ai` reads the key in the MCP URL or header. Fix whichever one is failing.
 
-**Hermes rejects the model at startup.** The context window is under 64,000 tokens. Use `deepseek-v4.1-flash`, `glm-5.2`, or `gpt-oss-120b`, and set `context_length` explicitly if auto-detection fails.
+**Hermes rejects the model at startup.** The context window is under 64,000 tokens. Use `deepseek-v4.1-flash` or `gpt-oss-120b`, and set `context_length` explicitly if auto-detection fails.
 
 **A tool call returns an error inside a normal-looking result.** ZeroGPU MCP failures come back as `isError: true` in the payload, not as a transport error. Check the tool output, not just the HTTP status.
 

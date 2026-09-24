@@ -810,8 +810,8 @@
               "gpt-5.6-luna",
               "gpt-4.1-mini",
               "deberta-v3-small",
-              "gliner2-base-v1",
-              "gliner-multi-pii-v1",
+              "gliner2.5-base-v1",
+              "gliner2.5-multi-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
@@ -849,7 +849,7 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Optional model-specific parameters, passed through to the model. For example, PII models accept `mask` and `usecase`. See the relevant [model page](/api-reference/models) for supported keys."
+            "description": "Optional model-specific parameters, passed through to the model. For example, the GLiNER2.5 models accept `usecase` together with `labels` or `schema`. See the relevant [model page](/api-reference/models) for supported keys."
           }
         }
       },
@@ -870,15 +870,14 @@
               "LFM2.5-1.2B-Thinking",
               "gpt-oss-120b",
               "qwen3-30b-a3b-fp8",
-              "glm-5.2",
               "deepseek-v4.1-flash",
               "glm-5.3-flash",
               "gpt-5.4-nano",
               "gpt-5.6-luna",
               "gpt-4.1-mini",
               "deberta-v3-small",
-              "gliner2-base-v1",
-              "gliner-multi-pii-v1",
+              "gliner2.5-base-v1",
+              "gliner2.5-multi-v1",
               "zlm-v1-iab-classify-edge",
               "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
@@ -897,7 +896,7 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Optional model-specific parameters, passed through to the model. For example, PII models accept `mask` and `usecase`. See the relevant [model page](/api-reference/models) for supported keys."
+            "description": "Optional model-specific parameters, passed through to the model. For example, the GLiNER2.5 models accept `usecase` together with `labels` or `schema`. See the relevant [model page](/api-reference/models) for supported keys."
           }
         }
       },
