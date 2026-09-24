@@ -190,7 +190,7 @@ Returns per-label scores.
 
 Classify text along several labeled axes at once, for example `{ "sentiment": ["positive","negative"], "topic": ["tech","sports","finance"] }`. Use this instead of `zerogpu_classify_zero_shot` when the labels are grouped into categories rather than a flat list.
 
-- **Backed by:** `gliner2-base-v1`.
+- **Backed by:** `gliner2.5-base-v1`.
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
@@ -213,7 +213,7 @@ Returns one chosen label per axis.
 
 Pull named entities out of text: people, places, organizations, dates, products, monetary amounts, or any custom entity types you name.
 
-- **Backed by:** `gliner2-base-v1`.
+- **Backed by:** `gliner2.5-base-v1`.
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
@@ -234,7 +234,7 @@ Returns an entities map keyed by label.
 
 Extract structured fields out of unstructured text into a JSON object: contact info from a signature, fields from a resume, line items from an invoice, specs from a product page, ticket details. Deterministic on the schema, faster and cheaper than hand-parsing.
 
-- **Backed by:** `gliner2-base-v1` (JSON mode).
+- **Backed by:** `gliner2.5-base-v1` (JSON mode).
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
@@ -257,7 +257,7 @@ Returns the extracted object, grouped exactly as the schema declares.
 
 Redact, mask, scrub, or anonymize personally identifiable information in text: names, phone numbers, emails, addresses, SSN, credit cards, account numbers, dates of birth. Use this before sharing or logging sensitive text, or before forwarding user input to another model you don't want to expose raw PII to.
 
-- **Backed by:** `gliner-multi-pii-v1`.
+- **Backed by:** `gliner2.5-multi-v1`.
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |
@@ -274,7 +274,7 @@ Returns the redacted text.
 
 Detect what PII is present in text and return it grouped by category (identity, contact, financial, medical, credentials) without modifying the source. Use this when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
 
-- **Backed by:** `gliner-multi-pii-v1`.
+- **Backed by:** `gliner2.5-multi-v1`.
 
 | Name | Required | Default | Description |
 | --- | --- | --- | --- |

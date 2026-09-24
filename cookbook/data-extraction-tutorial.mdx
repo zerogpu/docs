@@ -3,7 +3,7 @@ title: "🎓 Resume & profile extraction"
 description: "Step-by-step guide with example dataset. Text-only extraction, no OCR."
 ---
 
-This tutorial walks through **three production-style use cases** for structured data extraction with the [gliner2-base-v1](/api-reference/models/gliner2-base-v1) model. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
+This tutorial walks through **three production-style use cases** for structured data extraction with the [gliner2.5-base-v1](/api-reference/models/gliner2-5-base-v1) model. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
 
 <Note>
 	All sample people and companies in the [example
@@ -23,7 +23,7 @@ This tutorial walks through **three production-style use cases** for structured 
 | 2    | Scraped profile text | `profile` JSON (headline, role, location, …) |
 | 3    | Job description      | Labeled skill/tool spans (`ner`)             |
 
-**Model (steps 1-3):** `gliner2-base-v1`  
+**Model (steps 1-3):** `gliner2.5-base-v1`  
 **Endpoint:** `POST https://api.zerogpu.ai/v1/responses`
 
 Get your **API key** and **project ID** from the [dashboard](https://zerogpu.ai). See [Authentication](/docs/platform#authentication).
@@ -54,7 +54,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
   --header 'x-api-key: YOUR_API_KEY' \
   --header 'x-project-id: YOUR_PROJECT_ID' \
   --data '{
-    "model": "gliner2-base-v1",
+    "model": "gliner2.5-base-v1",
     "input": "ALEX RIVERA\nSan Francisco, CA | alex.rivera@example-mail.io | (415) 555-0198\n\nSUMMARY\nBackend engineer with 7 years building APIs and data pipelines...",
     "metadata": {
       "usecase": "json",
@@ -89,7 +89,7 @@ with open("resumes.jsonl", encoding="utf-8") as f:
     record = json.loads(f.readline())
 
 payload = {
-    "model": "gliner2-base-v1",
+    "model": "gliner2.5-base-v1",
     "input": record["text"],
     "metadata": {
         "usecase": "json",
@@ -150,7 +150,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
   --header 'x-api-key: YOUR_API_KEY' \
   --header 'x-project-id: YOUR_PROJECT_ID' \
   --data '{
-    "model": "gliner2-base-v1",
+    "model": "gliner2.5-base-v1",
     "input": "We are hiring a Backend Engineer to design REST APIs in Python, deploy on AWS EKS, and maintain PostgreSQL databases.",
     "metadata": {
       "usecase": "ner",
@@ -163,7 +163,7 @@ curl --location 'https://api.zerogpu.ai/v1/responses' \
 ```python Python
 # Use job_posts.jsonl record + same headers as Step 1
 payload = {
-    "model": "gliner2-base-v1",
+    "model": "gliner2.5-base-v1",
     "input": record["text"],
     "metadata": {
         "usecase": "ner",
@@ -198,7 +198,7 @@ For many files at once, combine this with the [Batch API](/api-reference/create-
 
 ## Optional: PII on inbound text
 
-Before storing user-submitted resumes, run PII extraction with the [gliner-multi-pii-v1](/api-reference/models/gliner-multi-pii-v1) model and `extract-pii` or `redact`.
+Before storing user-submitted resumes, run PII extraction with the [gliner2.5-multi-v1](/api-reference/models/gliner2-5-multi-v1) model and `extract-pii` or `redact`.
 
 ## Production tips
 
@@ -211,9 +211,9 @@ Before storing user-submitted resumes, run PII extraction with the [gliner-multi
 
 <CardGroup cols={2}>
 	<Card
-		title="gliner2-base-v1 model"
+		title="gliner2.5-base-v1 model"
 		icon="book"
-		href="/api-reference/models/gliner2-base-v1"
+		href="/api-reference/models/gliner2-5-base-v1"
 	>
 		API reference and schema examples for json and NER extraction.
 	</Card>
@@ -232,9 +232,9 @@ Before storing user-submitted resumes, run PII extraction with the [gliner-multi
 		Long-form walkthrough in the cookbook repo.
 	</Card>
 	<Card
-		title="gliner2-base-v1 playground"
+		title="gliner2.5-base-v1 playground"
 		icon="play"
-		href="/api-reference/models/gliner2-base-v1"
+		href="/api-reference/models/gliner2-5-base-v1"
 	>
 		Try schemas interactively in the model catalog.
 	</Card>

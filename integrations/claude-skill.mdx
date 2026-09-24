@@ -73,7 +73,7 @@ Redact the PII in this text using ZeroGPU:
 "Email John Smith at john@acme.com about invoice 12345."
 ```
 
-Claude routes the request to ZeroGPU's PII model (`gliner-multi-pii-v1`) through the OpenAI-compatible API. If your API key isn't available yet, Claude asks for it first. Once authenticated, it makes the call and returns the model's actual output:
+Claude routes the request to ZeroGPU's PII model (`gliner2.5-multi-v1`) through the OpenAI-compatible API. If your API key isn't available yet, Claude asks for it first. Once authenticated, it makes the call and returns the model's actual output:
 
 ```text
 Email [PERSON] at [EMAIL] about invoice 12345.
@@ -132,7 +132,7 @@ Classify this with ZeroGPU as positive, negative, or neutral:
 { "label": "positive", "scores": { "positive": 0.94, "neutral": 0.04, "negative": 0.02 } }
 ```
 
-For multi-axis classification (for example sentiment **and** topic at once), Claude routes to `gliner2-base-v1` and returns one chosen label per axis:
+For multi-axis classification (for example sentiment **and** topic at once), Claude routes to `gliner2.5-base-v1` and returns one chosen label per axis:
 
 ```text
 Classify this support ticket by sentiment and topic with ZeroGPU:
@@ -249,7 +249,7 @@ should be scared of what I might do next."
 
 Find personally identifiable information and return it as structured data, without altering the source text.
 
-- **Model:** `gliner-multi-pii-v1`
+- **Model:** `gliner2.5-multi-v1`
 - **Triggers on:** "find all PII", "what personal info is in this?", "detect PII."
 
 ```text
@@ -273,7 +273,7 @@ To **mask** PII inline instead of listing it, ask Claude to redact: the same mod
 
 Custom-label named-entity recognition: you name the entity types, the model finds the spans.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Triggers on:** "extract all people, organizations, and locations", "find every product mention."
 
 ```text
@@ -296,7 +296,7 @@ Extract the people, organizations, and locations from this with ZeroGPU:
 
 Pull specific named fields out of free text into a structured object, defined by a schema Claude builds from your request.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Triggers on:** "extract the contact info as JSON", "parse this into fields."
 
 ```text
@@ -374,14 +374,14 @@ Billing | High
 | --- | --- | --- |
 | Summarize | `llama-3.1-8b-instruct-fast` | "Summarize this with ZeroGPU: ..." |
 | Zero-shot classify | `deberta-v3-small` | "Classify this as positive, negative, or neutral with ZeroGPU: ..." |
-| Multi-axis classify | `gliner2-base-v1` | "Classify by sentiment and topic with ZeroGPU: ..." |
+| Multi-axis classify | `gliner2.5-base-v1` | "Classify by sentiment and topic with ZeroGPU: ..." |
 | IAB classify | `zlm-v1-iab-classify-edge` | "What IAB category is this, using ZeroGPU? ..." |
 | Domain classify | `zlm-v1-iab-domain-classifier` | "Classify this domain with ZeroGPU: ..." |
 | Moderate content | `zlm-v1-moderation-edge` | "Moderate this with ZeroGPU: ..." |
-| Detect PII | `gliner-multi-pii-v1` | "Detect PII in this text with ZeroGPU: ..." |
-| Redact PII | `gliner-multi-pii-v1` | "Redact the PII in this with ZeroGPU: ..." |
-| Extract entities | `gliner2-base-v1` | "Extract the people and organizations with ZeroGPU: ..." |
-| Extract JSON | `gliner2-base-v1` | "Extract the name, email, and phone as JSON with ZeroGPU: ..." |
+| Detect PII | `gliner2.5-multi-v1` | "Detect PII in this text with ZeroGPU: ..." |
+| Redact PII | `gliner2.5-multi-v1` | "Redact the PII in this with ZeroGPU: ..." |
+| Extract entities | `gliner2.5-base-v1` | "Extract the people and organizations with ZeroGPU: ..." |
+| Extract JSON | `gliner2.5-base-v1` | "Extract the name, email, and phone as JSON with ZeroGPU: ..." |
 | Translate / reply | `LFM2.5-1.2B-Instruct` | "Reply to this with ZeroGPU: ..." |
 | Reason / triage | `LFM2.5-1.2B-Thinking` | "Triage this ticket with ZeroGPU: ..." |
 

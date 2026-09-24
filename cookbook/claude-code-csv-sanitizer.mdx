@@ -68,7 +68,7 @@ If `status` reports you're not signed in, run `/zerogpu-router:signin` again bef
 
 ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will redact PII from a single support comment as an example, so you can see exactly what the model gives back before pointing it at a whole file.
 
-The `redact-pii` skill detects PII spans and replaces each one in-line with an uppercase `[LABEL]` placeholder. It routes to `gliner-multi-pii-v1` with `mask: "label"`.
+The `redact-pii` skill detects PII spans and replaces each one in-line with an uppercase `[LABEL]` placeholder. It routes to `gliner2.5-multi-v1` with `mask: "label"`.
 
 ```text
 /zerogpu-router:redact-pii "Spoke to Sarah Chen but my refund never came. Call me at +1 415-555-0182 or email dana.morris@gmail.com."

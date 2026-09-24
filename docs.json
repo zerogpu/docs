@@ -69,7 +69,6 @@
               "docs/text-classification",
               "docs/moderation",
               "docs/embeddings",
-              "docs/pii",
               "docs/ad-tech"
             ]
           },
@@ -140,15 +139,14 @@
                 "pages": [
                   "api-reference/models/gpt-oss-120b",
                   "api-reference/models/qwen3-30b-a3b-fp8",
-                  "api-reference/models/glm-5-2",
                   "api-reference/models/deepseek-v4-1-flash",
                   "api-reference/models/glm-5-3-flash",
                   "api-reference/models/gpt-5-4-nano",
                   "api-reference/models/gpt-5-6-luna",
                   "api-reference/models/gpt-4-1-mini",
                   "api-reference/models/deberta-v3-small",
-                  "api-reference/models/gliner-multi-pii-v1",
-                  "api-reference/models/gliner2-base-v1",
+                  "api-reference/models/gliner2-5-base-v1",
+                  "api-reference/models/gliner2-5-multi-v1",
                   "api-reference/models/lfm2-5-1-2b-instruct",
                   "api-reference/models/lfm2-5-1-2b-thinking",
                   "api-reference/models/llama-3-1-8b-instruct-fast",
@@ -285,6 +283,22 @@
     }
   },
   "redirects": [
+    {
+      "source": "/docs/pii",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/gliner-multi-pii-v1",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/gliner2-base-v1",
+      "destination": "/docs/model-catalog"
+    },
+    {
+      "source": "/api-reference/models/glm-5-2",
+      "destination": "/docs/text-generation"
+    },
     {
       "source": "/sdks/:slug",
       "destination": "/integrations/sdk/:slug"

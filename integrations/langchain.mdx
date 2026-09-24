@@ -269,7 +269,7 @@ print(tool.invoke({
 Multi-axis classification driven by a labelled schema. You define each axis and its allowed labels; the model returns one chosen label per axis in a single call.
 
 - **Tool name:** `zerogpu_classify_structured`
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Returns:** parsed JSON (`dict`) mapping each axis to its chosen label
 
 | Argument | Required | Default | Description |
@@ -300,7 +300,7 @@ print(tool.invoke({
 Custom-label named-entity recognition. You define the entity types; the model finds matching spans with confidence scores.
 
 - **Tool name:** `zerogpu_extract_entities`
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Returns:** parsed JSON (`list`) of matched spans grouped by label
 
 | Argument | Required | Default | Description |
@@ -334,7 +334,7 @@ print(tool.invoke({
 Detect and extract personally identifiable information, grouped by category, without modifying the source text. Use when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
 
 - **Tool name:** `zerogpu_extract_pii`
-- **Model:** `gliner-multi-pii-v1`
+- **Model:** `gliner2.5-multi-v1`
 - **Returns:** parsed JSON (`list`) of detected PII entities
 
 | Argument | Required | Default | Description |
@@ -366,7 +366,7 @@ print(tool.invoke({
 Detect PII and replace each span inline with a `[LABEL]` placeholder (the tool calls the PII model with `mask: "label"`). Use it before logging, sharing, or forwarding text to another LLM you don't want to expose raw PII to.
 
 - **Tool name:** `zerogpu_redact_pii`
-- **Model:** `gliner-multi-pii-v1` (with `mask: "label"`)
+- **Model:** `gliner2.5-multi-v1` (with `mask: "label"`)
 - **Returns:** `str` (the redacted text)
 
 | Argument | Required | Default | Description |
@@ -393,7 +393,7 @@ Note that `12345` is not masked: only spans the model recognizes as PII are repl
 Schema-driven JSON extraction: pull named fields out of free text into a structured object. Each field is declared as `name::type::description`, grouped under a group name.
 
 - **Tool name:** `zerogpu_extract_json`
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Returns:** parsed JSON (`dict`) with the extracted fields
 
 | Argument | Required | Default | Description |
@@ -524,11 +524,11 @@ Every tool at a glance.
 | `ZeroGPUClassifyIABTool` | `zerogpu_classify_iab` | `zlm-v1-iab-classify-edge` | IAB taxonomy classification | JSON |
 | `ZeroGPUClassifyIABEnrichedTool` | `zerogpu_classify_iab_enriched` | `zlm-v2-iab-classify-edge-enriched` | IAB + topics / keywords / intent | JSON |
 | `ZeroGPUClassifyZeroShotTool` | `zerogpu_classify_zero_shot` | `deberta-v3-small` | Zero-shot vs. custom labels | JSON |
-| `ZeroGPUClassifyStructuredTool` | `zerogpu_classify_structured` | `gliner2-base-v1` | Multi-axis schema classification | JSON |
-| `ZeroGPUExtractEntitiesTool` | `zerogpu_extract_entities` | `gliner2-base-v1` | Custom-label NER | JSON |
-| `ZeroGPUExtractPIITool` | `zerogpu_extract_pii` | `gliner-multi-pii-v1` | Extract PII entities | JSON |
-| `ZeroGPURedactPIITool` | `zerogpu_redact_pii` | `gliner-multi-pii-v1` (mask: label) | Mask PII inline with `[LABEL]` | `str` |
-| `ZeroGPUExtractJSONTool` | `zerogpu_extract_json` | `gliner2-base-v1` | Schema-driven JSON extraction | JSON |
+| `ZeroGPUClassifyStructuredTool` | `zerogpu_classify_structured` | `gliner2.5-base-v1` | Multi-axis schema classification | JSON |
+| `ZeroGPUExtractEntitiesTool` | `zerogpu_extract_entities` | `gliner2.5-base-v1` | Custom-label NER | JSON |
+| `ZeroGPUExtractPIITool` | `zerogpu_extract_pii` | `gliner2.5-multi-v1` | Extract PII entities | JSON |
+| `ZeroGPURedactPIITool` | `zerogpu_redact_pii` | `gliner2.5-multi-v1` (mask: label) | Mask PII inline with `[LABEL]` | `str` |
+| `ZeroGPUExtractJSONTool` | `zerogpu_extract_json` | `gliner2.5-base-v1` | Schema-driven JSON extraction | JSON |
 | `ZeroGPUToolkit` | - | - | Bundles all eleven tools behind one shared client | `list[BaseTool]` |
 
 ## Troubleshooting

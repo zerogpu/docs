@@ -82,7 +82,7 @@ Reply:
 ```text
 Email [PERSON] at [EMAIL] about invoice 12345.
 
-model: gliner-multi-pii-v1 · 2 spans masked
+model: gliner2.5-multi-v1 · 2 spans masked
 ```
 
 The raw PII never reaches your primary reasoning model - the small model does the masking, and only the scrubbed text comes back.
@@ -277,7 +277,7 @@ model: deberta-v3-small · 61 tokens in
 
 Schema-driven, multi-axis classification. You define each category and its allowed labels, and the model returns one chosen label per category.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu classify_structured`
 - **Auto-invokes on:** "classify by sentiment and topic", any request that names multiple classification dimensions with explicit label sets.
 
@@ -306,7 +306,7 @@ The agent synthesizes a schema such as `{"sentiment":["positive","negative","neu
 
 Custom-label named-entity recognition. You define the entity labels; the model finds matching spans with confidence scores.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu extract_entities`
 - **Auto-invokes on:** "extract all people, organizations, and locations", "find every product mention."
 
@@ -338,7 +338,7 @@ extract the people, organizations, and locations from:
 
 Pull specific named fields out of free text into a structured JSON object, defined by a per-field schema. Each field is declared as `name::type::description`.
 
-- **Model:** `gliner2-base-v1`
+- **Model:** `gliner2.5-base-v1`
 - **Wraps:** `zerogpu extract_json`
 - **Auto-invokes on:** "extract the contact info as JSON", "parse this invoice", "pull these fields out."
 
@@ -374,7 +374,7 @@ The agent builds a schema like `{"contact":["name::str::Full name","email::str::
 
 Extract personally identifiable information entities, grouped by category, **without modifying the source text**. Use it when you need structured data about PII (for redaction policies, audits, or downstream tooling) rather than a masked version.
 
-- **Model:** `gliner-multi-pii-v1`
+- **Model:** `gliner2.5-multi-v1`
 - **Wraps:** `zerogpu extract_pii`
 - **Auto-invokes on:** "find all PII", "what personal info is in this?", "list emails, phones, and names."
 
@@ -422,7 +422,7 @@ To mask PII in-line rather than extract it, use `redact-pii`.
 
 Detect PII and replace each span in-line with a `[LABEL]` placeholder. Use it before sharing or logging sensitive text, or before forwarding user input to another model you don't want to expose raw PII to.
 
-- **Model:** `gliner-multi-pii-v1`
+- **Model:** `gliner2.5-multi-v1`
 - **Wraps:** `zerogpu redact_pii`
 - **Auto-invokes on:** "redact", "scrub", "mask", "anonymize", or "sanitize this for sharing."
 
@@ -441,7 +441,7 @@ Card on file ends 4412 - do not reference it in email."
 Call with [PERSON] ([EMAIL], [PHONE_NUMBER]) on Tue. Send the enterprise quote to their
 AP team at [ADDRESS]. Card on file ends 4412 - do not reference it in email.
 
-model: gliner-multi-pii-v1 · 5 spans masked
+model: gliner2.5-multi-v1 · 5 spans masked
 ```
 
 The card last-four is left untouched: only spans the model recognizes as PII are replaced. Project-specific identifiers (account numbers, internal ticket IDs) should be handled by your own redaction layer or by `extract-entities` with custom labels.
@@ -490,11 +490,11 @@ Every skill at a glance.
 | `classify-iab`          | IAB topic classification                     | `zlm-v1-iab-classify-edge`          | auto       |
 | `classify-iab-enriched` | IAB categories plus topics, keywords, intent | `zlm-v2-iab-classify-edge-enriched` | auto       |
 | `classify-zero-shot`    | Classify against a flat label list           | `deberta-v3-small`                  | auto       |
-| `classify-structured`   | Multi-axis schema classification             | `gliner2-base-v1`                   | auto       |
-| `extract-entities`      | Custom-label named-entity recognition        | `gliner2-base-v1`                   | auto       |
-| `extract-json`          | Pull structured fields into grouped JSON     | `gliner2-base-v1`                   | auto       |
-| `extract-pii`           | Extract PII grouped by category              | `gliner-multi-pii-v1`               | auto       |
-| `redact-pii`            | Mask PII in-line with `[LABEL]` placeholders | `gliner-multi-pii-v1`               | auto       |
+| `classify-structured`   | Multi-axis schema classification             | `gliner2.5-base-v1`                   | auto       |
+| `extract-entities`      | Custom-label named-entity recognition        | `gliner2.5-base-v1`                   | auto       |
+| `extract-json`          | Pull structured fields into grouped JSON     | `gliner2.5-base-v1`                   | auto       |
+| `extract-pii`           | Extract PII grouped by category              | `gliner2.5-multi-v1`               | auto       |
+| `redact-pii`            | Mask PII in-line with `[LABEL]` placeholders | `gliner2.5-multi-v1`               | auto       |
 | `signin`                | Sign in and persist your API key             | -                                   | manual     |
 | `status`                | Show current sign-in status                  | -                                   | manual     |
 | `cost-savings`          | Cumulative dollars and tokens offloaded      | -                                   | manual     |

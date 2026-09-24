@@ -90,7 +90,7 @@ San Francis
 
 ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will extract skills, job titles, companies, and locations from the resume as a structured candidate card.
 
-`ZeroGPUExtractEntitiesTool` runs custom-label named-entity recognition on `gliner2-base-v1`. You pass the entity types you care about as `labels`, and it returns the matched spans grouped by label.
+`ZeroGPUExtractEntitiesTool` runs custom-label named-entity recognition on `gliner2.5-base-v1`. You pass the entity types you care about as `labels`, and it returns the matched spans grouped by label.
 
 ```python Python
 from langchain_zerogpu import ZeroGPUExtractEntitiesTool
@@ -130,7 +130,7 @@ Candidate card
 
 ## 🔐 Redact PII Before Sharing
 
-Before the resume goes into a dashboard, an applicant-tracking system, or a shared review channel, the personal data has to come out. `ZeroGPURedactPIITool` masks PII inline on `gliner-multi-pii-v1`, replacing each match with an uppercase `[LABEL]` placeholder and returning the redacted text.
+Before the resume goes into a dashboard, an applicant-tracking system, or a shared review channel, the personal data has to come out. `ZeroGPURedactPIITool` masks PII inline on `gliner2.5-multi-v1`, replacing each match with an uppercase `[LABEL]` placeholder and returning the redacted text.
 
 ```python Python
 from langchain_zerogpu import ZeroGPURedactPIITool
