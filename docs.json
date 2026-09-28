@@ -139,6 +139,7 @@
                 "pages": [
                   "api-reference/models/gpt-oss-120b",
                   "api-reference/models/qwen3-30b-a3b-fp8",
+                  "api-reference/models/qwen3-6-35b-a3b",
                   "api-reference/models/deepseek-v4-1-flash",
                   "api-reference/models/glm-5-3-flash",
                   "api-reference/models/gpt-5-4-nano",
