@@ -3,7 +3,7 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, which is Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8 and multimodal qwen3.6-35b-a3b, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8`, which is Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
@@ -18,6 +18,7 @@ Text generation models produce new text from an input prompt. ZeroGPU offers ope
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | — | 32,768 |
 | <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | — | 32,768 |
+| <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | — |
 
 ## gpt-oss-120b
 
@@ -590,3 +591,79 @@ The capital of Japan is **Tokyo**.
 1. Japan's political, cultural, and economic center is located in Tokyo.
 2. Historically, Tokyo has served as Japan's...
 ```
+
+## qwen3.6-35b-a3b
+
+> Alibaba's Qwen3.6-35B-A3B is a fast, open-weight multimodal model for applications that need to understand text, images, and video, served on ZeroGPU as an FP8 build. It suits visual question answering, document and screenshot analysis, video understanding, content extraction, agent workflows, and tool calling, and it supports structured output. Its Mixture-of-Experts architecture keeps inference efficient while it works through large amounts of multimodal content. When the input is images or video rather than text alone, this is the model.
+
+**References:** [Model docs](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) • [Terms](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) • [Privacy](https://huggingface.co/Qwen/Qwen3.6-35B-A3B)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_image",
+          "detail": "auto",
+          "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg"
+        },
+        {
+          "text": "What animal is this, and what is it doing?",
+          "type": "input_text"
+        }
+      ]
+    }
+  ],
+  "model": "qwen3.6-35b-a3b",
+  "temperature": 0.2,
+  "max_output_tokens": 512
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "qwen3.6-35b-a3b",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "video_url",
+          "video_url": {
+            "url": "https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3.5/demo/video/N1cdUjctpG8.mp4"
+          }
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",
+            "detail": "auto"
+          }
+        },
+        {
+          "text": "Describe what happens in the video, then say whether the animal in the photo appears in it.",
+          "type": "text"
+        }
+      ]
+    }
+  ],
+  "max_tokens": 512,
+  "temperature": 0.2
+}'
+```
+
+</CodeGroup>
+
+The model returns a text answer describing the images and video it was given.
