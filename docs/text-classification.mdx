@@ -3,7 +3,7 @@ title: "Text Classification"
 description: "Edge models that map text to labels, IAB taxonomy, and audience signals."
 ---
 
-Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech, a general zero-shot classifier where you supply the candidate labels, and the schema-based GLiNER2.5 models, which classify, extract entities, and fill a JSON schema from the same request. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech, a general zero-shot classifier where you supply the candidate labels, and the schema-based GLiNER2.5 models, which classify, extract entities, fill a JSON schema, and make dynamic-label decisions such as intent and routing from the same request. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
 
 | Model | Input /1M | Output /1M | Max tokens |
 | --- | ---: | ---: | ---: |
@@ -14,6 +14,7 @@ Text classification models map a passage to predefined labels or categories. Zer
 | <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.04 | $0.10 | 400 |
 | <a href="/api-reference/models/gliner2-5-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-base-v1" width="22" height="22" noZoom /> <code>gliner2.5-base-v1</code></a> | $0.02 | $0.05 | — |
 | <a href="/api-reference/models/gliner2-5-multi-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-multi-v1" width="22" height="22" noZoom /> <code>gliner2.5-multi-v1</code></a> | $0.02 | $0.05 | — |
+| <a href="/api-reference/models/gliner2-5-decide-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-decide-v1" width="22" height="22" noZoom /> <code>gliner2.5-decide-v1</code></a> | $0.004 | Not billed | — |
 
 ## zlm-v1-iab-classify-edge
 
@@ -670,6 +671,132 @@ curl https://api.zerogpu.ai/v1/chat/completions \
   -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
   "model": "gliner2.5-multi-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful."
+    }
+  ],
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+</CodeGroup>
+
+## gliner2.5-decide-v1
+
+> Fastino's GLiNER2.5 Decide is a 486M-parameter zero-shot decision and classification model built for operational AI workflows. You supply the labels or decision options at request time to classify intent, route agents and tools, triage support requests, make moderation decisions, detect completion, and determine when a request needs human handoff. It handles single-label, multi-label, and several decision heads in one call, which suits high-volume routing and decision workloads where speed and structured outputs matter.
+
+**References:** [Model docs](https://huggingface.co/fastino/GLiNER2.5-Decide) • [Terms](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE) • [Privacy](https://github.com/fastino-ai/GLiNER2/blob/main/LICENSE)
+
+### Decision / Routing
+
+Set `metadata.usecase` to `decide` and pass a `labels` map of decision heads to their allowed options. Every head is answered in the same call, so one request can return an intent and a handoff verdict together.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "The customer says their payment failed and they want someone to call them.",
+  "model": "gliner2.5-decide-v1",
+  "metadata": {
+    "labels": {
+      "intent": [
+        "payment_issue",
+        "refund",
+        "account_access",
+        "general_question"
+      ],
+      "handoff": [
+        "yes",
+        "no"
+      ]
+    },
+    "usecase": "decide"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-decide-v1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "The customer says their payment failed and they want someone to call them."
+    }
+  ],
+  "metadata": {
+    "labels": {
+      "intent": [
+        "payment_issue",
+        "refund",
+        "account_access",
+        "general_question"
+      ],
+      "handoff": [
+        "yes",
+        "no"
+      ]
+    },
+    "usecase": "decide"
+  }
+}'
+```
+
+</CodeGroup>
+
+### Text Classification
+
+Set `metadata.usecase` to `classification` and supply a `schema` mapping each axis to its allowed labels.
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "I absolutely love this product! The quality is outstanding and the customer service was incredibly helpful.",
+  "model": "gliner2.5-decide-v1",
+  "metadata": {
+    "schema": {
+      "sentiment": [
+        "positive",
+        "negative",
+        "neutral"
+      ]
+    },
+    "usecase": "classification"
+  }
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "gliner2.5-decide-v1",
   "messages": [
     {
       "role": "user",
