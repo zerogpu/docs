@@ -1,0 +1,143 @@
+---
+title: "Get Started"
+description: "Get your Edge Provider credentials, add the ZeroGPU Edge SDK to your app, and bring your first device online."
+---
+
+This guide takes you from a new account to a device serving inference on the ZeroGPU edge network.
+
+<Steps>
+  <Step title="Get your ZeroGPU Edge Provider credentials">
+    Sign up at the [Edge Operator Portal](https://edge.zerogpu.ai/auth/sign-up), then choose **Add New App** and fill in:
+
+    | Field | What to enter |
+    |---|---|
+    | **App name** | The name of your app |
+    | **Website / store URL** | Your website, store listing, or Telegram `t.me` link |
+    | **Category** | Productivity, Utilities, Creative, Finance, News, Lifestyle, or Gaming |
+    | **Estimated monthly users** | Your approximate monthly active users |
+    | **Primary region** | Where most of your users are |
+    | **App types** | The platforms you'll integrate: Android, Browser, Chrome Extension, Telegram Mini App, macOS |
+
+    Accept the terms and select **Submit for approval**. Your app shows as **Pending Review**; review usually takes 24–48 hours. Once it's **Approved**, open the app in the portal to copy its **SDK key**.
+
+    <Note>
+      The SDK key (`zgpu-sdk-…`) is for Edge Providers: it lets your app's devices join the network. It is different from the API key (`zgpu-api-…`) used to *call* the ZeroGPU API. Don't mix them up.
+    </Note>
+  </Step>
+
+  <Step title="Select your platform">
+    Pick the SDK that matches your app. Each SDK page covers requirements, setup, lifecycle, and troubleshooting.
+
+    <Columns cols={2}>
+      <Card title="Android" icon="android" href="/docs/edge-providers/sdk/android" />
+      <Card title="Chrome / Web" icon="chrome" href="/docs/edge-providers/sdk/web" />
+      <Card title="Telegram Mini Apps" icon="telegram" href="/docs/edge-providers/sdk/telegram" />
+      <Card title="macOS" icon="apple" href="/docs/edge-providers/sdk/macos" />
+    </Columns>
+  </Step>
+
+  <Step title="Install the SDK">
+    <Tabs>
+      <Tab title="Android">
+        ```kotlin build.gradle.kts
+        dependencies {
+            implementation("ai.zerogpu:android-sdk:0.3.0")
+        }
+        ```
+      </Tab>
+      <Tab title="Web">
+        ```html
+        <script async src="https://js-sdk.zerogpu.ai/dist/loader.js"></script>
+        ```
+      </Tab>
+      <Tab title="Chrome extension">
+        ```bash
+        npm install @zerogpu/browser-extension-sdk
+        npx zerogpu init
+        ```
+      </Tab>
+      <Tab title="Telegram Mini Apps">
+        ```html
+        <script async src="https://js-sdk.zerogpu.ai/dist/loader.js"></script>
+        ```
+      </Tab>
+      <Tab title="macOS">
+        ```bash
+        npm install @zerogpu/worker
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Initialize ZeroGPU">
+    Pass your SDK key when you create the SDK. Keep it out of source control and inject it at build time.
+
+    <Tabs>
+      <Tab title="Android">
+        ```kotlin
+        val sdk = ZeroGpuSdk(
+            context = applicationContext,
+            operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
+        )
+        ```
+      </Tab>
+      <Tab title="Web / Telegram">
+        ```html
+        <script
+          async
+          src="https://js-sdk.zerogpu.ai/dist/loader.js"
+          edgeOperatorKey="zgpu-sdk-your-key"
+        ></script>
+        ```
+      </Tab>
+      <Tab title="Chrome extension">
+        ```js offscreen.js
+        import { initZeroGpuOffscreen } from "./vendor/zerogpu/zerogpu-offscreen.js";
+
+        initZeroGpuOffscreen({ edgeOperatorKey: "zgpu-sdk-your-key" });
+        ```
+      </Tab>
+      <Tab title="macOS">
+        ```js
+        const worker = new ZeroGpuWorker({ operatorKey: ZEROGPU_OPERATOR_KEY });
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Register the device">
+    Nothing to call: registration is automatic. When the SDK starts, it registers the device with the ZeroGPU device registry using your SDK key, downloads and verifies its assigned model, runs a warm-up inference, and opens a secure connection for tasks.
+  </Step>
+
+  <Step title="Start contributing compute">
+    On Android and macOS, call `start()`. In browsers, Telegram Mini Apps, and Chrome extensions, the SDK starts as soon as it's initialized with your SDK key. From then on the device receives inference tasks from the network and runs them locally; you never feed it tasks or poll it.
+  </Step>
+
+  <Step title="Confirm the device is online">
+    - **SDK logs:** turn on debug logging (each SDK page shows how) and look for the device registering, loading its model, and becoming ready.
+    - **Portal:** check your app's status and the **Analytics** page in the [Edge Operator Portal](https://edge.zerogpu.ai). Apps serving traffic show as **Active/Earning**.
+
+    A connected device only receives work when the network needs it, so it may sit ready for a while before its first task.
+  </Step>
+</Steps>
+
+<Warning>
+  **Tell your users.** Before the SDK starts, show your users the End User Disclosure from the Edge Operator Portal, word for word, with your app's name, and get their agreement. Give them a way to turn resource sharing off.
+</Warning>
+
+## Choose your SDK
+
+<Columns cols={2}>
+  <Card title="Android" icon="android" href="/docs/edge-providers/sdk/android">
+    `ai.zerogpu:android-sdk` for Android apps.
+  </Card>
+  <Card title="Chrome / Web" icon="chrome" href="/docs/edge-providers/sdk/web">
+    Script tag for websites; npm package for Chrome extensions.
+  </Card>
+  <Card title="Telegram Mini Apps" icon="telegram" href="/docs/edge-providers/sdk/telegram">
+    One script tag in your Mini App.
+  </Card>
+  <Card title="macOS" icon="apple" href="/docs/edge-providers/sdk/macos">
+    `@zerogpu/worker` for Electron desktop apps.
+  </Card>
+</Columns>

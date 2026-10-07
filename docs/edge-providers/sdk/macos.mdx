@@ -1,0 +1,300 @@
+---
+title: "macOS"
+description: "Turn Macs running your Electron desktop app into ZeroGPU edge inference nodes with @zerogpu/worker."
+---
+
+## Overview
+
+`@zerogpu/worker` turns the Macs running your desktop app into compute nodes on the ZeroGPU network. It runs in its own background process (an Electron [utility process](https://www.electronjs.org/docs/latest/api/utility-process)), registers the Mac, downloads its assigned model, and serves inference tasks locally. There are no servers for you to run.
+
+Unlike the browser and Android SDKs, the worker doesn't watch battery, sleep, or window focus. It keeps serving until you stop it, so **your app decides when it runs**. The recommended policy below runs it while your app is open and the Mac is on power.
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **App shell** | Electron 29 or newer (Node.js 20+). Other shells that can ship Node.js 20+ also work; see [Other app shells](#other-app-shells). |
+| **Hardware** | Apple Silicon (`arm64`) or Intel (`x64`) Mac |
+| **Disk** | About 100 MB per assigned ONNX model (GGUF models: 2–5 GB), plus about 140 MB of native runtimes in your app bundle |
+| **Credentials** | An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+
+## Installation
+
+```bash
+npm install @zerogpu/worker
+```
+
+This adds the worker and its native inference runtimes (ONNX Runtime, and llama.cpp with Metal on Apple Silicon for GGUF models). The worker must ship as a real dependency in your packaged app's `node_modules`; don't bundle it into your main-process code.
+
+## Initialization
+
+Create `zerogpu-worker.mjs` next to your main-process code. It starts the worker in a utility process with a free loopback port and a per-launch token, keeps its state in your app's data directory, and stops it cleanly:
+
+```js zerogpu-worker.mjs
+import { app, utilityProcess } from "electron";
+import { randomBytes } from "node:crypto";
+import { createWriteStream, mkdirSync } from "node:fs";
+import { createRequire } from "node:module";
+import { createServer } from "node:net";
+import { join } from "node:path";
+
+const require = createRequire(import.meta.url);
+
+/** Ask the OS for a free loopback port. */
+function findFreePort() {
+  return new Promise((resolve, reject) => {
+    const probe = createServer();
+    probe.once("error", reject);
+    probe.listen(0, "127.0.0.1", () => {
+      const { port } = probe.address();
+      probe.close(() => resolve(port));
+    });
+  });
+}
+
+export class ZeroGpuWorker {
+  #child = null;
+  #log = null;
+  #exited = null;
+  #starting = null;
+  #port = 0;
+  #token = "";
+
+  constructor({ operatorKey, environment = "production", logLevel = "warn", onExit }) {
+    this.operatorKey = operatorKey;
+    this.environment = environment;
+    this.logLevel = logLevel;
+    this.onExit = onExit;
+  }
+
+  get running() {
+    return this.#child !== null;
+  }
+
+  /** Start the worker. Idempotent; safe to call repeatedly. */
+  start() {
+    this.#starting ??= this.#spawn().finally(() => {
+      this.#starting = null;
+    });
+    return this.#starting;
+  }
+
+  async #spawn() {
+    if (this.#child) return;
+    const stateDir = join(app.getPath("userData"), "zerogpu");
+    mkdirSync(stateDir, { recursive: true });
+    this.#port = await findFreePort();
+    this.#token = randomBytes(24).toString("hex");
+
+    const child = utilityProcess.fork(require.resolve("@zerogpu/worker/cli"), [], {
+      serviceName: "ZeroGPU Worker",
+      stdio: "pipe",
+      env: {
+        ...process.env,
+        ZG_OPERATOR_KEY: this.operatorKey,
+        ZG_ENV: this.environment,
+        ZG_LOCAL_API_PORT: String(this.#port),
+        ZG_LOCAL_API_TOKEN: this.#token,
+        ZG_MODELS_DIR: join(stateDir, "models"),
+        ZG_DATA_DIR: join(stateDir, "data"),
+        ZG_MAX_CONCURRENCY: "1",
+        ZG_LOG_LEVEL: this.logLevel,
+      },
+    });
+
+    this.#log ??= createWriteStream(join(app.getPath("logs"), "zerogpu-worker.log"), { flags: "a" });
+    child.stdout?.pipe(this.#log, { end: false });
+    child.stderr?.pipe(this.#log, { end: false });
+
+    this.#exited = new Promise((resolve) => {
+      child.once("exit", (code) => {
+        if (this.#child === child) this.#child = null;
+        this.onExit?.(code);
+        resolve(code);
+      });
+    });
+    this.#child = child;
+  }
+
+  /** Worker health: lifecycle status, model states, served/network counters. */
+  async status() {
+    if (!this.#child) return { running: false, ready: false };
+    try {
+      const res = await fetch(`http://127.0.0.1:${this.#port}/healthz`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      return { running: true, ...(await res.json()) };
+    } catch {
+      return { running: true, ready: false, status: "starting" };
+    }
+  }
+
+  /** Stop the worker: it leaves the network cleanly, then exits (≤ 5 s). */
+  async stop(timeoutMs = 7000) {
+    await this.#starting;
+    const child = this.#child;
+    if (!child) return;
+    this.#child = null;
+    child.kill(); // SIGTERM → graceful shutdown
+    await Promise.race([this.#exited, new Promise((resolve) => setTimeout(resolve, timeoutMs))]);
+  }
+}
+```
+
+The worker is configured entirely through environment variables:
+
+| Variable | Set to | Why |
+|---|---|---|
+| `ZG_OPERATOR_KEY` | your SDK key | Joins your fleet. Required. |
+| `ZG_ENV` | `production` | Use `staging` or `develop` only if ZeroGPU gave you access. |
+| `ZG_LOCAL_API_PORT` | a free port | The local API, bound to `127.0.0.1`. |
+| `ZG_LOCAL_API_TOKEN` | random, per launch | Only your app can call the local inference routes. |
+| `ZG_MODELS_DIR`, `ZG_DATA_DIR` | under `userData` | Survive app updates. Don't wipe them: a new identity makes the Mac a newcomer that gets less work at first. |
+| `ZG_MAX_CONCURRENCY` | `1` | One inference at a time, gentle on a laptop. |
+| `ZG_LOG_LEVEL` | `warn` | Use `info` while integrating. |
+
+## Authentication
+
+The worker authenticates with your **SDK key** (`zgpu-sdk-…`) through `ZG_OPERATOR_KEY`. The key only joins devices to your fleet, but it ships inside every copy of your app, so keep it out of source control and inject it at build time.
+
+<Warning>
+  Never ship a ZeroGPU **API key** (`zgpu-api-…`) inside a desktop app. It authorizes paid inference for your whole organization, and anything in an app bundle can be extracted.
+</Warning>
+
+## Register device
+
+Registration is automatic. On start, the worker runs a short CPU benchmark (about 5 seconds), creates a random device ID stored in `ZG_DATA_DIR`, registers the Mac with ZeroGPU, downloads and verifies its assigned model, loads it, and opens an outbound connection for tasks. Expect under 30 seconds on first launch and a few seconds afterwards.
+
+All connections to ZeroGPU are outbound (HTTPS and WSS). The only listener is the local API on `127.0.0.1`.
+
+## Start contributing compute
+
+Create **one** `ZeroGpuWorker` in your main process and start it when the Mac is on power:
+
+```js main.mjs
+import { app, powerMonitor } from "electron";
+
+import { ZEROGPU_OPERATOR_KEY } from "./build-config.mjs"; // generated at build time, not committed
+import { ZeroGpuWorker } from "./zerogpu-worker.mjs";
+
+const worker = new ZeroGpuWorker({
+  operatorKey: ZEROGPU_OPERATOR_KEY,
+  logLevel: app.isPackaged ? "warn" : "info",
+});
+
+const startIfOnPower = () => {
+  if (!powerMonitor.isOnBatteryPower()) void worker.start();
+};
+
+app.whenReady().then(() => {
+  startIfOnPower();
+  powerMonitor.on("on-ac", startIfOnPower);
+  powerMonitor.on("resume", startIfOnPower);
+  powerMonitor.on("on-battery", () => void worker.stop());
+  powerMonitor.on("suspend", () => void worker.stop());
+});
+```
+
+## Stop / pause
+
+`worker.stop()` sends `SIGTERM`: the worker leaves the network, flushes telemetry, unloads its model, and exits within 5 seconds. To pause, call `stop()`; to resume, call `start()`. The power policy above does exactly this on battery and sleep.
+
+Let the worker leave the network before your app quits:
+
+```js main.mjs
+let workerStopped = false;
+app.on("before-quit", (event) => {
+  if (workerStopped) return;
+  event.preventDefault();
+  worker.stop().finally(() => {
+    workerStopped = true;
+    app.quit();
+  });
+});
+```
+
+## Device lifecycle
+
+Check status from your main process with `await worker.status()`:
+
+```json
+{
+  "running": true,
+  "status": "ready",
+  "ready": true,
+  "capacity": { "inFlight": 0, "queued": 0, "maxConcurrency": 1 },
+  "network": { "completedTasks": 3, "failedTasks": 0 }
+}
+```
+
+`ready` turns `true` once a model is loaded and has passed a warm-up inference. `network.completedTasks` counts tasks ZeroGPU sent to this Mac. Use the `onExit` option to show status or restart after a delay; the worker protects itself against crash loops with a cooldown.
+
+## Example integration
+
+1. Start your app with `logLevel: "info"`.
+2. Open the worker log at `~/Library/Logs/<Your App>/zerogpu-worker.log`. A healthy first start looks like this:
+
+   ```text
+   INFO  [main] ZeroGPU Worker starting (env=production, fallback=reject)
+   INFO  [register] Registering device 57d6219e-… with https://devices.zerogpu.ai/register (env=production)
+   INFO  [register] Registered. 1 model recipe(s) assigned
+   INFO  [models] Model zlm-v1-iab-classify-onnx@1 verified (4 files)
+   INFO  [lifecycle] Device ready: iab_classify
+   ```
+
+3. Quit your app. The log ends with `[lifecycle] Shutdown (host_stop)`.
+
+Switch `logLevel` back to `warn` for release builds.
+
+### Packaging and signing
+
+Native libraries must live outside the ASAR archive and be signed with your Developer ID. With electron-builder:
+
+```json package.json
+{
+  "build": {
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/onnxruntime-node/**/*",
+      "**/node_modules/sharp/**/*",
+      "**/node_modules/@img/**/*",
+      "**/node_modules/node-llama-cpp/**/*",
+      "**/node_modules/@node-llama-cpp/**/*"
+    ],
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["arm64", "x64"] }],
+      "notarize": true
+    }
+  }
+}
+```
+
+Build `arm64` and `x64` separately, each after `npm ci --os=darwin --cpu=<arch>`, so every architecture gets its matching native binaries.
+
+### Other app shells
+
+Not using Electron? Any app that can ship a Node.js 20+ runtime can run the same entry point as a child process with the same variables:
+
+```bash
+ZG_OPERATOR_KEY="zgpu-sdk-…" \
+ZG_LOCAL_API_PORT=52817 \
+ZG_LOCAL_API_TOKEN="$(openssl rand -hex 24)" \
+ZG_MODELS_DIR="$HOME/Library/Application Support/YourApp/zerogpu/models" \
+ZG_DATA_DIR="$HOME/Library/Application Support/YourApp/zerogpu/data" \
+node node_modules/@zerogpu/worker/dist/cli.js
+```
+
+Stop it with `SIGTERM`, allow 5 seconds for it to exit, and make sure it never outlives your app.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Worker exits immediately with code `1`: `ZG_OPERATOR_KEY … is required` | The key didn't reach the worker's environment. Check the value you pass as `operatorKey`. |
+| `Registration auth failure (401)`, then `policy says stop` | The key isn't valid for the target environment. Fix the key or `environment` and restart. |
+| `Registration politely refused: <reason>` | Normal: the network is declining this Mac for now. The worker retries by itself. |
+| `status()` shows `ready: false` at first | Still booting. Allow up to ~30 seconds on first launch. |
+| Packaged app: `dlopen` errors or `Could not load the "sharp" module` | Native files are still inside the ASAR archive, or the build is missing binaries for that architecture. See [Packaging and signing](#packaging-and-signing). |
+| Packaged app: `Cannot find module '@zerogpu/worker/cli'` | Your bundler dropped the dependency. Keep `@zerogpu/worker` external and shipped in `node_modules`. |
+| `network.completedTasks` stays at `0` | The Mac is connected, but the network hasn't needed it yet. Keep `ZG_DATA_DIR` persistent. |
+| `npm install` fails with a `404` from another registry | Your `.npmrc` maps `@zerogpu` elsewhere. Use `npm install @zerogpu/worker --@zerogpu:registry=https://registry.npmjs.org`. |

@@ -1,0 +1,104 @@
+---
+title: "Telegram Mini Apps"
+description: "Connect your Telegram Mini App to ZeroGPU and contribute device compute to the edge network with one script tag."
+---
+
+## Overview
+
+Telegram Mini Apps run on the ZeroGPU browser SDK: one script tag in your Mini App's HTML turns the devices opening it into inference nodes on the ZeroGPU network. The SDK detects the Telegram WebApp environment automatically and adapts to it.
+
+## Requirements
+
+- A Telegram Mini App (a web app opened inside Telegram).
+- An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai). When you add your app, select **Telegram Mini App** as an app type and use your `t.me` link as the website.
+- The same browser requirements as the [Chrome / Web SDK](/docs/edge-providers/sdk/web#requirements): WebAssembly, IndexedDB, and Web Workers, all available in Telegram's in-app browser.
+
+## Installation
+
+Add the loader to your Mini App's HTML. It always resolves the latest released SDK:
+
+```html
+<script async src="https://js-sdk.zerogpu.ai/dist/loader.js"></script>
+```
+
+## Initialization
+
+The simplest setup is auto-init: put your SDK key on the script tag and the SDK starts when the page loads.
+
+```html
+<script
+  async
+  src="https://js-sdk.zerogpu.ai/dist/loader.js"
+  edgeOperatorKey="zgpu-sdk-your-key"
+></script>
+```
+
+For manual init, use `ZeroGpuSdk.initZeroGpuSdk({ edgeOperatorKey })` exactly as in the [Chrome / Web SDK](/docs/edge-providers/sdk/web#initialization). All the same options apply.
+
+## Authentication
+
+The SDK authenticates with your **SDK key** (`zgpu-sdk-…`), passed as `edgeOperatorKey`. The key only joins devices to your fleet; it can't call the inference API or spend credits.
+
+## Register device
+
+Registration is automatic. Inside Telegram, the SDK:
+
+- Detects `window.Telegram.WebApp` and registers the device with the `telegram-webapp` platform.
+- Uses the Telegram user ID as `appUserId`, so you don't need to pass it.
+- Downloads and caches its assigned model, then opens a connection for tasks.
+
+## Start contributing compute
+
+The device contributes compute while your Mini App is open. There's nothing else to call.
+
+## Stop / pause
+
+Keep the handle returned by `initZeroGpuSdk` and call `shutdown()` to stop:
+
+```js
+const zerogpu = await ZeroGpuSdk.initZeroGpuSdk({ edgeOperatorKey: 'zgpu-sdk-your-key' });
+
+// later, e.g. when the user turns resource sharing off
+await zerogpu.shutdown();
+```
+
+There is no separate pause call. Closing the Mini App also stops contribution.
+
+## Device lifecycle
+
+The lifecycle matches the [Chrome / Web SDK](/docs/edge-providers/sdk/web#device-lifecycle): `starting`, `running`, `degraded`, `shutdown`, or `error`, with `degraded`, `recovered`, and `shutdown` events.
+
+Telegram's in-app WebViews behave differently from regular browsers, so the SDK adapts its memory and storage checks there, and includes a guard that stops it from restarting repeatedly if the WebView keeps crashing and reloading.
+
+## Example integration
+
+```html index.html
+<!doctype html>
+<html>
+  <head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script
+      async
+      src="https://js-sdk.zerogpu.ai/dist/loader.js"
+      edgeOperatorKey="zgpu-sdk-your-key"
+      enableConsoleLogs="true"
+    ></script>
+  </head>
+  <body>
+    <!-- your Mini App -->
+  </body>
+</html>
+```
+
+To verify, open the Mini App in Telegram Desktop or Telegram Web with developer tools, and watch the console as the SDK registers the device, loads a model, and becomes ready. Turn `enableConsoleLogs` off for release.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Rejected at registration / `401` | The SDK key is wrong or inactive. Check it in the Edge Operator Portal. |
+| SDK pinned to an old version | Load `dist/loader.js`, not `zerogpu-browser-sdk.umd.js` directly. |
+| No SDK activity in the console | Add `enableConsoleLogs="true"` to the script tag. |
+| `Init skipped: crash-loop guard active` | The WebView crashed repeatedly while loading the model, so the SDK is in a cooldown. It starts again once the cooldown ends. |
+
+See [Chrome / Web troubleshooting](/docs/edge-providers/sdk/web#troubleshooting) for worker and CSP issues.

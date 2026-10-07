@@ -1,0 +1,50 @@
+---
+title: "Edge Providers"
+sidebarTitle: "Overview"
+description: "Connect compatible devices and applications to ZeroGPU and contribute idle compute to distributed AI inference across the ZeroGPU network."
+---
+
+Become an Edge Provider by connecting compatible devices and applications to ZeroGPU. Contribute compute from idle devices and make that capacity available for distributed AI inference across the ZeroGPU network.
+
+You add a ZeroGPU Edge SDK to an app you already ship. While your users run the app, their device becomes an inference node: it downloads a small model, registers with the network, and serves inference tasks locally. ZeroGPU handles routing, model assignment, and verification; you don't run any servers.
+
+## Edge SDKs
+
+<Columns cols={2}>
+  <Card title="Android SDK" icon="android" href="/docs/edge-providers/sdk/android">
+    Connect supported Android devices to the ZeroGPU edge network.
+  </Card>
+
+  <Card title="Chrome / Web SDK" icon="chrome" href="/docs/edge-providers/sdk/web">
+    Contribute compute from websites and Chrome extensions running in supported browsers.
+  </Card>
+
+  <Card title="Telegram Mini Apps SDK" icon="telegram" href="/docs/edge-providers/sdk/telegram">
+    Connect Telegram Mini Apps to ZeroGPU and contribute available device compute to the edge network.
+  </Card>
+
+  <Card title="macOS SDK" icon="apple" href="/docs/edge-providers/sdk/macos">
+    Connect supported Apple Silicon devices to the ZeroGPU edge network.
+  </Card>
+</Columns>
+
+## How it works
+
+<Steps>
+  <Step title="Add your app">
+    Register your app in the [Edge Operator Portal](https://edge.zerogpu.ai) and submit it for approval.
+  </Step>
+  <Step title="Get your SDK key">
+    Once your app is approved, copy its SDK key (`zgpu-sdk-…`) from the portal.
+  </Step>
+  <Step title="Integrate the SDK">
+    Add the SDK for your platform and start it with your SDK key. Devices register themselves automatically.
+  </Step>
+  <Step title="Contribute compute">
+    Devices running your app serve inference tasks. Track activity and earnings in the portal.
+  </Step>
+</Steps>
+
+<Card title="Get started" icon="arrow-right" href="/docs/edge-providers/get-started" horizontal>
+  Set up your first Edge Provider integration.
+</Card>

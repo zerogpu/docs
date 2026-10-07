@@ -1,0 +1,211 @@
+---
+title: "Android"
+description: "Turn devices running your Android app into ZeroGPU edge inference nodes with the ZeroGPU Android SDK."
+---
+
+## Overview
+
+The ZeroGPU Android SDK (`ai.zerogpu:android-sdk`) turns the devices running your app into on-device inference nodes on the ZeroGPU network. Once started, it registers the device, downloads the model the network assigns, and serves inference tasks locally with ONNX Runtime (and a bundled llama.cpp for GGUF models).
+
+The SDK follows your app's lifecycle: it contributes compute while the app is in the foreground and disconnects when the app goes to the background.
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **Android version** | Android 8.0+ (`minSdk 26`); built against `compileSdk 36` |
+| **Language** | Kotlin with coroutines |
+| **ABIs** | `arm64-v8a` (physical devices) and `x86_64` (emulators) |
+| **Credentials** | An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+
+The SDK's manifest declares `INTERNET` and `ACCESS_NETWORK_STATE` and sets `android:largeHeap="true"`. These merge into your app automatically.
+
+## Installation
+
+Make sure Maven Central is a repository:
+
+```kotlin settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+```
+
+Add the dependency to your app module:
+
+```kotlin build.gradle.kts
+dependencies {
+    implementation("ai.zerogpu:android-sdk:0.3.0")
+}
+```
+
+The SDK bundles native libraries (ONNX Runtime and llama.cpp). Add this to the `android { }` block so duplicate copies of `libc++_shared.so` don't fail the build:
+
+```kotlin build.gradle.kts
+android {
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+            pickFirsts += setOf("**/libc++_shared.so")
+        }
+    }
+}
+```
+
+<Tip>
+  Using Expo / React Native? Install the wrapper instead: `npx expo install @zerogpu/expo-android-sdk`, add `"@zerogpu/expo-android-sdk"` to your app config plugins, and run `npx expo prebuild`.
+</Tip>
+
+## Initialization
+
+Create **one** `ZeroGpuSdk` for your whole app, typically in `Application.onCreate()`. The base URL and environment default to production, so you only pass your SDK key:
+
+```kotlin
+import ai.zerogpu.android.sdk.ZeroGpuSdk
+
+class MyApp : Application() {
+    lateinit var zeroGpu: ZeroGpuSdk
+
+    override fun onCreate() {
+        super.onCreate()
+        zeroGpu = ZeroGpuSdk(
+            context = this,
+            operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
+        )
+        zeroGpu.start()
+    }
+}
+```
+
+Optional constructor parameters:
+
+| Parameter | Default | Description |
+|---|---|---|
+| `enableLogs` | `false` | Write the SDK's logcat output. Turn on while integrating. |
+| `enableTelemetry` | `true` | Send lifecycle and error events to ZeroGPU. |
+| `resourcePolicy` | `ResourcePolicy()` | Local limits: `maxModelBytes`, `memoryBudgetFraction`, `disableGuardrails`. |
+| `listener` | `null` | A `ZeroGpuListener` for lifecycle callbacks (see [Device lifecycle](#device-lifecycle)). |
+| `customParams` | `emptyMap()` | Up to three reporting slots, `cust_param1`–`cust_param3`. Values only; no personal data. |
+
+## Authentication
+
+The SDK authenticates with your **SDK key** (`zgpu-sdk-…`), passed as `operatorKey`. Don't hard-code it. Put it in `local.properties` (git-ignored) and expose it through `BuildConfig`:
+
+```kotlin build.gradle.kts
+import java.util.Properties
+
+val localProps = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+android {
+    defaultConfig {
+        buildConfigField(
+            "String",
+            "ZEROGPU_OPERATOR_KEY",
+            "\"${localProps.getProperty("zerogpu.operatorKey", "")}\"",
+        )
+    }
+    buildFeatures { buildConfig = true }
+}
+```
+
+```properties local.properties
+# never commit
+zerogpu.operatorKey=zgpu-sdk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+## Register device
+
+Registration is automatic. After `start()`, while the app is in the foreground, the SDK:
+
+1. Registers the device with the ZeroGPU device registry using your SDK key.
+2. Downloads its assigned model(s), verifies them, and caches them on device. Models are only re-downloaded when they change.
+3. Runs a warm-up inference.
+4. Opens a WebSocket and advertises the device as ready.
+
+## Start contributing compute
+
+Call `start()` once. From then on the device manages itself: it follows the app in and out of the foreground, reconnects after network drops, and serves whatever tasks the network sends. You don't poll it or feed it tasks.
+
+## Stop / pause
+
+```kotlin
+zeroGpu.stop()
+```
+
+`stop()` tears everything down: it closes the connection, unloads models, and cancels in-flight work. There is no separate pause call; to pause, call `stop()`, and call `start()` again to resume.
+
+Going to the background already pauses contribution: the SDK closes its connection and reconnects when the app returns to the foreground.
+
+## Device lifecycle
+
+| State | What's happening |
+|---|---|
+| **Stopped** | Created but not started, or torn down by `stop()`. |
+| **Registering** | Registering the device with the network. |
+| **Loading models** | Downloading, verifying, and warming up models (first registration only). |
+| **Ready** | Connected and waiting for tasks. |
+| **Processing** | Running inference tasks. |
+| **Reconnecting** | Recovering from a network drop, with backoff. |
+| **Backgrounded** | App is in the background; the connection is deliberately closed. |
+
+Before downloading models, the SDK checks free memory and storage, and blocks downloads when the battery is below 20% and the device isn't charging.
+
+Subscribe to lifecycle changes with a `ZeroGpuListener`. Callbacks arrive on a background thread:
+
+```kotlin
+val listener = object : ZeroGpuListener {
+    override fun onDegraded(reason: String) { /* resource pressure; contribution limited */ }
+    override fun onRecovered() { /* back to normal */ }
+    override fun onShutdown(reason: String) { /* the SDK stopped itself */ }
+}
+```
+
+## Example integration
+
+```kotlin MainActivity.kt
+import ai.zerogpu.android.sdk.ZeroGpuSdk
+
+class MainActivity : ComponentActivity() {
+
+    private val sdk = ZeroGpuSdk(
+        context = this,
+        operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
+        // baseUrl defaults to https://devices.zerogpu.ai
+        // env     defaults to "production"
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // ...your UI...
+        sdk.start()
+    }
+
+    override fun onDestroy() {
+        sdk.stop()
+        super.onDestroy()
+    }
+}
+```
+
+To confirm the device is online, construct the SDK with `enableLogs = true`, run the app in the foreground, and watch logcat:
+
+```bash
+adb logcat -s ZeroGpuSdk:* ZeroGpuWebSocket:* ModelDownloader:*
+```
+
+Once you see `status":"idle"` and `WebSocket ready for tasks`, the device is serving the network.
+
+## Troubleshooting
+
+| Symptom | Likely cause / fix |
+|---|---|
+| `Register failed: HTTP 401/403` | Wrong or inactive SDK key. Check the key in the Edge Operator Portal. |
+| Never reaches `ready for tasks` | The app isn't in the foreground, or there's no network. The connection closes in the background by design. |
+| Device is ready but serves no tasks | The network hasn't needed it yet; work depends on demand. Keep the app running. |
+| No SDK lines in logcat | Logging is off by default. Pass `enableLogs = true`. |
+| Build error: duplicate `libc++_shared.so` | Add the `packaging { jniLibs { … } }` block from [Installation](#installation). |
+| Native model won't load on some devices | Only `arm64-v8a` and `x86_64` are shipped. Use an `arm64` device or an `x86_64` emulator. |

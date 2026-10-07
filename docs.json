@@ -94,6 +94,22 @@
             "pages": [
               "docs/platform"
             ]
+          },
+          {
+            "group": "Edge Providers",
+            "pages": [
+              "docs/edge-providers/index",
+              "docs/edge-providers/get-started",
+              {
+                "group": "Edge SDKs",
+                "pages": [
+                  "docs/edge-providers/sdk/android",
+                  "docs/edge-providers/sdk/web",
+                  "docs/edge-providers/sdk/telegram",
+                  "docs/edge-providers/sdk/macos"
+                ]
+              }
+            ]
           }
         ]
       },
