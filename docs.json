@@ -90,12 +90,6 @@
             ]
           },
           {
-            "group": "Platform",
-            "pages": [
-              "docs/platform"
-            ]
-          },
-          {
             "group": "Edge Providers",
             "pages": [
               "docs/edge-providers/index",
@@ -454,36 +448,40 @@
       "destination": "/docs/batch/supported-endpoints"
     },
     {
+      "source": "/docs/platform",
+      "destination": "/docs/quickstart"
+    },
+    {
       "source": "/platform/dashboard",
-      "destination": "/docs/platform#dashboard"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/organizations-and-projects",
-      "destination": "/docs/platform#organizations-and-projects"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/api-keys",
-      "destination": "/docs/platform#api-keys"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/authentication",
-      "destination": "/docs/platform#authentication"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/usage-analytics",
-      "destination": "/docs/platform#usage-and-logs"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/logs",
-      "destination": "/docs/platform#usage-and-logs"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/billing",
-      "destination": "/docs/platform#billing"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/platform/security",
-      "destination": "/docs/platform#api-keys"
+      "destination": "/docs/quickstart"
     },
     {
       "source": "/docs/summarization",
