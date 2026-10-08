@@ -193,7 +193,12 @@
             "group": "ZeroClick",
             "pages": [
               "api-reference/zeroclick-responses",
-              "api-reference/zeroclick-chat-completions"
+              "api-reference/zeroclick-chat-completions",
+              "api-reference/zeroclick-moderations",
+              "api-reference/zeroclick-embeddings",
+              "api-reference/zeroclick-audio-transcriptions",
+              "api-reference/zeroclick-audio-translations",
+              "api-reference/zeroclick-audio-speech"
             ]
           },
           {

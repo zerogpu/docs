@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU Orchestration API \u2014 ZeroClick endpoints",
     "version": "1.0.0",
-    "description": "OpenAPI specification for the ZeroClick-authenticated orchestration endpoints\n(`/zeroclick/v1/*`).\n\nZeroClick sits in front of the ZeroGPU Orchestration API as the\nagent-payment layer. A buying agent calls ZeroClick's hosted pay URL;\nZeroClick then proxies the request to these endpoints, signing the raw\nrequest bytes with an HMAC in the `zc-signature` header. From this API's\nperspective, a request is authenticated **only** by a valid `zc-signature`\n\u2014 there is no `x-api-key` on these routes.\n\nThese endpoints mirror the standard `/v1/chat/completions` and\n`/v1/responses` orchestration endpoints (same request/response bodies,\nsame model routing), differing only in:\n  * **Authentication** \u2014 the `zc-signature` HMAC is verified over the raw\n    request bytes instead of an API key.\n  * **Authorization** \u2014 a ZeroClick allowance check runs before any\n    billable work. It fails *open* on a transient ZeroClick outage (the\n    signature has already verified), but never for a missing/invalid\n    signature.\n  * **Metering** \u2014 actual token usage is reported back to ZeroClick via the\n    `zc-usage` response header on success. Stripe metering is intentionally\n    bypassed; ZeroClick is the sole biller.\n"
+    "description": "OpenAPI specification for the ZeroClick-authenticated orchestration endpoints\n(`/zeroclick/v1/*`).\n\nZeroClick sits in front of the ZeroGPU Orchestration API as the\nagent-payment layer. A buying agent calls ZeroClick's hosted pay URL;\nZeroClick then proxies the request to these endpoints, signing the raw\nrequest bytes with an HMAC in the `zc-signature` header. From this API's\nperspective, a request is authenticated **only** by a valid `zc-signature`\n\u2014 there is no `x-api-key` on these routes.\n\nThese endpoints mirror the standard `/v1/chat/completions`,\n`/v1/responses`, `/v1/embeddings`, `/v1/moderations` and `/v1/audio/*`\norchestration endpoints (same request/response bodies,\nsame model routing), differing only in:\n  * **Authentication** \u2014 the `zc-signature` HMAC is verified over the raw\n    request bytes instead of an API key.\n  * **Authorization** \u2014 a ZeroClick allowance check runs before any\n    billable work. It fails *open* on a transient ZeroClick outage (the\n    signature has already verified), but never for a missing/invalid\n    signature.\n  * **Metering** \u2014 actual usage is reported back to ZeroClick via the\n    `zc-usage` response header on success: input/output tokens for the\n    text endpoints, audio seconds for the audio endpoints. Stripe metering is intentionally\n    bypassed; ZeroClick is the sole biller.\n"
   },
   "servers": [
     {
@@ -97,6 +97,9 @@
           "420": {
             "$ref": "#/components/responses/ContextLengthExceeded"
           },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
           }
@@ -178,8 +181,624 @@
           "420": {
             "$ref": "#/components/responses/ResponsesContextLengthExceeded"
           },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
           "500": {
             "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/embeddings": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateEmbedding",
+        "summary": "Create embeddings (ZeroClick-authenticated)",
+        "description": "OpenAI-style Embeddings endpoint. Billed on input tokens only; `zc-usage`\nreports the `prompt_tokens` from the response's `usage`.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/embeddings` runs behind it.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmbeddingRequest"
+              },
+              "example": {
+                "model": "all-minilm-l6-v2",
+                "input": "ZeroGPU runs high-volume inference tasks on small models at the edge."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI embeddings list. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-inference-type": {
+                "$ref": "#/components/headers/XInferenceType"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmbeddingResponse"
+                },
+                "example": {
+                  "object": "list",
+                  "data": [
+                    {
+                      "object": "embedding",
+                      "index": 0,
+                      "embedding": [
+                        0.012601,
+                        -0.072932,
+                        0.043332,
+                        0.028129,
+                        0.033064,
+                        -0.078302,
+                        -0.153619,
+                        -0.011621
+                      ]
+                    }
+                  ],
+                  "model": "all-MiniLM-L6-v2",
+                  "usage": {
+                    "prompt_tokens": 18,
+                    "total_tokens": 18
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/moderations": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateModeration",
+        "summary": "Create moderation (ZeroClick-authenticated)",
+        "description": "OpenAI-style Moderations endpoint. `model` may be omitted (the configured\nmoderation model is used) or given as an OpenAI id such as\n`omni-moderation-latest`, which is mapped to it. `zc-usage` reports the\ninput and output tokens from the response's `usage`.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/moderations` runs behind it.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateModerationRequest"
+              },
+              "example": {
+                "model": "zlm-v1-moderation-edge",
+                "input": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI moderations envelope. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-inference-type": {
+                "$ref": "#/components/headers/XInferenceType"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationResponse"
+                },
+                "example": {
+                  "id": "modr-0a1b2c3d4e5f60718293a4b5c6d7e8f90",
+                  "model": "zlm-v1-moderation-edge",
+                  "results": [
+                    {
+                      "flagged": true,
+                      "categories": {
+                        "harassment": true,
+                        "harassment/threatening": true,
+                        "hate": false,
+                        "hate/threatening": false,
+                        "illicit": true,
+                        "illicit/violent": true,
+                        "self-harm": false,
+                        "self-harm/intent": false,
+                        "self-harm/instructions": false,
+                        "sexual": false,
+                        "sexual/minors": false,
+                        "violence": true,
+                        "violence/graphic": false
+                      },
+                      "category_scores": {
+                        "harassment": 0.82545,
+                        "harassment/threatening": 0.957703,
+                        "hate": 0.21574,
+                        "hate/threatening": 0.168273,
+                        "illicit": 0.732167,
+                        "illicit/violent": 0.780693,
+                        "self-harm": 0.015232,
+                        "self-harm/intent": 0.017179,
+                        "self-harm/instructions": 0.01807,
+                        "sexual": 0.035671,
+                        "sexual/minors": 0.094207,
+                        "violence": 0.665897,
+                        "violence/graphic": 0.198346
+                      },
+                      "category_applied_input_types": {
+                        "harassment": [
+                          "text"
+                        ],
+                        "harassment/threatening": [
+                          "text"
+                        ],
+                        "hate": [
+                          "text"
+                        ],
+                        "hate/threatening": [
+                          "text"
+                        ],
+                        "illicit": [
+                          "text"
+                        ],
+                        "illicit/violent": [
+                          "text"
+                        ],
+                        "self-harm": [
+                          "text"
+                        ],
+                        "self-harm/intent": [
+                          "text"
+                        ],
+                        "self-harm/instructions": [
+                          "text"
+                        ],
+                        "sexual": [
+                          "text"
+                        ],
+                        "sexual/minors": [
+                          "text"
+                        ],
+                        "violence": [
+                          "text"
+                        ],
+                        "violence/graphic": [
+                          "text"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ModerationsBadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/audio/transcriptions": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateTranscription",
+        "summary": "Create transcription (ZeroClick-authenticated)",
+        "description": "OpenAI-style speech-to-text in the source language. The body is streamed upstream unread, so the model is the configured `whisper-tiny`\nrather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/transcriptions` runs behind it.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTranscriptionRequest"
+              },
+              "example": {
+                "model": "whisper-tiny"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The transcript, in the requested `response_format`. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-audio-duration-seconds": {
+                "$ref": "#/components/headers/XAudioDurationSeconds"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                },
+                "examples": {
+                  "json": {
+                    "summary": "json (default)",
+                    "value": {
+                      "text": "the quick brown fox jumps over the lazy dog."
+                    }
+                  },
+                  "verbose_json": {
+                    "summary": "verbose_json",
+                    "value": {
+                      "task": "transcribe",
+                      "language": "english",
+                      "duration": 1.76,
+                      "text": "Hello from Zero GPU.",
+                      "segments": [
+                        {
+                          "id": 0,
+                          "seek": 0,
+                          "start": 0.0,
+                          "end": 2.0,
+                          "text": " Hello from Zero GPU.",
+                          "tokens": [
+                            50364,
+                            2425,
+                            490,
+                            17182,
+                            18407,
+                            13,
+                            50464
+                          ],
+                          "temperature": 0.0,
+                          "avg_logprob": -0.797803,
+                          "compression_ratio": 0.724138,
+                          "no_speech_prob": 0.023181
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "the quick brown fox jumps over the lazy dog.\n"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AudioBadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "404": {
+            "description": "Unknown model (`model_not_found`)"
+          },
+          "413": {
+            "description": "File over 25 MB (`file_too_large`) or audio too long (`audio_too_long`)"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ModelUnavailable"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/audio/translations": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateTranslation",
+        "summary": "Create translation (ZeroClick-authenticated)",
+        "description": "OpenAI-style speech-to-text that always returns English. The body is streamed upstream unread, so the model is the configured `whisper-tiny`\nrather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/translations` runs behind it.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTranslationRequest"
+              },
+              "example": {
+                "model": "whisper-tiny"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The English transcript, in the requested `response_format`. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-audio-duration-seconds": {
+                "$ref": "#/components/headers/XAudioDurationSeconds"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                },
+                "examples": {
+                  "json": {
+                    "summary": "json (default)",
+                    "value": {
+                      "text": "Hello, how are you today?"
+                    }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Hello, how are you today?\n"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AudioBadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "404": {
+            "description": "Unknown model (`model_not_found`)"
+          },
+          "413": {
+            "description": "File over 25 MB (`file_too_large`) or audio too long (`audio_too_long`)"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ModelUnavailable"
+          }
+        }
+      }
+    },
+    "/zeroclick/v1/audio/speech": {
+      "post": {
+        "tags": [
+          "ZeroClick"
+        ],
+        "operationId": "zeroclickCreateSpeech",
+        "summary": "Create speech (ZeroClick-authenticated)",
+        "description": "Text-to-speech, with optional voice cloning from a `voice_sample` sent as\nmultipart. The body is streamed upstream unread, so the model is the configured `chatterbox-nano`\nrather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/speech` runs behind it.\n",
+        "security": [
+          {
+            "ZeroClickSignature": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ZcRequestId"
+          },
+          {
+            "$ref": "#/components/parameters/ZcAgentId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpeechMultipartRequest"
+              },
+              "example": {
+                "model": "chatterbox-nano",
+                "input": "Testing model to generate voice. Hey how are you today?",
+                "response_format": "mp3",
+                "seed": 1234
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSpeechRequest"
+              },
+              "example": {
+                "model": "chatterbox-nano",
+                "input": "Testing model to generate voice. Hey how are you today?",
+                "voice": "alloy",
+                "response_format": "mp3"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The audio file, with a content type matching `response_format`. Includes the `zc-usage` header settling actual usage with ZeroClick.",
+            "headers": {
+              "zc-usage": {
+                "$ref": "#/components/headers/ZcUsage"
+              },
+              "x-request-id": {
+                "$ref": "#/components/headers/XRequestId"
+              },
+              "x-audio-duration-seconds": {
+                "$ref": "#/components/headers/XAudioDurationSeconds"
+              }
+            },
+            "content": {
+              "audio/mpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/ogg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/aac": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/flac": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/wav": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/pcm": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AudioBadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/ZeroClickUnauthorized"
+          },
+          "402": {
+            "$ref": "#/components/responses/PaymentRequired"
+          },
+          "404": {
+            "description": "Unknown model (`model_not_found`)"
+          },
+          "413": {
+            "description": "Reference clip over 10 MB (`voice_sample_too_large`) or over 30 seconds (`voice_sample_too_long`)"
+          },
+          "422": {
+            "description": "Reference clip could not be used to clone a voice (`voice_conditioning_failed`), no audio was produced (`empty_audio`), or the format cannot be encoded (`response_format_unavailable`)"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          },
+          "503": {
+            "$ref": "#/components/responses/ModelUnavailable"
+          },
+          "504": {
+            "description": "Generation timed out (`timeout`)"
           }
         }
       }
@@ -218,7 +837,7 @@
     },
     "headers": {
       "ZcUsage": {
-        "description": "Usage report settled with ZeroClick, present on `200` responses. Encodes\nthe actual `input_tokens` and `output_tokens` metered against the\nrequest's ZeroClick service slug.\n",
+        "description": "Usage report settled with ZeroClick, present on `200` responses. Encodes\nthe actual usage metered against the request's ZeroClick service slug\n(the kebab-cased model id, e.g. `lfm2-5-1-2b-instruct`): `input_tokens`\nand `output_tokens` for chat completions, responses and moderations,\n`input_tokens` only for embeddings, and `audio_seconds` for the audio\nendpoints.\n",
         "schema": {
           "type": "string"
         }
@@ -233,6 +852,12 @@
         "description": "Where inference executed (e.g. `cloud` or an on-device route). Absent when inference ran neither on the edge nor in the cloud.",
         "schema": {
           "type": "string"
+        }
+      },
+      "XAudioDurationSeconds": {
+        "description": "Audio length in seconds: the uploaded audio for a transcription or translation, the generated audio for speech. ZeroClick is billed `max(1, ceil(x-audio-duration-seconds))` audio seconds.",
+        "schema": {
+          "type": "number"
         }
       }
     },
@@ -339,6 +964,62 @@
                 "message": "Internal error",
                 "type": "internal_error"
               }
+            }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit reached. Limits are counted per ZeroClick agent, so one busy agent does not throttle the others. Wait at least `Retry-After` seconds, then retry.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            }
+          }
+        }
+      },
+      "ModerationsBadRequest": {
+        "description": "Invalid request \u2014 malformed JSON, or a missing/invalid `input`.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": {
+                "message": "We could not parse the JSON body of your request. (HINT: This likely means you are not using your HTTP library correctly. The ZeroGPU API expects a JSON payload, but what was sent was not valid JSON.)",
+                "type": "invalid_request_error",
+                "param": null,
+                "code": null
+              }
+            }
+          }
+        }
+      },
+      "AudioBadRequest": {
+        "description": "Bad request \u2014 a body that is not the expected content type, or an invalid or missing field.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": {
+                "message": "'file' is required",
+                "type": "invalid_request_error",
+                "param": "file",
+                "code": "file_required"
+              }
+            }
+          }
+        }
+      },
+      "ModelUnavailable": {
+        "description": "Model warming up (`model_unavailable`) or every slot busy (`server_busy`). Retry with backoff.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorEnvelope"
             }
           }
         }
@@ -828,6 +1509,782 @@
         "type": "object",
         "description": "ZeroClick `payment_required` denial body, produced by the `@zeroclickai/sellers` SDK.",
         "additionalProperties": true
+      },
+      "CreateEmbeddingRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Embedding model to use. Embedding models are routable only on this endpoint.",
+            "enum": [
+              "all-minilm-l6-v2",
+              "bge-small-en-v1.5"
+            ],
+            "example": "all-minilm-l6-v2"
+          },
+          "input": {
+            "description": "Text to embed. A single string, or an array of strings (one vector per element). Inputs are truncated at the model's max token length.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            ]
+          }
+        }
+      },
+      "EmbeddingResponse": {
+        "type": "object",
+        "description": "An OpenAI-compatible embedding list.",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "list"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Embedding"
+            }
+          },
+          "model": {
+            "type": "string",
+            "description": "The resolved model id.",
+            "example": "all-MiniLM-L6-v2"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/EmbeddingUsage"
+          }
+        }
+      },
+      "Embedding": {
+        "type": "object",
+        "properties": {
+          "object": {
+            "type": "string",
+            "example": "embedding"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Position of the input this vector was produced from.",
+            "example": 0
+          },
+          "embedding": {
+            "type": "array",
+            "description": "The embedding vector. 384 dimensions for both models.",
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "EmbeddingUsage": {
+        "type": "object",
+        "description": "Embeddings are billed on input tokens only; there are no output tokens.",
+        "properties": {
+          "prompt_tokens": {
+            "type": "integer",
+            "example": 18
+          },
+          "total_tokens": {
+            "type": "integer",
+            "example": 18
+          }
+        }
+      },
+      "CreateModerationRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "default": "zlm-v1-moderation-edge",
+            "example": "zlm-v1-moderation-edge",
+            "description": "Moderation model to use. Defaults to the configured moderation model; OpenAI ids (`omni-moderation-latest`, `text-moderation-stable`) are accepted and mapped to it."
+          },
+          "input": {
+            "description": "Text to classify. A single string, an array of strings (one result per element), or an array of content parts (`{ \"type\": \"text\", \"text\": \"...\" }`) forming one multi-modal input.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "ModerationResponse": {
+        "type": "object",
+        "description": "OpenAI-compatible moderations envelope. One `results` entry per input.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the moderation request.",
+            "example": "modr-0a1b2c3d4e5f60718293a4b5c6d7e8f90"
+          },
+          "model": {
+            "type": "string",
+            "description": "The model used for classification.",
+            "example": "zlm-v1-moderation-edge"
+          },
+          "results": {
+            "type": "array",
+            "description": "Moderation verdicts, one per input (a string input yields a single-element array).",
+            "items": {
+              "$ref": "#/components/schemas/ModerationResult"
+            }
+          }
+        }
+      },
+      "ModerationResult": {
+        "type": "object",
+        "description": "A single entry of the `results` array \u2014 the verdict for one input.",
+        "properties": {
+          "flagged": {
+            "type": "boolean",
+            "description": "True when the model flagged the input in one or more categories.",
+            "example": true
+          },
+          "categories": {
+            "$ref": "#/components/schemas/ModerationCategories"
+          },
+          "category_scores": {
+            "$ref": "#/components/schemas/ModerationCategoryScores"
+          },
+          "category_applied_input_types": {
+            "$ref": "#/components/schemas/ModerationAppliedInputTypes"
+          }
+        }
+      },
+      "ModerationCategories": {
+        "type": "object",
+        "description": "Per-category boolean verdicts. All 13 categories are always present, in OpenAI's order.",
+        "properties": {
+          "harassment": {
+            "type": "boolean",
+            "description": "Content that expresses, incites, or promotes harassing language towards any target.",
+            "example": true
+          },
+          "harassment/threatening": {
+            "type": "boolean",
+            "description": "Harassment that also includes violence or serious harm towards any target.",
+            "example": true
+          },
+          "hate": {
+            "type": "boolean",
+            "description": "Content that expresses, incites, or promotes hate based on a protected attribute.",
+            "example": false
+          },
+          "hate/threatening": {
+            "type": "boolean",
+            "description": "Hateful content that also includes violence or serious harm towards a protected group.",
+            "example": false
+          },
+          "illicit": {
+            "type": "boolean",
+            "description": "Content that gives advice or instruction on how to commit a wrongdoing.",
+            "example": false
+          },
+          "illicit/violent": {
+            "type": "boolean",
+            "description": "Illicit content that also references violence or procuring a weapon.",
+            "example": false
+          },
+          "self-harm": {
+            "type": "boolean",
+            "description": "Content that promotes, encourages, or depicts acts of self-harm.",
+            "example": false
+          },
+          "self-harm/intent": {
+            "type": "boolean",
+            "description": "Content where the speaker expresses that they are engaging or intend to engage in self-harm.",
+            "example": false
+          },
+          "self-harm/instructions": {
+            "type": "boolean",
+            "description": "Content that provides instructions or advice on how to commit acts of self-harm.",
+            "example": false
+          },
+          "sexual": {
+            "type": "boolean",
+            "description": "Content meant to arouse sexual excitement or that promotes sexual services.",
+            "example": false
+          },
+          "sexual/minors": {
+            "type": "boolean",
+            "description": "Sexual content that includes an individual under 18 years old.",
+            "example": false
+          },
+          "violence": {
+            "type": "boolean",
+            "description": "Content that depicts death, violence, or physical injury.",
+            "example": true
+          },
+          "violence/graphic": {
+            "type": "boolean",
+            "description": "Content that depicts death, violence, or physical injury in graphic detail.",
+            "example": false
+          }
+        }
+      },
+      "ModerationCategoryScores": {
+        "type": "object",
+        "description": "Per-category confidence scores in [0, 1]. All 13 categories are always present, in OpenAI's order.",
+        "properties": {
+          "harassment": {
+            "type": "number",
+            "description": "Confidence score for `harassment`.",
+            "example": 0.9412
+          },
+          "harassment/threatening": {
+            "type": "number",
+            "description": "Confidence score for `harassment/threatening`.",
+            "example": 0.9016
+          },
+          "hate": {
+            "type": "number",
+            "description": "Confidence score for `hate`.",
+            "example": 0.0231
+          },
+          "hate/threatening": {
+            "type": "number",
+            "description": "Confidence score for `hate/threatening`.",
+            "example": 0.0104
+          },
+          "illicit": {
+            "type": "number",
+            "description": "Confidence score for `illicit`.",
+            "example": 0.0057
+          },
+          "illicit/violent": {
+            "type": "number",
+            "description": "Confidence score for `illicit/violent`.",
+            "example": 0.0039
+          },
+          "self-harm": {
+            "type": "number",
+            "description": "Confidence score for `self-harm`.",
+            "example": 0.0021
+          },
+          "self-harm/intent": {
+            "type": "number",
+            "description": "Confidence score for `self-harm/intent`.",
+            "example": 0.0012
+          },
+          "self-harm/instructions": {
+            "type": "number",
+            "description": "Confidence score for `self-harm/instructions`.",
+            "example": 0.0008
+          },
+          "sexual": {
+            "type": "number",
+            "description": "Confidence score for `sexual`.",
+            "example": 0.0006
+          },
+          "sexual/minors": {
+            "type": "number",
+            "description": "Confidence score for `sexual/minors`.",
+            "example": 0.0002
+          },
+          "violence": {
+            "type": "number",
+            "description": "Confidence score for `violence`.",
+            "example": 0.8774
+          },
+          "violence/graphic": {
+            "type": "number",
+            "description": "Confidence score for `violence/graphic`.",
+            "example": 0.0311
+          }
+        }
+      },
+      "ModerationAppliedInputTypes": {
+        "type": "object",
+        "description": "Which input modality triggered each category. This is a text-only model, so every category maps to [\"text\"].",
+        "properties": {
+          "harassment": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "harassment/threatening": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "hate": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "hate/threatening": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "illicit": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "illicit/violent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm/intent": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "self-harm/instructions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "sexual": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "sexual/minors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "violence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          },
+          "violence/graphic": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "text"
+            ]
+          }
+        }
+      },
+      "CreateTranscriptionRequest": {
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The audio file to transcribe."
+          },
+          "model": {
+            "type": "string",
+            "enum": [
+              "whisper-tiny"
+            ],
+            "default": "whisper-tiny",
+            "example": "whisper-tiny",
+            "description": "Model identifier. The endpoint serves `whisper-tiny`."
+          },
+          "language": {
+            "type": "string",
+            "example": "en",
+            "description": "ISO-639-1 code, such as `en`. Detected automatically when omitted."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Text to guide spelling and style, such as names or jargon."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "srt",
+              "verbose_json",
+              "vtt"
+            ],
+            "default": "json",
+            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "description": "Sampling temperature."
+          },
+          "timestamp_granularities[]": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "segment",
+                "word"
+              ]
+            },
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
+          }
+        }
+      },
+      "TranscriptionResponse": {
+        "type": "object",
+        "description": "`json` returns `{ text }`. `verbose_json` adds `task`, `language`, `duration`, and `segments` and/or `words`.",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The transcript."
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateSpeechRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "description": "JSON body, as the OpenAI SDKs send it. Use `multipart/form-data` to attach a `voice_sample`.",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "chatterbox-nano"
+            ],
+            "default": "chatterbox-nano",
+            "example": "chatterbox-nano",
+            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "format": "textarea",
+            "example": "Testing model to generate voice. Hey how are you today?",
+            "description": "The text to speak. Inline tags such as `[laugh]` and `[cough]` add paralinguistic cues."
+          },
+          "voice": {
+            "type": "string",
+            "enum": [
+              "default",
+              "builtin",
+              "chatterbox",
+              "alloy",
+              "ash",
+              "ballad",
+              "cedar",
+              "coral",
+              "echo",
+              "fable",
+              "marin",
+              "nova",
+              "onyx",
+              "sage",
+              "shimmer",
+              "verse"
+            ],
+            "default": "default",
+            "example": "default",
+            "description": "OpenAI voice names are accepted and all map to the built-in voice."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "mp3",
+              "opus",
+              "aac",
+              "flac",
+              "wav",
+              "pcm"
+            ],
+            "default": "mp3",
+            "example": "mp3",
+            "description": "`pcm` is raw 16-bit little-endian mono at 24 kHz."
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "example": 1234,
+            "description": "Pins sampling for repeatable output (best-effort)."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0.8,
+            "description": "Sampling temperature."
+          },
+          "top_p": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.95,
+            "description": "Nucleus sampling."
+          },
+          "top_k": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 1000,
+            "description": "Top-k sampling."
+          },
+          "repetition_penalty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1.2,
+            "description": "Penalty on repeated speech tokens."
+          }
+        }
+      },
+      "CreateSpeechMultipartRequest": {
+        "type": "object",
+        "required": [
+          "input"
+        ],
+        "description": "Multipart form, required for voice cloning.",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "chatterbox-nano"
+            ],
+            "default": "chatterbox-nano",
+            "example": "chatterbox-nano",
+            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "format": "textarea",
+            "example": "Testing model to generate voice. Hey how are you today?",
+            "description": "The text to speak. Inline tags such as `[laugh]` and `[cough]` add paralinguistic cues."
+          },
+          "voice": {
+            "type": "string",
+            "enum": [
+              "default",
+              "builtin",
+              "chatterbox",
+              "alloy",
+              "ash",
+              "ballad",
+              "cedar",
+              "coral",
+              "echo",
+              "fable",
+              "marin",
+              "nova",
+              "onyx",
+              "sage",
+              "shimmer",
+              "verse"
+            ],
+            "default": "default",
+            "example": "default",
+            "description": "OpenAI voice names are accepted and all map to the built-in voice."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "mp3",
+              "opus",
+              "aac",
+              "flac",
+              "wav",
+              "pcm"
+            ],
+            "default": "mp3",
+            "example": "mp3",
+            "description": "`pcm` is raw 16-bit little-endian mono at 24 kHz."
+          },
+          "seed": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295,
+            "example": 1234,
+            "description": "Pins sampling for repeatable output (best-effort)."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "default": 0.8,
+            "description": "Sampling temperature."
+          },
+          "top_p": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.95,
+            "description": "Nucleus sampling."
+          },
+          "top_k": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "default": 1000,
+            "description": "Top-k sampling."
+          },
+          "repetition_penalty": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4,
+            "default": 1.2,
+            "description": "Penalty on repeated speech tokens."
+          },
+          "voice_sample": {
+            "type": "string",
+            "format": "binary",
+            "description": "Reference clip to clone a voice from. Overrides `voice`. Not stored."
+          }
+        }
+      },
+      "CreateTranslationRequest": {
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "The audio file to translate into English."
+          },
+          "model": {
+            "type": "string",
+            "enum": [
+              "whisper-tiny"
+            ],
+            "default": "whisper-tiny",
+            "example": "whisper-tiny",
+            "description": "Model identifier. The endpoint serves `whisper-tiny`."
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Text to guide spelling and style, such as names or jargon."
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text",
+              "srt",
+              "verbose_json",
+              "vtt"
+            ],
+            "default": "json",
+            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0,
+            "description": "Sampling temperature."
+          },
+          "timestamp_granularities[]": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "segment",
+                "word"
+              ]
+            },
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
+          }
+        },
+        "description": "Same form as a transcription, without `language`: the transcript is always English. Sending `language` returns `400`."
       }
     }
   }
