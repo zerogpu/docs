@@ -182,7 +182,7 @@
             "$ref": "#/components/responses/ResponsesContextLengthExceeded"
           },
           "429": {
-            "$ref": "#/components/responses/RateLimited"
+            "$ref": "#/components/responses/ResponsesRateLimited"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -234,9 +234,6 @@
               },
               "x-request-id": {
                 "$ref": "#/components/headers/XRequestId"
-              },
-              "x-inference-type": {
-                "$ref": "#/components/headers/XInferenceType"
               }
             },
             "content": {
@@ -333,9 +330,6 @@
               },
               "x-request-id": {
                 "$ref": "#/components/headers/XRequestId"
-              },
-              "x-inference-type": {
-                "$ref": "#/components/headers/XInferenceType"
               }
             },
             "content": {
@@ -859,6 +853,12 @@
         "schema": {
           "type": "number"
         }
+      },
+      "RetryAfter": {
+        "description": "Seconds to wait before retrying.",
+        "schema": {
+          "type": "integer"
+        }
       }
     },
     "responses": {
@@ -896,17 +896,14 @@
               "invalidJson": {
                 "value": {
                   "error": {
-                    "message": "Invalid JSON body",
-                    "type": "invalid_request_error"
+                    "message": "Invalid JSON body"
                   }
                 }
               },
               "missingModel": {
                 "value": {
                   "error": {
-                    "message": "model is required",
-                    "type": "invalid_request_error",
-                    "param": "model"
+                    "message": "Missing or invalid \"model\""
                   }
                 }
               }
@@ -969,11 +966,24 @@
         }
       },
       "RateLimited": {
-        "description": "Rate limit reached. Limits are counted per ZeroClick agent, so one busy agent does not throttle the others. Wait at least `Retry-After` seconds, then retry.",
+        "description": "Rate limit reached. Limits are counted per ZeroClick agent, so one busy agent does not throttle the others. Wait at least `retry-after` seconds, then retry.",
+        "headers": {
+          "retry-after": {
+            "$ref": "#/components/headers/RetryAfter"
+          }
+        },
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ErrorEnvelope"
+            },
+            "example": {
+              "error": {
+                "message": "Rate limit reached for LFM2.5-1.2B-Instruct in organization org_123 on requests per min (RPM): Limit 60, Used 60, Requested 1. Please try again in 1s.",
+                "type": "rate_limit_error",
+                "param": null,
+                "code": "requests_per_minute_exceeded"
+              }
             }
           }
         }
@@ -997,7 +1007,7 @@
         }
       },
       "AudioBadRequest": {
-        "description": "Bad request \u2014 a body that is not the expected content type, or an invalid or missing field.",
+        "description": "Bad request \u2014 a body that is not `multipart/form-data` (transcriptions and translations), or an invalid or missing field reported by the upstream model.",
         "content": {
           "application/json": {
             "schema": {
@@ -1005,21 +1015,29 @@
             },
             "example": {
               "error": {
-                "message": "'file' is required",
+                "message": "POST /v1/audio/transcriptions expects a multipart/form-data body containing the audio `file` field.",
                 "type": "invalid_request_error",
-                "param": "file",
-                "code": "file_required"
+                "param": null,
+                "code": "invalid_content_type"
               }
             }
           }
         }
       },
       "ModelUnavailable": {
-        "description": "Model warming up (`model_unavailable`) or every slot busy (`server_busy`). Retry with backoff.",
+        "description": "Model warming up (`model_unavailable`) or every slot busy (`server_busy`), forwarded from the upstream with its `retry-after`. Retry with backoff."
+      },
+      "ResponsesRateLimited": {
+        "description": "Rate limit reached. Limits are counted per ZeroClick agent, so one busy agent does not throttle the others. Wait at least `retry-after` seconds, then retry. Returned in the Responses error envelope.",
+        "headers": {
+          "retry-after": {
+            "$ref": "#/components/headers/RetryAfter"
+          }
+        },
         "content": {
           "application/json": {
             "schema": {
-              "$ref": "#/components/schemas/ErrorEnvelope"
+              "$ref": "#/components/schemas/ResponsesResponse"
             }
           }
         }
