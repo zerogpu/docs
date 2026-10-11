@@ -1,0 +1,36 @@
+---
+title: "System One"
+description: "Answer yes/no, multiple-choice and rubric questions about any content with the ZLM classifiers."
+sidebarTitle: "System One"
+openapi: "api-reference/openapi/zerogpu.openapi.json POST /systemone"
+---
+
+Send the content as `state` and ask any number of named `questions` about it in one call. Each answer comes back under the question's name, with calibrated probabilities. The request and response follow the [TypeSafe System One](https://api.typesafe.ai/openapi.json) decision schema, so an existing System One client works by changing the base URL and API key.
+
+System One is available on four models, in addition to their existing endpoints:
+
+| Model | Also served on | Good for |
+| --- | --- | --- |
+| [`zlm-v1-moderation-edge`](/api-reference/models/zlm-v1-moderation-edge) | `/moderations` | Is this unsafe? Which moderation category applies? How severe is it? |
+| [`zlm-v1-iab-classify-edge`](/api-reference/models/zlm-v1-iab-classify-edge) | `/chat/completions`, `/responses` | Which IAB category matches? Does it belong to category X? How strongly? |
+| [`zlm-v1-iab-domain-classifier`](/api-reference/models/zlm-v1-iab-domain-classifier) | `/chat/completions`, `/responses` | The same questions about a domain. `state` must be a URL or domain. |
+| [`zlm-v2-iab-classify-edge-enriched`](/api-reference/models/zlm-v2-iab-classify-edge-enriched) | `/chat/completions`, `/responses` | Mixed category, brand-safety and commercial-intent questions in one request. |
+
+## Question types
+
+- **`noul`** - a yes/no decision. The answer's `noul` is the probability of yes: near 1 favors yes, near 0 favors no. Optional `criteria.true` and `criteria.false` describe what counts as each.
+- **`choice`** - pick one option. `criteria` maps each choice name to a description. The answer gives the `choice`, its `confidence` and the `probabilities` of every option.
+- **`score`** - rate against an ordered rubric. `criteria` is a list of levels, scored from 0. The answer's `score` is the probability-weighted level and may fall between integers; `legend` maps each level number back to its text.
+
+## How answers are produced
+
+Each model scores the content against its own labels: the 13 OpenAI moderation categories plus an overall unsafe score, or the IAB Content 2.2 and Audience 1.1 taxonomies. A question whose criteria name those labels is answered directly from the model's scores. A category name covers its whole branch, so `Technology and computing` also counts `Laptops`. Brand-safety questions on the IAB models read the Sensitive Topics branch, and commercial-intent questions read the Purchase Intent audiences.
+
+A question whose criteria are not among the model's labels is answered by zero-shot classification instead. You can mix both kinds in one request.
+
+## Limits and billing
+
+- Up to 16 questions per request, and up to 32 criteria per question.
+- `state` may be a string, an object or an array. An object or array is read as its JSON.
+- You are billed for input tokens only (the state plus the questions); `output_tokens` is always 0.
+- Request validation errors return `422` with System One's `{ "detail": [{ "loc", "msg", "type" }] }` body. Other errors use the standard [error format](/docs/production-patterns#handle-status-codes-explicitly).
