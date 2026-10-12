@@ -1,0 +1,14 @@
+---
+title: "Speech (ZeroClick)"
+description: "Generate speech with chatterbox-nano, authenticated by a ZeroClick HMAC signature instead of an API key."
+sidebarTitle: "Speech"
+openapi: "api-reference/openapi/zeroclick.openapi.json POST /zeroclick/v1/audio/speech"
+---
+
+This is the [Speech](/api-reference/audio-speech) endpoint behind **ZeroClick**, ZeroGPU's agent-payment layer. Same request/response bodies, limits, and model as `/v1/audio/speech` — only authentication, authorization, and metering differ. The body is streamed upstream unread, so the request is always served by the configured model (`chatterbox-nano`). Send JSON, or `multipart/form-data` with a `voice_sample` to clone a voice.
+
+- **Authentication** — no `x-api-key`. A buying agent calls ZeroClick's hosted pay URL; ZeroClick proxies the request and signs the raw request bytes with an HMAC in the `zc-signature` header. A request is authenticated **only** by a valid signature.
+- **Authorization** — a ZeroClick allowance check runs before any billable work. It fails *open* on a transient ZeroClick outage (the signature has already verified), but never for a missing or invalid signature.
+- **Metering** — billed per audio second. The allowance check asks for a 1-second floor, since the duration is not known until the clip is decoded or generated. On success, `zc-usage` reports `max(1, ceil(x-audio-duration-seconds))` audio seconds. Stripe metering is bypassed; ZeroClick is the sole biller.
+
+Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).

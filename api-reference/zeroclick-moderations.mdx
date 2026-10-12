@@ -1,0 +1,14 @@
+---
+title: "Moderations (ZeroClick)"
+description: "OpenAI-style content moderation authenticated by a ZeroClick HMAC signature instead of an API key."
+sidebarTitle: "Moderations"
+openapi: "api-reference/openapi/zeroclick.openapi.json POST /zeroclick/v1/moderations"
+---
+
+This is the [Moderations](/api-reference/moderations) endpoint behind **ZeroClick**, ZeroGPU's agent-payment layer. Same request/response bodies and same model routing as `/v1/moderations` — only authentication, authorization, and metering differ. `model` may be omitted, or given as an OpenAI id such as `omni-moderation-latest`; either way the configured moderation model serves the request.
+
+- **Authentication** — no `x-api-key`. A buying agent calls ZeroClick's hosted pay URL; ZeroClick proxies the request and signs the raw request bytes with an HMAC in the `zc-signature` header. A request is authenticated **only** by a valid signature.
+- **Authorization** — a ZeroClick allowance check runs before any billable work. It fails *open* on a transient ZeroClick outage (the signature has already verified), but never for a missing or invalid signature.
+- **Metering** — the input and output tokens from the response's `usage` are settled with ZeroClick and reported via the `zc-usage` response header. Stripe metering is bypassed; ZeroClick is the sole biller.
+
+Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).
