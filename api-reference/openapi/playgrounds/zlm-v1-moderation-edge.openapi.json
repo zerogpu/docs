@@ -246,7 +246,7 @@
                     },
                     "severity": {
                       "type": "score",
-                      "score": 2.75,
+                      "score": 2.69,
                       "confidence": 0.71,
                       "legend": {
                         "0": "None",
@@ -723,8 +723,10 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "A model that supports System One: `zlm-v1-moderation-edge`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier` or `zlm-v2-iab-classify-edge-enriched`.",
-            "example": "zlm-v1-iab-classify-edge"
+            "const": "zlm-v1-moderation-edge",
+            "default": "zlm-v1-moderation-edge",
+            "example": "zlm-v1-moderation-edge",
+            "description": "Model identifier (fixed for this playground)."
           },
           "state": {
             "description": "The content every question refers to: a string, object or array. An object or array is read as its JSON. For `zlm-v1-iab-domain-classifier` it must be a URL or domain.",
