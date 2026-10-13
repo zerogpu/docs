@@ -143,6 +143,7 @@
               "api-reference/responses",
               "api-reference/chat-completions",
               "api-reference/moderations",
+              "api-reference/systemone",
               "api-reference/embeddings",
               {
                 "group": "By model",

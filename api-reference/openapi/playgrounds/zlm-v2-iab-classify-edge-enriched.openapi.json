@@ -342,6 +342,161 @@
           }
         ]
       }
+    },
+    "/systemone": {
+      "post": {
+        "operationId": "createSystemOneDecision",
+        "summary": "Create System One decision",
+        "description": "Answer named `noul`, `choice` and `score` questions about `state`, compatible with TypeSafe System One.",
+        "tags": [
+          "System One"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemOneRequest"
+              },
+              "example": {
+                "model": "zlm-v2-iab-classify-edge-enriched",
+                "state": "Apple announced a new MacBook powered by its latest M-series processor. Preorders open today.",
+                "questions": {
+                  "category": {
+                    "type": "choice",
+                    "instructions": "Which category best describes this content?",
+                    "criteria": {
+                      "technology": "Technology and computing",
+                      "finance": "Personal finance",
+                      "travel": "Travel"
+                    }
+                  },
+                  "brand_safe": {
+                    "type": "noul",
+                    "instructions": "Is this content suitable for brand advertising?"
+                  },
+                  "commercial_intent": {
+                    "type": "score",
+                    "instructions": "How strong is the commercial intent?",
+                    "criteria": [
+                      "None",
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemOneResponse"
+                },
+                "example": {
+                  "model": "zlm-v2-iab-classify-edge-enriched",
+                  "answers": {
+                    "category": {
+                      "type": "choice",
+                      "choice": "technology",
+                      "confidence": 0.95,
+                      "probabilities": {
+                        "technology": 0.95,
+                        "finance": 0.03,
+                        "travel": 0.02
+                      }
+                    },
+                    "brand_safe": {
+                      "type": "noul",
+                      "noul": 0.98
+                    },
+                    "commercial_intent": {
+                      "type": "score",
+                      "score": 2.64,
+                      "confidence": 0.7,
+                      "legend": {
+                        "0": "None",
+                        "1": "Low",
+                        "2": "Medium",
+                        "3": "High"
+                      },
+                      "probabilities": {
+                        "0": 0.01,
+                        "1": 0.04,
+                        "2": 0.25,
+                        "3": 0.7
+                      }
+                    }
+                  },
+                  "usage": {
+                    "input_tokens": 120,
+                    "output_tokens": 0,
+                    "total_tokens": 120
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The model does not support System One (`model_not_supported`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or missing API key)"
+          },
+          "402": {
+            "description": "Insufficient quota (insufficient_quota)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found (`model_not_found`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream inference failed (`upstream_error`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -457,6 +612,447 @@
       "ErrorResponse": {
         "type": "object",
         "additionalProperties": true
+      },
+      "SystemOneRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "state",
+          "questions"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "zlm-v2-iab-classify-edge-enriched",
+            "default": "zlm-v2-iab-classify-edge-enriched",
+            "example": "zlm-v2-iab-classify-edge-enriched",
+            "description": "Model identifier (fixed for this playground)."
+          },
+          "state": {
+            "description": "The content every question refers to: a string, object or array. An object or array is read as its JSON. For `zlm-v1-iab-domain-classifier` it must be a URL or domain.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array",
+                "items": {}
+              }
+            ]
+          },
+          "questions": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 16,
+            "description": "Named questions (up to 16). Keys are names you choose; each answer comes back under the same key.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SystemOneQuestion"
+            }
+          }
+        }
+      },
+      "SystemOneQuestion": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NoulQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/components/schemas/ScoreQuestion"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "noul": "#/components/schemas/NoulQuestion",
+            "choice": "#/components/schemas/ChoiceQuestion",
+            "score": "#/components/schemas/ScoreQuestion"
+          }
+        }
+      },
+      "NoulQuestion": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "description": "A yes/no (true/false) decision.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "noul"
+          },
+          "instructions": {
+            "description": "The statement or question to evaluate.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criteria": {
+            "description": "Optional definitions of what counts as true and false.",
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "true": {
+                    "description": "Free-form text: a string, or an object or array that is read as its JSON.",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "array",
+                        "items": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "false": {
+                    "description": "Free-form text: a string, or an object or array that is read as its JSON.",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object"
+                      },
+                      {
+                        "type": "array",
+                        "items": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ChoiceQuestion": {
+        "type": "object",
+        "required": [
+          "type",
+          "criteria"
+        ],
+        "description": "Pick one option.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "choice"
+          },
+          "instructions": {
+            "description": "Free-form text: a string, or an object or array that is read as its JSON.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criteria": {
+            "type": "object",
+            "minProperties": 1,
+            "maxProperties": 32,
+            "description": "Choice names mapped to descriptions. A null description means the name alone is used.",
+            "additionalProperties": {
+              "description": "Free-form text: a string, or an object or array that is read as its JSON.",
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "array",
+                  "items": {}
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "ScoreQuestion": {
+        "type": "object",
+        "required": [
+          "type",
+          "criteria"
+        ],
+        "description": "Rate against an ordered rubric.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "score"
+          },
+          "instructions": {
+            "description": "What to rate.",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "criteria": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 32,
+            "description": "Ordered level descriptions. A level's position is its score, starting at 0.",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "array",
+                  "items": {}
+                }
+              ]
+            }
+          }
+        }
+      },
+      "SystemOneResponse": {
+        "type": "object",
+        "required": [
+          "model",
+          "answers",
+          "usage"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "The model that answered."
+          },
+          "answers": {
+            "type": "object",
+            "description": "Keyed by your question names, in request order.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SystemOneAnswer"
+            }
+          },
+          "usage": {
+            "$ref": "#/components/schemas/SystemOneUsage"
+          }
+        }
+      },
+      "SystemOneAnswer": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/NoulAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/ChoiceAnswer"
+          },
+          {
+            "$ref": "#/components/schemas/ScoreAnswer"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "noul": "#/components/schemas/NoulAnswer",
+            "choice": "#/components/schemas/ChoiceAnswer",
+            "score": "#/components/schemas/ScoreAnswer"
+          }
+        }
+      },
+      "NoulAnswer": {
+        "type": "object",
+        "required": [
+          "type",
+          "noul"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "noul"
+          },
+          "noul": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Probability of true. Near 1 favors true, near 0 favors false, near 0.5 is uncertain."
+          }
+        }
+      },
+      "ChoiceAnswer": {
+        "type": "object",
+        "required": [
+          "type",
+          "choice",
+          "confidence",
+          "probabilities"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "choice"
+          },
+          "choice": {
+            "type": "string",
+            "description": "The most likely choice name."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "probabilities": {
+            "type": "object",
+            "description": "Keyed by choice name; sums to about 1.",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "ScoreAnswer": {
+        "type": "object",
+        "required": [
+          "type",
+          "score",
+          "confidence",
+          "legend",
+          "probabilities"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "score"
+          },
+          "score": {
+            "type": "number",
+            "description": "Probability-weighted average level; may fall between integers."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "legend": {
+            "type": "object",
+            "description": "Level key (\"0\", \"1\", ...) to its criteria text.",
+            "additionalProperties": {}
+          },
+          "probabilities": {
+            "type": "object",
+            "description": "Keyed like `legend`; sums to about 1.",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "SystemOneUsage": {
+        "type": "object",
+        "required": [
+          "input_tokens",
+          "output_tokens",
+          "total_tokens"
+        ],
+        "properties": {
+          "input_tokens": {
+            "type": "integer",
+            "description": "Tokens billed: the state plus the questions."
+          },
+          "output_tokens": {
+            "type": "integer",
+            "description": "Always 0; System One output is not billed."
+          },
+          "total_tokens": {
+            "type": "integer"
+          }
+        }
+      },
+      "HTTPValidationError": {
+        "type": "object",
+        "description": "Request validation failure (System One's own error shape).",
+        "properties": {
+          "detail": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "loc",
+                "msg",
+                "type"
+              ],
+              "properties": {
+                "loc": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

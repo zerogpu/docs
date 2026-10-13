@@ -12,4 +12,8 @@ openapi: "api-reference/openapi/playgrounds/zlm-v2-iab-classify-edge-enriched.op
 
 > The enriched variant of ZeroGPU's IAB classifier turns a single inference call into a full content-intelligence profile not just a label, but everything a contextual pipeline needs to act on. Each call returns IAB categories across both the 1.0 and 2.2 taxonomies (down to tier-3), audience and interest segments, topics, keywords, and user-intent classification — all with confidence scores with edge-native, sub-millisecond speeds. With support for 50+ languages, it delivers the same full profile on multilingual content without a translation step. Built for contextual ad targeting, brand-safety scoring, publisher content categorization, and signal pipelines that need full metadata on every request.
 
+## System One
+
+It also answers [System One](/api-reference/systemone) decisions on `/v1/systemone`, including several mixed questions in one request: category, intent and contextual classification (`choice`), brand safety and suitability (`noul`), and commercial intent or category strength (`score`).
+
 **References:** [Model docs](https://docs.zerogpu.ai/) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
