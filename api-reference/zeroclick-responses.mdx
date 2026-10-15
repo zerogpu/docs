@@ -5,10 +5,11 @@ sidebarTitle: "Responses"
 openapi: "api-reference/openapi/zeroclick.openapi.json POST /zeroclick/v1/responses"
 ---
 
-This is the [Responses](/api-reference/responses) endpoint behind **ZeroClick**, ZeroGPU's agent-payment layer. Same request/response bodies and same model routing as `/v1/responses` — only authentication, authorization, and metering differ.
+This is the [Responses](/api-reference/responses) endpoint behind **ZeroClick**, ZeroGPU's agent-payment layer. Same request/response bodies and same model routing as `/v1/responses`, except for retired model ids (below) — authentication, authorization, and metering differ.
 
 - **Authentication** — no `x-api-key`. A buying agent calls ZeroClick's hosted pay URL; ZeroClick proxies the request and signs the raw request bytes with an HMAC in the `zc-signature` header. A request is authenticated **only** by a valid signature.
 - **Authorization** — a ZeroClick allowance check runs before any billable work. It fails *open* on a transient ZeroClick outage (the signature has already verified), but never for a missing or invalid signature.
+- **Retired model ids** — `deepseek-v4-flash`, `glm-5.2` and `gliner2-base-v1` are served and metered as their successors (`deepseek-v4.1-flash`, `glm-5.3-flash`, `gliner2.5-base-v1`); the response's `model` is the successor. Send the current id.
 - **Metering** — actual token usage is settled with ZeroClick and reported via the `zc-usage` response header. Stripe metering is bypassed; ZeroClick is the sole biller.
 
 The `input` and `output` shapes vary by model; open a [model page](/api-reference/models) for a prefilled playground. Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).
