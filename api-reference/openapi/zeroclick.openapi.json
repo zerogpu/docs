@@ -445,7 +445,7 @@
         ],
         "operationId": "zeroclickCreateTranscription",
         "summary": "Create transcription (ZeroClick-authenticated)",
-        "description": "OpenAI-style speech-to-text in the source language. The model is the configured `whisper-tiny` rather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/transcriptions` runs behind it.\n\n**Body**: `application/json` \u2014 the form ZeroClick's pay host forwards \u2014 with the audio as base64 (`file`) or an https URL (`file_url`), or `multipart/form-data` with a `file` part. A JSON body is converted to the multipart upload before dispatch; one that cannot be (bad base64, unreachable URL, neither or both sources) is answered with `400` or `413` before any inference and is not billed.\n",
+        "description": "OpenAI-style speech-to-text in the source language. The model is the configured `whisper-tiny` rather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/transcriptions` runs behind it.\n\n**Body**: `application/json`, with the audio as base64 (`file`) or an https URL (`file_url`). A body that cannot be read (bad base64, unreachable URL, neither or both sources) is answered with `400` or `413` before any inference and is not billed.\n",
         "security": [
           {
             "ZeroClickSignature": []
@@ -483,14 +483,6 @@
                     "model": "whisper-tiny"
                   }
                 }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTranscriptionRequest"
-              },
-              "example": {
-                "model": "whisper-tiny"
               }
             }
           }
@@ -596,7 +588,7 @@
         ],
         "operationId": "zeroclickCreateTranslation",
         "summary": "Create translation (ZeroClick-authenticated)",
-        "description": "OpenAI-style speech-to-text that always returns English. The model is the configured `whisper-tiny` rather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/translations` runs behind it.\n\n**Body**: `application/json` \u2014 the form ZeroClick's pay host forwards \u2014 with the audio as base64 (`file`) or an https URL (`file_url`), or `multipart/form-data` with a `file` part. A JSON body is converted to the multipart upload before dispatch; one that cannot be (bad base64, unreachable URL, neither or both sources) is answered with `400` or `413` before any inference and is not billed.\n",
+        "description": "OpenAI-style speech-to-text that always returns English. The model is the configured `whisper-tiny` rather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/translations` runs behind it.\n\n**Body**: `application/json`, with the audio as base64 (`file`) or an https URL (`file_url`). A body that cannot be read (bad base64, unreachable URL, neither or both sources) is answered with `400` or `413` before any inference and is not billed.\n",
         "security": [
           {
             "ZeroClickSignature": []
@@ -634,14 +626,6 @@
                     "model": "whisper-tiny"
                   }
                 }
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTranslationRequest"
-              },
-              "example": {
-                "model": "whisper-tiny"
               }
             }
           }
@@ -716,7 +700,7 @@
         ],
         "operationId": "zeroclickCreateSpeech",
         "summary": "Create speech (ZeroClick-authenticated)",
-        "description": "Text-to-speech, with optional voice cloning from a `voice_sample` sent as\nmultipart. The body is streamed upstream unread, so the model is the configured `chatterbox-nano`\nrather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/speech` runs behind it.\n",
+        "description": "Text-to-speech from a JSON body. Voice cloning (a `voice_sample` upload) is not\navailable on this route. The model is the configured `chatterbox-nano`\nrather than one read from the request. Billed per audio second: the allowance\ncheck asks for the 1-second floor, and `zc-usage` reports\n`max(1, ceil(x-audio-duration-seconds))` audio seconds on success.\n\nAuthenticated by verifying the `zc-signature` HMAC over the raw\nrequest bytes; the same orchestration as `/v1/audio/speech` runs behind it.\n",
         "security": [
           {
             "ZeroClickSignature": []
@@ -733,17 +717,6 @@
         "requestBody": {
           "required": true,
           "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSpeechMultipartRequest"
-              },
-              "example": {
-                "model": "chatterbox-nano",
-                "input": "Testing model to generate voice. Hey how are you today?",
-                "response_format": "mp3",
-                "seed": 1234
-              }
-            },
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateSpeechRequest"
@@ -1053,7 +1026,7 @@
         }
       },
       "AudioBadRequest": {
-        "description": "Bad request. On transcriptions and translations: a body that is neither JSON nor `multipart/form-data` (`invalid_content_type`), or a JSON body that cannot be converted (`invalid_json`, `invalid_audio_source`, `invalid_base64`, `invalid_file_url`, `invalid_field`, `file_url_fetch_failed`, `file_url_timeout`). On every audio route: an invalid or missing field reported by the upstream model.",
+        "description": "Bad request. On transcriptions and translations: a body that cannot be read (`invalid_json`, `invalid_audio_source`, `invalid_base64`, `invalid_file_url`, `invalid_field`, `file_url_fetch_failed`, `file_url_timeout`). On every audio route: an invalid or missing field reported by the upstream model.",
         "content": {
           "application/json": {
             "schema": {
@@ -1068,17 +1041,6 @@
                     "type": "invalid_request_error",
                     "param": "file",
                     "code": "invalid_audio_source"
-                  }
-                }
-              },
-              "invalid_content_type": {
-                "summary": "Body that is neither JSON nor multipart",
-                "value": {
-                  "error": {
-                    "message": "POST /v1/audio/transcriptions expects a multipart/form-data body containing the audio `file` field.",
-                    "type": "invalid_request_error",
-                    "param": null,
-                    "code": "invalid_content_type"
                   }
                 }
               }
@@ -2080,68 +2042,6 @@
           }
         }
       },
-      "CreateTranscriptionRequest": {
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "properties": {
-          "file": {
-            "type": "string",
-            "format": "binary",
-            "description": "The audio file to transcribe."
-          },
-          "model": {
-            "type": "string",
-            "enum": [
-              "whisper-tiny"
-            ],
-            "default": "whisper-tiny",
-            "example": "whisper-tiny",
-            "description": "Model identifier. The endpoint serves `whisper-tiny`."
-          },
-          "language": {
-            "type": "string",
-            "example": "en",
-            "description": "ISO-639-1 code, such as `en`. Detected automatically when omitted."
-          },
-          "prompt": {
-            "type": "string",
-            "maxLength": 4096,
-            "description": "Text to guide spelling and style, such as names or jargon."
-          },
-          "response_format": {
-            "type": "string",
-            "enum": [
-              "json",
-              "text",
-              "srt",
-              "verbose_json",
-              "vtt"
-            ],
-            "default": "json",
-            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
-          },
-          "temperature": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 0,
-            "description": "Sampling temperature."
-          },
-          "timestamp_granularities[]": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "segment",
-                "word"
-              ]
-            },
-            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
-          }
-        }
-      },
       "TranscriptionResponse": {
         "type": "object",
         "description": "`json` returns `{ text }`. `verbose_json` adds `task`, `language`, `duration`, and `segments` and/or `words`.",
@@ -2161,7 +2061,7 @@
         "required": [
           "input"
         ],
-        "description": "JSON body, as the OpenAI SDKs send it. Use `multipart/form-data` to attach a `voice_sample`.",
+        "description": "JSON body, as the OpenAI SDKs send it.",
         "properties": {
           "model": {
             "type": "string",
@@ -2254,172 +2154,10 @@
             "description": "Penalty on repeated speech tokens."
           }
         }
-      },
-      "CreateSpeechMultipartRequest": {
-        "type": "object",
-        "required": [
-          "input"
-        ],
-        "description": "Multipart form, required for voice cloning.",
-        "properties": {
-          "model": {
-            "type": "string",
-            "enum": [
-              "chatterbox-nano"
-            ],
-            "default": "chatterbox-nano",
-            "example": "chatterbox-nano",
-            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
-          },
-          "input": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 2000,
-            "format": "textarea",
-            "example": "Testing model to generate voice. Hey how are you today?",
-            "description": "The text to speak. Inline tags such as `[laugh]` and `[cough]` add paralinguistic cues."
-          },
-          "voice": {
-            "type": "string",
-            "enum": [
-              "default",
-              "builtin",
-              "chatterbox",
-              "alloy",
-              "ash",
-              "ballad",
-              "cedar",
-              "coral",
-              "echo",
-              "fable",
-              "marin",
-              "nova",
-              "onyx",
-              "sage",
-              "shimmer",
-              "verse"
-            ],
-            "default": "default",
-            "example": "default",
-            "description": "OpenAI voice names are accepted and all map to the built-in voice."
-          },
-          "response_format": {
-            "type": "string",
-            "enum": [
-              "mp3",
-              "opus",
-              "aac",
-              "flac",
-              "wav",
-              "pcm"
-            ],
-            "default": "mp3",
-            "example": "mp3",
-            "description": "`pcm` is raw 16-bit little-endian mono at 24 kHz."
-          },
-          "seed": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 4294967295,
-            "example": 1234,
-            "description": "Pins sampling for repeatable output (best-effort)."
-          },
-          "temperature": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 2,
-            "default": 0.8,
-            "description": "Sampling temperature."
-          },
-          "top_p": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 0.95,
-            "description": "Nucleus sampling."
-          },
-          "top_k": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000,
-            "default": 1000,
-            "description": "Top-k sampling."
-          },
-          "repetition_penalty": {
-            "type": "number",
-            "minimum": 1,
-            "maximum": 4,
-            "default": 1.2,
-            "description": "Penalty on repeated speech tokens."
-          },
-          "voice_sample": {
-            "type": "string",
-            "format": "binary",
-            "description": "Reference clip to clone a voice from. Overrides `voice`. Not stored."
-          }
-        }
-      },
-      "CreateTranslationRequest": {
-        "type": "object",
-        "required": [
-          "file"
-        ],
-        "properties": {
-          "file": {
-            "type": "string",
-            "format": "binary",
-            "description": "The audio file to translate into English."
-          },
-          "model": {
-            "type": "string",
-            "enum": [
-              "whisper-tiny"
-            ],
-            "default": "whisper-tiny",
-            "example": "whisper-tiny",
-            "description": "Model identifier. The endpoint serves `whisper-tiny`."
-          },
-          "prompt": {
-            "type": "string",
-            "maxLength": 4096,
-            "description": "Text to guide spelling and style, such as names or jargon."
-          },
-          "response_format": {
-            "type": "string",
-            "enum": [
-              "json",
-              "text",
-              "srt",
-              "verbose_json",
-              "vtt"
-            ],
-            "default": "json",
-            "description": "`json` and `verbose_json` return `application/json`; `text`, `srt`, and `vtt` return `text/plain`."
-          },
-          "temperature": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 1,
-            "default": 0,
-            "description": "Sampling temperature."
-          },
-          "timestamp_granularities[]": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "segment",
-                "word"
-              ]
-            },
-            "description": "`segment` (default), `word`, or both. Requires `verbose_json`."
-          }
-        },
-        "description": "Same form as a transcription, without `language`: the transcript is always English. Sending `language` returns `400`."
       },
       "CreateTranscriptionJsonRequest": {
         "type": "object",
-        "description": "JSON form of a transcription request, the form ZeroClick's pay host forwards. Exactly one of `file` (base64) or `file_url` (https). Converted to the multipart upload before dispatch, so the other fields behave exactly as their form fields.",
+        "description": "A transcription request. Exactly one of `file` (base64) or `file_url` (https). The other fields behave exactly as on `/v1/audio/transcriptions`.",
         "properties": {
           "file": {
             "type": "string",
@@ -2485,7 +2223,7 @@
                 "word"
               ]
             },
-            "description": "`segment` (default), `word`, or both. Requires `verbose_json`. The form-field name `timestamp_granularities[]` is accepted too."
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`. `timestamp_granularities[]` is accepted as the key too."
           }
         },
         "oneOf": [
@@ -2513,7 +2251,7 @@
       },
       "CreateTranslationJsonRequest": {
         "type": "object",
-        "description": "JSON form of a translation request, the form ZeroClick's pay host forwards. Exactly one of `file` (base64) or `file_url` (https). No `language`: the transcript is always English, and sending `language` returns `400`.",
+        "description": "A translation request. Exactly one of `file` (base64) or `file_url` (https). No `language`: the transcript is always English, and sending `language` returns `400`.",
         "properties": {
           "file": {
             "type": "string",
@@ -2574,7 +2312,7 @@
                 "word"
               ]
             },
-            "description": "`segment` (default), `word`, or both. Requires `verbose_json`. The form-field name `timestamp_granularities[]` is accepted too."
+            "description": "`segment` (default), `word`, or both. Requires `verbose_json`. `timestamp_granularities[]` is accepted as the key too."
           }
         },
         "oneOf": [
