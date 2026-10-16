@@ -1116,8 +1116,31 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "Model id; routes the request via model metadata. Kebab-cased into a ZeroClick service slug for metering. A retired id (`deepseek-v4-flash` \u2192 `deepseek-v4.1-flash`, `glm-5.2` \u2192 `glm-5.3-flash`, `gliner2-base-v1` \u2192 `gliner2.5-base-v1`) is served and metered as its successor.",
-            "example": "LFM2.5-1.2B-Instruct"
+            "description": "Model id; routes the request via model metadata. Kebab-cased into a ZeroClick service slug for metering. The same models are served on `/zeroclick/v1/chat/completions` and `/zeroclick/v1/responses`; embedding, moderation and audio models are routable only on their own endpoints. A retired id (`deepseek-v4-flash`, `glm-5.2`, `gliner2-base-v1`) is still accepted, and is served and metered as its successor.",
+            "example": "LFM2.5-1.2B-Instruct",
+            "enum": [
+              "LFM2.5-1.2B-Instruct",
+              "LFM2.5-1.2B-Thinking",
+              "qwen3.6-35b-a3b",
+              "qwen3-30b-a3b-fp8",
+              "deepseek-v4.1-flash",
+              "glm-5.3-flash",
+              "gpt-4.1-mini",
+              "gpt-5.4-nano",
+              "gpt-5.6-luna",
+              "gpt-oss-120b",
+              "llama-3.1-8b-instruct-fast",
+              "llama-3.2-3b-instruct-fast",
+              "zlm-v1-iab-classify-edge",
+              "zlm-v2-iab-classify-edge-enriched",
+              "zlm-v1-iab-domain-classifier",
+              "zlm-v1-signal-extract",
+              "deberta-v3-small",
+              "gliner2.5-base-v1",
+              "gliner2.5-multi-v1",
+              "gliner2.5-decide-v1",
+              "gliner-multi-pii-v1"
+            ]
           },
           "messages": {
             "type": "array",
@@ -1253,7 +1276,30 @@
           "model": {
             "type": "string",
             "example": "LFM2.5-1.2B-Instruct",
-            "description": "Model id; routes the request via model metadata. Kebab-cased into a ZeroClick service slug for metering. A retired id (`deepseek-v4-flash` \u2192 `deepseek-v4.1-flash`, `glm-5.2` \u2192 `glm-5.3-flash`, `gliner2-base-v1` \u2192 `gliner2.5-base-v1`) is served and metered as its successor."
+            "description": "Model id; routes the request via model metadata. Kebab-cased into a ZeroClick service slug for metering. The same models are served on `/zeroclick/v1/chat/completions` and `/zeroclick/v1/responses`; embedding, moderation and audio models are routable only on their own endpoints. A retired id (`deepseek-v4-flash`, `glm-5.2`, `gliner2-base-v1`) is still accepted, and is served and metered as its successor.",
+            "enum": [
+              "LFM2.5-1.2B-Instruct",
+              "LFM2.5-1.2B-Thinking",
+              "qwen3.6-35b-a3b",
+              "qwen3-30b-a3b-fp8",
+              "deepseek-v4.1-flash",
+              "glm-5.3-flash",
+              "gpt-4.1-mini",
+              "gpt-5.4-nano",
+              "gpt-5.6-luna",
+              "gpt-oss-120b",
+              "llama-3.1-8b-instruct-fast",
+              "llama-3.2-3b-instruct-fast",
+              "zlm-v1-iab-classify-edge",
+              "zlm-v2-iab-classify-edge-enriched",
+              "zlm-v1-iab-domain-classifier",
+              "zlm-v1-signal-extract",
+              "deberta-v3-small",
+              "gliner2.5-base-v1",
+              "gliner2.5-multi-v1",
+              "gliner2.5-decide-v1",
+              "gliner-multi-pii-v1"
+            ]
           },
           "input": {
             "type": "string",
@@ -1695,7 +1741,11 @@
             "type": "string",
             "default": "zlm-v1-moderation-edge",
             "example": "zlm-v1-moderation-edge",
-            "description": "Moderation model to use. Defaults to the configured moderation model; OpenAI ids (`omni-moderation-latest`, `text-moderation-stable`) are accepted and mapped to it."
+            "description": "Moderation model to use. Defaults to the configured moderation model (`zlm-v1-moderation-edge`). OpenAI ids (`omni-moderation-latest`, `omni-moderation-2024-09-26`, `text-moderation-latest`, `text-moderation-stable`, `text-moderation-007`, `text-moderation-006`) are also accepted, and served and metered as `zlm-v1-moderation-edge`.",
+            "enum": [
+              "zlm-v1-moderation-edge",
+              "llama-guard-4-12b"
+            ]
           },
           "input": {
             "description": "Text to classify. A single string, an array of strings (one result per element), or an array of content parts (`{ \"type\": \"text\", \"text\": \"...\" }`) forming one multi-modal input.",
