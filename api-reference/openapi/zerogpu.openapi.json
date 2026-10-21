@@ -964,6 +964,7 @@
               "glm-5.3-flash",
               "gpt-5.4-nano",
               "gpt-5.6-luna",
+              "gpt-6-luna",
               "gpt-4.1-mini",
               "deberta-v3-small",
               "gliner2.5-base-v1",
@@ -1022,6 +1023,7 @@
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "enum": [
               "llama-3.1-8b-instruct-fast",
+              "llama-3.2-3b-instruct-fast",
               "llama-guard-4-12b",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",
@@ -1032,6 +1034,7 @@
               "glm-5.3-flash",
               "gpt-5.4-nano",
               "gpt-5.6-luna",
+              "gpt-6-luna",
               "gpt-4.1-mini",
               "deberta-v3-small",
               "gliner2.5-base-v1",
