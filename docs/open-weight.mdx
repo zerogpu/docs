@@ -3,7 +3,7 @@ title: "Open Weight"
 description: "The open-weight frontier-class models served on ZeroGPU, with pricing and context windows."
 ---
 
-Open-weight models ship with published weights and permissive licenses, so you can inspect them, self-host them, and avoid lock-in to a closed vendor. ZeroGPU serves seven of them — for reasoning, coding, agentic workflows, multimodal understanding, high-volume summarization, and safety classification — through the same OpenAI-compatible API as every other model in the [catalog](/docs/model-catalog).
+Open-weight models ship with published weights and permissive licenses, so you can inspect them, self-host them, and avoid lock-in to a closed vendor. ZeroGPU serves eight of them — for reasoning, coding, agentic workflows, multimodal understanding, high-volume summarization, and safety classification — through the same OpenAI-compatible API as every other model in the [catalog](/docs/model-catalog).
 
 Full request and response examples live on the [Text Generation](/docs/text-generation) page. Open-weight speech-to-text and text-to-speech models are on [Audio Models](/docs/audio).
 
@@ -17,6 +17,7 @@ Full request and response examples live on the [Text Generation](/docs/text-gene
 | <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | — |
 | <a href="/api-reference/models/gpt-oss-120b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="gpt-oss-120b" width="22" height="22" noZoom /> <code>gpt-oss-120b</code></a> | $0.15 | $0.60 | $0.03 | 131,072 |
 | <a href="/api-reference/models/llama-3-1-8b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.1-8b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.1-8b-instruct-fast</code></a> | $0.15 | $0.28 | $0.025 | 131,072 |
+| <a href="/api-reference/models/llama-3-2-3b-instruct-fast" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.2-3b-instruct-fast" width="22" height="22" noZoom /> <code>llama-3.2-3b-instruct-fast</code></a> | $0.05 | $0.30 | $0.025 | 131,072 |
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
 
 ## Model cards
@@ -81,6 +82,16 @@ Full request and response examples live on the [Text Generation](/docs/text-gene
     <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>131,072 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.15 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.28 / 1M output</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.025 / 1M cached input</span></div>
 
     Meta's Llama 3.1 Instruct, tuned for fast, low-cost summarization at scale on the ZeroGPU edge network. Its 128K-token context window takes in entire documents, long transcripts, and full email or…
+  </Card>
+  <Card href="/api-reference/models/llama-3-2-3b-instruct-fast">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-3.2-3b-instruct-fast" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>llama-3.2-3b-instruct-fast</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>131,072 max tokens</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.05 / 1M input</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.30 / 1M output</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.025 / 1M cached input</span></div>
+
+    Meta's Llama 3.2 3B Instruct, packaged by ZeroGPU for fast, low-cost summarization on edge GPUs. It shares the 131,072-token context window and the summarization pipeline of llama-3.1-8b-instruct-fast, and…
   </Card>
   <Card href="/api-reference/models/llama-guard-4-12b">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
