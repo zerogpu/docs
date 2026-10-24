@@ -1,0 +1,87 @@
+---
+title: "macOS"
+description: "Install ZeroGPU Edge on Macs and managed Mac fleets."
+---
+
+ZeroGPU Edge runs on macOS as a system background service under its own restricted account. It starts at boot and serves inference while the Mac is available. See the [GPU Fleet overview](/docs/edge-providers/fleet) for how fleets earn and for every setting.
+
+<Tip>
+  Building a macOS desktop app that should contribute while your users run it? Use the [macOS app SDK](/docs/edge-providers/sdk/macos) instead.
+</Tip>
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **macOS** | macOS 12 Monterey or later |
+| **Architecture** | Apple Silicon (arm64) or Intel (x86_64) |
+| **GPU** | Used automatically on Apple Silicon. Intel Macs are supported and get smaller models. |
+| **Credentials** | Your fleet's SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+| **Install rights** | Administrator |
+
+## Download
+
+From [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge?os=macos):
+
+| File | Use it for |
+|---|---|
+| `ZeroGPU.dmg` | Installing on a single Mac, with a guided setup |
+| `zerogpu-edge.pkg` | Silent and MDM installs (Jamf, Kandji, and other device-management tools) |
+
+<Note>
+  The installers aren't notarized by Apple yet, so macOS may say it can't verify **Install ZeroGPU Edge**. Open **System Settings → Privacy & Security** and select **Open Anyway**. To confirm the file is genuine first, compare its hash with the `SHA256SUMS` file published alongside it:
+
+  ```bash
+  shasum -a 256 ZeroGPU.dmg
+  ```
+</Note>
+
+## Install
+
+<Tabs>
+  <Tab title="Guided (one Mac)">
+    1. Open `ZeroGPU.dmg` and run **Install ZeroGPU Edge**.
+    2. Paste your SDK key and enter an administrator password.
+
+    The service starts right away and again at every boot. **ZeroGPU Edge** is added to Applications and to the menu bar.
+  </Tab>
+  <Tab title="Silent / MDM">
+    ```bash
+    sudo installer -pkg zerogpu-edge.pkg -target /
+    sudo zerogpu-edge configure --operator-key "zgpu-sdk-your-key" --cust-param1 "site-a" --restart
+    ```
+
+    Through MDM, deploy `zerogpu-edge.pkg` together with a configuration profile that sets the operator key and pre-approves the background service, so users see no prompts. Contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) for the profile templates.
+  </Tab>
+</Tabs>
+
+## Configure
+
+The settings table is on the [GPU Fleet overview](/docs/edge-providers/fleet#configuration).
+
+```bash
+sudo zerogpu-edge configure --resource-policy idle-only --restart
+```
+
+## Verify
+
+```bash
+zerogpu-edge status
+```
+
+The status shows the service registered and serving. You can also open the ZeroGPU Edge menu bar icon. Then confirm the Mac in the portal: [Verify devices and earnings](/docs/edge-providers/verify).
+
+## Uninstall
+
+```bash
+sudo /Library/ZeroGPU/Edge/bin/uninstall.sh
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| "Apple could not verify…" | The installer isn't notarized yet. Use **System Settings → Privacy & Security → Open Anyway** after checking its SHA-256. |
+| Service installed but waiting for a key | Run `sudo zerogpu-edge configure --operator-key … --restart`, or use **Change operator key…** in the menu bar app. |
+| macOS asks to allow a background item | Allow **ZeroGPU Edge** under **System Settings → General → Login Items**. MDM deployments can pre-approve it. |
+| Anything else | See [GPU Fleet troubleshooting](/docs/edge-providers/fleet#troubleshooting). |

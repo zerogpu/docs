@@ -23,6 +23,14 @@ Building a Telegram Mini App? See [Telegram Mini Apps](/docs/edge-providers/sdk/
 - **Websites with a strict Content Security Policy:** allow `blob:` workers, or host the worker yourself and set `overrides.inference.workerUrl`.
 - **Chrome extensions:** Manifest V3, plus Node.js and npm at build time only. Nothing from `node_modules` ships in your extension.
 
+## Download
+
+| Source | |
+|---|---|
+| **npm** | [`@zerogpu/browser-extension-sdk`](https://www.npmjs.com/package/@zerogpu/browser-extension-sdk) |
+| **CDN** | `https://js-sdk.zerogpu.ai/dist/loader.js` (always the latest release) |
+| **GitHub** | [zerogpu/edge-chrome](https://github.com/zerogpu/edge-chrome): every version's package on [Releases](https://github.com/zerogpu/edge-chrome/releases) with SHA-256 checksums, plus a sample extension |
+
 ## Installation
 
 <Tabs>
@@ -211,6 +219,8 @@ zerogpu.on('shutdown', ({ code }) => { /* the SDK stopped */ });
     After each SDK update, run `npx zerogpu vendor` (or wire it into `prebuild`) and republish your extension.
   </Tab>
 </Tabs>
+
+Once the device is online, [check that it's eligible and earning](/docs/edge-providers/verify).
 
 ## Troubleshooting
 

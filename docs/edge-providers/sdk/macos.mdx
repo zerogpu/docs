@@ -1,7 +1,12 @@
 ---
-title: "macOS"
+title: "macOS Apps (Electron)"
+sidebarTitle: "macOS apps"
 description: "Turn Macs running your Electron desktop app into ZeroGPU edge inference nodes with @zerogpu/worker."
 ---
+
+<Tip>
+  Connecting Macs you manage, rather than shipping an app? Install [ZeroGPU Edge for macOS](/docs/edge-providers/fleet/macos) instead.
+</Tip>
 
 ## Overview
 
@@ -17,6 +22,12 @@ Unlike the browser and Android SDKs, the worker doesn't watch battery, sleep, or
 | **Hardware** | Apple Silicon (`arm64`) or Intel (`x64`) Mac |
 | **Disk** | About 100 MB per assigned ONNX model (GGUF models: 2–5 GB), plus about 140 MB of native runtimes in your app bundle |
 | **Credentials** | An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+
+## Download
+
+| Source | |
+|---|---|
+| **npm** | [`@zerogpu/worker`](https://www.npmjs.com/package/@zerogpu/worker) |
 
 ## Installation
 
@@ -285,6 +296,8 @@ node node_modules/@zerogpu/worker/dist/cli.js
 ```
 
 Stop it with `SIGTERM`, allow 5 seconds for it to exit, and make sure it never outlives your app.
+
+Once the device is online, [check that it's eligible and earning](/docs/edge-providers/verify).
 
 ## Troubleshooting
 

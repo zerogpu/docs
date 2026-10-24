@@ -94,6 +94,7 @@
             "pages": [
               "docs/edge-providers/index",
               "docs/edge-providers/get-started",
+              "docs/edge-providers/verify",
               {
                 "group": "Edge SDKs",
                 "pages": [
@@ -101,6 +102,15 @@
                   "docs/edge-providers/sdk/web",
                   "docs/edge-providers/sdk/telegram",
                   "docs/edge-providers/sdk/macos"
+                ]
+              },
+              {
+                "group": "GPU Fleet",
+                "pages": [
+                  "docs/edge-providers/fleet/index",
+                  "docs/edge-providers/fleet/windows",
+                  "docs/edge-providers/fleet/macos",
+                  "docs/edge-providers/fleet/linux"
                 ]
               }
             ]

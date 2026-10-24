@@ -1,0 +1,90 @@
+---
+title: "Windows"
+description: "Install ZeroGPU Edge on Windows PCs and managed Windows fleets."
+---
+
+ZeroGPU Edge runs on Windows as the `ZeroGPUEdge` Windows service, under its own restricted account. It starts at boot and serves inference while the PC is available. See the [GPU Fleet overview](/docs/edge-providers/fleet) for how fleets earn and for every setting.
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **Windows** | Windows 10 or 11 |
+| **Architecture** | x64 |
+| **GPU (optional)** | NVIDIA (CUDA) or any DirectX 12 GPU (DirectML). Without one, the PC serves models on the CPU. |
+| **Credentials** | Your fleet's SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+| **Install rights** | Administrator |
+
+## Download
+
+From [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge?os=windows):
+
+| File | Use it for |
+|---|---|
+| `ZeroGPU-Setup.exe` | Installing on a single PC, with a guided setup |
+| `ZeroGPU-Edge.msi` | Silent and managed installs (Intune, SCCM, Group Policy) |
+
+<Note>
+  The installers aren't Authenticode-signed yet, so Microsoft Defender SmartScreen may show **Windows protected your PC**. Select **More info → Run anyway**. To confirm the file is genuine first, compare its hash with the `SHA256SUMS` file published alongside it:
+
+  ```powershell
+  Get-FileHash .\ZeroGPU-Setup.exe -Algorithm SHA256
+  ```
+</Note>
+
+## Install
+
+<Tabs>
+  <Tab title="Guided (one PC)">
+    1. Run `ZeroGPU-Setup.exe`.
+    2. Paste your SDK key and select **Install**.
+
+    The service starts right away and again at every boot. The ZeroGPU Edge icon appears in the notification area.
+  </Tab>
+  <Tab title="Silent / managed">
+    ```powershell
+    msiexec /i ZeroGPU-Edge.msi /qn OPERATOR_KEY="zgpu-sdk-your-key" CUST_PARAM1="site-a"
+    ```
+
+    or
+
+    ```powershell
+    ZeroGPU-Setup.exe /quiet OPERATOR_KEY="zgpu-sdk-your-key"
+    ```
+
+    For Intune, SCCM, or Group Policy, deploy `ZeroGPU-Edge.msi` as a line-of-business app with the same properties. You can deliver the operator key and other settings through Group Policy instead; with a policy-delivered key, the installer needs none.
+  </Tab>
+</Tabs>
+
+## Configure
+
+The settings table is on the [GPU Fleet overview](/docs/edge-providers/fleet#configuration). From an elevated PowerShell:
+
+```powershell
+zerogpu-edge configure --operator-key "zgpu-sdk-your-key" --resource-policy idle-only --restart
+```
+
+## Verify
+
+```powershell
+zerogpu-edge status
+```
+
+The status shows the service registered and serving. You can also open **ZeroGPU Edge** from the Start menu. Then confirm the PC in the portal: [Verify devices and earnings](/docs/edge-providers/verify).
+
+## Uninstall
+
+Remove **ZeroGPU Edge** from **Settings → Apps → Installed apps**, or run:
+
+```powershell
+msiexec /x ZeroGPU-Edge.msi /qn
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| **Windows protected your PC** | The installer isn't signed yet. Select **More info → Run anyway** after checking its SHA-256. |
+| Service installed but waiting for a key | Run `zerogpu-edge configure --operator-key … --restart` from an elevated prompt, or use **Change operator key…** in the app. |
+| GPU not used | Run `zerogpu-edge doctor` to see which accelerators it found. Update the GPU driver, or set `--accelerator directml` or `cuda`. |
+| Anything else | See [GPU Fleet troubleshooting](/docs/edge-providers/fleet#troubleshooting). |

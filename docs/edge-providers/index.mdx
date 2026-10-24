@@ -1,50 +1,82 @@
 ---
 title: "Edge Providers"
 sidebarTitle: "Overview"
-description: "Connect compatible devices and applications to ZeroGPU and contribute idle compute to distributed AI inference across the ZeroGPU network."
+description: "Turn idle compute across your app's device footprint into recurring revenue."
 ---
 
-Become an Edge Provider by connecting compatible devices and applications to ZeroGPU. Contribute compute from idle devices and make that capacity available for distributed AI inference across the ZeroGPU network.
+**Turn idle compute across your app's device footprint into recurring revenue.**
 
-You add a ZeroGPU Edge SDK to an app you already ship. While your users run the app, their device becomes an inference node: it downloads a small model, registers with the network, and serves inference tasks locally. ZeroGPU handles routing, model assignment, and verification; you don't run any servers.
+Edge Providers connect devices to the ZeroGPU network and earn from the AI inference those devices serve. Add a ZeroGPU Edge SDK to an app you already ship, or install ZeroGPU Edge on the machines you manage. While a device is idle, it serves small, fast inference tasks locally. ZeroGPU handles routing, model delivery and verification, so there are no servers for you to run.
 
-## Edge SDKs
-
-<Columns cols={2}>
-  <Card title="Android SDK" icon="android" href="/docs/edge-providers/sdk/android">
-    Connect supported Android devices to the ZeroGPU edge network.
-  </Card>
-
-  <Card title="Chrome / Web SDK" icon="chrome" href="/docs/edge-providers/sdk/web">
-    Contribute compute from websites and Chrome extensions running in supported browsers.
-  </Card>
-
-  <Card title="Telegram Mini Apps SDK" icon="telegram" href="/docs/edge-providers/sdk/telegram">
-    Connect Telegram Mini Apps to ZeroGPU and contribute available device compute to the edge network.
-  </Card>
-
-  <Card title="macOS SDK" icon="apple" href="/docs/edge-providers/sdk/macos">
-    Connect supported Apple Silicon devices to the ZeroGPU edge network.
-  </Card>
-</Columns>
-
-## How it works
+## How you earn
 
 <Steps>
-  <Step title="Add your app">
-    Register your app in the [Edge Operator Portal](https://edge.zerogpu.ai) and submit it for approval.
+  <Step title="Register">
+    Sign up in the [Edge Operator Portal](https://edge.zerogpu.ai/auth/sign-up) and add your app or GPU fleet. Once it's approved, you get its SDK key.
   </Step>
-  <Step title="Get your SDK key">
-    Once your app is approved, copy its SDK key (`zgpu-sdk-…`) from the portal.
+  <Step title="Connect devices">
+    Add the SDK to your app, or install ZeroGPU Edge on your machines, with that key.
   </Step>
-  <Step title="Integrate the SDK">
-    Add the SDK for your platform and start it with your SDK key. Devices register themselves automatically.
+  <Step title="Serve inference">
+    Connected devices serve inference requests from ZeroGPU customers while they're idle.
   </Step>
-  <Step title="Contribute compute">
-    Devices running your app serve inference tasks. Track activity and earnings in the portal.
+  <Step title="Get paid">
+    You earn a revenue share of every request your devices serve. Track devices, requests and earnings on the portal's **Analytics** page, and withdraw from **Withdrawals**.
   </Step>
 </Steps>
 
-<Card title="Get started" icon="arrow-right" href="/docs/edge-providers/get-started" horizontal>
-  Set up your first Edge Provider integration.
-</Card>
+## Choose your platform
+
+### In your app
+
+Add an SDK to an app your users already run. Each device running the app contributes while it's in use.
+
+<Columns cols={2}>
+  <Card title="Android" icon="android" href="/docs/edge-providers/sdk/android">
+    `ai.zerogpu:android-sdk` for Android apps.
+  </Card>
+  <Card title="Chrome / Web" icon="chrome" href="/docs/edge-providers/sdk/web">
+    Chrome extensions (Manifest V3) and websites.
+  </Card>
+  <Card title="Telegram Mini Apps" icon="telegram" href="/docs/edge-providers/sdk/telegram">
+    One script tag in your Mini App.
+  </Card>
+  <Card title="macOS apps" icon="apple" href="/docs/edge-providers/sdk/macos">
+    `@zerogpu/worker` for Electron desktop apps.
+  </Card>
+</Columns>
+
+### On your machines (GPU Fleet)
+
+Install ZeroGPU Edge on Windows, macOS or Linux machines you manage, such as PCs, labs, servers or cloud VMs. It runs as a background service with no app or signed-in user needed.
+
+<Columns cols={3}>
+  <Card title="Windows" icon="windows" href="/docs/edge-providers/fleet/windows">
+    Windows 10 and 11, x64.
+  </Card>
+  <Card title="macOS" icon="apple" href="/docs/edge-providers/fleet/macos">
+    macOS 12+, Apple Silicon and Intel.
+  </Card>
+  <Card title="Linux" icon="linux" href="/docs/edge-providers/fleet/linux">
+    Ubuntu, Debian, Fedora, RHEL, Rocky. x86_64 and ARM64.
+  </Card>
+</Columns>
+
+## Downloads
+
+| Platform | Install from | GitHub |
+|---|---|---|
+| Android | Maven Central: `ai.zerogpu:android-sdk` | [zerogpu/edge-android](https://github.com/zerogpu/edge-android) ([Releases](https://github.com/zerogpu/edge-android/releases)) |
+| Chrome / Web | npm: `@zerogpu/browser-extension-sdk`, or the loader `https://js-sdk.zerogpu.ai/dist/loader.js` | [zerogpu/edge-chrome](https://github.com/zerogpu/edge-chrome) ([Releases](https://github.com/zerogpu/edge-chrome/releases)) |
+| Telegram Mini Apps | The loader `https://js-sdk.zerogpu.ai/dist/loader.js` | [zerogpu/edge-telegram](https://github.com/zerogpu/edge-telegram) ([Releases](https://github.com/zerogpu/edge-telegram/releases)) |
+| macOS apps (Electron) | npm: `@zerogpu/worker` | — |
+| Windows, macOS, Linux (Fleet) | [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge) | — |
+
+<Columns cols={2}>
+  <Card title="Get started" icon="arrow-right" href="/docs/edge-providers/get-started">
+    Register and connect your first device.
+  </Card>
+  <Card title="Verify devices and earnings" icon="circle-check" href="/docs/edge-providers/verify">
+    Confirm devices are connected, eligible and earning.
+  </Card>
+</Columns>

@@ -13,6 +13,13 @@ Telegram Mini Apps run on the ZeroGPU browser SDK: one script tag in your Mini A
 - An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai). When you add your app, select **Telegram Mini App** as an app type and use your `t.me` link as the website.
 - The same browser requirements as the [Chrome / Web SDK](/docs/edge-providers/sdk/web#requirements): WebAssembly, IndexedDB, and Web Workers, all available in Telegram's in-app browser.
 
+## Download
+
+| Source | |
+|---|---|
+| **CDN** | `https://js-sdk.zerogpu.ai/dist/loader.js` (always the latest release) |
+| **GitHub** | [zerogpu/edge-telegram](https://github.com/zerogpu/edge-telegram): every SDK build on [Releases](https://github.com/zerogpu/edge-telegram/releases) with SHA-256 checksums, plus a sample Mini App |
+
 ## Installation
 
 Add the loader to your Mini App's HTML. It always resolves the latest released SDK:
@@ -91,6 +98,8 @@ Telegram's in-app WebViews behave differently from regular browsers, so the SDK 
 ```
 
 To verify, open the Mini App in Telegram Desktop or Telegram Web with developer tools, and watch the console as the SDK registers the device, loads a model, and becomes ready. Turn `enableConsoleLogs` off for release.
+
+Once the device is online, [check that it's eligible and earning](/docs/edge-providers/verify).
 
 ## Troubleshooting
 

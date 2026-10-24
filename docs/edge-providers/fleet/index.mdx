@@ -1,0 +1,101 @@
+---
+title: "GPU Fleet"
+sidebarTitle: "Overview"
+description: "Earn from the Windows, macOS, and Linux machines you manage by running ZeroGPU Edge as a background service."
+---
+
+## Overview
+
+ZeroGPU Edge turns the machines you manage, such as PCs, Macs, lab and office computers, servers, and cloud VMs, into ZeroGPU edge devices. Install it once and it runs as a background service: it starts at boot, needs no app or signed-in user, picks the fastest accelerator the machine has, and serves inference tasks while the machine is available. You earn a revenue share of every request it serves.
+
+<Columns cols={3}>
+  <Card title="Windows" icon="windows" href="/docs/edge-providers/fleet/windows">
+    `ZeroGPU-Setup.exe` or `ZeroGPU-Edge.msi`
+  </Card>
+  <Card title="macOS" icon="apple" href="/docs/edge-providers/fleet/macos">
+    `ZeroGPU.dmg` or `zerogpu-edge.pkg`
+  </Card>
+  <Card title="Linux" icon="linux" href="/docs/edge-providers/fleet/linux">
+    `.deb` or `.rpm`
+  </Card>
+</Columns>
+
+<Note>
+  ZeroGPU Edge installers aren't code-signed by Apple or Microsoft yet. macOS and Windows show a security prompt on first open; each platform page shows how to continue and how to check the download's checksum.
+</Note>
+
+## Supported systems
+
+| OS | Versions | Architectures |
+|---|---|---|
+| **Windows** | Windows 10 and 11 | x64 |
+| **macOS** | macOS 12 Monterey and later | Apple Silicon (arm64) and Intel (x86_64) |
+| **Linux** | Ubuntu, Debian, Fedora, RHEL, Rocky Linux (systemd) | x86_64 and ARM64 |
+
+**Hardware.** A GPU isn't required: every machine can serve small models on the CPU. Machines with a supported GPU (NVIDIA through CUDA, DirectML on Windows, Apple Silicon, Vulkan on Linux) and more memory are assigned larger models and more work. Allow about 100 MB for the install and a few GB of disk for downloaded models.
+
+## Downloads
+
+Every release is on the download page, which offers the right installer for your computer and lists every file with its SHA-256 checksum:
+
+**[apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge)**
+
+Versioned packages are at `https://apps.zerogpu.ai/edge/releases/<version>/`, with a `SHA256SUMS` file next to them. Installed machines update themselves; see [Updates](#updates).
+
+## Before you start
+
+1. [Register a GPU Fleet](/docs/edge-providers/get-started) in the Edge Operator Portal and wait for it to be approved.
+2. Open the fleet in the portal and copy its **SDK key** (`zgpu-sdk-…`). ZeroGPU Edge calls this the *operator key*.
+
+You use the same key on every machine in the fleet.
+
+## Configuration
+
+The guided installers only ask for the operator key. To set anything else, run `zerogpu-edge configure` on the machine (with administrator rights), or deploy the same settings through your management tool:
+
+```bash
+sudo zerogpu-edge configure --operator-key "zgpu-sdk-your-key" \
+  --cust-param1 engineering-lab --cust-param2 room-301 --restart
+```
+
+| Setting | Flag | Windows MSI property / policy |
+|---|---|---|
+| Operator key (required) | `--operator-key` | `OPERATOR_KEY` / `OperatorKey` |
+| Reporting labels | `--cust-param1` … `--cust-param3` | `CUST_PARAM1` … `CUST_PARAM3` / `CustParam1` … `CustParam3` |
+| When to run | `--resource-policy always\|idle-only\|scheduled` | `ResourcePolicy` |
+| Schedule (with `scheduled`) | `--schedule "mon-fri 18:00-08:00; sat-sun 00:00-24:00"` | `Schedule` |
+| Accelerator | `--accelerator auto\|cuda\|directml\|coreml\|cpu` (default `auto`) | `Accelerator` |
+| Automatic updates | `--auto-update true\|false` (default `true`) | — |
+
+Reporting labels (`cust_param1`–`cust_param3`) tag the work each machine serves, for example by site or lab, so you can break earnings down by them through the Supply Analytics API. Use values only (letters, digits, `.`, `_`, `-`), never personal data.
+
+The operator key is stored in the operating system's protected store, never in a plain config file. You can also change it in the ZeroGPU Edge app with **Change operator key…**.
+
+## The ZeroGPU Edge app
+
+Every install adds a small ZeroGPU Edge app: an icon in the macOS menu bar or the Windows notification area, and **ZeroGPU Edge** in the Linux applications menu. It shows:
+
+- **Status:** whether the service is running and serving, its model, and its task counts, with a **Start** / **Stop** button.
+- **Settings:** the operator key, automatic updates, **Open logs folder**, and **Reset and re-register**.
+
+## Check a machine
+
+```bash
+zerogpu-edge status     # what the service is doing: state, accelerator, models, task counts
+zerogpu-edge doctor     # configuration, GPUs, and whether ZeroGPU is reachable
+```
+
+A healthy machine shows the service running, registered, and serving. If it doesn't, run `zerogpu-edge doctor` and follow what it reports. Then check the fleet in the portal: see [Verify devices and earnings](/docs/edge-providers/verify).
+
+## Updates
+
+Machines check for a new version once a day and install it by themselves. The service finishes the task it's running, updates, and starts again. Turn this off with `zerogpu-edge configure --auto-update false`, or with **Install updates automatically** in the app. **Check for updates now** in the app checks on demand.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| The service waits for a key | No operator key is set. Run `zerogpu-edge configure --operator-key … --restart`, or use **Change operator key…** in the app. |
+| The key is rejected | Check that you copied the fleet's SDK key (`zgpu-sdk-…`), not an API key, and that the fleet is **Approved** in the portal. |
+| Running, but no tasks | Work depends on network demand, and a new machine can wait a while before its first task. Check `--resource-policy`: with `idle-only` or `scheduled`, the machine only serves when idle or inside its schedule. |
+| Something else | Open the app's **Settings → Open logs folder**, and send `zerogpu-edge doctor` output with the logs to [hello@zerogpu.ai](mailto:hello@zerogpu.ai). |
