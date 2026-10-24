@@ -1,0 +1,86 @@
+---
+title: "Verify Devices and Earnings"
+sidebarTitle: "Verify devices & earnings"
+description: "Check that your devices are connected, eligible for workloads, and reporting earnings."
+---
+
+Work through three checks after you integrate an SDK or install ZeroGPU Edge: the device is **connected**, it's **eligible** for work, and it's **earning**.
+
+## 1. Connected
+
+The device has joined the network with your SDK key.
+
+<Tabs>
+  <Tab title="Android">
+    Construct the SDK with `enableLogs = true`, keep the app in the foreground, and watch logcat:
+
+    ```bash
+    adb logcat -s ZeroGpuSdk:* ZeroGpuWebSocket:*
+    ```
+
+    The device is connected once you see `WebSocket ready for tasks`.
+  </Tab>
+  <Tab title="Chrome / Web / Telegram">
+    Turn on console logs (`enableConsoleLogs="true"` on the script tag, or `enableConsoleLogs: true` in `offscreen.js`) and open the console. For a Chrome extension, that's **Inspect views: offscreen.html** on `chrome://extensions`. The SDK logs the device registering, loading a model, and becoming ready.
+
+    On a website, the handle returned by `initZeroGpuSdk` reports `status === "running"`. For an extension, `npx zerogpu doctor` checks the integration itself.
+  </Tab>
+  <Tab title="macOS app">
+    ```js
+    await worker.status(); // { running: true, ready: true, ... }
+    ```
+
+    `ready: true` means a model is loaded and the Mac is connected.
+  </Tab>
+  <Tab title="Fleet">
+    ```bash
+    zerogpu-edge status
+    ```
+
+    The status shows the service registered and serving. The ZeroGPU Edge app shows the same under **Status**. If it doesn't, run `zerogpu-edge doctor`.
+  </Tab>
+</Tabs>
+
+Then open **Analytics** in the [Edge Operator Portal](https://edge.zerogpu.ai). The **Device Fleet** map shows devices seen in the last 24 hours, and **Unique Devices** counts them over time.
+
+## 2. Eligible for workloads
+
+A connected device receives work when all of these hold:
+
+| Check | Where to look |
+|---|---|
+| The app or fleet is **Approved**, not Pending Review, Suspended, or Rejected | **My Apps** in the portal |
+| The platform you integrated is one of the app types or device types you registered | **My Apps** → your app's setup |
+| The device has the resources to run a model: free memory and storage, and on phones, a battery above 20% or charging | SDK logs (`degraded` events), `zerogpu-edge doctor` |
+| It's allowed to run right now: the app is open (mobile and browser), the Mac is on power (macOS app SDK policy), or the fleet machine is inside its `--resource-policy` window | Your integration, `zerogpu-edge status` |
+| The user hasn't turned resource sharing off | Your opt-out setting |
+
+<Note>
+  A registration that's "politely refused", or a device that sits ready without tasks, is normal. Work follows network demand, and new devices get less work at first. Keep devices running, and keep their stored identity (app data, `ZG_DATA_DIR`, or the fleet's state folder): a reset device starts over as a newcomer.
+</Note>
+
+## 3. Earning
+
+On **Analytics** in the portal, for each app or across all of them:
+
+- **Edge Requests** counts the requests your devices served.
+- **Earnings** shows what those requests earned. You earn a revenue share of every request your devices serve.
+- Filter by app and date range. Earnings broken down by reporting label (`cust_param1`–`cust_param3`) are available through the Supply Analytics API; contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) for access.
+
+On **My Apps**, an app or fleet that is serving traffic shows as **Active/Earning**. Withdraw your balance from **Withdrawals**.
+
+<Tip>
+  Analytics can lag real time by a few minutes. If devices show as connected but earnings stay at zero for more than a day, contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) with your app name and the platform.
+</Tip>
+
+## Platform guides
+
+<Columns cols={2}>
+  <Card title="Android" icon="android" href="/docs/edge-providers/sdk/android" />
+  <Card title="Chrome / Web" icon="chrome" href="/docs/edge-providers/sdk/web" />
+  <Card title="Telegram Mini Apps" icon="telegram" href="/docs/edge-providers/sdk/telegram" />
+  <Card title="macOS apps (Electron)" icon="apple" href="/docs/edge-providers/sdk/macos" />
+  <Card title="Windows fleet" icon="windows" href="/docs/edge-providers/fleet/windows" />
+  <Card title="macOS fleet" icon="apple" href="/docs/edge-providers/fleet/macos" />
+  <Card title="Linux fleet" icon="linux" href="/docs/edge-providers/fleet/linux" />
+</Columns>

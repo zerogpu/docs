@@ -1,0 +1,96 @@
+---
+title: "Linux"
+description: "Install ZeroGPU Edge on Linux desktops, servers, and cloud VMs."
+---
+
+ZeroGPU Edge runs on Linux as the `zerogpu-edge` systemd service, under its own sandboxed user. It starts at boot and serves inference while the machine is available, with or without a desktop. See the [GPU Fleet overview](/docs/edge-providers/fleet) for how fleets earn and for every setting.
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **Distributions** | Ubuntu and Debian (`.deb`); Fedora, RHEL, and Rocky Linux (`.rpm`). systemd is required. |
+| **Architecture** | x86_64 (amd64) or ARM64 (aarch64) |
+| **GPU (optional)** | NVIDIA (CUDA) or a Vulkan-capable GPU. Without one, the machine serves models on the CPU. |
+| **Credentials** | Your fleet's SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+| **Install rights** | root / `sudo` |
+
+## Download
+
+From [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge?os=linux), replacing `<version>` with the current version shown there:
+
+| Distribution | x86_64 | ARM64 |
+|---|---|---|
+| Ubuntu / Debian | `zerogpu-edge_<version>_amd64.deb` | `zerogpu-edge_<version>_arm64.deb` |
+| Fedora / RHEL / Rocky | `zerogpu-edge-<version>-1.x86_64.rpm` | `zerogpu-edge-<version>-1.aarch64.rpm` |
+
+Check the download against the `SHA256SUMS` file published alongside it:
+
+```bash
+sha256sum zerogpu-edge_*_amd64.deb
+```
+
+## Install
+
+<Tabs>
+  <Tab title="Desktop">
+    Open the package with your desktop's software installer. The ZeroGPU Edge page opens afterwards and asks for your SDK key; select **Save and start**.
+  </Tab>
+  <Tab title="Terminal">
+    ```bash
+    # Ubuntu / Debian (asks for the key during install)
+    sudo apt install ./zerogpu-edge_<version>_amd64.deb
+
+    # Fedora / RHEL / Rocky
+    sudo dnf install ./zerogpu-edge-<version>-1.x86_64.rpm
+    sudo zerogpu-edge configure --operator-key "zgpu-sdk-your-key" --restart
+    ```
+  </Tab>
+  <Tab title="Servers and automation">
+    For cloud-init, Ansible, Terraform, or images, install the package and write the settings to `/etc/zerogpu-edge/edge.env` instead of running `configure`:
+
+    ```bash /etc/zerogpu-edge/edge.env
+    ZGPU_OPERATOR_KEY_FILE=/etc/zerogpu-edge/operator.key
+    ZGPU_CUST_PARAM1=site-a
+    ```
+
+    Put the key in `/etc/zerogpu-edge/operator.key` (mode `0640`, owner `root:zerogpu-edge`), then:
+
+    ```bash
+    sudo systemctl enable --now zerogpu-edge
+    ```
+  </Tab>
+</Tabs>
+
+## Configure
+
+The settings table is on the [GPU Fleet overview](/docs/edge-providers/fleet#configuration).
+
+```bash
+sudo zerogpu-edge configure --resource-policy scheduled --schedule "mon-fri 18:00-08:00; sat-sun 00:00-24:00" --restart
+```
+
+## Verify
+
+```bash
+zerogpu-edge status
+systemctl status zerogpu-edge
+```
+
+The status shows the service registered and serving. Then confirm the machine in the portal: [Verify devices and earnings](/docs/edge-providers/verify).
+
+## Uninstall
+
+```bash
+sudo apt remove zerogpu-edge     # Ubuntu / Debian
+sudo dnf remove zerogpu-edge     # Fedora / RHEL / Rocky
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Service waiting for a key | Run `sudo zerogpu-edge configure --operator-key … --restart`, or open **ZeroGPU Edge** from the applications menu. |
+| GPU not used | Run `zerogpu-edge doctor` to see which accelerators it found. Install the NVIDIA driver or Vulkan loader for your distribution. |
+| Logs | `journalctl -u zerogpu-edge` |
+| Anything else | See [GPU Fleet troubleshooting](/docs/edge-providers/fleet#troubleshooting). |
