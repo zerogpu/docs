@@ -1,0 +1,10 @@
+---
+title: "zlm-v1-tool-decisions"
+sidebarTitle: "zlm-v1-tool-decisions"
+description: "Model details for zlm-v1-tool-decisions. MCP tool selection with query and argument generation in a single inference step."
+openapi: "api-reference/openapi/playgrounds/zlm-v1-tool-decisions.openapi.json POST /responses"
+---
+
+> ZeroGPU's tool-decision model turns user intent into action, pairing fast MCP tool selection with query and argument generation. It reads the conversation, selects the tools that fit, and generates the inputs needed to call them, with the decision and the generation happening in a single inference step so an agent moves from understanding a request to acting on it. When no tool is needed it returns `NO_TOOL`, which keeps unnecessary calls out of the workflow. At 0.6B parameters, served as a bf16 build with a 24,576-token context window, it is built for agents that need to choose quickly and act precisely.
+
+**References:** [Model docs](https://huggingface.co/Qwen/Qwen3-0.6B) • [Terms](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)

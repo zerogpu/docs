@@ -171,6 +171,7 @@
                   "api-reference/models/zlm-v1-iab-domain-classifier",
                   "api-reference/models/zlm-v1-signal-extract",
                   "api-reference/models/zlm-v1-moderation-edge",
+                  "api-reference/models/zlm-v1-tool-decisions",
                   "api-reference/models/all-minilm-l6-v2",
                   "api-reference/models/bge-small-en-v1-5",
                   "api-reference/models/whisper-tiny",

@@ -3,7 +3,7 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8 and multimodal qwen3.6-35b-a3b, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, gpt-6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast and llama-3.2-3b-instruct-fast for high-volume summarization, and Meta's llama-guard-4-12b for safety classification. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8` and `llama-3.2-3b-instruct-fast`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8 and multimodal qwen3.6-35b-a3b, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, gpt-6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast and llama-3.2-3b-instruct-fast for high-volume summarization, Meta's llama-guard-4-12b for safety classification, and ZeroGPU's zlm-v1-tool-decisions for picking an agent's tools and generating their arguments. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8` and `llama-3.2-3b-instruct-fast`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
@@ -20,7 +20,8 @@ Text generation models produce new text from an input prompt. ZeroGPU offers ope
 | <a href="/api-reference/models/llama-guard-4-12b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/llama-3.2-3b-instruct/meta.png" alt="llama-guard-4-12b" width="22" height="22" noZoom /> <code>llama-guard-4-12b</code></a> | $0.18 | $0.18 | — | 163,840 |
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | — | 32,768 |
 | <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | — | 32,768 |
-| <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | — |
+| <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | 16,384 |
+| <a href="/api-reference/models/zlm-v1-tool-decisions" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>zlm-v1-tool-decisions</code></a> | $0.05 | $0.15 | — | 24,576 |
 
 ## gpt-oss-120b
 
@@ -737,3 +738,156 @@ curl https://api.zerogpu.ai/v1/chat/completions \
 </CodeGroup>
 
 The model returns a text answer describing the images and video it was given.
+
+## zlm-v1-tool-decisions
+
+> ZeroGPU's tool-decision model turns user intent into action, pairing fast MCP tool selection with query and argument generation. It reads the conversation, selects the tools that fit, and generates the inputs needed to call them, with the decision and the generation happening in a single inference step so an agent moves from understanding a request to acting on it. When no tool is needed it returns `NO_TOOL`, which keeps unnecessary calls out of the workflow. At 0.6B parameters, served as a bf16 build with a 24,576-token context window, it is built for agents that need to choose quickly and act precisely.
+
+**References:** [Model docs](https://huggingface.co/Qwen/Qwen3-0.6B) • [Terms](https://huggingface.co/Qwen/Qwen3-0.6B/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "input": "Will it rain in Austin this week? And what'"'"'s the latest news on the Longhorns?",
+  "model": "zlm-v1-tool-decisions",
+  "tools": [
+    {
+      "name": "web_search",
+      "type": "function",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          }
+        }
+      },
+      "description": "Search the web for current information: news, facts, events and prices."
+    },
+    {
+      "name": "get_forecast",
+      "type": "function",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "city"
+        ],
+        "properties": {
+          "city": {
+            "type": "string",
+            "description": "City name"
+          }
+        }
+      },
+      "description": "7-day weather forecast for a city."
+    },
+    {
+      "name": "get_stock_quote",
+      "type": "function",
+      "parameters": {
+        "type": "object",
+        "required": [
+          "ticker"
+        ],
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "description": "Ticker symbol, e.g. AAPL"
+          }
+        }
+      },
+      "description": "Real-time stock quote for an exchange ticker symbol."
+    }
+  ],
+  "temperature": 0
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -H "x-project-id: YOUR_PROJECT_ID" \
+  -d '{
+  "model": "zlm-v1-tool-decisions",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "query"
+          ],
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query"
+            }
+          }
+        },
+        "description": "Search the web for current information: news, facts, events and prices."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_forecast",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "city"
+          ],
+          "properties": {
+            "city": {
+              "type": "string",
+              "description": "City name"
+            }
+          }
+        },
+        "description": "7-day weather forecast for a city."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "get_stock_quote",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "ticker"
+          ],
+          "properties": {
+            "ticker": {
+              "type": "string",
+              "description": "Ticker symbol, e.g. AAPL"
+            }
+          }
+        },
+        "description": "Real-time stock quote for an exchange ticker symbol."
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "Will it rain in Austin this week? And what'"'"'s the latest news on the Longhorns?"
+    }
+  ],
+  "temperature": 0
+}'
+```
+
+</CodeGroup>
+
+The model returns the tool it picked together with the arguments it generated for that tool — as `message.tool_calls` in Chat Completions, and as a tool-call item in the Responses output — or the text `NO_TOOL` when none of the supplied tools fits.
