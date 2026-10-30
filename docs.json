@@ -116,6 +116,7 @@
               "integrations/index",
               "integrations/claude-code-plugin",
               "integrations/claude-skill",
+              "integrations/sprites",
               "integrations/hermes",
               "integrations/langchain",
               "integrations/litellm",
