@@ -43,7 +43,7 @@ export ZEROGPU_GATEWAY="https://api.sprites.dev/v1/gateway/zerogpu/<connection_i
 curl "$ZEROGPU_GATEWAY/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "meta-llama/llama-3.1-8b-instruct",
+    "model": "llama-3.1-8b-instruct-fast",
     "messages": [{"role": "user", "content": "Write a one-line tagline for a coffee shop."}],
     "max_tokens": 60
   }'
@@ -61,7 +61,7 @@ Set `"stream": true` to receive server-sent events, and pass `-N` so curl prints
 curl -N "$ZEROGPU_GATEWAY/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "meta-llama/llama-3.1-8b-instruct",
+    "model": "llama-3.1-8b-instruct-fast",
     "messages": [{"role": "user", "content": "Count to five."}],
     "stream": true
   }'
@@ -86,7 +86,7 @@ curl "$ZEROGPU_GATEWAY/v1/chat/completions" \
 curl "$ZEROGPU_GATEWAY/v1/responses" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "openai/gpt-oss-120b",
+    "model": "gpt-oss-120b",
     "input": "Summarize what an edge inference network is in two sentences.",
     "max_output_tokens": 300
   }'
@@ -142,7 +142,7 @@ The check is free and read-only: it runs no inference, does not touch your balan
 
 **403 from the gateway on every call.** Either the key was revoked after you saved it (replace it in the connection), or the calling Sprite is not allowed by the connection's access policy. Check the policy's name prefix and labels against the Sprite.
 
-**The request is refused before it reaches ZeroGPU.** The path is not one the connector forwards. Only the three routes above are allowed; call other ZeroGPU endpoints directly with your key instead.
+**The request is refused before it reaches ZeroGPU.** Either the path is not one the connector forwards (only the three routes above are), or the connection's endpoint policy blocks it. Check the connection's allowed and blocked endpoints in Sprites first. For endpoints the connector does not forward, call ZeroGPU from outside the Sprite, so your key stays out of the sandbox.
 
 **402 Payment Required.** Your ZeroGPU balance is exhausted. Add credit or enable autopay in the [dashboard](https://platform.zerogpu.ai/dashboard).
 
