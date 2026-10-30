@@ -1,0 +1,513 @@
+---
+title: "🚅 Build a Cost-Aware Inbound Lead Desk with LiteLLM and ZeroGPU"
+description: "Use a LiteLLM Router to qualify, extract, and answer inbound sales leads on ZeroGPU's small models, escalate enterprise deals to a frontier model with fallbacks, and price every call against a GPT-4.1 baseline."
+---
+
+This notebook demonstrates how to put a LiteLLM Router in front of ZeroGPU to run an inbound lead desk: every "Contact sales" form submission is qualified, mined for structured fields, and answered with a first-touch reply. Each step runs on the smallest ZeroGPU model that can do the job, enterprise deals escalate to a frontier model, and every call lands in a cost ledger priced against a GPT-4.1 baseline. By combining LiteLLM and ZeroGPU, this notebook walks you through a practical pattern for routing high-volume, well-defined LLM work to cheap models while keeping a frontier model exactly where it earns its price.
+
+For the full reference, see the [LiteLLM integration guide](/integrations/litellm).
+
+In this notebook, you'll explore:
+
+- **LiteLLM**: An open-source AI gateway that puts more than a hundred model providers behind one OpenAI-format interface. Here its Router groups deployments by pipeline step, retries and falls back between them, and reports the cost of every call from its built-in model cost map, including ZeroGPU's native `zerogpu/` route.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **OpenAI**: A leading provider of advanced AI models capable of natural language understanding, contextual reasoning, and content generation. It enables intelligent, human-like interactions and supports a wide range of applications across various domains.
+
+This setup not only demonstrates a practical application of tiered model routing for sales operations, but also provides a flexible framework that can be adapted to other real-world scenarios requiring cost-aware, multi-step LLM pipelines with structured outputs and a frontier-model safety net.
+
+## 🎥 Watch the Video Guide
+
+Video walkthrough coming soon.
+
+## 📦 Installation
+
+First, install the LiteLLM package with all its dependencies:
+
+```bash
+!pip install -U litellm
+```
+
+ZeroGPU doesn't need its own SDK here. LiteLLM ships a native `zerogpu/` provider route that points at ZeroGPU's OpenAI-compatible endpoint at `https://api.zerogpu.ai/v1`. See the [LiteLLM integration guide](/integrations/litellm) for every option the route supports.
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your API keys for ZeroGPU and OpenAI. This ensures that the tools can interact with external services securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+
+```python Python
+import os
+from getpass import getpass
+
+# Prompt for the ZeroGPU API key and Project ID securely
+zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
+os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
+
+zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
+os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
+```
+
+You can go to [here](https://platform.openai.com/api-keys) to get an API key from OpenAI.
+
+```python Python
+# Prompt for the OpenAI API key securely
+openai_api_key = getpass('Enter your OpenAI API key: ')
+os.environ["OPENAI_API_KEY"] = openai_api_key
+```
+
+LiteLLM reads `ZEROGPU_API_KEY` and `OPENAI_API_KEY` from the environment automatically. The Project ID travels as an `x-project-id` header, which you'll attach to each ZeroGPU deployment in the Router below.
+
+## 🚅 Access Text Generation with ZeroGPU
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will make a single `zerogpu/` call through LiteLLM and read its cost straight off the response.
+
+```python Python
+import litellm
+from litellm import completion
+
+response = completion(
+    model="zerogpu/gpt-oss-120b",
+    messages=[{"role": "user", "content": "In one sentence, why should a sales team reply to inbound leads within five minutes?"}],
+    extra_headers={"x-project-id": os.environ["ZEROGPU_PROJECT_ID"]},
+)
+
+print(response.choices[0].message.content)
+print(f"\nmodel: {response.model}")
+print(f"tokens: {response.usage.prompt_tokens} in / {response.usage.completion_tokens} out")
+print(f"cost:  ${response._hidden_params['response_cost']:.7f}")
+```
+
+```
+Leads contacted within five minutes are far more likely to convert, because you reach them while their intent and attention are at their peak, before a competitor does.
+
+model: zerogpu/gpt-oss-120b
+tokens: 84 in / 61 out
+cost:  $0.0000492
+```
+
+🎉 **ZeroGPU effortlessly answers through LiteLLM's native `zerogpu/` route, with the cost of the call already computed, providing a drop-in, spend-aware model provider for AI integration!**
+
+## 🧭 Building the Lead Desk Router
+
+_Each step of the pipeline gets its own Router model group, backed by the cheapest ZeroGPU model that can do that step well, with GPT-4.1 as both the escalation target and the safety net._
+
+```python Python
+import json
+from litellm import Router
+
+# Drop params a model doesn't support (e.g. reasoning_effort on GPT-4.1) instead of raising
+litellm.drop_params = True
+
+ZEROGPU_HEADERS = {"x-project-id": os.environ["ZEROGPU_PROJECT_ID"]}
+```
+
+Now define the model groups. `qualify` runs on a fast 8B model, `extract` on `gpt-6-luna` for strict JSON, `draft` on the reasoning model `gpt-oss-120b`, and `frontier` on GPT-4.1:
+
+```python Python
+router = Router(
+    model_list=[
+        {
+            "model_name": "qualify",
+            "litellm_params": {
+                "model": "zerogpu/llama-3.1-8b-instruct-fast",
+                "extra_headers": ZEROGPU_HEADERS,
+            },
+        },
+        {
+            "model_name": "extract",
+            "litellm_params": {
+                "model": "zerogpu/gpt-6-luna",
+                "extra_headers": ZEROGPU_HEADERS,
+            },
+        },
+        {
+            "model_name": "draft",
+            "litellm_params": {
+                "model": "zerogpu/gpt-oss-120b",
+                "extra_headers": ZEROGPU_HEADERS,
+            },
+        },
+        {
+            "model_name": "frontier",
+            "litellm_params": {"model": "openai/gpt-4.1"},
+        },
+    ],
+    # If a ZeroGPU step fails after retries, the frontier model picks it up
+    fallbacks=[
+        {"qualify": ["frontier"]},
+        {"extract": ["frontier"]},
+        {"draft": ["frontier"]},
+    ],
+    num_retries=2,
+)
+```
+
+Before running anything, check that LiteLLM knows what each ZeroGPU model can do. Strict `json_schema` output is the backbone of the first two steps:
+
+```python Python
+for model in ["zerogpu/llama-3.1-8b-instruct-fast", "zerogpu/gpt-6-luna", "zerogpu/gpt-oss-120b"]:
+    info = litellm.get_model_info(model)
+    print(
+        f"{model:<36} schema={litellm.supports_response_schema(model=model)!s:<5} "
+        f"reasoning={litellm.supports_reasoning(model=model)!s:<5} "
+        f"${info['input_cost_per_token'] * 1e6:.2f} / ${info['output_cost_per_token'] * 1e6:.2f} per 1M"
+    )
+```
+
+```
+zerogpu/llama-3.1-8b-instruct-fast   schema=True  reasoning=False $0.15 / $0.28 per 1M
+zerogpu/gpt-6-luna                   schema=True  reasoning=True  $0.10 / $0.50 per 1M
+zerogpu/gpt-oss-120b                 schema=True  reasoning=True  $0.15 / $0.60 per 1M
+```
+
+## 🧾 Tracking Spend with a Cost Ledger
+
+_Every Router call goes through one helper that records which model actually answered, the tokens it used, what it cost, and what the same tokens would have cost on GPT-4.1._
+
+```python Python
+ledger = []
+
+def call(step, lead_id, model_group, messages, **kwargs):
+    response = router.completion(model=model_group, messages=messages, **kwargs)
+
+    cost = response._hidden_params.get("response_cost")
+    if cost is None:
+        cost = litellm.completion_cost(completion_response=response)
+
+    # Price the identical tokens at GPT-4.1 rates from LiteLLM's cost map
+    p_cost, c_cost = litellm.cost_per_token(
+        model="gpt-4.1",
+        prompt_tokens=response.usage.prompt_tokens,
+        completion_tokens=response.usage.completion_tokens,
+    )
+
+    ledger.append({
+        "lead": lead_id,
+        "step": step,
+        "model": response.model,
+        "in": response.usage.prompt_tokens,
+        "out": response.usage.completion_tokens,
+        "cost": cost,
+        "baseline": p_cost + c_cost,
+    })
+    return response
+```
+
+## 📥 The Inbound Leads
+
+Here are six submissions from a "Contact sales" form, the kind of mix every real inbox gets: a big enterprise deal, a tiny agency, a customer who used the wrong form, a spammer, a reseller, and a mid-market evaluation.
+
+```python Python
+leads = [
+    {"id": "L-101", "text": "Hi, I'm Priya Raman, VP Engineering at Northwind Freight (about 4,000 employees). We need SSO, audit logs, and a DPA before procurement signs off. Looking at roughly 200 seats, budget is approved for Q1. Can we get a call this week?"},
+    {"id": "L-102", "text": "hey! Marco from Pixel & Pine, we're an 8 person design agency. what does the starter plan cost and is there a discount if we pay yearly?"},
+    {"id": "L-103", "text": "I already have an account but the password reset email never arrives. I've tried three times today. Account email is dana.kim@brightloop.io."},
+    {"id": "L-104", "text": "We offer premium SEO backlinks from DA 90+ sites, guaranteed page one rankings in 30 days. Reply for our price list!!!"},
+    {"id": "L-105", "text": "Hello, this is Tomasz Nowak, partnerships at Vistula Digital. We implement data tooling for mid-size clients across Central Europe and want to explore a reseller agreement."},
+    {"id": "L-106", "text": "Head of Data at Ledgerly, a 300-person fintech. We're evaluating vendors for an internal analytics assistant. Timeline is next quarter, budget not set yet. Mostly care about data residency in the EU."},
+]
+```
+
+## 🎯 Step 1: Qualify Every Lead
+
+_The `qualify` group reads each lead and returns three enums under a strict schema, so the code branches on fields rather than parsing prose._
+
+```python Python
+QUALIFY_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "lead_qualification",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "intent": {"type": "string", "enum": ["sales", "support", "partnership", "spam"]},
+                "segment": {"type": "string", "enum": ["enterprise", "mid_market", "smb", "unknown"]},
+                "priority": {"type": "string", "enum": ["hot", "warm", "cold"]},
+            },
+            "required": ["intent", "segment", "priority"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+QUALIFY_PROMPT = (
+    "You qualify inbound B2B leads. Segment by company size: enterprise is 1,000+ employees, "
+    "mid_market is 100-999, smb is under 100. Priority is hot when budget or a near-term "
+    "timeline is stated, warm when they are evaluating, cold otherwise. Spam and support are always cold."
+)
+
+def qualify(lead):
+    response = call(
+        "qualify", lead["id"], "qualify",
+        messages=[
+            {"role": "system", "content": QUALIFY_PROMPT},
+            {"role": "user", "content": lead["text"]},
+        ],
+        response_format=QUALIFY_SCHEMA,
+        temperature=0,
+    )
+    return json.loads(response.choices[0].message.content)
+
+for lead in leads:
+    lead["qualification"] = qualify(lead)
+    print(lead["id"], lead["qualification"])
+```
+
+```
+L-101 {'intent': 'sales', 'segment': 'enterprise', 'priority': 'hot'}
+L-102 {'intent': 'sales', 'segment': 'smb', 'priority': 'warm'}
+L-103 {'intent': 'support', 'segment': 'unknown', 'priority': 'cold'}
+L-104 {'intent': 'spam', 'segment': 'unknown', 'priority': 'cold'}
+L-105 {'intent': 'partnership', 'segment': 'unknown', 'priority': 'warm'}
+L-106 {'intent': 'sales', 'segment': 'mid_market', 'priority': 'warm'}
+```
+
+The spam lead stops here, and the support ticket gets bounced to the help desk. Neither one ever touches a bigger model.
+
+## 🔎 Step 2: Extract the CRM Fields
+
+_For leads worth pursuing, the `extract` group pulls out the fields a CRM record needs. Nullable types let the model say "not stated" instead of guessing._
+
+```python Python
+EXTRACT_SCHEMA = {
+    "type": "json_schema",
+    "json_schema": {
+        "name": "lead_fields",
+        "strict": True,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "name": {"type": ["string", "null"]},
+                "company": {"type": ["string", "null"]},
+                "role": {"type": ["string", "null"]},
+                "company_size": {"type": ["integer", "null"]},
+                "budget": {"type": ["string", "null"]},
+                "timeline": {"type": ["string", "null"]},
+                "needs": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["name", "company", "role", "company_size", "budget", "timeline", "needs"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+def extract(lead):
+    response = call(
+        "extract", lead["id"], "extract",
+        messages=[
+            {"role": "system", "content": "Extract CRM fields from this inbound lead. Use null for anything not stated. Do not infer."},
+            {"role": "user", "content": lead["text"]},
+        ],
+        response_format=EXTRACT_SCHEMA,
+        temperature=0,
+    )
+    return json.loads(response.choices[0].message.content)
+
+pursue = [l for l in leads if l["qualification"]["intent"] in ("sales", "partnership")]
+
+for lead in pursue:
+    lead["fields"] = extract(lead)
+    print(lead["id"], json.dumps(lead["fields"], indent=2))
+```
+
+```
+L-101 {
+  "name": "Priya Raman",
+  "company": "Northwind Freight",
+  "role": "VP Engineering",
+  "company_size": 4000,
+  "budget": "approved for Q1",
+  "timeline": "call this week",
+  "needs": ["SSO", "audit logs", "DPA", "~200 seats"]
+}
+L-102 {
+  "name": "Marco",
+  "company": "Pixel & Pine",
+  "role": null,
+  "company_size": 8,
+  "budget": null,
+  "timeline": null,
+  "needs": ["starter plan pricing", "annual billing discount"]
+}
+L-105 {
+  "name": "Tomasz Nowak",
+  "company": "Vistula Digital",
+  "role": "Partnerships",
+  "company_size": null,
+  "budget": null,
+  "timeline": null,
+  "needs": ["reseller agreement"]
+}
+L-106 {
+  "name": null,
+  "company": "Ledgerly",
+  "role": "Head of Data",
+  "company_size": 300,
+  "budget": "not set",
+  "timeline": "next quarter",
+  "needs": ["internal analytics assistant", "EU data residency"]
+}
+```
+
+## ✉️ Step 3: Draft the First-Touch Reply
+
+_The reply step is where routing judgment pays off: a hot enterprise deal is worth frontier tokens, while everything else drafts perfectly well on ZeroGPU._
+
+```python Python
+DRAFT_PROMPT = (
+    "You are an SDR. Write a warm, specific first-touch email reply under 110 words. "
+    "Reference what the lead asked for, propose one concrete next step, and sign off as 'Sam, Acme Sales'. "
+    "Return only the email body."
+)
+
+def pick_drafter(lead):
+    q = lead["qualification"]
+    return "frontier" if q["segment"] == "enterprise" and q["priority"] == "hot" else "draft"
+
+def draft(lead):
+    group = pick_drafter(lead)
+    response = call(
+        "draft", lead["id"], group,
+        messages=[
+            {"role": "system", "content": DRAFT_PROMPT},
+            {"role": "user", "content": f"Lead message:\n{lead['text']}\n\nCRM fields:\n{json.dumps(lead['fields'])}"},
+        ],
+        reasoning_effort="low",  # used by gpt-oss-120b, dropped for GPT-4.1
+        max_tokens=600,
+    )
+    return group, response.choices[0].message.content
+
+for lead in pursue:
+    group, lead["reply"] = draft(lead)
+    print(f"--- {lead['id']} via {group} ---\n{lead['reply']}\n")
+```
+
+```
+--- L-101 via frontier ---
+Hi Priya,
+
+Thanks for reaching out. SSO, audit logs, and a signed DPA are all standard on our Enterprise plan, and we can share our security pack ahead of procurement review. For a 200-seat rollout with Q1 budget in place, I'd suggest a 30-minute call this week with one of our solutions engineers to map your SSO provider and audit requirements. Would Thursday at 10am or Friday at 2pm your time work?
+
+Best,
+Sam, Acme Sales
+
+--- L-102 via draft ---
+Hi Marco,
+
+Great to hear from Pixel & Pine! Our Starter plan is built for small teams like yours, and paying annually saves you two months compared to monthly billing. I've attached the current pricing sheet so you can compare options for all 8 seats. If it helps, I can set up a 14-day trial for the whole team today. Just reply with the emails you'd like invited.
+
+Cheers,
+Sam, Acme Sales
+
+--- L-105 via draft ---
+Hi Tomasz,
+
+Thanks for reaching out about a reseller partnership. Implementation partners like Vistula Digital are exactly who our partner program is designed for, especially across Central Europe. I'd love to walk you through our margins, enablement resources, and co-selling support. Would you be open to a 20-minute intro call next week? Send over a couple of times that suit you and I'll get it booked.
+
+Best regards,
+Sam, Acme Sales
+
+--- L-106 via draft ---
+Hi there,
+
+Thanks for considering us for Ledgerly's internal analytics assistant. EU data residency is fully supported: you can pin storage and processing to our Frankfurt region, and we're happy to share our data processing documentation. Since you're evaluating for next quarter, a short technical call with our team could help you scope requirements before budget is set. Would a 30-minute session in the next two weeks work?
+
+Best,
+Sam, Acme Sales
+```
+
+## 💸 Reading the Cost Ledger
+
+Now, let's see what the whole run cost, call by call, next to what the same tokens would have cost if every step had run on GPT-4.1:
+
+```python Python
+print(f"{'lead':<6} {'step':<8} {'model':<36} {'in':>4} {'out':>4} {'cost':>11} {'gpt-4.1':>11}")
+for r in ledger:
+    print(f"{r['lead']:<6} {r['step']:<8} {r['model']:<36} {r['in']:>4} {r['out']:>4} ${r['cost']:>10.7f} ${r['baseline']:>10.7f}")
+
+total = sum(r["cost"] for r in ledger)
+baseline = sum(r["baseline"] for r in ledger)
+zg = [r for r in ledger if r["model"].startswith("zerogpu/")]
+zg_total = sum(r["cost"] for r in zg)
+zg_baseline = sum(r["baseline"] for r in zg)
+
+print(f"\n{len(ledger)} calls, {len(zg)} on ZeroGPU")
+print(f"Pipeline cost:        ${total:.7f}")
+print(f"All-GPT-4.1 baseline: ${baseline:.7f}")
+print(f"Saved overall:        {(1 - total / baseline):.1%}")
+print(f"Saved on ZeroGPU steps: {(1 - zg_total / zg_baseline):.1%}")
+print(f"\nProjected per 10,000 leads: ${total / len(leads) * 10_000:,.2f} vs ${baseline / len(leads) * 10_000:,.2f}")
+```
+
+```
+lead   step     model                                  in  out        cost     gpt-4.1
+L-101  qualify  zerogpu/llama-3.1-8b-instruct-fast    212   24 $ 0.0000385 $ 0.0006160
+L-102  qualify  zerogpu/llama-3.1-8b-instruct-fast    188   23 $ 0.0000346 $ 0.0005600
+L-103  qualify  zerogpu/llama-3.1-8b-instruct-fast    176   22 $ 0.0000326 $ 0.0005280
+L-104  qualify  zerogpu/llama-3.1-8b-instruct-fast    181   21 $ 0.0000330 $ 0.0005300
+L-105  qualify  zerogpu/llama-3.1-8b-instruct-fast    194   23 $ 0.0000355 $ 0.0005720
+L-106  qualify  zerogpu/llama-3.1-8b-instruct-fast    203   24 $ 0.0000372 $ 0.0005980
+L-101  extract  zerogpu/gpt-6-luna                    268   86 $ 0.0000698 $ 0.0012240
+L-102  extract  zerogpu/gpt-6-luna                    241   71 $ 0.0000596 $ 0.0010500
+L-105  extract  zerogpu/gpt-6-luna                    250   74 $ 0.0000620 $ 0.0010920
+L-106  extract  zerogpu/gpt-6-luna                    259   79 $ 0.0000654 $ 0.0011500
+L-101  draft    gpt-4.1-2025-04-14                    286  142 $ 0.0017080 $ 0.0017080
+L-102  draft    zerogpu/gpt-oss-120b                  262  198 $ 0.0001581 $ 0.0021080
+L-105  draft    zerogpu/gpt-oss-120b                  270  211 $ 0.0001671 $ 0.0022280
+L-106  draft    zerogpu/gpt-oss-120b                  277  226 $ 0.0001771 $ 0.0023620
+
+14 calls, 13 on ZeroGPU
+Pipeline cost:        $0.0026786
+All-GPT-4.1 baseline: $0.0163260
+Saved overall:        83.6%
+Saved on ZeroGPU steps: 93.4%
+
+Projected per 10,000 leads: $4.46 vs $27.21
+```
+
+The one enterprise reply on GPT-4.1 accounts for almost two thirds of the whole bill. That's the trade you want to see: frontier tokens spent on the single deal most likely to close, and everything repetitive running on small models.
+
+## 🛡️ Testing the Safety Net
+
+_Fallbacks only matter if they work when ZeroGPU, the network, or a deployment has a bad minute. LiteLLM can simulate a failure so you can prove the path end to end._
+
+Pass `mock_testing_fallbacks=True` and the Router fails the primary deployment on purpose, then walks the `fallbacks` list:
+
+```python Python
+response = router.completion(
+    model="draft",
+    messages=[
+        {"role": "system", "content": DRAFT_PROMPT},
+        {"role": "user", "content": f"Lead message:\n{leads[1]['text']}"},
+    ],
+    reasoning_effort="low",
+    mock_testing_fallbacks=True,
+)
+
+print(f"requested group: draft")
+print(f"answered by:     {response.model}")
+print(f"cost:            ${response._hidden_params['response_cost']:.7f}")
+```
+
+```
+requested group: draft
+answered by:     gpt-4.1-2025-04-14
+cost:            $0.0014320
+```
+
+The reply still went out, `reasoning_effort` was quietly dropped for GPT-4.1 thanks to `litellm.drop_params`, and the higher cost shows up in the same place as every other call, so a spike in fallback traffic is visible the moment it starts.
+
+🎉 You just ran a full inbound lead desk through one LiteLLM Router: thirteen of fourteen calls ran on ZeroGPU's small models, the only frontier call went to the deal that justified it, and the whole batch cost about a sixth of the all-GPT-4.1 baseline, with fallbacks proven to keep replies flowing if a ZeroGPU step fails. The costs above come from LiteLLM's cost map; the authoritative charges are on your own [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard) and OpenAI account.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running a LiteLLM workflow with ZeroGPU for qualifying, enriching, and answering inbound sales leads. You can adapt and expand this example for various other scenarios requiring cost-aware, multi-step LLM pipelines with structured outputs and a frontier-model safety net.
+
+Key tools utilized in this notebook include:
+
+- **LiteLLM**: An open-source AI gateway that puts more than a hundred model providers behind one OpenAI-format interface. Here its Router groups deployments by pipeline step, retries and falls back between them, and reports the cost of every call from its built-in model cost map, including ZeroGPU's native `zerogpu/` route.
+- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **OpenAI**: A leading provider of advanced AI models capable of natural language understanding, contextual reasoning, and content generation. It enables intelligent, human-like interactions and supports a wide range of applications across various domains.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring cost-aware, multi-step LLM pipelines with structured outputs and a frontier-model safety net.

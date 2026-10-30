@@ -237,6 +237,7 @@
             "pages": [
               "cookbook/claude-code-csv-sanitizer",
               "cookbook/langchain-resume-screening",
+              "cookbook/litellm-lead-qualification",
               "cookbook/claude-iab-targeted-copy",
               "cookbook/claude-support-ticket-routing",
               "cookbook/openclaw-inbox-summarizer",
