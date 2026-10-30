@@ -10,7 +10,7 @@ For the full reference, see the [Claude Code plugin integration guide](/integrat
 In this notebook, you'll explore:
 
 - **Claude Code**: Anthropic's agentic coding tool that runs Claude directly in your terminal, with file editing, command execution, and a plugin system that extends sessions with custom slash commands and skills. Here it reads the CSV, loops over every row, and assembles the output files while routing the redaction work to ZeroGPU.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This setup not only demonstrates a practical application of PII redaction at scale, but also provides a flexible framework that can be adapted to other real-world scenarios requiring consistent, auditable handling of sensitive free-text data.
 
@@ -66,7 +66,7 @@ If `status` reports you're not signed in, run `/zerogpu-router:signin` again bef
 
 ## 🔐 Redact PII with ZeroGPU
 
-ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will redact PII from a single support comment as an example, so you can see exactly what the model gives back before pointing it at a whole file.
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will redact PII from a single support comment as an example, so you can see exactly what the model gives back before pointing it at a whole file.
 
 The `redact-pii` skill detects PII spans and replaces each one in-line with an uppercase `[LABEL]` placeholder. It routes to `gliner2.5-multi-v1` with `mask: "label"`.
 
@@ -207,6 +207,6 @@ This notebook has guided you through setting up and running a Claude Code workfl
 Key tools utilized in this notebook include:
 
 - **Claude Code**: Anthropic's agentic coding tool that runs Claude directly in your terminal, with file editing, command execution, and a plugin system that extends sessions with custom slash commands and skills. Here it reads the CSV, loops over every row, and assembles the output files while routing the redaction work to ZeroGPU.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring consistent, auditable handling of sensitive free-text data.

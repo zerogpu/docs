@@ -10,7 +10,7 @@ For the full reference, see the [OpenClaw integration guide](/integrations/openc
 In this notebook, you'll explore:
 
 - **OpenClaw**: A self-hosted, open-source personal AI assistant that connects the chat apps you already use - Telegram, Slack, Discord, WhatsApp, iMessage, and more - to AI agents and tools through a plugin system. Here it receives the messages you forward in your channel of choice and routes the cheap summarize, classify, and redact steps to ZeroGPU instead of your primary model.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This setup not only demonstrates a practical application of privacy-safe message triage, but also provides a flexible framework that can be adapted to other real-world scenarios requiring fast, low-cost handling of high-volume, free-text messages.
 
@@ -161,7 +161,7 @@ Everything in the sections below happens right here in this Telegram chat: you m
 
 ## 📨 Summarize a Message with ZeroGPU
 
-ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will summarize a single forwarded message as an example, so you can see exactly what comes back before wiring it into your assistant's inbox workflow.
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will summarize a single forwarded message as an example, so you can see exactly what comes back before wiring it into your assistant's inbox workflow.
 
 The `summarize` skill condenses a passage into a few sentences. It routes to `llama-3.1-8b-instruct-fast`. Send your assistant a message like this in your chat app:
 
@@ -299,6 +299,6 @@ This notebook has guided you through setting up and running an OpenClaw workflow
 Key tools utilized in this notebook include:
 
 - **OpenClaw**: A self-hosted, open-source personal AI assistant that connects the chat apps you already use - Telegram, Slack, Discord, WhatsApp, iMessage, and more - to AI agents and tools through a plugin system. Here it receives the messages you forward in your channel of choice and routes the cheap summarize, classify, and redact steps to ZeroGPU instead of your primary model.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring fast, low-cost handling of high-volume, free-text messages.

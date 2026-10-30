@@ -11,7 +11,7 @@ For the full reference, see the [`langchain-zerogpu` repository on GitHub](https
 In this notebook, you'll explore:
 
 - **LangChain**: The framework for building applications with LLMs and agents. Its `langchain-zerogpu` package exposes ZeroGPU's small and nano models as first-class tools, so you can drop entity extraction, PII redaction, and zero-shot classification straight into a pipeline without writing any HTTP code.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This setup not only demonstrates a practical application of privacy-aware resume screening, but also provides a flexible framework that can be adapted to other real-world scenarios requiring structured extraction and compliant handling of sensitive documents.
 
@@ -88,7 +88,7 @@ San Francis
 
 ## 🏷️ Extract Candidate Entities with ZeroGPU
 
-ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will extract skills, job titles, companies, and locations from the resume as a structured candidate card.
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will extract skills, job titles, companies, and locations from the resume as a structured candidate card.
 
 `ZeroGPUExtractEntitiesTool` runs custom-label named-entity recognition on `gliner2.5-base-v1`. You pass the entity types you care about as `labels`, and it returns the matched spans grouped by label.
 
@@ -274,6 +274,6 @@ This notebook has guided you through setting up and running a LangChain workflow
 Key tools utilized in this notebook include:
 
 - **LangChain**: The framework for building applications with LLMs and agents. Its `langchain-zerogpu` package exposes ZeroGPU's small and nano models as first-class tools, so you can drop entity extraction, PII redaction, and zero-shot classification straight into a pipeline without writing any HTTP code.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring structured extraction and compliant handling of sensitive documents. For more, see the [`langchain-zerogpu` repository](https://github.com/zerogpu/langchain-zerogpu), the [PyPI page](https://pypi.org/project/langchain-zerogpu/), and the [ZeroGPU documentation](https://docs.zerogpu.ai).

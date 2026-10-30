@@ -13,7 +13,7 @@ For another end-to-end workflow, see:
 In this notebook, you'll explore:
 
 - **ZeroGPU Batch API**: An asynchronous, OpenAI-compatible endpoint that takes thousands of `/v1/chat/completions` requests as a single JSONL file and returns the results within a completion window, at a lower per-request cost than synchronous calls. Here it tags every row of a customer-review CSV in one overnight job.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 - **LFM2.5-1.2B-Instruct**: A small, fast instruct model that handles short-form classification well, keeping per-row cost low while still producing open-vocabulary topics and a JSON tag. See the [model card](/api-reference/models/lfm2-5-1-2b-instruct) for context window and playground.
 
 This setup not only demonstrates a practical application of large-scale review tagging, but also provides a flexible framework that can be adapted to other real-world scenarios requiring high-volume, asynchronous classification over tabular data.
@@ -596,7 +596,7 @@ This notebook has guided you through setting up and running a ZeroGPU Batch API 
 Key tools utilized in this notebook include:
 
 - **ZeroGPU Batch API**: An asynchronous, OpenAI-compatible endpoint that takes thousands of `/v1/chat/completions` requests as a single JSONL file and returns the results within a completion window, at a lower per-request cost than synchronous calls. Here it tags every row of a customer-review CSV in one overnight job.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 - **LFM2.5-1.2B-Instruct**: A small, fast instruct model that handles short-form classification well, keeping per-row cost low while still producing open-vocabulary topics and a JSON tag. See the [model card](/api-reference/models/lfm2-5-1-2b-instruct) for context window and playground.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring high-volume, asynchronous classification over tabular data.

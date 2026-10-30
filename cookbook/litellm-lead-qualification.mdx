@@ -10,7 +10,7 @@ For the full reference, see the [LiteLLM integration guide](/integrations/litell
 In this notebook, you'll explore:
 
 - **LiteLLM**: An open-source AI gateway that puts more than a hundred model providers behind one OpenAI-format interface. Here its Router groups deployments by pipeline step, retries and falls back between them, and reports the cost of every call from its built-in model cost map, including ZeroGPU's native `zerogpu/` route.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 - **OpenAI**: A leading provider of advanced AI models capable of natural language understanding, contextual reasoning, and content generation. It enables intelligent, human-like interactions and supports a wide range of applications across various domains.
 
 This setup not only demonstrates a practical application of tiered model routing for sales operations, but also provides a flexible framework that can be adapted to other real-world scenarios requiring cost-aware, multi-step LLM pipelines with structured outputs and a frontier-model safety net.
@@ -59,7 +59,7 @@ LiteLLM reads `ZEROGPU_API_KEY` and `OPENAI_API_KEY` from the environment automa
 
 ## 🚅 Access Text Generation with ZeroGPU
 
-ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default. In this section, we will make a single `zerogpu/` call through LiteLLM and read its cost straight off the response.
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will make a single `zerogpu/` call through LiteLLM and read its cost straight off the response.
 
 ```python Python
 import litellm
@@ -507,7 +507,7 @@ This notebook has guided you through setting up and running a LiteLLM workflow w
 Key tools utilized in this notebook include:
 
 - **LiteLLM**: An open-source AI gateway that puts more than a hundred model providers behind one OpenAI-format interface. Here its Router groups deployments by pipeline step, retries and falls back between them, and reports the cost of every call from its built-in model cost map, including ZeroGPU's native `zerogpu/` route.
-- **ZeroGPU**: An ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
 - **OpenAI**: A leading provider of advanced AI models capable of natural language understanding, contextual reasoning, and content generation. It enables intelligent, human-like interactions and supports a wide range of applications across various domains.
 
 This comprehensive setup allows you to adapt and expand the example for various scenarios requiring cost-aware, multi-step LLM pipelines with structured outputs and a frontier-model safety net.
