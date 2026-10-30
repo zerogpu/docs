@@ -1,0 +1,172 @@
+---
+title: "Fly.io Sprites"
+description: "Call ZeroGPU's open-weight models and specialized small models from a Fly.io Sprite, with Sprites holding your API key."
+icon: "cloud"
+noindex: true
+---
+
+[Sprites](https://fly.io/sprites) are persistent, hardware-isolated Linux sandboxes from Fly.io, built for running AI agents and the code they write. Sprites connectors let a Sprite call third-party APIs through a gateway that holds the credential for you: the Sprite sends a plain HTTP request, the gateway attaches your key and forwards it, and the key never lands on the Sprite. Each connector forwards only an explicit list of routes, and an access policy decides which of your Sprites can use it.
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+The ZeroGPU connector gives any Sprite you allow access to ZeroGPU's OpenAI-compatible Chat Completions and Responses APIs, covering both open-weight models and ZeroGPU's specialized small language models (ZLMs). You save your ZeroGPU API key in Sprites once; agents and scripts in the Sprite then call ZeroGPU through the Sprites gateway without ever seeing the key. By the end of this guide you will have connected your key and run a chat completion, a ZLM classification, and a Responses API call from inside a Sprite.
+
+## Quickstart
+
+### Prerequisites
+
+- A Fly.io organization with [Sprites](https://fly.io/sprites), and a running Sprite to call from.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (it starts with `zgpu-api-`). No Project ID is required: every key belongs to one project, and ZeroGPU reads the project from the key.
+
+### Connect ZeroGPU in Sprites
+
+1. In the Sprites dashboard, open your organization, then **Connectors**, then **Add connection**.
+2. Choose **ZeroGPU** and paste your API key. Sprites checks the key before saving it (see [How key validation works](#how-key-validation-works)); the check is free.
+3. Set the connection's access policy: allow all Sprites, or only those with a given name prefix or labels. A new connection allows no Sprites until you grant access.
+4. Open the connection and copy its gateway URL. It has the form `https://api.sprites.dev/v1/gateway/zerogpu/<connection_id>`.
+
+### Your first request
+
+From a shell inside a Sprite that the policy allows, append the ZeroGPU path to the gateway URL. No `Authorization` or `x-api-key` header is needed; the gateway identifies the Sprite and attaches your key.
+
+```bash
+export ZEROGPU_GATEWAY="https://api.sprites.dev/v1/gateway/zerogpu/<connection_id>"
+
+curl "$ZEROGPU_GATEWAY/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.1-8b-instruct-fast",
+    "messages": [{"role": "user", "content": "Write a one-line tagline for a coffee shop."}],
+    "max_tokens": 60
+  }'
+```
+
+The response is a standard `chat.completion` object. Gateway calls only work from inside a running Sprite; the same request from your laptop or CI is rejected.
+
+## Usage
+
+### Stream a response
+
+Set `"stream": true` to receive server-sent events, and pass `-N` so curl prints each chunk as it arrives:
+
+```bash
+curl -N "$ZEROGPU_GATEWAY/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "llama-3.1-8b-instruct-fast",
+    "messages": [{"role": "user", "content": "Count to five."}],
+    "stream": true
+  }'
+```
+
+### Classify text with a ZLM
+
+ZLMs are ZeroGPU's specialized small models. `zlm-v1-iab-classify-edge` returns IAB content and audience categories with scores, as a JSON string in the message content:
+
+```bash
+curl "$ZEROGPU_GATEWAY/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zlm-v1-iab-classify-edge",
+    "messages": [{"role": "user", "content": "Best trail running shoes for beginners, with a guide to cushioning and grip."}]
+  }'
+```
+
+### Use the Responses API
+
+```bash
+curl "$ZEROGPU_GATEWAY/v1/responses" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "input": "Summarize what an edge inference network is in two sentences.",
+    "max_output_tokens": 300
+  }'
+```
+
+See the [model catalog](/docs/model-catalog) for every model ID, its task, context window, and price.
+
+### What the connector forwards
+
+| Route | Purpose |
+| --- | --- |
+| `POST /v1/chat/completions` | Chat completions, including SSE streaming |
+| `POST /v1/responses` | Responses API, including SSE streaming |
+| `GET /v1/me` | Key validation (see below) |
+
+Everything else is refused at the gateway, including embeddings, moderations, audio, batches, files, and anything that manages API keys, billing, or your account. Requests always run in the project the key belongs to.
+
+### Billing
+
+Inference through the connector is charged to your ZeroGPU account at the same prices as direct API calls. Saving, replacing, or testing the key in Sprites is free.
+
+## How key validation works
+
+Whenever you save, replace, or test your key, Sprites sends one request to confirm it works:
+
+```http
+GET https://api.zerogpu.ai/v1/me
+x-api-key: <your key>
+```
+
+A valid key returns `200` with the key, project, and organization it belongs to:
+
+```json
+{
+  "object": "api_key",
+  "id": "<api_key_id>",
+  "project_id": "<project_id>",
+  "organization_id": "<organization_id>"
+}
+```
+
+| Status | Meaning |
+| --- | --- |
+| `200` | The key is valid and active. |
+| `401` | No key was sent. |
+| `403` | The key is unknown or has been revoked (plain-text body `Invalid credentials`). |
+
+The check is free and read-only: it runs no inference, does not touch your balance or free calls, and records no usage. It confirms the key is valid, not that the account has credit, so a valid key on an account with no balance still saves; inference calls then return `402` until you add credit.
+
+## Troubleshooting
+
+**Sprites rejects the key when you save it.** The key is wrong or has been revoked. Copy it again from the [dashboard](https://platform.zerogpu.ai/dashboard), or create a new one.
+
+**403 from the gateway on every call.** Either the key was revoked after you saved it (replace it in the connection), or the calling Sprite is not allowed by the connection's access policy. Check the policy's name prefix and labels against the Sprite.
+
+**The request is refused before it reaches ZeroGPU.** Either the path is not one the connector forwards (only the three routes above are), or the connection's endpoint policy blocks it. Check the connection's allowed and blocked endpoints in Sprites first. For endpoints the connector does not forward, call ZeroGPU from outside the Sprite, so your key stays out of the sandbox.
+
+**402 Payment Required.** Your ZeroGPU balance is exhausted. Add credit or enable autopay in the [dashboard](https://platform.zerogpu.ai/dashboard).
+
+**404 `model_not_found`.** The model ID is wrong. Copy it from the [model catalog](/docs/model-catalog).
+
+**429 responses under load.** You are being rate limited. Honor the `retry-after` header the gateway passes back, and move bulk work to the [Batch API](/docs/batch/index) by calling ZeroGPU directly.
+
+**Calls fail from your laptop or CI.** Gateway URLs only accept requests from inside a running Sprite. Outside a Sprite, call `https://api.zerogpu.ai` directly with your key.
+
+## Conclusion
+
+The Sprites connector keeps your ZeroGPU key out of the sandbox while giving the agents in it the full Chat Completions and Responses APIs. Route the high-volume, well-defined steps - classification, extraction, short generation - to ZeroGPU's small models, and keep the key in one place you control.
+
+<CardGroup cols={2}>
+	<Card title="Model catalog" icon="layers" href="/docs/model-catalog">
+		Every model, its task, context window, and price.
+	</Card>
+	<Card title="Chat Completions" icon="code" href="/api-reference/chat-completions">
+		Full request and response reference.
+	</Card>
+	<Card title="Sprites connectors" icon="cloud" href="https://docs.fly.io/sprites/concepts/connectors">
+		Access policies, gateway URLs, and connection management.
+	</Card>
+	<Card title="Discord" icon="discord" href="https://discord.gg/58XZuxKyq6">
+		Ask questions and share what you built.
+	</Card>
+</CardGroup>
