@@ -118,6 +118,7 @@
               "integrations/claude-skill",
               "integrations/hermes",
               "integrations/langchain",
+              "integrations/litellm",
               "integrations/mcp",
               "integrations/openclaw"
             ]

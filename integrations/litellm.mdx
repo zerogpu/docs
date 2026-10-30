@@ -1,0 +1,808 @@
+---
+title: "LiteLLM"
+description: "Call ZeroGPU's text generation models through LiteLLM's SDK and proxy with the native zerogpu/ route, with spend tracked per request."
+icon: "train"
+---
+
+LiteLLM is an open-source AI gateway from BerriAI that puts more than a hundred model providers behind one OpenAI-format interface. It ships as a Python SDK (`litellm.completion()`, `litellm.responses()`, and friends) and as a self-hosted proxy server with virtual keys, budgets, spend logs, fallbacks, load balancing, and an Admin UI. Teams use it to swap or mix providers without touching application code, and to give every app and agent one governed endpoint to call. ZeroGPU is a first-class LiteLLM provider, so `zerogpu/<model>` works on every LiteLLM surface with pricing and capability flags built in.
+
+ZeroGPU is an ultra-fast, compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge-powered network for the high-volume, purpose-specific tasks your app or agent runs constantly. Plug in our OpenAI-compatible API and you're live - zero GPU infrastructure, serverless, auto-scaling by default.
+
+## Overview
+
+This guide covers LiteLLM's native `zerogpu/` provider route, for Python developers using the LiteLLM SDK and for platform teams running the LiteLLM proxy. You'll set your API key, make your first `zerogpu/` call, and then work through every surface LiteLLM exposes for ZeroGPU: chat completions, streaming, tool calling, structured output, reasoning effort, image input, the Responses API, Anthropic Messages, the proxy and Admin UI, routing and fallbacks, cost tracking, and model metadata. By the end you'll be able to put ZeroGPU behind a governed LiteLLM endpoint and route cheap, high-volume traffic to it while spend is tracked per request.
+
+## Cookbook
+
+Cookbook coming soon.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+Video walkthrough coming soon.
+
+## Quickstart
+
+### Prerequisites
+
+- Python 3.10 or newer.
+- A LiteLLM release that includes the `zerogpu` provider (added in [BerriAI/litellm#43874](https://github.com/BerriAI/litellm/pull/43874)). Older releases reject `zerogpu/<model>` with `Invalid model name`.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- A text generation model from the [model catalog](/docs/model-catalog). This guide uses `gpt-oss-120b`.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`) and export it. LiteLLM reads `ZEROGPU_API_KEY` automatically.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+# Optional. Defaults to https://api.zerogpu.ai/v1
+export ZEROGPU_API_BASE="https://api.zerogpu.ai/v1"
+```
+
+### Install LiteLLM
+
+For the Python SDK:
+
+```bash
+pip install -U litellm
+```
+
+For the proxy server and Admin UI:
+
+```bash
+pip install -U 'litellm[proxy]'
+```
+
+### Your first request
+
+```python
+import os
+from litellm import completion
+
+os.environ["ZEROGPU_API_KEY"] = "zgpu-api-..."
+os.environ["ZEROGPU_API_BASE"] = "https://api.zerogpu.ai/v1"  # optional, this is the default
+
+response = completion(
+    model="zerogpu/gpt-oss-120b",
+    messages=[{"role": "user", "content": "Reply with the word ok"}],
+)
+
+print(response.choices[0].message.content)
+print(response._hidden_params["response_cost"])
+```
+
+```json
+{
+  "id": "id-1793212650100",
+  "object": "chat.completion",
+  "model": "zerogpu/gpt-oss-120b",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": { "role": "assistant", "content": "ok" }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 72,
+    "completion_tokens": 35,
+    "total_tokens": 107,
+    "prompt_tokens_details": { "cached_tokens": 0 }
+  }
+}
+```
+
+The `zerogpu/` prefix tells LiteLLM which provider to use. LiteLLM strips it before the request leaves, so ZeroGPU receives `gpt-oss-120b`, and prices the call from its own cost map. The cost for this call is `72 x $0.15/1M + 35 x $0.60/1M = $0.0000318`.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, which ZeroGPU endpoint it hits, its parameters, a runnable example, and the response you get back.
+
+### The `zerogpu/` route and supported models
+
+LiteLLM registers `zerogpu` as an OpenAI-compatible provider at `https://api.zerogpu.ai/v1`. It sends chat calls to ZeroGPU's `/chat/completions`, Responses calls to ZeroGPU's native `/responses`, and Anthropic Messages calls through its own Messages-to-chat bridge. The route covers ZeroGPU's text generation models. ZeroGPU's classification, extraction, moderation, embedding, and audio models are not part of the LiteLLM route; call those through the [ZeroGPU API](/api-reference/responses) or an [official SDK](/integrations/sdk/python).
+
+These 13 models ship in LiteLLM's model cost map with pricing and capability flags:
+
+| Model | Max input | Max output | Input / 1M | Output / 1M | Cache read / 1M | Tools and JSON schema | Reasoning | Vision |
+|---|---:|---:|---:|---:|---:|:---:|:---:|:---:|
+| `zerogpu/deepseek-v4.1-flash` | 1,048,576 | 65,536 | $0.30 | $1.20 | $0.003 | Yes | Yes | |
+| `zerogpu/glm-5.3-flash` | 1,048,576 | 32,768 | $0.10 | $0.35 | $0.015 | Yes | Yes | |
+| `zerogpu/gpt-4.1-mini` | 1,047,576 | 32,768 | $0.40 | $1.60 | $0.10 | Yes | | |
+| `zerogpu/gpt-5.4-nano` | 272,000 | 128,000 | $0.20 | $1.25 | $0.02 | Yes | Yes | |
+| `zerogpu/gpt-5.6-luna` | 272,000 | 128,000 | $0.20 | $1.20 | $0.20 | Yes | Yes | |
+| `zerogpu/gpt-6-luna` | 272,000 | 128,000 | $0.10 | $0.50 | $0.01 | Yes | Yes | Yes |
+| `zerogpu/gpt-oss-120b` | 128,000 | 32,768 | $0.15 | $0.60 | $0.03 | Yes | Yes | |
+| `zerogpu/LFM2.5-1.2B-Instruct` | 32,768 | 8,192 | $0.02 | $0.05 | n/a | | | |
+| `zerogpu/LFM2.5-1.2B-Thinking` | 32,768 | 8,192 | $0.02 | $0.05 | n/a | | | |
+| `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | 8,192 | $0.15 | $0.28 | $0.025 | Yes | | |
+| `zerogpu/llama-3.2-3b-instruct-fast` | 131,072 | 8,192 | $0.05 | $0.30 | $0.025 | | | |
+| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | 16,384 | $0.10 | $0.45 | $0.05 | Yes | Yes | |
+| `zerogpu/qwen3.6-35b-a3b` | 262,144 | 16,384 | $0.20 | $1.50 | $0.20 | Yes | Yes | Yes |
+
+"Tools and JSON schema" means LiteLLM flags the model for `tools`, `tool_choice`, and a `json_schema` `response_format`. The limits are the ones LiteLLM enforces for pre-call checks. The [model catalog](/docs/model-catalog) is the source of truth for ZeroGPU pricing; LiteLLM's cost map is updated separately, so see [Troubleshooting](#troubleshooting) if the two drift.
+
+Model IDs are case-sensitive. `zerogpu/LFM2.5-1.2B-Instruct` works; `zerogpu/lfm2.5-1.2b-instruct` does not.
+
+### Credentials and configuration
+
+LiteLLM resolves ZeroGPU credentials in this order: a per-call argument, then the environment variable, then the default.
+
+| Setting | Per-call argument | Environment variable | Proxy `litellm_params` key | Required | Default |
+|---|---|---|---|---|---|
+| API key | `api_key` | `ZEROGPU_API_KEY` | `api_key` | Yes | none |
+| API base | `api_base` | `ZEROGPU_API_BASE` | `api_base` | No | `https://api.zerogpu.ai/v1` |
+| Project scope | `extra_headers={"x-project-id": ...}` | none | `extra_headers` | No | none |
+
+```python
+from litellm import completion
+
+response = completion(
+    model="zerogpu/gpt-6-luna",
+    messages=[{"role": "user", "content": "Hello"}],
+    api_key="zgpu-api-...",
+    api_base="https://api.zerogpu.ai/v1",
+    extra_headers={"x-project-id": "your-project-id"},
+)
+```
+
+Passing `api_base` keeps the provider identity and pricing. Only the `zerogpu/` prefix decides how LiteLLM prices and labels the call.
+
+### `completion()` and `acompletion()`
+
+The core chat entry point. Hits ZeroGPU's `POST /v1/chat/completions` with any model from the table above. `acompletion()` is the async twin with the same arguments.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu/<model-id>`, for example `zerogpu/gpt-oss-120b`. |
+| `messages` | Yes | none | OpenAI-format message list. Content can be a string or a list of `text` and `image_url` parts. |
+| `stream` | No | `False` | Return an iterator of chunks instead of one response. |
+| `stream_options` | No | none | `{"include_usage": True}` adds a final usage chunk when streaming. |
+| `max_tokens` | No | model default | Cap on generated tokens. Must fit inside the model's max output. |
+| `temperature`, `top_p` | No | model default | Sampling controls, forwarded as is. |
+| `tools`, `tool_choice` | No | none | OpenAI-format function tools. See [Tool calling](#tool-calling). |
+| `parallel_tool_calls` | No | model default | Set `False` to force one tool call per turn. |
+| `response_format` | No | none | `{"type": "json_schema", ...}` for schema-constrained output. |
+| `reasoning_effort` | No | none | `"low"`, `"medium"`, or `"high"` on reasoning models. |
+| `drop_params` | No | `False` | Drop parameters the model does not support instead of raising. |
+| `num_retries` | No | `0` (SDK) | Retries on retryable errors. |
+| `timeout` | No | `600` | Request timeout in seconds. |
+| `api_key`, `api_base`, `extra_headers` | No | see above | Per-call credential overrides. |
+
+```python
+import asyncio
+from litellm import acompletion
+
+async def main():
+    response = await acompletion(
+        model="zerogpu/llama-3.1-8b-instruct-fast",
+        messages=[
+            {"role": "system", "content": "You summarize support tickets in one sentence."},
+            {"role": "user", "content": "My invoice for October was charged twice and I need a refund for the duplicate."},
+        ],
+        max_tokens=64,
+        temperature=0.2,
+    )
+    print(response.choices[0].message.content)
+
+asyncio.run(main())
+```
+
+Response: a `ModelResponse` in OpenAI chat completion shape, as in the [Quickstart](#your-first-request). `response.usage` carries token counts, including `prompt_tokens_details.cached_tokens` and, on reasoning models, `completion_tokens_details.reasoning_tokens`. `response._hidden_params["response_cost"]` carries the USD cost.
+
+### Streaming
+
+Set `stream=True` to get chunks as they are generated. Add `stream_options={"include_usage": True}` to receive a final chunk with token counts, which LiteLLM also uses for cost.
+
+```python
+from litellm import completion
+
+response = completion(
+    model="zerogpu/gpt-5.6-luna",
+    messages=[{"role": "user", "content": "Count from 1 to 3"}],
+    stream=True,
+    stream_options={"include_usage": True},
+)
+
+for chunk in response:
+    if chunk.choices and chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+    if getattr(chunk, "usage", None):
+        print("\n", chunk.usage)
+```
+
+Each chunk is a `ModelResponseStream` with `object: "chat.completion.chunk"` and a `delta`. The last chunk has empty `choices` and a `usage` block:
+
+```json
+{
+  "object": "chat.completion.chunk",
+  "model": "zerogpu/gpt-5.6-luna",
+  "choices": [],
+  "usage": {
+    "prompt_tokens": 13,
+    "completion_tokens": 10,
+    "total_tokens": 23,
+    "completion_tokens_details": { "reasoning_tokens": 0 }
+  }
+}
+```
+
+### Tool calling
+
+Pass OpenAI-format `tools` and an optional `tool_choice` to any model flagged for tools in the [model table](#the-zerogpu-route-and-supported-models). LiteLLM forwards them unchanged to ZeroGPU's chat completions endpoint.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `tools` | Yes | none | List of `{"type": "function", "function": {name, description, parameters}}`. |
+| `tool_choice` | No | `"auto"` | `"auto"`, `"none"`, `"required"`, or `{"type": "function", "function": {"name": ...}}`. |
+| `parallel_tool_calls` | No | model default | `False` limits the model to one call per turn. |
+
+```python
+import json
+from litellm import completion
+
+tools = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get the current weather for a city",
+            "parameters": {
+                "type": "object",
+                "properties": {"city": {"type": "string", "description": "City name"}},
+                "required": ["city"],
+            },
+        },
+    }
+]
+
+messages = [{"role": "user", "content": "What is the weather in Paris? Use the tool."}]
+
+response = completion(
+    model="zerogpu/gpt-6-luna",
+    messages=messages,
+    tools=tools,
+    tool_choice="auto",
+)
+
+call = response.choices[0].message.tool_calls[0]
+print(call.function.name, json.loads(call.function.arguments))
+
+# Send the tool result back for the final answer
+messages.append(response.choices[0].message)
+messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps({"temp_c": 18, "sky": "clear"})})
+final = completion(model="zerogpu/gpt-6-luna", messages=messages, tools=tools)
+print(final.choices[0].message.content)
+```
+
+Response: `message.tool_calls` is a list of `{id, type: "function", function: {name, arguments}}`, where `arguments` is a JSON string, and `finish_reason` is `"tool_calls"`.
+
+```json
+{
+  "role": "assistant",
+  "content": null,
+  "tool_calls": [
+    {
+      "id": "call_0",
+      "type": "function",
+      "function": { "name": "get_weather", "arguments": "{\"city\": \"Paris\"}" }
+    }
+  ]
+}
+```
+
+### Structured output
+
+Pass a `json_schema` `response_format` to get output that matches your schema. Supported on every model flagged for JSON schema in the [model table](#the-zerogpu-route-and-supported-models).
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `response_format.type` | Yes | none | `"json_schema"`. |
+| `response_format.json_schema.name` | Yes | none | A name for the schema. |
+| `response_format.json_schema.schema` | Yes | none | A JSON Schema object. |
+| `response_format.json_schema.strict` | No | `False` | `True` requires an exact match, including `additionalProperties: false`. |
+
+```python
+import json
+from litellm import completion
+
+response = completion(
+    model="zerogpu/qwen3.6-35b-a3b",
+    messages=[{"role": "user", "content": "Name the capital of France."}],
+    max_tokens=1024,
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "city",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {"city": {"type": "string"}},
+                "required": ["city"],
+                "additionalProperties": False,
+            },
+        },
+    },
+)
+
+print(json.loads(response.choices[0].message.content))
+```
+
+Response: `message.content` is a JSON string that parses to `{"city": "Paris"}`. Some models pretty-print it, so always parse rather than compare strings.
+
+You can also pass a Pydantic model class as `response_format`, and LiteLLM converts it to a `json_schema` for you.
+
+### Reasoning effort
+
+`reasoning_effort` controls how long a reasoning model thinks before answering. LiteLLM forwards it only to ZeroGPU models flagged `supports_reasoning`: `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-oss-120b`, `qwen3-30b-a3b-fp8`, and `qwen3.6-35b-a3b`. The others, `gpt-4.1-mini`, both Llama models, and both LFM2.5 models, reject it with a 400.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `reasoning_effort` | No | model default | `"low"`, `"medium"`, or `"high"`. |
+| `drop_params` | No | `False` | `True` silently drops `reasoning_effort` for models that don't support it. |
+
+```python
+from litellm import completion
+
+response = completion(
+    model="zerogpu/gpt-5.6-luna",
+    messages=[{"role": "user", "content": "How many prime numbers are there below 100?"}],
+    reasoning_effort="high",
+    drop_params=True,
+)
+
+print(response.choices[0].message.content)
+print(response.usage.completion_tokens_details.reasoning_tokens)
+```
+
+Response: a normal chat completion. Reasoning tokens are counted in `usage.completion_tokens_details.reasoning_tokens` and billed at the output rate. Set `drop_params=True` whenever the same code path can reach a non-reasoning model, for example behind a router or a wildcard.
+
+### Image input
+
+`gpt-6-luna` and `qwen3.6-35b-a3b` are flagged `supports_vision` and accept `image_url` content parts, either a public URL or a base64 data URL.
+
+```python
+import base64
+from litellm import completion
+
+with open("photo.png", "rb") as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+response = completion(
+    model="zerogpu/gpt-6-luna",
+    max_tokens=512,
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What color is this image? One word."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
+            ],
+        }
+    ],
+)
+
+print(response.choices[0].message.content)  # "Red"
+```
+
+Response: a normal chat completion. Image tokens are billed as input tokens. Check `litellm.supports_vision(model="zerogpu/<model>")` before sending images from a generic code path.
+
+### `responses()`
+
+LiteLLM's Responses API entry point. For `zerogpu/` models it calls ZeroGPU's own `POST /v1/responses` natively rather than going through the chat completions bridge, so reasoning items and output items come back exactly as ZeroGPU returns them.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu/<model-id>`. |
+| `input` | Yes | none | A string or a list of input items. |
+| `instructions` | No | none | System-level instructions. |
+| `max_output_tokens` | No | model default | Cap on generated tokens. |
+| `stream` | No | `False` | Return an iterator of Responses events. |
+| `tools` | No | none | Responses-format function tools. |
+| `reasoning` | No | none | `{"effort": "low" \| "medium" \| "high"}` on reasoning models. |
+
+```python
+import litellm
+
+response = litellm.responses(
+    model="zerogpu/glm-5.3-flash",
+    input="What is 17 times 23? Answer with the number.",
+)
+
+for item in response.output:
+    if item.type == "message":
+        print(item.content[0].text)  # "391"
+print(response.usage)
+```
+
+Response: a `ResponsesAPIResponse` with `status: "completed"`, an `output` list (reasoning models return a `reasoning` item followed by a `message` item), and `usage` with `input_tokens`, `output_tokens`, and `total_tokens`.
+
+Streaming yields `response.created`, `response.in_progress`, `response.output_item.added`, `response.output_text.delta`, `response.output_text.done`, `response.output_item.done`, and `response.completed` events:
+
+```python
+stream = litellm.responses(
+    model="zerogpu/gpt-oss-120b",
+    input="Name three primary colors",
+    stream=True,
+)
+
+for event in stream:
+    if event.type == "response.output_text.delta":
+        print(event.delta, end="", flush=True)
+```
+
+<Note>
+	Most ZeroGPU models ignore `previous_response_id`. To continue a
+	conversation, send the earlier turns again in `input` rather than relying on
+	server-side state.
+</Note>
+
+### Anthropic Messages
+
+LiteLLM translates Anthropic Messages-shaped requests into ZeroGPU chat completions, so clients written for the Anthropic SDK can call ZeroGPU models without changes. In the SDK, use `litellm.anthropic.messages.acreate()`; on the proxy, use `POST /v1/messages`.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu/<model-id>`, or a proxy `model_name`. |
+| `messages` | Yes | none | Anthropic-format messages. |
+| `max_tokens` | Yes | none | Required by the Messages format. |
+| `system` | No | none | System prompt. |
+| `tools` | No | none | Anthropic-format tools, translated to OpenAI tools. |
+| `stream` | No | `False` | Return Anthropic-format stream events. |
+
+```python
+import asyncio
+import litellm
+
+async def main():
+    response = await litellm.anthropic.messages.acreate(
+        model="zerogpu/gpt-oss-120b",
+        max_tokens=256,
+        messages=[{"role": "user", "content": "Reply with the word ok"}],
+    )
+    print(response)
+
+asyncio.run(main())
+```
+
+Response: an Anthropic-format message.
+
+```json
+{
+  "id": "id-1793211833536",
+  "type": "message",
+  "role": "assistant",
+  "model": "zerogpu/gpt-oss-120b",
+  "content": [{ "type": "text", "text": "ok" }],
+  "stop_reason": "end_turn",
+  "usage": { "input_tokens": 72, "output_tokens": 34 }
+}
+```
+
+### LiteLLM Proxy
+
+The proxy puts ZeroGPU behind one OpenAI-compatible (and Anthropic-compatible) endpoint with virtual keys, budgets, and spend logs. Add ZeroGPU deployments to `config.yaml`:
+
+```yaml
+model_list:
+  # One named deployment
+  - model_name: gpt-oss-120b
+    litellm_params:
+      model: zerogpu/gpt-oss-120b
+      api_key: os.environ/ZEROGPU_API_KEY
+
+  # Every ZeroGPU model, called as zerogpu/<model-id>
+  - model_name: zerogpu/*
+    litellm_params:
+      model: zerogpu/*
+      api_key: os.environ/ZEROGPU_API_KEY
+
+  # Project-scoped deployment with a custom base
+  - model_name: luna-project
+    litellm_params:
+      model: zerogpu/gpt-6-luna
+      api_key: os.environ/ZEROGPU_API_KEY
+      api_base: https://api.zerogpu.ai/v1
+      extra_headers:
+        x-project-id: os.environ/ZEROGPU_PROJECT_ID
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+| `litellm_params` key | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu/<model-id>` or `zerogpu/*`. |
+| `api_key` | No | `ZEROGPU_API_KEY` | Use `os.environ/VAR` to read from the environment. If omitted, the proxy falls back to `ZEROGPU_API_KEY`. |
+| `api_base` | No | `https://api.zerogpu.ai/v1` | Override the endpoint. Keeps provider identity and pricing. |
+| `extra_headers` | No | none | Extra headers on every upstream call, such as `x-project-id`. |
+| `input_cost_per_token`, `output_cost_per_token` | No | cost map | Override LiteLLM's pricing for this deployment. |
+| `rpm`, `tpm` | No | none | Per-deployment limits used by the router. |
+
+Start the proxy:
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+export LITELLM_MASTER_KEY="sk-local-zerogpu"
+litellm --config config.yaml --port 4000
+
+# RUNNING on http://0.0.0.0:4000
+```
+
+Call it with any OpenAI client:
+
+<CodeGroup>
+
+```python OpenAI SDK
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:4000", api_key="sk-local-zerogpu")
+
+response = client.chat.completions.create(
+    model="gpt-oss-120b",
+    messages=[{"role": "user", "content": "hello from litellm"}],
+)
+print(response.choices[0].message.content)
+```
+
+```bash cURL
+curl -sS -D - http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "zerogpu/gpt-oss-120b",
+    "messages": [{"role": "user", "content": "hello from litellm"}]
+  }'
+```
+
+```bash Anthropic Messages
+curl http://localhost:4000/v1/messages \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -H "anthropic-version: 2023-06-01" \
+  -d '{
+    "model": "gpt-oss-120b",
+    "max_tokens": 128,
+    "messages": [{"role": "user", "content": "hello from litellm"}]
+  }'
+```
+
+```bash Responses
+curl http://localhost:4000/v1/responses \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "zerogpu/glm-5.3-flash", "input": "What is 17 times 23?"}'
+```
+
+</CodeGroup>
+
+Response: the same OpenAI, Anthropic, or Responses body as the SDK sections above, plus LiteLLM headers. `x-litellm-response-cost` carries the USD cost of the call and `x-litellm-call-id` identifies it in spend logs.
+
+```
+HTTP/1.1 200 OK
+x-litellm-call-id: 401105cd-f4a3-43df-89c7-4f15a617a41e
+x-litellm-response-cost: 3.18e-05
+```
+
+### Admin UI
+
+You can add ZeroGPU without editing `config.yaml`. Open the proxy's Admin UI at `http://localhost:4000/ui`, go to **Models**, then **Add Model**, and type "zero" into **Provider** to select **ZeroGPU**. Pick one or more of the 13 `zerogpu/` models, paste your key into **API Key**, and save.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| Provider | Yes | none | ZeroGPU. |
+| LiteLLM model name | Yes | `zerogpu/gpt-oss-120b` | One or more `zerogpu/` models, or a wildcard. |
+| API Key | Yes | none | Your `zgpu-api-` key. Stored encrypted in the proxy database. |
+| API Base | No | `https://api.zerogpu.ai/v1` | Leave blank unless you use a custom endpoint. |
+
+Models added in the UI need the proxy to run with a database (`DATABASE_URL`).
+
+### Router, fallbacks, and load balancing
+
+`litellm.Router` (and the proxy's `router_settings`) groups deployments under one `model_name`, retries, and falls back to another group when a call fails. Use it to send traffic to ZeroGPU first and keep a frontier model as the safety net.
+
+| Router argument | Required | Default | Description |
+|---|---|---|---|
+| `model_list` | Yes | none | Deployments, same shape as the proxy `model_list`. |
+| `fallbacks` | No | none | `[{"<group>": ["<fallback group>", ...]}]`. |
+| `context_window_fallbacks` | No | none | Fallbacks used only when the prompt exceeds the model's window. |
+| `num_retries` | No | `0` | Retries per deployment before falling back. |
+| `routing_strategy` | No | `"simple-shuffle"` | How to pick among deployments in one group. |
+| `enable_pre_call_checks` | No | `False` | Reject or skip deployments whose `max_input_tokens` the prompt exceeds. |
+
+```python
+import os
+from litellm import Router
+
+router = Router(
+    model_list=[
+        {
+            "model_name": "fast-chat",
+            "litellm_params": {"model": "zerogpu/gpt-6-luna", "api_key": os.environ["ZEROGPU_API_KEY"]},
+        },
+        {
+            "model_name": "long-context",
+            "litellm_params": {"model": "zerogpu/deepseek-v4.1-flash", "api_key": os.environ["ZEROGPU_API_KEY"]},
+        },
+        {
+            "model_name": "frontier",
+            "litellm_params": {"model": "openai/gpt-4.1", "api_key": os.environ["OPENAI_API_KEY"]},
+        },
+    ],
+    fallbacks=[{"fast-chat": ["frontier"]}],
+    context_window_fallbacks=[{"fast-chat": ["long-context"]}],
+    num_retries=2,
+    enable_pre_call_checks=True,
+)
+
+response = router.completion(
+    model="fast-chat",
+    messages=[{"role": "user", "content": "Classify this ticket: 'I was charged twice.'"}],
+)
+print(response.model, response.choices[0].message.content)
+```
+
+The proxy equivalent:
+
+```yaml
+router_settings:
+  fallbacks: [{"fast-chat": ["frontier"]}]
+  context_window_fallbacks: [{"fast-chat": ["long-context"]}]
+  num_retries: 2
+  enable_pre_call_checks: true
+```
+
+Response: a normal completion. `response.model` tells you which deployment actually answered, so you can see how often the fallback fires.
+
+### Cost tracking
+
+Every `zerogpu/` model is in LiteLLM's cost map, so spend is computed per request with no extra setup. When ZeroGPU reports cached prompt tokens in `prompt_tokens_details.cached_tokens`, LiteLLM bills those at the cache read rate and the rest of the prompt at the input rate.
+
+| Where | How to read it |
+|---|---|
+| SDK response | `response._hidden_params["response_cost"]` |
+| SDK helper | `litellm.completion_cost(completion_response=response)` |
+| Proxy response header | `x-litellm-response-cost` |
+| Proxy spend logs | `GET /spend/logs?request_id=<id>`, recorded under provider `zerogpu` |
+| Custom logging | `response_cost` in the `kwargs` passed to a custom callback |
+
+```python
+import litellm
+from litellm import completion
+
+response = completion(
+    model="zerogpu/gpt-oss-120b",
+    messages=[{"role": "user", "content": "Reply with the word ok"}],
+)
+
+print(f"Request cost: ${response._hidden_params['response_cost']}")
+print(f"Recomputed:   ${litellm.completion_cost(completion_response=response)}")
+```
+
+A spend log row for a ZeroGPU call:
+
+```json
+{
+  "request_id": "id-1793212550228",
+  "model": "zerogpu/gpt-oss-120b",
+  "custom_llm_provider": "zerogpu",
+  "spend": 0.0000336,
+  "prompt_tokens": 72,
+  "completion_tokens": 38
+}
+```
+
+### Model metadata and discovery
+
+LiteLLM exposes the cost map entries so code can check limits and capabilities before calling.
+
+| Entry point | Returns |
+|---|---|
+| `litellm.get_model_info("zerogpu/<model>")` | Dict with `max_input_tokens`, `max_output_tokens`, prices, and `supports_*` flags. |
+| `litellm.supports_function_calling(model=...)` | `True` for models flagged for tools. |
+| `litellm.supports_reasoning(model=...)` | `True` for reasoning models. |
+| `litellm.supports_response_schema(model=...)` | `True` for models flagged for `json_schema`. |
+| `litellm.supports_vision(model=...)` | `True` for `gpt-6-luna` and `qwen3.6-35b-a3b`. |
+| Proxy `GET /v1/models` | Every model the key can call. With a `zerogpu/*` wildcard, all 13 `zerogpu/` IDs. |
+| Proxy `GET /model_group/info?model_group=<name>` | Limits and capability flags for one proxy model group. |
+
+```python
+import litellm
+
+info = litellm.get_model_info("zerogpu/gpt-5.4-nano")
+print(info["max_input_tokens"], info["max_output_tokens"])        # 272000 128000
+print(litellm.supports_reasoning(model="zerogpu/gpt-5.4-nano"))   # True
+print(litellm.supports_vision(model="zerogpu/qwen3.6-35b-a3b"))   # True
+```
+
+### Patterns and recipes
+
+**Cheap first, frontier as the safety net.** Put a ZeroGPU model in front of a frontier model with Router `fallbacks`. Most traffic resolves on ZeroGPU at a fraction of the cost, and anything that errors or times out still gets an answer. Watch `response.model` (or the spend logs, grouped by provider) to see the real split and decide whether the fallback is earning its keep.
+
+**One alias, many capabilities.** Expose a `zerogpu/*` wildcard on the proxy and set `litellm_settings.drop_params: true`. Clients can then send `reasoning_effort` to any model without knowing which ones support it; LiteLLM forwards it to the eight reasoning models and drops it for the rest instead of returning 400s.
+
+**Structured extraction on a small model.** For "pull these fields out of this text" jobs, use `response_format` with a strict `json_schema` on `gpt-6-luna` or `qwen3.6-35b-a3b` rather than asking a large model for prose and parsing it. Check `litellm.supports_response_schema()` in shared code so a misconfigured model fails fast instead of returning unparseable text.
+
+**Budgeted keys per team or agent.** With the proxy running against a database, mint a virtual key that can only call ZeroGPU models and stops at a budget. Each agent or team gets its own spend line, all priced from the `zerogpu/` cost map:
+
+```bash
+curl -X POST http://localhost:4000/key/generate \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"models": ["gpt-oss-120b", "zerogpu/*"], "max_budget": 5, "metadata": {"team": "support-bots"}}'
+```
+
+### At a glance
+
+| Task | Entry point | Endpoint on ZeroGPU |
+|---|---|---|
+| Chat | `litellm.completion(model="zerogpu/...")` | `/v1/chat/completions` |
+| Async chat | `litellm.acompletion(...)` | `/v1/chat/completions` |
+| Streaming | `completion(..., stream=True)` | `/v1/chat/completions` |
+| Tool calling | `completion(..., tools=[...])` | `/v1/chat/completions` |
+| Structured output | `completion(..., response_format={...})` | `/v1/chat/completions` |
+| Reasoning control | `completion(..., reasoning_effort="high")` | `/v1/chat/completions` |
+| Image input | `image_url` content parts | `/v1/chat/completions` |
+| Responses API | `litellm.responses(...)` | `/v1/responses` (native) |
+| Anthropic Messages | `litellm.anthropic.messages.acreate(...)`, proxy `/v1/messages` | `/v1/chat/completions` (bridged) |
+| Proxy deployment | `model_list` entry with `model: zerogpu/...` | depends on call |
+| Admin UI | Models, Add Model, Provider: ZeroGPU | depends on call |
+| Routing and fallbacks | `litellm.Router`, proxy `router_settings` | depends on call |
+| Cost | `_hidden_params["response_cost"]`, `x-litellm-response-cost` | none |
+| Model metadata | `litellm.get_model_info(...)`, `supports_*` helpers | none |
+
+## Troubleshooting
+
+**`Invalid model name passed in model=zerogpu/...` or `LLM Provider NOT provided`.** Your LiteLLM release predates the `zerogpu` provider. Upgrade with `pip install -U litellm` (or `pip install -U 'litellm[proxy]'`, or pull a newer proxy image), then restart the proxy.
+
+**`AuthenticationError` or 401 on every call.** `ZEROGPU_API_KEY` is not set in the process that makes the call. On the proxy, the variable must be exported in the proxy's own environment, and `api_key` in `config.yaml` must use the `os.environ/ZEROGPU_API_KEY` form, not a bare variable name.
+
+**A bad key returns 403 only after a noticeable delay.** LiteLLM retries the upstream call twice before surfacing the 403. Fix the key in the dashboard; while debugging, pass `num_retries=0` so failures come back immediately.
+
+**`reasoning_effort` returns 400 on some models.** `gpt-4.1-mini`, the Llama models, and the LFM2.5 models don't support it. Pass `drop_params=True` on the call, or set `litellm_settings.drop_params: true` on the proxy.
+
+**`verbosity` is rejected, or `temperature` is not dropped, on `gpt-5.4-nano`, `gpt-5.6-luna`, or `gpt-6-luna`.** LiteLLM doesn't yet apply its GPT-5 parameter rules to these ZeroGPU models. Omit `verbosity`, and leave `temperature` at its default on these models until a LiteLLM release fixes it.
+
+**Spend shows `$0`, `unknown-model`, or an empty provider.** The deployment points at ZeroGPU with `api_base` but without the `zerogpu/` prefix (for example `model: gpt-5.6-luna` or `model: openai/gpt-5.6-luna`), so LiteLLM treats it as generic OpenAI and has no price for it. Change `model` to `zerogpu/<model-id>`.
+
+**Prices in LiteLLM no longer match the ZeroGPU catalog.** LiteLLM's cost map is updated separately from ZeroGPU's pricing. Set `input_cost_per_token` and `output_cost_per_token` in that deployment's `litellm_params` to the current [model catalog](/docs/model-catalog) rates until the cost map catches up.
+
+**`ContextWindowExceededError` with `enable_pre_call_checks`.** LiteLLM checks the prompt against the model's `max_input_tokens` before calling. Move to a larger-window model such as `deepseek-v4.1-flash` or `glm-5.3-flash`, or add `context_window_fallbacks` so long prompts reroute automatically.
+
+**Embeddings or image generation fail on `zerogpu/`.** The LiteLLM route covers text generation only. `litellm.embedding(model="zerogpu/...")` returns 400 before any upstream call, and image generation returns 404. Call ZeroGPU's [embeddings](/api-reference/embeddings) and task endpoints directly instead.
+
+**A multi-turn Responses conversation forgets earlier turns.** Most ZeroGPU models ignore `previous_response_id`. Resend the earlier turns in `input` on each call.
+
+**Parallel tool calls on `llama-3.1-8b-instruct-fast` share one `id`.** Matching tool results back to calls then fails. Pass `parallel_tool_calls=False`, or use `gpt-6-luna` or `qwen3.6-35b-a3b` for multi-tool turns.
+
+**429 responses under load.** You are being rate limited. Set `num_retries` so LiteLLM backs off and retries, add `rpm` / `tpm` per deployment so the router spreads load, and move offline work to the [Batch API](/docs/batch/index).
+
+## Conclusion
+
+LiteLLM gives every app and agent in your stack one governed endpoint, and its native `zerogpu/` route means ZeroGPU's small and nano models sit behind that endpoint with pricing, capability flags, and spend tracking already in place. Route the high-volume, purpose-specific calls to ZeroGPU, keep a frontier model as a fallback for the rest, and let the spend logs show you what each request actually cost.
+
+<CardGroup cols={2}>
+	<Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+		Browse every model available on ZeroGPU and pick the best fit.
+	</Card>
+	<Card title="API Reference" icon="code" href="/api-reference/chat-completions">
+		Explore the OpenAI-compatible chat completions endpoint LiteLLM calls.
+	</Card>
+	<Card title="Cookbook" icon="book" href="/cookbook/index">
+		Worked examples for classification, extraction, and batch jobs.
+	</Card>
+	<Card title="Join Discord" icon="discord" href="https://discord.gg/58XZuxKyq6">
+		Ask questions and share what you're building.
+	</Card>
+</CardGroup>
