@@ -1,6 +1,7 @@
 ---
 title: "🎫 Route Support Tickets with Claude and ZeroGPU's Thinking Model"
 description: "Use the ZeroGPU Skill in Claude to triage incoming support tickets. Claude builds an exact /v1/responses call to the LFM2.5-1.2B-Thinking model, which returns a team and priority for routing."
+integration: claude-skill
 ---
 
 This guide shows how to use Claude as a support-ticket router with the ZeroGPU Skill. The Skill defines how Claude calls ZeroGPU: when a ticket comes in, Claude builds an exact `curl` request to the `/v1/responses` endpoint, sends it to the `LFM2.5-1.2B-Thinking` model, and reports the routing decision the model returns. Claude does not decide the team or priority itself; the label comes from the API. The result is a triage step that runs on each incoming ticket and produces a consistent team and priority.

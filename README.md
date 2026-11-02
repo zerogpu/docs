@@ -92,6 +92,8 @@ Preview at `http://localhost:3000` (or the port Mintlify reports).
 
 Docs use ASCII hyphens only (no em/en dashes). Check this by hand when editing prose.
 
+**Integrations and cookbooks:** an integration's guide lives at `integrations/<slug>.mdx` (SDKs under `integrations/sdk/`). A cookbook built around one integration names it in its frontmatter, e.g. `integration: litellm`; general cookbooks leave it out. Nick Fury, our GTM agent, reads both from `main` to track docs coverage of each integration, so a merged guide or cookbook shows up there without anyone linking it by hand.
+
 See `api-reference/openapi/zerogpu.openapi.json` and `api` in `docs.json`. Validate with `mint validate`.
 
 ### Submitting changes
