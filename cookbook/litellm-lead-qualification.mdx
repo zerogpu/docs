@@ -1,6 +1,7 @@
 ---
 title: "🚅 Build a Cost-Aware Inbound Lead Desk with LiteLLM and ZeroGPU"
 description: "Use a LiteLLM Router to qualify, extract, and answer inbound sales leads on ZeroGPU's small models, escalate enterprise deals to a frontier model with fallbacks, and price every call against a GPT-4.1 baseline."
+integration: litellm
 ---
 
 This notebook demonstrates how to put a LiteLLM Router in front of ZeroGPU to run an inbound lead desk: every "Contact sales" form submission is qualified, mined for structured fields, and answered with a first-touch reply. Each step runs on the smallest ZeroGPU model that can do the job, enterprise deals escalate to a frontier model, and every call lands in a cost ledger priced against a GPT-4.1 baseline. By combining LiteLLM and ZeroGPU, this notebook walks you through a practical pattern for routing high-volume, well-defined LLM work to cheap models while keeping a frontier model exactly where it earns its price.

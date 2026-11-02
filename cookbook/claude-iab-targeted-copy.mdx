@@ -1,6 +1,7 @@
 ---
 title: "🎯 Turn Raw Content into Targeted Copy with the IAB Classifier and Claude"
 description: "Connect the ZeroGPU MCP server in Claude Desktop so Claude can call the zlm-v1-iab-classify-edge model, then turn the returned IAB categories, audience segments, and confidence scores into three targeted outputs: an ad brief, a newsletter blurb, and a content pitch."
+integration: mcp
 ---
 
 This guide shows how to combine ZeroGPU's `zlm-v1-iab-classify-edge` model with Claude entirely inside Claude Desktop, with no code to write or run. You connect the hosted ZeroGPU MCP server once, then Claude reads your article, calls the IAB classifier as a tool to get hard signals (IAB content categories, audience segments, and confidence scores), and uses those signals to write an Ad Brief, a Newsletter Blurb, and a Content Pitch, each in a distinct voice. By pairing ZeroGPU's edge classifier with Claude's writing, this guide walks you through a transparent, reproducible pipeline where the classification numbers visibly drive every line of copy, all from a chat window.
