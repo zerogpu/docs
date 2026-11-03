@@ -3,7 +3,7 @@
   "info": {
     "title": "qwen3-30b-a3b-fp8 playground",
     "version": "1.0",
-    "description": "Interactive playground for **qwen3-30b-a3b-fp8**.\nModel is always `qwen3-30b-a3b-fp8` on this page (shown in the form, not editable).\nThis model supports the Chat Completions API only — the Responses endpoint is not available.\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
+    "description": "Interactive playground for **qwen3-30b-a3b-fp8**.\nModel is always `qwen3-30b-a3b-fp8` on this page (shown in the form, not editable).\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
   },
   "servers": [
     {

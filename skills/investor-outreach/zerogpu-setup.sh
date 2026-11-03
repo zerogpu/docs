@@ -121,9 +121,9 @@ echo "    Testing the model provider..."
 REPLY_TEXT="$(hermes --accept-hooks -z 'Reply with exactly: ZEROGPU BRAIN OK' </dev/null 2>&1)"
 case "$REPLY_TEXT" in
   *ZEROGPU\ BRAIN\ OK*) ok "model provider is live on ZeroGPU" ;;
-  *401*|*[Uu]nauthorized*|*[Ii]nvalid*key*)
+  *401*|*403*|*[Uu]nauthorized*|*[Ii]nvalid*key*|*[Ii]nvalid\ credentials*)
       warn "auth rejected by api.zerogpu.ai"
-      echo "        ZeroGPU expects the x-api-key header; Hermes may be sending Bearer."
+      echo "        ZeroGPU accepts x-api-key or Authorization: Bearer; check the API key Hermes is configured with."
       echo "        The MCP tools above still work — only the agent's own model is affected." ;;
   *)  warn "unexpected reply:"; echo "$REPLY_TEXT" | head -5 | sed 's/^/        /' ;;
 esac

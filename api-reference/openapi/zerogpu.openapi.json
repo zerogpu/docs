@@ -160,10 +160,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -268,10 +268,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -422,10 +422,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -564,7 +564,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "402": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -669,10 +669,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -1039,6 +1039,8 @@
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "enum": [
               "llama-3.1-8b-instruct-fast",
+              "llama-3.2-3b-instruct-fast",
+              "qwen3-30b-a3b-fp8",
               "llama-guard-4-12b",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",

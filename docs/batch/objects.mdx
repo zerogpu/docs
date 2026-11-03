@@ -21,8 +21,8 @@ x-api-key:    <your-api-key>
 x-project-id: <your-project-uuid>   # optional
 ```
 
-Missing `x-api-key` returns `401`; a key that is invalid, inactive, or does
-not belong to the supplied project returns `403`; an organization with no
+Missing `x-api-key` returns `401`; a key that is invalid or inactive
+returns `403`; an organization with no
 balance and no free credits returns `429` with `insufficient_quota`. See the
 [Errors reference](/docs/batch/errors) for the complete list.
 

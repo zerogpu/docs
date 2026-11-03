@@ -536,9 +536,9 @@ Every tool at a glance.
 
 **`ZeroGPUAuthError: Invalid ZeroGPU API key`** - the key must start with `zgpu-api-`. You've likely pasted a truncated key or a different credential; copy it again from the [dashboard](https://platform.zerogpu.ai/dashboard).
 
-**`ZeroGPU authentication failed (401)`** - the key was rejected. It's been revoked or mistyped; rotate it in the dashboard and update `ZEROGPU_API_KEY`.
+**`ZeroGPU authentication failed (401)`** - no API key reached ZeroGPU. Check that `ZEROGPU_API_KEY` is set in the environment the Python process sees, or pass `api_key=...`.
 
-**`ZeroGPU access denied (403)`** - the key is valid but the project doesn't have access to the requested model, or the Project ID doesn't match the project that owns the key. Check `ZEROGPU_PROJECT_ID` and your model entitlements.
+**`ZeroGPU access denied (403)`** - the key was rejected: it's invalid, revoked, or mistyped, or it doesn't have access to the requested model. Rotate it in the dashboard, update `ZEROGPU_API_KEY`, and check your model entitlements.
 
 **`ZeroGPU rate limit exceeded (429)`** - back off and retry with exponential delay, or move bulk workloads to the [Batch API](/docs/batch/index), which has separate quotas tuned for offline jobs.
 

@@ -521,9 +521,9 @@ For the full flag reference on any command, run `zerogpu <command> --help` in yo
 
 **The agent won't use the plugin's skills** - the plugin may not be installed or enabled. Re-run `openclaw plugins install clawhub:zerogpu-router` and confirm it's enabled in your OpenClaw plugin settings. Pin a known-good release with `clawhub:zerogpu-router@2.1.2` if a newer build misbehaves.
 
-**`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run the `signin` skill. Keys must start with `zgpu-api-`.
+**`Request failed with status 401`** - no API key was sent. Re-run the `signin` skill to save your key.
 
-**`Request failed with status 403`** - the key is valid but doesn't have access to the requested project or model. Confirm the key belongs to a project that owns the model you're routing to.
+**`Request failed with status 403`** - your API key is invalid, revoked, or mistyped, or it doesn't have access to the model you're routing to. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run the `signin` skill. Keys must start with `zgpu-api-`.
 
 **`Request failed with status 429`** - you're being rate-limited. Back off and retry with exponential delay, or move heavy workloads to the [Batch API](/docs/batch), which has separate quotas tuned for bulk jobs.
 

@@ -139,11 +139,6 @@ The model reasons before it answers and returns the trace alongside the final te
 
 ## qwen3-30b-a3b-fp8
 
-<Note>
-	This model supports the Chat Completions API only — the Responses endpoint
-	(`/v1/responses`) is not available for this model.
-</Note>
-
 > Alibaba's Qwen3-30B-A3B is an open-weight Mixture-of-Experts model with 30.5B total parameters (3.3B active per token), served on ZeroGPU as an FP8 build for efficient inference. It thinks through a problem before answering and returns that reasoning alongside the final text, and it supports function calling, streaming, batch tasks, and 100+ languages with a 32,768-token context window. When you want frontier-style reasoning and tool use in a lighter, multilingual package, this is the model.
 
 **References:** [Model docs](https://huggingface.co/Qwen/Qwen3-30B-A3B-FP8) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
@@ -464,11 +459,6 @@ The global semiconductor industry is undergoing a significant transformation dri
 ```
 
 ## llama-3.2-3b-instruct-fast
-
-<Note>
-	This model supports the Chat Completions API only — the Responses endpoint
-	(`/v1/responses`) is not available for this model.
-</Note>
 
 > Meta's Llama 3.2 3B Instruct, packaged by ZeroGPU for fast, low-cost summarization on edge GPUs. It shares the 131,072-token context window and the summarization pipeline of llama-3.1-8b-instruct-fast, and runs on ZeroGPU worker devices with GPU acceleration, falling back to the hybrid inference cloud when no device is available. At 3B parameters, served as a Q4_K_L quantized build, it is the lighter of ZeroGPU's two Llama summarization models.
 

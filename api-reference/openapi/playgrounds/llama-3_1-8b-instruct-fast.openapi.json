@@ -3,7 +3,7 @@
   "info": {
     "title": "llama-3.1-8b-instruct-fast playground",
     "version": "1.0",
-    "description": "Interactive playground for **llama-3.1-8b-instruct-fast**.\nModel is always `llama-3.1-8b-instruct-fast` on this page (shown in the form, not editable).\nThis model uses the **Chat Completions** route (`POST /v1/chat/completions`); it does not support `/v1/responses`.\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
+    "description": "Interactive playground for **llama-3.1-8b-instruct-fast**.\nModel is always `llama-3.1-8b-instruct-fast` on this page (shown in the form, not editable).\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
   },
   "servers": [
     {

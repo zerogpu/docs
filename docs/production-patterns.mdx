@@ -3,7 +3,7 @@ title: "Production patterns"
 description: "What to get right when you move ZeroGPU from a first call into production."
 ---
 
-Keep API keys in environment variables, never in source or client-side code. Handle the common status codes explicitly: 401 (bad API key), 403 (bad project ID), and 429 (rate limit). Set sensible timeouts and retries with backoff on 429 and 5xx. For large, non-real-time jobs, use the Batch and Files API instead of the synchronous endpoint - streaming is not supported in batch mode. Already on the OpenAI SDK? The drop-in client shown in the [Introduction](/) is the recommended way to call ZeroGPU from application code.
+Keep API keys in environment variables, never in source or client-side code. Handle the common status codes explicitly: 401 (missing API key), 403 (invalid API key), and 429 (rate limit). Set sensible timeouts and retries with backoff on 429 and 5xx. For large, non-real-time jobs, use the Batch and Files API instead of the synchronous endpoint - streaming is not supported in batch mode. Already on the OpenAI SDK? The drop-in client shown in the [Introduction](/) is the recommended way to call ZeroGPU from application code.
 
 ## Keep secrets out of source
 
@@ -26,8 +26,8 @@ Branch on the status code. Authentication and authorization errors are permanent
 |--------|---------|------------|
 | `200` | Success | Parse and use the response. |
 | `400` | Bad request | Fix the request body. Do **not** retry. |
-| `401` | Bad API key | Check `x-api-key`. Do **not** retry. |
-| `403` | Bad project ID | Check `x-project-id` and permissions. Do **not** retry. |
+| `401` | Missing API key | Send `x-api-key` or `Authorization: Bearer`. Do **not** retry. |
+| `403` | Invalid API key | Check the key is correct and not revoked, and its permissions. Do **not** retry. |
 | `420` | Input over token limit | Shorten the input. Do **not** retry unchanged. |
 | `429` | Rate limit reached | Wait at least `Retry-After` seconds, then retry. See [Rate limits](#rate-limits). |
 | `5xx` | Server error | Retry with exponential backoff. |

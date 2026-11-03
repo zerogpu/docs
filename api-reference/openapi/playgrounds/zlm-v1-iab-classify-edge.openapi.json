@@ -367,7 +367,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "402": {
             "description": "Insufficient quota (insufficient_quota)",
