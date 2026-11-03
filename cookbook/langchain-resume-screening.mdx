@@ -32,21 +32,18 @@ First, install the `langchain-zerogpu` package, which ships the ZeroGPU tools. Y
 
 You'll need to set up your ZeroGPU credentials so the tools can reach the inference API securely. This ensures every tool call is authenticated without re-prompting.
 
-You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
 
 ```python Python
 import os
 from getpass import getpass
 
-# Prompt for the ZeroGPU API key and Project ID securely
+# Prompt for the ZeroGPU API key securely
 zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
 os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
-
-zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
-os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
 ```
 
-Each tool reads `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID` from the environment when you construct it with no arguments. The key is held as a `SecretStr` and is never logged.
+Each tool reads `ZEROGPU_API_KEY` from the environment when you construct it with no arguments. The key is held as a `SecretStr` and is never logged.
 
 <Note>
 The example outputs throughout this notebook are illustrative placeholders that show the shape of each result. Rerun the cells with your own credentials and resume to capture live values.

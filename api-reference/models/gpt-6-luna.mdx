@@ -8,3 +8,7 @@ openapi: "api-reference/openapi/playgrounds/gpt-6-luna.openapi.json POST /respon
 > OpenAI's GPT-6 Luna is the most efficient model of the GPT-6 family, served on ZeroGPU for high-volume, cost-sensitive workloads. It reads both text and images, and supports adjustable reasoning effort, function calling, and structured outputs across a 272,000-token context window.
 
 **References:** [Terms](https://openai.com/policies/services-agreement/) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<Note>
+  Supports [streaming](/api-reference/responses#streaming) (`"stream": true`) and [tool calling](/api-reference/responses#tool-calling) (`tools`) on `/v1/responses`.
+</Note>

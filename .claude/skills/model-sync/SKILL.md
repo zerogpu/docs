@@ -84,7 +84,7 @@ Both of:
 - a row in that page's pricing table — same markup, but the columns differ per page (`docs/text-generation.mdx` and `docs/open-weight.mdx` carry a Cached input column; the others do not), and
 - a `## <modelId>` section, positioned to match table order, containing: the `<Note>` block if the model is [Chat-Completions-only](#endpoint-support), a `>` blockquote blurb, the `**References:**` line, a `<CodeGroup>` with `bash Responses API` + `bash Chat Completions` (a single `bash Chat Completions` block when there is no Responses support), one sentence on what comes back, and a fenced ` ```json Response ` / ` ```text Response ` example.
 
-Request bodies come from `sample_responses_body` / `sample_chat_completions_body`, pretty-printed at 2 spaces, against `https://api.zerogpu.ai/v1/responses` or `/v1/chat/completions`, with `-H "content-type: application/json"`, `-H "x-api-key: YOUR_API_KEY"`, `-H "x-project-id: YOUR_PROJECT_ID"`. Response examples must come from the API's samples — if a sample body is absent, write the request block and omit the response block rather than inventing one.
+Request bodies come from `sample_responses_body` / `sample_chat_completions_body`, pretty-printed at 2 spaces, against `https://api.zerogpu.ai/v1/responses` or `/v1/chat/completions`, with `-H "content-type: application/json"`, `-H "x-api-key: YOUR_API_KEY"`. Response examples must come from the API's samples — if a sample body is absent, write the request block and omit the response block rather than inventing one.
 
 Moderation and embedding models are routable **only** on `/v1/moderations` and `/v1/embeddings`; their sections use that endpoint.
 

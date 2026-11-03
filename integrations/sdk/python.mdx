@@ -19,7 +19,6 @@ from zerogpu import ZerogpuApi
 
 client = ZerogpuApi(
     api_key=os.environ["ZEROGPU_API_KEY"],
-    project_id=os.environ["ZEROGPU_PROJECT_ID"],
 )
 
 # Many models accept plain string `input`; others accept a message list: see API reference.
@@ -66,7 +65,6 @@ url = "https://api.zerogpu.ai/v1/responses"
 headers = {
     "content-type": "application/json",
     "x-api-key": "YOUR_API_KEY",
-    "x-project-id": "YOUR_PROJECT_ID",
 }
 payload = {
     "model": "YOUR_MODEL",
@@ -97,7 +95,6 @@ url = "https://api.zerogpu.ai/v1/responses"
 headers = {
     "content-type": "application/json",
     "x-api-key": os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
 }
 payload = {
     "model": "YOUR_MODEL",

@@ -7,7 +7,7 @@ Keep API keys in environment variables, never in source or client-side code. Han
 
 ## Keep secrets out of source
 
-Read your `x-api-key` and `x-project-id` from the environment (or a secrets manager) and inject them at deploy time. Never commit them, never ship them in a browser bundle or mobile app - a key embedded in client-side code is a public key.
+Read your `x-api-key` (and `x-project-id`, if you scope requests to a project) from the environment (or a secrets manager) and inject them at deploy time. Never commit them, never ship them in a browser bundle or mobile app - a key embedded in client-side code is a public key.
 
 <Warning>
   ZeroGPU calls authenticate from your backend. If you need to call from a browser or mobile client, proxy the request through a server you control so the key stays server-side.
@@ -16,7 +16,6 @@ Read your `x-api-key` and `x-project-id` from the environment (or a secrets mana
 ```bash
 # .env (git-ignored) - load with your process manager or dotenv
 export ZEROGPU_API_KEY="zgpu-..."
-export ZEROGPU_PROJECT_ID="..."
 ```
 
 ## Handle status codes explicitly
@@ -103,10 +102,9 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.zerogpu.ai/v1",
-    api_key="unused",  # ZeroGPU authenticates via the headers below
+    api_key="unused",  # ZeroGPU authenticates via the header below
     default_headers={
         "x-api-key": os.environ["ZEROGPU_API_KEY"],
-        "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
     },
     timeout=30.0,    # seconds, per request
     max_retries=5,   # exponential backoff on 408 / 409 / 429 / 5xx
@@ -124,10 +122,9 @@ import OpenAI from 'openai';
 
 const client = new OpenAI({
   baseURL: 'https://api.zerogpu.ai/v1',
-  apiKey: 'unused', // ZeroGPU authenticates via the headers below
+  apiKey: 'unused', // ZeroGPU authenticates via the header below
   defaultHeaders: {
     'x-api-key': process.env.ZEROGPU_API_KEY,
-    'x-project-id': process.env.ZEROGPU_PROJECT_ID,
   },
   timeout: 30_000, // ms, per request
   maxRetries: 5,   // exponential backoff on 408 / 409 / 429 / 5xx
@@ -157,7 +154,6 @@ curl --retry 5 --retry-delay 1 --max-time 30 \
   https://api.zerogpu.ai/v1/responses \
   -H "content-type: application/json" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -d '{
     "model": "llama-3.1-8b-instruct-fast",
     "input": "Your input text here..."
@@ -175,7 +171,6 @@ RETRIABLE = {408, 429, 500, 502, 503, 504}
 HEADERS = {
     "content-type": "application/json",
     "x-api-key": os.environ["ZEROGPU_API_KEY"],
-    "x-project-id": os.environ["ZEROGPU_PROJECT_ID"],
 }
 
 
@@ -208,7 +203,6 @@ async function createResponse(payload, { maxRetries = 5, timeoutMs = 30_000 } = 
   const headers = {
     'content-type': 'application/json',
     'x-api-key': process.env.ZEROGPU_API_KEY,
-    'x-project-id': process.env.ZEROGPU_PROJECT_ID,
   };
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -255,7 +249,6 @@ const RETRIABLE: [u16; 6] = [408, 429, 500, 502, 503, 504];
 async fn create_response(payload: Value, max_retries: u32) -> Result<Value, Box<dyn std::error::Error>> {
     let client = Client::builder().timeout(Duration::from_secs(30)).build()?;
     let api_key = std::env::var("ZEROGPU_API_KEY")?;
-    let project_id = std::env::var("ZEROGPU_PROJECT_ID")?;
 
     for attempt in 0..=max_retries {
         let mut retry_after: Option<u64> = None;
@@ -264,7 +257,6 @@ async fn create_response(payload: Value, max_retries: u32) -> Result<Value, Box<
             .post("https://api.zerogpu.ai/v1/responses")
             .header("content-type", "application/json")
             .header("x-api-key", &api_key)
-            .header("x-project-id", &project_id)
             .json(&payload)
             .send()
             .await
@@ -328,7 +320,6 @@ func createResponse(payload map[string]any, maxRetries int) ([]byte, error) {
 		req, _ := http.NewRequest("POST", "https://api.zerogpu.ai/v1/responses", bytes.NewReader(body))
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("x-api-key", os.Getenv("ZEROGPU_API_KEY"))
-		req.Header.Set("x-project-id", os.Getenv("ZEROGPU_PROJECT_ID"))
 
 		res, err := client.Do(req)
 		if err == nil && !retriable[res.StatusCode] {
@@ -379,7 +370,6 @@ def create_response(payload, max_retries: 5, timeout: 30)
   request = Net::HTTP::Post.new(ENDPOINT.request_uri)
   request['content-type'] = 'application/json'
   request['x-api-key'] = ENV.fetch('ZEROGPU_API_KEY')
-  request['x-project-id'] = ENV.fetch('ZEROGPU_PROJECT_ID')
   request.body = payload.to_json
 
   (0..max_retries).each do |attempt|

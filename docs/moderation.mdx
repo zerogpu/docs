@@ -23,7 +23,6 @@ Send the text to classify as `input` — a string, an array of strings (one verd
 curl https://api.zerogpu.ai/v1/moderations \
   -H "content-type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
   "model": "zlm-v1-moderation-edge",
   "input": "I am so angry at this person that I want to hurt them. They are worthless and should be scared of what I might do next."
@@ -34,7 +33,6 @@ curl https://api.zerogpu.ai/v1/moderations \
 curl https://api.zerogpu.ai/v1/chat/completions \
   -H "content-type: application/json" \
   -H "x-api-key: YOUR_API_KEY" \
-  -H "x-project-id: YOUR_PROJECT_ID" \
   -d '{
   "model": "zlm-v1-moderation-edge",
   "messages": [

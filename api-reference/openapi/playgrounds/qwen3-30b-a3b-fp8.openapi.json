@@ -3,7 +3,7 @@
   "info": {
     "title": "qwen3-30b-a3b-fp8 playground",
     "version": "1.0",
-    "description": "Interactive playground for **qwen3-30b-a3b-fp8**.\nModel is always `qwen3-30b-a3b-fp8` on this page (shown in the form, not editable).\nThis model supports the Chat Completions API only — the Responses endpoint is not available.\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **qwen3-30b-a3b-fp8**.\nModel is always `qwen3-30b-a3b-fp8` on this page (shown in the form, not editable).\nThis model supports the Chat Completions API only — the Responses endpoint is not available.\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
   },
   "servers": [
     {
@@ -14,6 +14,9 @@
   "security": [
     {
       "ApiKey": []
+    },
+    {
+      "BearerAuth": []
     }
   ],
   "paths": {
@@ -151,6 +154,11 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI-compatible: send your ZeroGPU API key as `Authorization: Bearer <key>`."
       }
     },
     "schemas": {

@@ -52,9 +52,8 @@ These appear in the intro bullets and in the Highlights recap, **word-for-word i
 
 - Dashboard: https://platform.zerogpu.ai/dashboard
 - Key prefix: `zgpu-api-`
-- Project ID is a UUID, also from the dashboard.
-- Env vars: `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID`.
-- The "go get a key" line should say: *"You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page."*
+- Env var: `ZEROGPU_API_KEY`. The `x-project-id` header is optional; leave it out of cookbooks.
+- The "go get a key" line should say: *"You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`."*
 
 ## Page template
 
@@ -124,18 +123,15 @@ client and link to /integrations/<slug> for the exact setup.>
 You'll need to set up your API keys for <list every service used, in order>.
 This ensures that the tools can interact with external services securely.
 
-You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
 
 ```python Python
 import os
 from getpass import getpass
 
-# Prompt for the ZeroGPU API key and Project ID securely
+# Prompt for the ZeroGPU API key securely
 zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
 os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
-
-zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
-os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
 ```
 
 You can go to [here](<link-to-other-provider-keys-page>) to get an API key from <Provider>.
@@ -230,7 +226,7 @@ These are the things that make a page read like a ZeroGPU cookbook rather than g
 - **Conversational, lightly enthusiastic tone.** Short paragraphs of 1-3 sentences between code blocks. Phrases like "First,", "Now,", "Let's", and "Here's" are fine and on-voice. Cookbooks are friendly walkthroughs, not API reference.
 - **Second person ("you", "you'll").** Talk to the reader directly. Avoid "we will lead the user through" framings.
 - **Code fence labels.** Use `` ```bash `` for shell (note the leading `!` on pip lines, mirroring notebook conventions), `` ```python Python `` for runnable Python (the trailing `Python` is the Mintlify tab label), and an unlabeled `` ``` `` fence for example outputs.
-- **`getpass` for every key.** Every API key is read with `getpass(...)` and written to `os.environ`. ZeroGPU's section reads two values: API key and Project ID. Do not hard-code keys, do not use `input()`, do not skip the comment line above each prompt.
+- **`getpass` for every key.** Every API key is read with `getpass(...)` and written to `os.environ`. ZeroGPU's section reads one value: the API key. Do not hard-code keys, do not use `input()`, do not skip the comment line above each prompt.
 - **The canonical ZeroGPU blurb appears at least twice**, once in the intro bullet list, once in the Highlights bullet list, and is word-for-word identical. The longer "Access <Capability> with ZeroGPU" section opens with the same blurb followed by a "In this section, we will..." sentence. This is deliberate; do not paraphrase.
 - **Free credits callout.** When a provider in the stack (AgentOps, etc.) advertises a free tier, include the word **free** in the link line, matching the source template's cadence.
 - **Emoji section headers.** *Every* top-level section header uses a leading emoji, no exceptions. Required: `📦 Installation`, `🔑 Setting Up API Keys`, `🎥 Watch the Video Guide`, `🌟 Highlights`. Use a thematic emoji for capability and scenario sections: `🛰️` for real-time data, `📹` for monitoring/observability, `🤖🤖` for multi-agent, `🧠` for reasoning, `🔎` for search/research, `📰` for news, `💹` for finance, `🧵` for chains, `🔐` for privacy/PII, `🎙️` for chat.

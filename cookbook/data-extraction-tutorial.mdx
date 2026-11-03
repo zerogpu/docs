@@ -52,7 +52,6 @@ Open `dataset/resumes.jsonl` and pick `resume-001` (synthetic). Define a schema 
 curl --location 'https://api.zerogpu.ai/v1/responses' \
   --header 'content-type: application/json' \
   --header 'x-api-key: YOUR_API_KEY' \
-  --header 'x-project-id: YOUR_PROJECT_ID' \
   --data '{
     "model": "gliner2.5-base-v1",
     "input": "ALEX RIVERA\nSan Francisco, CA | alex.rivera@example-mail.io | (415) 555-0198\n\nSUMMARY\nBackend engineer with 7 years building APIs and data pipelines...",
@@ -81,7 +80,6 @@ url = "https://api.zerogpu.ai/v1/responses"
 headers = {
     "content-type": "application/json",
     "x-api-key": "YOUR_API_KEY",
-    "x-project-id": "YOUR_PROJECT_ID",
 }
 
 # First line of demos/data-extraction/dataset/resumes.jsonl (clone cookbook repo)
@@ -148,7 +146,6 @@ When you need **categories** instead of fixed columns, set `metadata.usecase` to
 curl --location 'https://api.zerogpu.ai/v1/responses' \
   --header 'content-type: application/json' \
   --header 'x-api-key: YOUR_API_KEY' \
-  --header 'x-project-id: YOUR_PROJECT_ID' \
   --data '{
     "model": "gliner2.5-base-v1",
     "input": "We are hiring a Backend Engineer to design REST APIs in Python, deploy on AWS EKS, and maintain PostgreSQL databases.",

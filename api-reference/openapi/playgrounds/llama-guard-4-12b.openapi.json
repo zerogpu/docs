@@ -14,6 +14,9 @@
   "security": [
     {
       "ApiKey": []
+    },
+    {
+      "BearerAuth": []
     }
   ],
   "paths": {
@@ -113,6 +116,11 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI-compatible: send your ZeroGPU API key as `Authorization: Bearer <key>`."
       }
     },
     "schemas": {

@@ -13,6 +13,53 @@ Log into the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard) and copy
 | **Project ID** (optional) | Dashboard → Project Settings - scopes requests to a project |
 | **Model** | Dashboard → Model selector, or pick one from the [Model Catalog](/docs/model-catalog) |
 
+Send your API key in the `x-api-key` header, as the examples below do, or as `Authorization: Bearer <key>`. Both work on the inference endpoints. The [Batch & Files API](/docs/batch/index) accepts `x-api-key` only. To use Bearer, swap the header:
+
+<CodeGroup>
+
+```bash cURL wrap
+-H "Authorization: Bearer $ZEROGPU_API_KEY"
+```
+
+```python Python wrap
+# pip install openai
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key=os.environ["ZEROGPU_API_KEY"],  # sent as Authorization: Bearer
+)
+```
+
+```javascript JavaScript wrap
+// npm install openai
+import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: 'https://api.zerogpu.ai/v1',
+  apiKey: process.env.ZEROGPU_API_KEY, // sent as Authorization: Bearer
+});
+```
+
+```rust Rust wrap
+.header("Authorization", "Bearer YOUR_API_KEY")
+```
+
+```go Go wrap
+req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+```
+
+```ruby Ruby wrap
+request['Authorization'] = 'Bearer YOUR_API_KEY'
+```
+
+</CodeGroup>
+
+<Note>
+  The `x-project-id` header is optional. Send it only to scope a request to a specific project.
+</Note>
+
 ## 2. Send a request
 
 <CodeGroup>
@@ -21,7 +68,6 @@ Log into the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard) and copy
 curl https://api.zerogpu.ai/v1/responses \
   -H "content-type: application/json" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -d '{
     "model": "YOUR_MODEL",
     "input": "Your input text here..."
@@ -35,7 +81,6 @@ from zerogpu import ZerogpuApi
 
 client = ZerogpuApi(
     api_key=os.environ["ZEROGPU_API_KEY"],
-    project_id=os.environ["ZEROGPU_PROJECT_ID"],
 )
 
 response = client.responses.create_response(
@@ -51,7 +96,6 @@ import { ZerogpuApiClient } from 'zerogpu-api';
 
 const client = new ZerogpuApiClient({
   apiKey: process.env.ZEROGPU_API_KEY,
-  projectId: process.env.ZEROGPU_PROJECT_ID,
 });
 
 const response = await client.responses.createResponse({
@@ -79,7 +123,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .post("https://api.zerogpu.ai/v1/responses")
         .header("content-type", "application/json")
         .header("x-api-key", "YOUR_API_KEY")
-        .header("x-project-id", "YOUR_PROJECT_ID")
         .json(&payload)
         .send()
         .await?;
@@ -121,7 +164,6 @@ func main() {
 
   req.Header.Set("content-type", "application/json")
   req.Header.Set("x-api-key", "YOUR_API_KEY")
-  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
 
   client := &http.Client{}
   res, err := client.Do(req)
@@ -147,7 +189,6 @@ http.use_ssl = (uri.scheme == 'https')
 request = Net::HTTP::Post.new(uri.request_uri)
 request['content-type'] = 'application/json'
 request['x-api-key'] = 'YOUR_API_KEY'
-request['x-project-id'] = 'YOUR_PROJECT_ID'
 
 request.body = {
   model: 'YOUR_MODEL',
@@ -174,7 +215,6 @@ A full request - here the `llama-3.1-8b-instruct-fast` model summarizing a passa
 curl https://api.zerogpu.ai/v1/responses \
   -H "content-type: application/json" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -d '{
     "model": "llama-3.1-8b-instruct-fast",
     "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
@@ -188,7 +228,6 @@ from zerogpu import ZerogpuApi
 
 client = ZerogpuApi(
     api_key=os.environ["ZEROGPU_API_KEY"],
-    project_id=os.environ["ZEROGPU_PROJECT_ID"],
 )
 
 response = client.responses.create_response(
@@ -204,7 +243,6 @@ import { ZerogpuApiClient } from 'zerogpu-api';
 
 const client = new ZerogpuApiClient({
   apiKey: process.env.ZEROGPU_API_KEY,
-  projectId: process.env.ZEROGPU_PROJECT_ID,
 });
 
 const response = await client.responses.createResponse({
@@ -232,7 +270,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .post("https://api.zerogpu.ai/v1/responses")
         .header("content-type", "application/json")
         .header("x-api-key", "YOUR_API_KEY")
-        .header("x-project-id", "YOUR_PROJECT_ID")
         .json(&payload)
         .send()
         .await?;
@@ -274,7 +311,6 @@ func main() {
 
   req.Header.Set("content-type", "application/json")
   req.Header.Set("x-api-key", "YOUR_API_KEY")
-  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
 
   client := &http.Client{}
   res, err := client.Do(req)
@@ -300,7 +336,6 @@ http.use_ssl = (uri.scheme == 'https')
 request = Net::HTTP::Post.new(uri.request_uri)
 request['content-type'] = 'application/json'
 request['x-api-key'] = 'YOUR_API_KEY'
-request['x-project-id'] = 'YOUR_PROJECT_ID'
 
 request.body = {
   model: 'llama-3.1-8b-instruct-fast',

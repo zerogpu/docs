@@ -47,7 +47,6 @@ func main() {
 
   req.Header.Set("content-type", "application/json")
   req.Header.Set("x-api-key", "YOUR_API_KEY")
-  req.Header.Set("x-project-id", "YOUR_PROJECT_ID")
 
   client := &http.Client{}
   res, err := client.Do(req)
@@ -67,10 +66,8 @@ func main() {
 import "os"
 
 apiKey := os.Getenv("ZEROGPU_API_KEY")
-projectID := os.Getenv("ZEROGPU_PROJECT_ID")
 
 req.Header.Set("x-api-key", apiKey)
-req.Header.Set("x-project-id", projectID)
 ```
 
 ## Error handling

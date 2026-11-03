@@ -8,3 +8,7 @@ openapi: "api-reference/openapi/playgrounds/gpt-4_1-mini.openapi.json POST /resp
 > OpenAI's GPT-4.1 mini is the fast, cost-efficient model of the GPT-4.1 family, served on ZeroGPU for general text generation. It excels at instruction following and tool calling, supports function calling and structured outputs, and works across a 1,047,576-token (1M) context window with low latency.
 
 **References:** [Terms](https://openai.com/policies/services-agreement/) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<Note>
+  Supports [streaming](/api-reference/responses#streaming) (`"stream": true`) and [tool calling](/api-reference/responses#tool-calling) (`tools`) on `/v1/responses`.
+</Note>

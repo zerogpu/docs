@@ -25,21 +25,21 @@ Prefer a quick walkthrough? Watch the full demo here:
 
 ## 🔑 Get Your ZeroGPU API Key
 
-You'll need a ZeroGPU API key and Project ID so Claude Desktop can authenticate to the MCP server. This is the only credential setup required, there are no packages to install and no keys to paste into code.
+You'll need a ZeroGPU API key so Claude Desktop can authenticate to the MCP server. This is the only credential setup required, there are no packages to install and no keys to paste into code.
 
-You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
 
 1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
 2. Open **API Keys** and click **Create key**.
-3. Copy the key (starts with `zgpu-api-`) and grab your Project ID (UUID) from the project settings page.
+3. Copy the key (starts with `zgpu-api-`).
 
-Keep both values handy for the next step. The classifier is reached through the hosted ZeroGPU MCP server, so no Anthropic API key or SDK is required, you just need the desktop app.
+Keep it handy for the next step. The classifier is reached through the hosted ZeroGPU MCP server, so no Anthropic API key or SDK is required, you just need the desktop app.
 
 ## 🔌 Connect the ZeroGPU MCP Server in Claude Desktop
 
 The ZeroGPU MCP server is hosted at `https://mcp.zerogpu.ai/mcp` and authenticates with the `x-api-key` header (your API key) on every request; the `x-project-id` header (your Project ID) is optional. To make its tools available to Claude, add the server to Claude Desktop's MCP configuration.
 
-In Claude Desktop, open **Settings → Developer → Edit Config**, then add the `zerogpu` entry to `mcpServers` (substitute your real key and Project ID):
+In Claude Desktop, open **Settings → Developer → Edit Config**, then add the `zerogpu` entry to `mcpServers` (substitute your real key):
 
 ```json
 {
@@ -48,8 +48,7 @@ In Claude Desktop, open **Settings → Developer → Edit Config**, then add the
       "type": "http",
       "url": "https://mcp.zerogpu.ai/mcp",
       "headers": {
-        "x-api-key": "<YOUR_API_KEY>",
-        "x-project-id": "<YOUR_PROJECT_ID>"
+        "x-api-key": "<YOUR_API_KEY>"
       }
     }
   }

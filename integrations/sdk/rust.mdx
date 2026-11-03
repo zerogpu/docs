@@ -33,7 +33,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .post("https://api.zerogpu.ai/v1/responses")
         .header("content-type", "application/json")
         .header("x-api-key", "YOUR_API_KEY")
-        .header("x-project-id", "YOUR_PROJECT_ID")
         .json(&payload)
         .send()
         .await?;
@@ -59,13 +58,11 @@ tokio = { version = "1", features = ["full"] }
 use std::env;
 
 let api_key = env::var("ZEROGPU_API_KEY").expect("ZEROGPU_API_KEY not set");
-let project_id = env::var("ZEROGPU_PROJECT_ID").expect("ZEROGPU_PROJECT_ID not set");
 
 let response = client
     .post("https://api.zerogpu.ai/v1/responses")
     .header("content-type", "application/json")
     .header("x-api-key", &api_key)
-    .header("x-project-id", &project_id)
     .json(&payload)
     .send()
     .await?;
