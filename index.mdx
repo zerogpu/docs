@@ -9,13 +9,16 @@ Send a request to one OpenAI-compatible endpoint; ZeroGPU picks the right small 
 
 ## Make your first call
 
-Find your API key and project ID in the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+Find your API key in the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+
+<Note>
+  The `x-project-id` header is optional. Send it only to scope a request to a specific project.
+</Note>
 
 ```bash wrap
 curl --location 'https://api.zerogpu.ai/v1/responses' \
   --header 'content-type: application/json' \
   --header 'x-api-key: YOUR_API_KEY' \
-  --header 'x-project-id: YOUR_PROJECT_ID' \
   --data '{
   "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
   "model": "zlm-v1-iab-classify-edge"
@@ -29,10 +32,9 @@ from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.zerogpu.ai/v1",
-    api_key="unused",  # ZeroGPU authenticates via the headers below
+    api_key="unused",  # ZeroGPU authenticates via the header below
     default_headers={
         "x-api-key": "YOUR_API_KEY",
-        "x-project-id": "YOUR_PROJECT_ID",
     },
 )
 
@@ -101,7 +103,7 @@ resp = client.responses.create(
     One organization, multiple projects. Each gets its own API key and dashboard.
   </Step>
   <Step title="Send requests">
-    POST to `/v1/responses` with your key, project ID, and model. Response comes back as structured JSON.
+    POST to `/v1/responses` with your key and model. Response comes back as structured JSON.
   </Step>
   <Step title="Monitor everything">
     Token usage, request volume, latency, error rates: all visible in the dashboard. Debug individual requests in Logs.

@@ -46,7 +46,7 @@ issues to support so the call can be located in logs.
 | `204` | Success with no body (CORS preflight). |
 | `400` | Your request is malformed or fails validation. Fix and retry. |
 | `401` | Missing `x-api-key` header. |
-| `403` | Headers were supplied but credentials are invalid, inactive, or don't belong to the supplied project. |
+| `403` | The API key is invalid or inactive. |
 | `404` | The resource doesn't exist, or doesn't belong to your project. Both cases return `404` to avoid leaking cross-project information. |
 | `413` | Uploaded file is larger than 100 MB. |
 | `429` | Rate-limit / insufficient quota. The `error.type` distinguishes: `insufficient_quota` (no balance and no free credits) vs `rate_limit_exceeded` (transient throttling). |
@@ -81,9 +81,8 @@ is optional, and only needed to scope the request to a specific project.
 { "error": { "message": "Invalid credentials" } }
 ```
 
-**Cause:** The API key doesn't exist, is inactive, or belongs to a different
-project than the one in `x-project-id`.
-**Fix:** Verify the key, and verify the project UUID matches.
+**Cause:** The API key doesn't exist or is inactive.
+**Fix:** Verify the key.
 
 ### `429 Insufficient Quota`
 

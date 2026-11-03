@@ -3,7 +3,7 @@
   "info": {
     "title": "zlm-v1-tool-decisions playground",
     "version": "1.0",
-    "description": "Interactive playground for **zlm-v1-tool-decisions**.\nModel is always `zlm-v1-tool-decisions` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key` (required) and `x-project-id` (optional)."
+    "description": "Interactive playground for **zlm-v1-tool-decisions**.\nModel is always `zlm-v1-tool-decisions` on this page (shown in the form, not editable).\nUse the **request example** selector to switch use cases (JSON, NER, PII, etc.).\nAuthentication: `x-api-key`, or the OpenAI-compatible `Authorization: Bearer` header. `x-project-id` is optional."
   },
   "servers": [
     {
@@ -14,6 +14,9 @@
   "security": [
     {
       "ApiKey": []
+    },
+    {
+      "BearerAuth": []
     }
   ],
   "paths": {
@@ -314,6 +317,11 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "OpenAI-compatible: send your ZeroGPU API key as `Authorization: Bearer <key>`."
       }
     },
     "schemas": {

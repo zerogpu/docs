@@ -493,9 +493,9 @@ For full flag reference on any command, run `zerogpu <command> --help` outside t
 
 **`/zerogpu-router:*` skills don't appear in `/help`** - the plugin isn't enabled. Run `/plugin` to view installed plugins, enable `zerogpu-router`, then `/reload-plugins`. If it's not listed at all, re-run `/plugin marketplace add zerogpu/zerogpu-router` followed by `/plugin install zerogpu-router@zerogpu`.
 
-**`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run `/zerogpu-router:signin`. Keys must start with `zgpu-api-`.
+**`Request failed with status 401`** - no API key was sent. Re-run `/zerogpu-router:signin` to save your key.
 
-**`Request failed with status 403`** - the key is valid but doesn't have access to the project, or the project doesn't have access to the requested model. Confirm your Project ID matches the project that owns the key.
+**`Request failed with status 403`** - your API key is invalid, revoked, or mistyped, or it doesn't have access to the requested model. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and re-run `/zerogpu-router:signin`. Keys must start with `zgpu-api-`.
 
 **`Request failed with status 429`** - you're being rate-limited. Back off and retry with exponential delay, or switch heavy workloads to the [Batch API](/docs/batch), which has separate quotas tuned for bulk jobs.
 

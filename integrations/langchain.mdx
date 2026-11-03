@@ -27,19 +27,18 @@ Prefer to learn by running real code? A worked, end-to-end example is available 
 ### Prerequisites
 
 - Python 3.10 or newer.
-- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`) and a Project ID.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
 - A look at the [model catalog](/docs/model-catalog) if you want to see what each tool routes to.
 
 ### Get your ZeroGPU API key
 
 1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
 2. Open **API Keys** and click **Create key**.
-3. Copy the key (starts with `zgpu-api-`) and grab your Project ID (UUID) from the project settings page.
+3. Copy the key (starts with `zgpu-api-`).
 4. Export both so every tool can pick them up automatically:
 
 ```bash
 export ZEROGPU_API_KEY="zgpu-api-..."
-export ZEROGPU_PROJECT_ID="your-project-id"
 ```
 
 ### Install langchain-zerogpu
@@ -52,7 +51,7 @@ The package depends on `langchain-core` and the official [`zerogpu-api`](https:/
 
 ### Your first request
 
-With `ZEROGPU_API_KEY` and `ZEROGPU_PROJECT_ID` exported, construct a tool with no arguments and invoke it:
+With `ZEROGPU_API_KEY` exported, construct a tool with no arguments and invoke it:
 
 ```python
 from langchain_zerogpu import ZeroGPUClassifyZeroShotTool
@@ -537,11 +536,9 @@ Every tool at a glance.
 
 **`ZeroGPUAuthError: Invalid ZeroGPU API key`** - the key must start with `zgpu-api-`. You've likely pasted a truncated key or a different credential; copy it again from the [dashboard](https://platform.zerogpu.ai/dashboard).
 
-**`ZeroGPUAuthError: No ZeroGPU project id provided`** - the package needs both a key and a project ID. Set `ZEROGPU_PROJECT_ID` or pass `project_id=...`.
+**`ZeroGPU authentication failed (401)`** - no API key reached ZeroGPU. Check that `ZEROGPU_API_KEY` is set in the environment the Python process sees, or pass `api_key=...`.
 
-**`ZeroGPU authentication failed (401)`** - the key was rejected. It's been revoked or mistyped; rotate it in the dashboard and update `ZEROGPU_API_KEY`.
-
-**`ZeroGPU access denied (403)`** - the key is valid but the project doesn't have access to the requested model, or the Project ID doesn't match the project that owns the key. Check `ZEROGPU_PROJECT_ID` and your model entitlements.
+**`ZeroGPU access denied (403)`** - the key was rejected: it's invalid, revoked, or mistyped, or it doesn't have access to the requested model. Rotate it in the dashboard, update `ZEROGPU_API_KEY`, and check your model entitlements.
 
 **`ZeroGPU rate limit exceeded (429)`** - back off and retry with exponential delay, or move bulk workloads to the [Batch API](/docs/batch/index), which has separate quotas tuned for offline jobs.
 

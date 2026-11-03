@@ -18,7 +18,6 @@ http.use_ssl = (uri.scheme == 'https')
 request = Net::HTTP::Post.new(uri.request_uri)
 request['content-type'] = 'application/json'
 request['x-api-key'] = 'YOUR_API_KEY'
-request['x-project-id'] = 'YOUR_PROJECT_ID'
 
 request.body = {
   model: 'YOUR_MODEL',
@@ -43,7 +42,6 @@ puts response.body
 
 ```ruby
 request['x-api-key'] = ENV['ZEROGPU_API_KEY']
-request['x-project-id'] = ENV['ZEROGPU_PROJECT_ID']
 ```
 
 ## Error handling

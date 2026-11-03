@@ -172,7 +172,6 @@ Upload the JSONL with `purpose=batch`, then create the batch against `/v1/chat/c
 # 1. Upload the JSONL
 curl -X POST https://api.zerogpu.ai/v1/files \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -F purpose=batch \
   -F file=@input.jsonl
 # -> { "id": "file-abc123...", "status": "processed", ... }
@@ -180,7 +179,6 @@ curl -X POST https://api.zerogpu.ai/v1/files \
 # 2. Create the batch
 curl -X POST https://api.zerogpu.ai/v1/batches \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -H "content-type: application/json" \
   -d '{
     "input_file_id":     "file-abc123...",

@@ -8,3 +8,7 @@ openapi: "api-reference/openapi/playgrounds/glm-5_3-flash.openapi.json POST /res
 > Z.ai's GLM-5.3-Flash is an efficient open-weight model for coding and long-horizon agent tasks, served on ZeroGPU for general text generation. Its hybrid sparse and linear attention keeps long-context behaviour accurate across a 1,048,576-token (1M) window while reducing compute, and it supports function calling and adjustable reasoning effort.
 
 **References:** [Model docs](https://huggingface.co/zai-org/GLM-5.3-Flash) • [Terms](https://huggingface.co/zai-org/GLM-5.3-Flash/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<Note>
+  Supports [streaming](/api-reference/responses#streaming) (`"stream": true`) and [tool calling](/api-reference/responses#tool-calling) (`tools`) on `/v1/responses`.
+</Note>

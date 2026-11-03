@@ -23,14 +23,14 @@ Watch the full demo here:
 ### Prerequisites
 
 - An MCP-capable client (Claude Desktop, Claude Code, Cursor, or any runtime that speaks MCP over streamable HTTP).
-- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) and Project ID.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard).
 - A model ID from the [model catalog](/docs/model-catalog) if you plan to override the default model on `zerogpu_chat`.
 
 ### Get your ZeroGPU API key
 
 1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
 2. Open **API Keys** and click **Create key**.
-3. Copy the key (starts with `zgpu-api-`) and grab your Project ID (UUID) from the project settings page.
+3. Copy the key (starts with `zgpu-api-`).
 
 ### Connect the server
 
@@ -43,8 +43,7 @@ The ZeroGPU MCP server authenticates with the `x-api-key` header (your API key) 
       "type": "http",
       "url": "https://mcp.zerogpu.ai/mcp",
       "headers": {
-        "x-api-key": "<YOUR_API_KEY>",
-        "x-project-id": "<YOUR_PROJECT_ID>"
+        "x-api-key": "<YOUR_API_KEY>"
       }
     }
   }
@@ -55,8 +54,7 @@ In Claude Code you can register the same server from the terminal:
 
 ```bash
 claude mcp add --transport http zerogpu https://mcp.zerogpu.ai/mcp \
-  --header "x-api-key: <YOUR_API_KEY>" \
-  --header "x-project-id: <YOUR_PROJECT_ID>"
+  --header "x-api-key: <YOUR_API_KEY>"
 ```
 
 Never commit real credentials. Keep them in environment variables or a local, git-ignored config and substitute them at runtime.
@@ -67,13 +65,11 @@ Once the server is registered, the client performs the MCP handshake (`initializ
 
 ```bash
 export ZEROGPU_API_KEY="<YOUR_API_KEY>"
-export ZEROGPU_PROJECT_ID="<YOUR_PROJECT_ID>"
 
 curl -sS -D - https://mcp.zerogpu.ai/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"my-client","version":"1.0.0"}}}'
 ```
 
@@ -84,7 +80,6 @@ curl -sS https://mcp.zerogpu.ai/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -H "mcp-session-id: <SESSION_ID>" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"zerogpu_health","arguments":{}}}'
 ```
@@ -369,7 +364,6 @@ curl -sS https://mcp.zerogpu.ai/mcp \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "x-api-key: $ZEROGPU_API_KEY" \
-  -H "x-project-id: $ZEROGPU_PROJECT_ID" \
   -H "mcp-session-id: <SESSION_ID>" \
   -d '{
     "jsonrpc": "2.0",
@@ -440,11 +434,9 @@ Every tool at a glance.
 
 ## Troubleshooting
 
-**`missing required headers: x-api-key and x-project-id`** - the request reached the server without the required auth header. Make sure your client config sets `x-api-key` (and `x-project-id` if you scope requests to a project), and that it's sent on the `initialize` call as well as every later request.
+**`Authentication required`** - the request reached the server without the required auth header. Make sure your client config sets `x-api-key` (and `x-project-id` if you scope requests to a project), and that it's sent on the `initialize` call as well as every later request.
 
-**`Request failed with status 401`** - your API key is missing, revoked, or mistyped. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and update your client config. Keys must start with `zgpu-api-`.
-
-**`Request failed with status 403`** - the key is valid but doesn't have access to the project, or the project doesn't have access to a requested model. Confirm your `x-project-id` matches the project that owns the key.
+**`ZeroGPU upstream POST /v1/chat/completions failed: 403`** (in a tool result) - your API key is invalid, revoked, or mistyped, or it doesn't have access to a requested model. The server accepts the connection with any key, so this shows up on the first tool call. Rotate the key in the [dashboard](https://platform.zerogpu.ai/dashboard) and update your client config. Keys must start with `zgpu-api-`.
 
 **`Request failed with status 429`** - you're being rate-limited. Back off and retry with exponential delay, or move bulk workloads to the [Batch API](/docs/batch), which has separate quotas tuned for high-volume jobs.
 

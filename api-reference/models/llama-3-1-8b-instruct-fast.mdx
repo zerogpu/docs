@@ -8,3 +8,7 @@ openapi: "api-reference/openapi/playgrounds/llama-3_1-8b-instruct-fast.openapi.j
 > Meta's Llama 3.1 Instruct, tuned for fast, low-cost summarization at scale on the ZeroGPU edge network. Its 128K-token context window takes in entire documents, long transcripts, and full email or chat threads in a single pass. No chunking, no stitching partial summaries back together. Built for the high-volume summarization that runs around your core product: condensing long reports and transcripts, summarizing email and chat threads, and processing articles in bulk. When context length matters and you're summarizing on every request, this is the model that keeps it fast and affordable.
 
 **References:** [Model docs](https://github.com/meta-llama/llama-models/tree/main/models/llama3_1) • [Terms](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE) • [Privacy](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/USE_POLICY.md)
+
+<Note>
+  Supports [streaming](/api-reference/responses#streaming) (`"stream": true`) and [tool calling](/api-reference/responses#tool-calling) (`tools`) on `/v1/responses`.
+</Note>

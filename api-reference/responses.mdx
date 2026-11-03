@@ -7,3 +7,143 @@ openapi: "api-reference/openapi/zerogpu.openapi.json POST /responses"
 One endpoint for every model. Pass text or a document as `input`; what comes back depends on the model: generated text, a classification, extracted fields, redacted output, and more. The `input` and `output` shapes vary by model, so open a [model page](/api-reference/models) for a prefilled playground. For the `messages`-style route, see [Chat completions](/api-reference/chat-completions).
 
 Install the official SDK from [npm](https://www.npmjs.com/package/zerogpu-api) or [PyPI](https://pypi.org/project/zerogpu-api/) (`pip install zerogpu-api`). Source: [zerogpu/SDK](https://github.com/zerogpu/SDK). Handle errors the same way as [API error codes](/docs/production-patterns#handle-status-codes-explicitly).
+
+## Authentication
+
+Send your API key in the `x-api-key` header or, OpenAI-compatible, as `Authorization: Bearer <key>`. The `x-project-id` header is optional; send it only to scope a request to a specific project. See the [Quickstart](/docs/quickstart#1-grab-your-credentials) for both forms in each language.
+
+## Streaming
+
+Set `"stream": true` to receive the response as server-sent events (`text/event-stream`) instead of one JSON body. Pass `-N` so curl prints each event as it arrives:
+
+```bash cURL
+curl -N https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ZEROGPU_API_KEY" \
+  -d '{
+    "model": "gpt-4.1-mini",
+    "input": "Write one sentence about the sea.",
+    "stream": true
+  }'
+```
+
+Each event is a `data:` line holding a JSON object with a `type` and a `sequence_number`:
+
+```text
+data: {"type":"response.created","response":{"id":"resp_abc123","object":"response","status":"in_progress","output":[],...},"sequence_number":0}
+
+data: {"type":"response.output_text.delta","item_id":"msg_abc123","output_index":0,"content_index":0,"delta":"The sea","sequence_number":4}
+
+data: {"type":"response.output_text.delta","item_id":"msg_abc123","output_index":0,"content_index":0,"delta":" hums","sequence_number":5}
+
+data: {"type":"response.completed","response":{"id":"resp_abc123","object":"response","status":"completed","output":[...],"usage":{...}},"sequence_number":17}
+
+data: [DONE]
+```
+
+Events arrive in this order:
+
+| Event | Sent when |
+|---|---|
+| `response.created`, `response.in_progress` | The response starts. `response` holds the response object, with an empty `output`. |
+| `response.output_item.added` | An output item starts. `item` is a `message` or a `function_call`. |
+| `response.content_part.added` | A content part of a message starts. |
+| `response.output_text.delta` | The next chunk of text, in `delta`. Concatenate the deltas to build the text. |
+| `response.output_text.done` | The content part is complete. `text` holds the full text. |
+| `response.function_call_arguments.delta` | The next chunk of a tool call's arguments, in `delta`. |
+| `response.function_call_arguments.done` | The tool call's arguments are complete. `arguments` holds the full JSON string. |
+| `response.content_part.done`, `response.output_item.done` | The content part or output item is complete. |
+| `response.completed` | The response is complete. `response` holds the full `output` and `usage`. |
+
+Reasoning models also send `response.reasoning_text.delta` or `response.reasoning_summary_text.delta` events before the answer. Most models end the stream with `data: [DONE]`; treat `response.completed` as the end of the response and ignore `[DONE]`. Task models (classifiers and extractors) don't stream and return `400` with code `stream_not_supported`. Each [model page](/api-reference/models) says whether the model supports streaming.
+
+## Tool calling
+
+Pass function definitions in `tools`. Each tool has a `type` of `function`, a `name`, a `description`, and its arguments as a JSON Schema in `parameters`:
+
+```bash cURL
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ZEROGPU_API_KEY" \
+  -d '{
+    "model": "gpt-4.1-mini",
+    "input": "What is the weather in Paris right now?",
+    "tools": [
+      {
+        "type": "function",
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string", "description": "City name" }
+          },
+          "required": ["city"]
+        }
+      }
+    ]
+  }'
+```
+
+When the model calls a tool, `output` contains a `function_call` item. `arguments` is a JSON-encoded string, so parse it before use:
+
+```json
+{
+  "id": "resp_abc123",
+  "object": "response",
+  "status": "completed",
+  "model": "gpt-4.1-mini",
+  "output": [
+    {
+      "type": "function_call",
+      "id": "fc_abc123",
+      "call_id": "call_S4s5bz8VtacSuLONhiOHriD7",
+      "name": "get_weather",
+      "arguments": "{\"city\":\"Paris\"}",
+      "status": "completed"
+    }
+  ],
+  "usage": { "input_tokens": 67, "output_tokens": 15, "total_tokens": 82 }
+}
+```
+
+Some models return an empty `message` item before the `function_call`, so find the call by its `type` rather than by position. Run the function yourself, then send the result back. Pass `input` as an array with the original message, the `function_call` item, and a `function_call_output` item with the same `call_id`, and include `tools` again:
+
+```bash cURL
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: $ZEROGPU_API_KEY" \
+  -d '{
+    "model": "gpt-4.1-mini",
+    "input": [
+      { "role": "user", "content": "What is the weather in Paris right now?" },
+      {
+        "type": "function_call",
+        "call_id": "call_S4s5bz8VtacSuLONhiOHriD7",
+        "name": "get_weather",
+        "arguments": "{\"city\":\"Paris\"}"
+      },
+      {
+        "type": "function_call_output",
+        "call_id": "call_S4s5bz8VtacSuLONhiOHriD7",
+        "output": "{\"city\": \"Paris\", \"temperature_c\": 18, \"conditions\": \"light rain\"}"
+      }
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "name": "get_weather",
+        "description": "Get the current weather for a city.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "city": { "type": "string", "description": "City name" }
+          },
+          "required": ["city"]
+        }
+      }
+    ]
+  }'
+```
+
+The model answers with a `message` that uses the result, for example "The current weather in Paris is 18°C with light rain." With `"stream": true`, a tool call arrives as `response.function_call_arguments.delta` events followed by `response.function_call_arguments.done`. Models without tool support return `400` with code `tools_not_supported`; each [model page](/api-reference/models) says whether the model supports tool calling.

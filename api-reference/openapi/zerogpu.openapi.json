@@ -3,7 +3,7 @@
   "info": {
     "title": "ZeroGPU API",
     "version": "1.0",
-    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthentication uses the `x-api-key` header on every request. The `x-project-id` header is optional.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** are listed on [Model playgrounds](/api-reference/models) with request examples for each model's use cases.\nThese endpoint pages show a generic shape only."
+    "description": "REST API for ZeroGPU model inference: `POST /v1/responses` and `POST /v1/chat/completions` (model-dependent).\nAuthenticate every request with the `x-api-key` header or, OpenAI-compatible, `Authorization: Bearer <key>`. The `x-project-id` header is optional.\nDocumentation: https://docs.zerogpu.ai\n\n**Per-model playgrounds** are listed on [Model playgrounds](/api-reference/models) with request examples for each model's use cases.\nThese endpoint pages show a generic shape only."
   },
   "servers": [
     {
@@ -14,6 +14,9 @@
   "security": [
     {
       "ApiKey": []
+    },
+    {
+      "BearerAuth": []
     }
   ],
   "paths": {
@@ -31,43 +34,124 @@
               "schema": {
                 "$ref": "#/components/schemas/CreateResponseRequest"
               },
-              "example": {
-                "model": "llama-3.1-8b-instruct-fast",
-                "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
+              "examples": {
+                "default": {
+                  "summary": "Text input",
+                  "value": {
+                    "model": "llama-3.1-8b-instruct-fast",
+                    "input": "NASA announced that its Artemis III mission is now scheduled for late 2026, marking the first time astronauts will land on the lunar surface since Apollo 17 in 1972. The mission will send a crew of four to the Moon aboard the Orion spacecraft, with two astronauts descending to the south pole using SpaceX Starship as a lunar lander. Scientists are particularly excited about exploring permanently shadowed craters that may contain water ice, which could be critical for sustaining long-term human presence on the Moon."
+                  }
+                },
+                "streaming": {
+                  "summary": "Streaming",
+                  "value": {
+                    "model": "gpt-4.1-mini",
+                    "input": "Write one sentence about the sea.",
+                    "stream": true
+                  }
+                },
+                "tools": {
+                  "summary": "Tool calling",
+                  "value": {
+                    "model": "gpt-4.1-mini",
+                    "input": "What is the weather in Paris right now?",
+                    "tools": [
+                      {
+                        "type": "function",
+                        "name": "get_weather",
+                        "description": "Get the current weather for a city.",
+                        "parameters": {
+                          "type": "object",
+                          "properties": {
+                            "city": {
+                              "type": "string",
+                              "description": "City name"
+                            }
+                          },
+                          "required": [
+                            "city"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "Success. A JSON response object, or a stream of server-sent events when `stream` is `true`.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Response"
                 },
-                "example": {
-                  "id": "resp_abc123",
-                  "object": "response",
-                  "created": 1710000000,
-                  "model": "llama-3.1-8b-instruct-fast",
-                  "output": [
-                    {
-                      "type": "message",
-                      "role": "assistant",
-                      "content": [
+                "examples": {
+                  "default": {
+                    "summary": "Text response",
+                    "value": {
+                      "id": "resp_abc123",
+                      "object": "response",
+                      "created": 1710000000,
+                      "model": "llama-3.1-8b-instruct-fast",
+                      "output": [
                         {
-                          "type": "output_text",
-                          "text": "Artemis III, slated for late 2026, will return astronauts to the Moon for the first time since 1972, landing two crew at the south pole to study shadowed craters that may hold water ice."
+                          "type": "message",
+                          "role": "assistant",
+                          "content": [
+                            {
+                              "type": "output_text",
+                              "text": "Artemis III, slated for late 2026, will return astronauts to the Moon for the first time since 1972, landing two crew at the south pole to study shadowed craters that may hold water ice."
+                            }
+                          ]
                         }
-                      ]
+                      ],
+                      "usage": {
+                        "input_tokens": 112,
+                        "output_tokens": 44,
+                        "total_tokens": 156
+                      }
                     }
-                  ],
-                  "usage": {
-                    "input_tokens": 112,
-                    "output_tokens": 44,
-                    "total_tokens": 156
+                  },
+                  "tool_call": {
+                    "summary": "Tool call",
+                    "value": {
+                      "id": "resp_abc123",
+                      "object": "response",
+                      "status": "completed",
+                      "model": "gpt-4.1-mini",
+                      "output": [
+                        {
+                          "type": "function_call",
+                          "id": "fc_abc123",
+                          "call_id": "call_S4s5bz8VtacSuLONhiOHriD7",
+                          "name": "get_weather",
+                          "arguments": "{\"city\":\"Paris\"}",
+                          "status": "completed"
+                        }
+                      ],
+                      "usage": {
+                        "input_tokens": 67,
+                        "output_tokens": 15,
+                        "total_tokens": 82
+                      }
+                    }
                   }
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseStreamEvent"
+                },
+                "example": {
+                  "type": "response.output_text.delta",
+                  "item_id": "msg_abc123",
+                  "output_index": 0,
+                  "content_index": 0,
+                  "delta": "The sea",
+                  "sequence_number": 4
                 }
               }
             }
@@ -76,10 +160,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -184,10 +268,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -338,10 +422,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -480,7 +564,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "402": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -585,10 +669,10 @@
             "description": "Bad request (invalid body)"
           },
           "401": {
-            "description": "Unauthorized (invalid or missing API key)"
+            "description": "Unauthorized (missing API key)"
           },
           "403": {
-            "description": "Forbidden (invalid project ID or permissions)"
+            "description": "Forbidden (invalid API key or permissions)"
           },
           "420": {
             "description": "Insufficient quota (insufficient_quota)",
@@ -955,6 +1039,8 @@
             "description": "Model identifier. Open a [model page](/api-reference/models) for a dedicated playground with the correct body for that model.",
             "enum": [
               "llama-3.1-8b-instruct-fast",
+              "llama-3.2-3b-instruct-fast",
+              "qwen3-30b-a3b-fp8",
               "llama-guard-4-12b",
               "LFM2.5-1.2B-Instruct",
               "LFM2.5-1.2B-Thinking",
@@ -979,11 +1065,35 @@
             "example": "llama-3.1-8b-instruct-fast"
           },
           "input": {
-            "type": "string",
-            "minLength": 1,
-            "format": "textarea",
-            "maxLength": 131072,
-            "description": "The text or document to send, as a plain string."
+            "description": "The text or document to send, as a plain string. To return a tool result, send an array of input items instead: the conversation so far, the model's `function_call` item, and a `function_call_output` item with the same `call_id`.",
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "format": "textarea",
+                "maxLength": 131072,
+                "title": "Text"
+              },
+              {
+                "type": "array",
+                "title": "Input items",
+                "items": {
+                  "$ref": "#/components/schemas/InputItem"
+                }
+              }
+            ]
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false,
+            "description": "If `true`, the response is sent as server-sent events (`text/event-stream`) instead of one JSON body. See [Streaming](/api-reference/responses#streaming) for the events. Supported on text-generation models; task models (classifiers, extractors) return `400` with code `stream_not_supported`."
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FunctionTool"
+            },
+            "description": "Function tools the model may call. When it calls one, `output` contains a `function_call` item; see [Tool calling](/api-reference/responses#tool-calling). Models without tool support return `400` with code `tools_not_supported`."
           },
           "text": {
             "type": "object",
@@ -1191,9 +1301,16 @@
           },
           "output": {
             "type": "array",
-            "description": "Output message objects produced by the model.",
+            "description": "Output items produced by the model: `message` items, and a `function_call` item for each tool the model calls. Reasoning models may also return a `reasoning` item. Read items by `type`, not by position.",
             "items": {
-              "$ref": "#/components/schemas/OutputMessage"
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/OutputMessage"
+                },
+                {
+                  "$ref": "#/components/schemas/FunctionCall"
+                }
+              ]
             }
           },
           "usage": {
@@ -1254,6 +1371,200 @@
             "type": "integer",
             "description": "Total tokens consumed (input plus output).",
             "example": 156
+          }
+        }
+      },
+      "FunctionTool": {
+        "type": "object",
+        "description": "A function the model may call.",
+        "required": [
+          "type",
+          "name",
+          "parameters"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "function"
+            ],
+            "description": "Always `function`."
+          },
+          "name": {
+            "type": "string",
+            "description": "Function name the model uses to call it.",
+            "example": "get_weather"
+          },
+          "description": {
+            "type": "string",
+            "description": "What the function does. The model uses this to decide when to call it.",
+            "example": "Get the current weather for a city."
+          },
+          "parameters": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "JSON Schema for the function's arguments."
+          }
+        }
+      },
+      "InputItem": {
+        "description": "One item of an array `input`.",
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/InputMessage"
+          },
+          {
+            "$ref": "#/components/schemas/FunctionCall"
+          },
+          {
+            "$ref": "#/components/schemas/FunctionCallOutput"
+          }
+        ]
+      },
+      "InputMessage": {
+        "type": "object",
+        "title": "Message",
+        "required": [
+          "role",
+          "content"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "description": "Author of the message, for example `user`.",
+            "example": "user"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message text."
+          }
+        }
+      },
+      "FunctionCall": {
+        "type": "object",
+        "title": "Function call",
+        "description": "A tool call made by the model. Returned in `output`; send it back unchanged in `input` together with its `function_call_output`.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "function_call"
+            ],
+            "description": "Always `function_call`."
+          },
+          "id": {
+            "type": "string",
+            "description": "Output item ID."
+          },
+          "call_id": {
+            "type": "string",
+            "description": "ID that links this call to its `function_call_output`.",
+            "example": "call_S4s5bz8VtacSuLONhiOHriD7"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the function to call.",
+            "example": "get_weather"
+          },
+          "arguments": {
+            "type": "string",
+            "description": "Arguments as a JSON-encoded string. Parse it before use.",
+            "example": "{\"city\":\"Paris\"}"
+          },
+          "status": {
+            "type": "string",
+            "description": "Item status, for example `completed`.",
+            "example": "completed"
+          }
+        }
+      },
+      "FunctionCallOutput": {
+        "type": "object",
+        "title": "Function call output",
+        "description": "The result of a tool call, sent back to the model.",
+        "required": [
+          "type",
+          "call_id",
+          "output"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "function_call_output"
+            ],
+            "description": "Always `function_call_output`."
+          },
+          "call_id": {
+            "type": "string",
+            "description": "The `call_id` of the `function_call` this answers."
+          },
+          "output": {
+            "type": "string",
+            "description": "The tool result as a string, for example JSON.",
+            "example": "{\"city\": \"Paris\", \"temperature_c\": 18, \"conditions\": \"light rain\"}"
+          }
+        }
+      },
+      "ResponseStreamEvent": {
+        "type": "object",
+        "description": "One server-sent event of a streamed response. Each event is sent as a `data:` line holding this JSON object; most models end the stream with `data: [DONE]`.",
+        "required": [
+          "type",
+          "sequence_number"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Event type.",
+            "enum": [
+              "response.created",
+              "response.in_progress",
+              "response.output_item.added",
+              "response.content_part.added",
+              "response.output_text.delta",
+              "response.output_text.done",
+              "response.content_part.done",
+              "response.function_call_arguments.delta",
+              "response.function_call_arguments.done",
+              "response.reasoning_text.delta",
+              "response.reasoning_text.done",
+              "response.reasoning_summary_text.delta",
+              "response.output_item.done",
+              "response.completed"
+            ]
+          },
+          "sequence_number": {
+            "type": "integer",
+            "description": "Position of the event in the stream, starting at 0."
+          },
+          "output_index": {
+            "type": "integer",
+            "description": "Index of the output item the event belongs to."
+          },
+          "item_id": {
+            "type": "string",
+            "description": "ID of the output item the event belongs to."
+          },
+          "delta": {
+            "type": "string",
+            "description": "On `*.delta` events: the next chunk of text or function arguments."
+          },
+          "text": {
+            "type": "string",
+            "description": "On `response.output_text.done`: the full text of the content part."
+          },
+          "arguments": {
+            "type": "string",
+            "description": "On `response.function_call_arguments.done`: the full JSON-encoded arguments."
+          },
+          "item": {
+            "type": "object",
+            "description": "On `response.output_item.added` and `.done`: the output item (`message` or `function_call`)."
+          },
+          "response": {
+            "$ref": "#/components/schemas/Response",
+            "description": "On `response.created`, `response.in_progress` and `response.completed`: the response object. On `response.completed` it holds the full `output` and `usage`."
           }
         }
       },

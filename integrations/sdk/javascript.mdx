@@ -18,7 +18,6 @@ import { ZerogpuApiClient } from 'zerogpu-api';
 
 const client = new ZerogpuApiClient({
   apiKey: process.env.ZEROGPU_API_KEY,
-  projectId: process.env.ZEROGPU_PROJECT_ID,
 });
 
 // Many models accept plain string `input`; others accept a message list: see API reference.
@@ -52,8 +51,7 @@ If you prefer not to use the SDK, call the endpoint directly.
 const url = 'https://api.zerogpu.ai/v1/responses';
 const headers = {
   'content-type': 'application/json',
-  'x-api-key': 'YOUR_API_KEY',
-  'x-project-id': 'YOUR_PROJECT_ID'
+  'x-api-key': 'YOUR_API_KEY'
 };
 const payload = {
   model: 'YOUR_MODEL',
@@ -86,8 +84,7 @@ fetch(url, {
 const url = 'https://api.zerogpu.ai/v1/responses';
 const headers = {
   'content-type': 'application/json',
-  'x-api-key': process.env.ZEROGPU_API_KEY,
-  'x-project-id': process.env.ZEROGPU_PROJECT_ID
+  'x-api-key': process.env.ZEROGPU_API_KEY
 };
 const payload = {
   model: 'YOUR_MODEL',

@@ -34,18 +34,15 @@ ZeroGPU doesn't need its own SDK here. LiteLLM ships a native `zerogpu/` provide
 
 You'll need to set up your API keys for ZeroGPU and OpenAI. This ensures that the tools can interact with external services securely.
 
-You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key and Project ID from ZeroGPU. The key starts with `zgpu-api-` and the Project ID (UUID) is on the project settings page.
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
 
 ```python Python
 import os
 from getpass import getpass
 
-# Prompt for the ZeroGPU API key and Project ID securely
+# Prompt for the ZeroGPU API key securely
 zerogpu_api_key = getpass('Enter your ZeroGPU API key: ')
 os.environ["ZEROGPU_API_KEY"] = zerogpu_api_key
-
-zerogpu_project_id = getpass('Enter your ZeroGPU Project ID: ')
-os.environ["ZEROGPU_PROJECT_ID"] = zerogpu_project_id
 ```
 
 You can go to [here](https://platform.openai.com/api-keys) to get an API key from OpenAI.
@@ -56,7 +53,7 @@ openai_api_key = getpass('Enter your OpenAI API key: ')
 os.environ["OPENAI_API_KEY"] = openai_api_key
 ```
 
-LiteLLM reads `ZEROGPU_API_KEY` and `OPENAI_API_KEY` from the environment automatically. The Project ID travels as an `x-project-id` header, which you'll attach to each ZeroGPU deployment in the Router below.
+LiteLLM reads `ZEROGPU_API_KEY` and `OPENAI_API_KEY` from the environment automatically.
 
 ## 🚅 Access Text Generation with ZeroGPU
 
@@ -69,7 +66,6 @@ from litellm import completion
 response = completion(
     model="zerogpu/gpt-oss-120b",
     messages=[{"role": "user", "content": "In one sentence, why should a sales team reply to inbound leads within five minutes?"}],
-    extra_headers={"x-project-id": os.environ["ZEROGPU_PROJECT_ID"]},
 )
 
 print(response.choices[0].message.content)
@@ -98,8 +94,6 @@ from litellm import Router
 
 # Drop params a model doesn't support (e.g. reasoning_effort on GPT-4.1) instead of raising
 litellm.drop_params = True
-
-ZEROGPU_HEADERS = {"x-project-id": os.environ["ZEROGPU_PROJECT_ID"]}
 ```
 
 Now define the model groups. `qualify` runs on a fast 8B model, `extract` on `gpt-6-luna` for strict JSON, `draft` on the reasoning model `gpt-oss-120b`, and `frontier` on GPT-4.1:
@@ -109,24 +103,15 @@ router = Router(
     model_list=[
         {
             "model_name": "qualify",
-            "litellm_params": {
-                "model": "zerogpu/llama-3.1-8b-instruct-fast",
-                "extra_headers": ZEROGPU_HEADERS,
-            },
+            "litellm_params": {"model": "zerogpu/llama-3.1-8b-instruct-fast"},
         },
         {
             "model_name": "extract",
-            "litellm_params": {
-                "model": "zerogpu/gpt-6-luna",
-                "extra_headers": ZEROGPU_HEADERS,
-            },
+            "litellm_params": {"model": "zerogpu/gpt-6-luna"},
         },
         {
             "model_name": "draft",
-            "litellm_params": {
-                "model": "zerogpu/gpt-oss-120b",
-                "extra_headers": ZEROGPU_HEADERS,
-            },
+            "litellm_params": {"model": "zerogpu/gpt-oss-120b"},
         },
         {
             "model_name": "frontier",
