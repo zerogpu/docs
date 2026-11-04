@@ -1,0 +1,223 @@
+---
+title: "🎙️ Triage Voice Notes with the Vercel AI SDK and ZeroGPU"
+description: "Use the Vercel AI SDK and the ZeroGPU provider to transcribe a customer voicemail with whisper-tiny, turn it into a typed support ticket with Output.object, and speak an acknowledgment back with chatterbox-nano."
+integration: vercel-ai-sdk
+---
+
+This cookbook shows how to turn a customer voicemail into a support ticket with three AI SDK calls: `transcribe` turns the audio into text, `generateText` with `Output.object` turns the text into a typed ticket with a summary, intent, priority, and caller details, and `generateSpeech` reads a short acknowledgment back to the caller. Every step runs on a small ZeroGPU model through the `@zerogpu/ai-sdk-provider` package, so the whole pipeline is a few dozen lines of TypeScript and costs about three cents per voicemail. By combining the Vercel AI SDK and ZeroGPU, this cookbook walks you through a practical voice pipeline you can drop into a support inbox, a call center queue, or a Next.js route.
+
+For the full reference, see the [Vercel AI SDK integration guide](/integrations/vercel-ai-sdk).
+
+In this cookbook, you'll explore:
+
+- **Vercel AI SDK**: Vercel's open-source TypeScript toolkit for building AI applications and agents, with one set of functions (`generateText`, `transcribe`, `generateSpeech`, and more) that work the same across every model provider. Here it handles the audio in and out and validates the ticket against a zod schema.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+This setup not only demonstrates a practical application of speech-to-ticket triage for support teams, but also provides a flexible framework that can be adapted to other real-world scenarios requiring fast, low-cost voice processing with structured, typed outputs.
+
+## 🎥 Watch the Video Guide
+
+Video walkthrough coming soon.
+
+## 📦 Installation
+
+First, create a project and install the AI SDK, the ZeroGPU provider, and `zod` for the ticket schema. `tsx` runs the TypeScript file directly. You'll need Node.js 22 or newer.
+
+```bash
+mkdir voice-triage && cd voice-triage
+npm init -y && npm pkg set type=module
+npm i ai @zerogpu/ai-sdk-provider zod tsx
+```
+
+ZeroGPU plugs into the AI SDK as a provider package, so there's no separate client to set up. See the [Vercel AI SDK integration guide](/integrations/vercel-ai-sdk) for every option the provider supports.
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your API key for ZeroGPU. This ensures that the tools can interact with external services securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
+
+```bash
+# Set the ZeroGPU API key for this shell session
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+The provider reads `ZEROGPU_API_KEY` from the environment automatically, so the code below never touches the key.
+
+## 🎙️ Access Speech Generation with ZeroGPU
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will generate the sample voicemail that the rest of the cookbook triages, so you don't need an audio file of your own.
+
+Save this as `make-voicemail.ts`:
+
+```typescript TypeScript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateSpeech } from 'ai';
+import { writeFile } from 'node:fs/promises';
+
+const voicemail =
+  "Hi, this is Dana Whitfield from Brightline Dental. Our online booking page has been down since this morning " +
+  "and patients can't schedule appointments. We're on the Pro plan, account number 48213. " +
+  'Please call me back at 555-0142 as soon as you can. Thanks.';
+
+const { audio } = await generateSpeech({
+  model: zerogpu.speech('chatterbox-nano'),
+  text: voicemail,
+  voice: 'nova',
+});
+
+await writeFile('voicemail.mp3', audio.uint8Array);
+console.log(`Saved voicemail.mp3 (${audio.mediaType}, ${audio.uint8Array.length.toLocaleString()} bytes)`);
+```
+
+```bash
+npx tsx make-voicemail.ts
+```
+
+```
+Saved voicemail.mp3 (audio/mpeg, 278,445 bytes)
+```
+
+Play `voicemail.mp3` and you'll hear about 17 seconds of a customer reporting an outage. Got a real voicemail? Drop it in as `voicemail.mp3` instead.
+
+🎉 **ZeroGPU effortlessly turns text into natural-sounding speech in a single `generateSpeech` call, providing a fast, low-cost voice layer for AI integration!**
+
+## 📞 Triaging the Voice Note
+
+_The triage script runs three AI SDK calls in a row, each on a small ZeroGPU model: speech to text, text to a typed ticket, and ticket to a spoken reply._
+
+Create `triage.ts` and add the cells below to it in order. Start with the imports:
+
+```typescript TypeScript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateSpeech, generateText, Output, transcribe } from 'ai';
+import { readFile, writeFile } from 'node:fs/promises';
+import { z } from 'zod';
+```
+
+### Step 1: Transcribe the voicemail
+
+`transcribe` sends the audio to `whisper-tiny`. Passing the language up front makes it faster and more accurate, and the result includes timed segments and the audio duration along with the text.
+
+```typescript TypeScript
+const transcript = await transcribe({
+  model: zerogpu.transcription('whisper-tiny'),
+  audio: await readFile('voicemail.mp3'),
+  providerOptions: { zerogpu: { language: 'en' } },
+});
+
+console.log(transcript.text);
+console.log(
+  `\nlanguage: ${transcript.language}, duration: ${transcript.durationInSeconds}s, segments: ${transcript.segments.length}`,
+);
+```
+
+```
+Hi, this is Dana Whitfield from Brightline Dental. Our online booking page has been down since this morning in Patience Cancer Schedule appointments. We're on the Pro Plan, account number 48-233. Please call me back at 555-0142 as soon as you can. Thanks.
+
+language: en, duration: 17.32s, segments: 6
+```
+
+Look closely and you'll spot two slips: "and patients can't schedule" came back as "in Patience Cancer Schedule", and the account number 48213 became "48-233". `whisper-tiny` is the smallest Whisper model, tuned for speed and cost. The next step still reads the meaning correctly, but treat exact numbers from a transcript as hints and check them against your own records before acting on them.
+
+### Step 2: Turn the transcript into a ticket
+
+Now describe the ticket you want as a zod schema. `.describe()` on a field tells the model what goes there, and `z.enum` limits `intent` and `priority` to values your helpdesk understands:
+
+```typescript TypeScript
+const ticketSchema = z.object({
+  summary: z.string().describe('One sentence describing what the caller needs'),
+  intent: z.enum(['outage', 'billing', 'how_to', 'feature_request', 'other']),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']),
+  caller: z.object({
+    name: z.string(),
+    company: z.string().nullable(),
+    phone: z.string().nullable(),
+    accountNumber: z.string().nullable(),
+  }),
+  actionItems: z.array(z.string()),
+});
+```
+
+Pass the schema to `Output.object` and send the transcript to `gpt-6-luna`. The AI SDK validates the reply against the schema, so `ticket` comes back fully typed:
+
+```typescript TypeScript
+const { output: ticket, usage } = await generateText({
+  model: zerogpu('gpt-6-luna'),
+  output: Output.object({ schema: ticketSchema }),
+  instructions:
+    'You triage voicemails for a SaaS support desk. Anything that stops customers from using the product is urgent.',
+  prompt: `Voicemail transcript:\n\n${transcript.text}`,
+});
+
+console.log(JSON.stringify(ticket, null, 2));
+console.log(`tokens: ${usage.inputTokens} in / ${usage.outputTokens} out`);
+```
+
+```
+{
+  "summary": "Dana Whitfield reports that Brightline Dental’s online booking page has been down since this morning and requests a callback as soon as possible.",
+  "intent": "outage",
+  "priority": "urgent",
+  "caller": {
+    "name": "Dana Whitfield",
+    "company": "Brightline Dental",
+    "phone": "555-0142",
+    "accountNumber": "48-233"
+  },
+  "actionItems": [
+    "Investigate the online booking page outage.",
+    "Call Dana Whitfield back as soon as possible."
+  ]
+}
+tokens: 229 in / 150 out
+```
+
+The model saw through the garbled phrase, recognized an outage, and marked it urgent because of the instruction. It copied the account number exactly as transcribed, which is why the check from Step 1 matters. From here you can post `ticket` straight to your helpdesk API: every field is already validated.
+
+### Step 3: Speak an acknowledgment back
+
+Last, build a short reply from the ticket and turn it into audio with `chatterbox-nano`, ready to send back by SMS, WhatsApp, or a callback system:
+
+```typescript TypeScript
+const firstName = ticket.caller.name.split(' ')[0];
+const reply =
+  `Hi ${firstName}, thanks for your message. We've logged this as ${ticket.priority} priority ` +
+  'and an engineer will call you back shortly.';
+
+const { audio } = await generateSpeech({
+  model: zerogpu.speech('chatterbox-nano'),
+  text: reply,
+  voice: 'alloy',
+});
+
+await writeFile('reply.mp3', audio.uint8Array);
+console.log(reply);
+console.log(`Saved reply.mp3 (${audio.uint8Array.length.toLocaleString()} bytes)`);
+```
+
+Run the whole script:
+
+```bash
+npx tsx triage.ts
+```
+
+```
+Hi Dana, thanks for your message. We've logged this as urgent priority and an engineer will call you back shortly.
+Saved reply.mp3 (94,893 bytes)
+```
+
+The full run, from audio in to audio out, makes three model calls, all on ZeroGPU, and took about 16 seconds in our test. Audio is billed per minute with a one-minute minimum, so this voicemail costs about $0.02 to transcribe and $0.01 to answer, while the ticket step costs under $0.0001 in `gpt-6-luna` tokens. See the [model catalog](/docs/model-catalog) for current prices.
+
+🎉 You've turned a voicemail into a typed, prioritized support ticket and a spoken reply with three AI SDK calls. Since every step uses the standard AI SDK functions, you can move this script into a Next.js route handler or a queue worker without changing the model code, and swap any single step to another model by changing one `model` line.
+
+## 🌟 Highlights
+
+This cookbook has guided you through setting up and running a Vercel AI SDK workflow with ZeroGPU for voice-note triage. You can adapt and expand this example for various other scenarios requiring fast, low-cost voice processing with structured, typed outputs.
+
+Key tools utilized in this cookbook include:
+
+- **Vercel AI SDK**: Vercel's open-source TypeScript toolkit for building AI applications and agents, with one set of functions (`generateText`, `transcribe`, `generateSpeech`, and more) that work the same across every model provider. Here it handles the audio in and out and validates the ticket against a zod schema.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring fast, low-cost voice processing with structured, typed outputs.

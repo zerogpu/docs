@@ -1,0 +1,711 @@
+---
+title: "Vercel AI SDK"
+description: "Call ZeroGPU's text, classification, extraction, embedding, speech, and transcription models from TypeScript with the @zerogpu/ai-sdk-provider community provider for the Vercel AI SDK."
+icon: "triangle"
+---
+
+The [AI SDK](https://ai-sdk.dev/docs) is Vercel's open-source TypeScript toolkit for building AI-powered applications and agents. It gives you one set of functions, `generateText`, `streamText`, `embed`, `generateSpeech`, `transcribe`, and more, that work the same across every model provider, plus typed tool calling, schema-validated structured output, and UI hooks for React, Next.js, Svelte, and Vue. Providers plug in as small packages, so switching models is a one-line change. ZeroGPU ships an official community provider, [`@zerogpu/ai-sdk-provider`](https://github.com/zerogpu/ai-sdk-provider), listed in the [AI SDK provider docs](https://ai-sdk.dev/providers/community-providers/zerogpu).
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+This guide covers `@zerogpu/ai-sdk-provider`, for TypeScript developers who build with the AI SDK in Node.js, Next.js, or any other JavaScript runtime. You'll install the provider, make your first `generateText` call, and then work through every surface it exposes: text generation, streaming, tool calling, structured output, image input, reasoning, ZeroGPU's classification and extraction models, embeddings, speech generation, and transcription. By the end you'll be able to send any AI SDK workload to ZeroGPU by changing one `model` line, and pick the right ZeroGPU model for each step of a pipeline.
+
+## Cookbook
+
+For a runnable, real-world example, see [Triage Voice Notes with the Vercel AI SDK and ZeroGPU](/cookbook/vercel-ai-sdk-voice-note-triage). It transcribes a customer voicemail with `whisper-tiny`, turns the transcript into a typed support ticket with `Output.object`, and speaks an acknowledgment back with `chatterbox-nano`, all through the AI SDK's standard functions. Check it out to see the transcription, structured output, and speech surfaces from this guide working together.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+Video walkthrough coming soon.
+
+## Quickstart
+
+### Prerequisites
+
+- Node.js 22 or newer.
+- AI SDK 7 (`ai@7`). The provider implements the AI SDK's V4 model specification, which earlier major versions of `ai` don't accept.
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- A model from the [model catalog](/docs/model-catalog). This guide uses `gpt-oss-120b` for its first request.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`) and export it. The provider reads `ZEROGPU_API_KEY` automatically.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+### Install the Vercel AI SDK
+
+Install the AI SDK, the ZeroGPU provider, and `zod` (used for tool and output schemas):
+
+```bash
+npm i ai @zerogpu/ai-sdk-provider zod
+```
+
+`pnpm add` and `yarn add` work the same way.
+
+### Your first request
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text, finishReason, usage } = await generateText({
+  model: zerogpu('gpt-oss-120b'),
+  prompt: 'Reply with the word ok',
+});
+
+console.log(text);
+console.log(finishReason, usage.inputTokens, usage.outputTokens);
+```
+
+```
+ok
+stop 72 36
+```
+
+The default `zerogpu` instance reads `ZEROGPU_API_KEY` and sends requests to `https://api.zerogpu.ai/v1`. Every call returns the standard AI SDK result, so `text`, `usage`, `finishReason`, and `response` look the same as they do with any other provider.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, which ZeroGPU endpoint it hits, its parameters, a runnable example, and the response you get back.
+
+### Provider instance and settings
+
+`zerogpu` is a ready-made provider instance. Use `createZeroGPU()` when you need a different key, a project scope, a proxy, or custom headers.
+
+```typescript
+import { createZeroGPU } from '@zerogpu/ai-sdk-provider';
+
+const zerogpu = createZeroGPU({
+  apiKey: process.env.ZEROGPU_API_KEY,
+  baseURL: 'https://api.zerogpu.ai/v1',
+});
+```
+
+| Setting | Required | Default | Description |
+|---|---|---|---|
+| `apiKey` | No | `ZEROGPU_API_KEY` env var | Sent as `Authorization: Bearer <key>`. The call throws `LoadAPIKeyError` if neither is set. |
+| `baseURL` | No | `https://api.zerogpu.ai/v1` | URL prefix for every request, for example a proxy. A trailing slash is removed. |
+| `projectId` | No | none | Sent as the optional `x-project-id` header. |
+| `headers` | No | none | Extra headers on every request. |
+| `fetch` | No | global `fetch` | Custom fetch implementation, for logging, retries, or tests. |
+| `generateId` | No | AI SDK default | ID generator for tool calls that ZeroGPU returns without an `id`. |
+
+The provider exposes one factory per model type. Each has an alias, so you can use whichever name you prefer:
+
+| Factory | Alias | Model type | ZeroGPU endpoint |
+|---|---|---|---|
+| `zerogpu(id)`, `zerogpu.languageModel(id)` | `zerogpu.chat(id)` | Language model | `POST /v1/chat/completions` |
+| `zerogpu.embeddingModel(id)` | `zerogpu.embedding(id)` | Embedding model | `POST /v1/embeddings` |
+| `zerogpu.speech(id)` | `zerogpu.speechModel(id)` | Speech model | `POST /v1/audio/speech` |
+| `zerogpu.transcription(id)` | `zerogpu.transcriptionModel(id)` | Transcription model | `POST /v1/audio/transcriptions` |
+
+Model IDs are autocompleted in your editor and are case-sensitive: `LFM2.5-1.2B-Instruct` works, `lfm2.5-1.2b-instruct` does not. Any other ZeroGPU model ID also works as a plain string. ZeroGPU has no image generation models, so `zerogpu.imageModel()` throws `NoSuchModelError`.
+
+### `generateText`
+
+The core text entry point. Hits ZeroGPU's `POST /v1/chat/completions` and returns once the full response is ready. Works with every language model in the [capability table](#model-capabilities), including the classification and extraction models.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu('<model-id>')`. |
+| `prompt` or `messages` | Yes | none | A string prompt, or an array of `system`, `user`, `assistant`, and `tool` messages. |
+| `instructions` | No | none | System instructions. On `deberta-v3-small` this carries the label list. |
+| `maxOutputTokens` | No | model default | Cap on generated tokens, sent as `max_tokens`. |
+| `temperature`, `topP`, `topK` | No | model default | Sampling controls. |
+| `frequencyPenalty`, `presencePenalty` | No | none | Repetition controls. |
+| `stopSequences` | No | none | Sent as `stop`. |
+| `seed` | No | none | Seed for more repeatable sampling. |
+| `tools`, `toolChoice`, `stopWhen` | No | none | See [Tool calling](#tool-calling). |
+| `output` | No | text | `Output.object(...)` for structured output. See [Structured output](#structured-output). |
+| `reasoning` | No | model default | See [Reasoning](#reasoning). |
+| `providerOptions.zerogpu` | No | none | See [Classification and extraction models](#classification-and-extraction-models). |
+| `maxRetries` | No | `2` | AI SDK retries on retryable errors such as 429 and 5xx. |
+| `abortSignal` | No | none | Cancel the request. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: zerogpu('llama-3.1-8b-instruct-fast'),
+  instructions: 'You summarize support tickets in one sentence.',
+  prompt: 'My invoice for October was charged twice and I need a refund for the duplicate.',
+  maxOutputTokens: 64,
+  temperature: 0.2,
+});
+
+console.log(text);
+```
+
+```
+You are requesting a refund for a duplicate charge of your October invoice, which was mistakenly billed twice.
+```
+
+Response: a `GenerateTextResult`. `text` is the reply, `finishReason` is `stop`, `length`, or `tool-calls`, and `usage` carries `inputTokens`, `outputTokens`, `totalTokens`, and `inputTokenDetails.cacheReadTokens` when ZeroGPU reports cached prompt tokens. `response.body` holds ZeroGPU's raw chat completion if you need a field the AI SDK doesn't map.
+
+### `streamText`
+
+Streams the reply as it is generated. Hits the same `POST /v1/chat/completions` endpoint with `stream: true` and `stream_options.include_usage`, so the final `usage` is always filled in. Supported on every model in the [capability table](#model-capabilities); the classification and extraction models don't stream. `streamText` takes the same parameters as `generateText`, plus `onChunk`, `onFinish`, and `onError` callbacks.
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { streamText } from 'ai';
+
+const result = streamText({
+  model: zerogpu('deepseek-v4.1-flash'),
+  prompt: 'Explain edge inference in two sentences.',
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+
+console.log('\n', await result.finishReason, (await result.usage).outputTokens);
+```
+
+```
+Edge inference is the process of running machine learning models directly on local devices like phones or IoT sensors rather than sending data to a remote cloud server. This approach reduces latency, saves bandwidth, and improves privacy by keeping sensitive data on the device.
+ stop 48
+```
+
+Response: a `StreamTextResult`. Consume `textStream` for text only, or `fullStream` for text, tool call, and finish parts. In a Next.js route handler, return `result.toUIMessageStreamResponse()` to feed the AI SDK's `useChat` hook. `LFM2.5-1.2B-Instruct`, `LFM2.5-1.2B-Thinking`, and `llama-3.2-3b-instruct-fast` accept streaming but deliver the reply in a single chunk.
+
+### Tool calling
+
+Pass AI SDK `tool()` definitions and the model decides when to call them. The provider converts them to OpenAI-format function tools on `POST /v1/chat/completions`. Supported on every model marked for tool usage in the [capability table](#model-capabilities).
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `tools` | Yes | none | A record of `tool({ description, inputSchema, execute })`. `inputSchema` is a zod schema. Leave out `execute` to get the call back without running it. |
+| `toolChoice` | No | `'auto'` | `'auto'`, `'none'`, `'required'`, or `{ type: 'tool', toolName }`. Not every model honors a forced tool: `gpt-4.1-mini` and `gpt-6-luna` do, while models such as `qwen3.6-35b-a3b` and `gpt-oss-120b` can answer in text instead. |
+| `stopWhen` | No | one step | For example `isStepCount(3)`, so the SDK sends tool results back and lets the model answer. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText, isStepCount, tool } from 'ai';
+import { z } from 'zod';
+
+const { text, steps } = await generateText({
+  model: zerogpu('gpt-6-luna'),
+  tools: {
+    weather: tool({
+      description: 'Get the weather for a city',
+      inputSchema: z.object({ city: z.string() }),
+      execute: async ({ city }) => ({ city, temperatureC: 21, sky: 'clear' }),
+    }),
+  },
+  stopWhen: isStepCount(3),
+  prompt: 'What is the weather in Paris?',
+});
+
+console.log(text);
+console.log(steps[0].toolCalls.map(c => ({ toolName: c.toolName, input: c.input })));
+```
+
+```
+It's clear in Paris and 21°C.
+[ { toolName: 'weather', input: { city: 'Paris' } } ]
+```
+
+Response: `steps` lists each round trip. The first step has `finishReason: 'tool-calls'` with the parsed `toolCalls` and `toolResults`; the last step holds the final `text`. Tool calls also stream through `streamText` as `tool-input-start`, `tool-input-delta`, and `tool-call` parts on `fullStream`.
+
+### Structured output
+
+`Output.object()` makes the model return JSON that matches your zod schema, and the AI SDK validates and types it for you. The provider sends the schema as a `json_schema` `response_format`. Supported on every model marked for object generation in the [capability table](#model-capabilities).
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `output` | Yes | none | `Output.object({ schema })`. Also `Output.array({ element })` and `Output.choice({ options })`. |
+| `schema` | Yes | none | A zod schema. Use `.describe()` on fields to guide the model. |
+| `name`, `description` | No | `'response'` | Optional schema name and description sent with the `json_schema`. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText, Output } from 'ai';
+import { z } from 'zod';
+
+const { output } = await generateText({
+  model: zerogpu('gpt-5.4-nano'),
+  output: Output.object({
+    schema: z.object({
+      name: z.string(),
+      ingredients: z.array(z.string()),
+    }),
+  }),
+  prompt: 'Generate a short lasagna recipe.',
+});
+
+console.log(output.name, output.ingredients.length);
+```
+
+```
+Quick Short-Cut Lasagna 14
+```
+
+Response: `output` is a typed object that already passed schema validation. If the model returns something that doesn't parse, the call throws `NoObjectGeneratedError`. With `streamText`, read `partialOutputStream` to render the object as it fills in.
+
+### Image input
+
+Vision models accept images as `file` parts in a user message, either as bytes (`Buffer`, `Uint8Array`, base64) or as an `https` URL that ZeroGPU downloads. Supported on every model marked for image input in the [capability table](#model-capabilities).
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+import { readFile } from 'node:fs/promises';
+
+const { text } = await generateText({
+  model: zerogpu('qwen3.6-35b-a3b'),
+  messages: [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What color is this image? One word.' },
+        { type: 'file', mediaType: 'image/png', data: await readFile('./image.png') },
+      ],
+    },
+  ],
+});
+
+console.log(text.trim()); // "Red"
+```
+
+To pass a URL instead, use `data: new URL('https://example.com/photo.png')`. Response: a normal `generateText` result; image tokens are counted in `usage.inputTokens`.
+
+### Reasoning
+
+Reasoning models think before they answer. Control how long with the AI SDK's `reasoning` option or with `providerOptions.zerogpu.reasoningEffort`, both sent as `reasoning_effort`.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `reasoning` | No | model default | AI SDK option: `'none'`, `'minimal'`, `'low'`, `'medium'`, `'high'`. `'xhigh'` and `'max'` map to `'high'`. |
+| `providerOptions.zerogpu.reasoningEffort` | No | none | `'none'`, `'minimal'`, `'low'`, `'medium'`, or `'high'`. Takes precedence over `reasoning`. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text, usage } = await generateText({
+  model: zerogpu('gpt-5.6-luna'),
+  reasoning: 'high',
+  prompt: 'How many prime numbers are there below 100? Answer with the number.',
+});
+
+console.log(text, usage.outputTokenDetails);
+```
+
+```
+25 { textTokens: 10, reasoningTokens: 15 }
+```
+
+Response: a normal result. ZeroGPU reports the reasoning token count in `usage.outputTokenDetails.reasoningTokens` when the model exposes it, but doesn't return the reasoning text, so `reasoningText` is `undefined`. Models without adjustable reasoning, such as `gpt-4.1-mini`, the Llama models, and the LFM2.5 models, reject `reasoning_effort`; leave the option off for them.
+
+### Classification and extraction models
+
+ZeroGPU's task models run through `generateText` like any other model. They return their result as a JSON string in `text`, so `JSON.parse(text)` it. They don't stream, and they don't take tools or `Output.object`. Model-specific settings go in `providerOptions.zerogpu`:
+
+| Provider option | Used by | Description |
+|---|---|---|
+| `metadata` | `gliner2.5-*` | Task configuration: `usecase` (`ner`, `json`, `classification`, or `decide`), plus `labels`, `schema`, and `threshold`. |
+| `categories` | `zlm-v1-signal-extract` | Signal categories to extract, for example `['signals']`. |
+| `maxKeywords` | `zlm-v1-signal-extract` | Maximum number of keywords returned. |
+
+See the [model catalog](/docs/model-catalog) and each model's page for the full input and output format.
+
+#### IAB classification
+
+`zlm-v1-iab-classify-edge` maps text to IAB content (1.0 and 2.2) and audience categories with confidence scores. `zlm-v2-iab-classify-edge-enriched` adds IAB IDs and tiers, topics, keywords, and user intent. `zlm-v1-iab-domain-classifier` takes a bare domain name.
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+
+const { text } = await generateText({
+  model: zerogpu('zlm-v1-iab-classify-edge'),
+  prompt: 'Apple released a new MacBook laptop today.',
+});
+
+const { audience, content } = JSON.parse(text);
+console.log(audience[0], content.iab_2_2[0]);
+```
+
+```
+{ name: 'Laptops', score: 0.7895236167380252 } { name: 'Laptops', score: 0.8754153951140519 }
+```
+
+#### Signal extraction
+
+`zlm-v1-signal-extract` pulls keywords and user intent out of short text such as a search query or a chat message.
+
+```typescript
+const { text } = await generateText({
+  model: zerogpu('zlm-v1-signal-extract'),
+  prompt: 'How can I pay using my credit card?',
+  providerOptions: { zerogpu: { categories: ['signals'], maxKeywords: 6 } },
+});
+```
+
+```json
+{"keywords":["credit card","login"],"user_intent":{"name":"pay using credit card","category":"navigational","score":0.95}}
+```
+
+#### GLiNER entity, JSON, and label extraction
+
+`gliner2.5-base-v1` (English) and `gliner2.5-multi-v1` (multilingual) take the task in `metadata`. Use `usecase: 'ner'` with `labels` for entities, `usecase: 'json'` with a `schema` of `field::type::description` entries for structured records, and `usecase: 'classification'` with a `schema` that maps each axis to its labels.
+
+```typescript
+// Entities
+const { text: entities } = await generateText({
+  model: zerogpu('gliner2.5-base-v1'),
+  prompt: 'The app is built with Python 3.11 and uses PostgreSQL 15.',
+  providerOptions: {
+    zerogpu: {
+      metadata: { usecase: 'ner', labels: ['programming language', 'database'], threshold: 0.3 },
+    },
+  },
+});
+
+// Structured record
+const { text: invoice } = await generateText({
+  model: zerogpu('gliner2.5-base-v1'),
+  prompt: 'Invoice INV-2291 from Acme Corp is due on March 3 for $1,250.',
+  providerOptions: {
+    zerogpu: {
+      metadata: {
+        usecase: 'json',
+        schema: {
+          invoice: [
+            'number::str::Invoice number',
+            'vendor::str::Company that issued it',
+            'amount::str::Total amount',
+            'due_date::str::Due date',
+          ],
+        },
+      },
+    },
+  },
+});
+
+// Labels on several axes at once
+const { text: labels } = await generateText({
+  model: zerogpu('gliner2.5-base-v1'),
+  prompt: 'The checkout page keeps timing out and I am really frustrated.',
+  providerOptions: {
+    zerogpu: {
+      metadata: {
+        usecase: 'classification',
+        schema: {
+          sentiment: ['positive', 'negative', 'neutral'],
+          topic: ['billing', 'bug', 'feature request'],
+        },
+      },
+    },
+  },
+});
+```
+
+```
+{"entities":{"programming language":["Python 3.11"],"database":["PostgreSQL 15"]}}
+{"data":{"invoice":[{"number":"INV-2291","vendor":"Acme Corp","amount":"$1,250","due_date":"March 3"}]}}
+{"classification":{"sentiment":"negative","topic":"bug"}}
+```
+
+`gliner2.5-multi-v1` takes the same `metadata` on non-English text: `Marie Dupont travaille chez Airbus à Toulouse.` with labels `person`, `company`, and `city` returns `{"entities":{"person":["Marie Dupont"],"company":["Airbus"],"city":["Toulouse"]}}`.
+
+#### GLiNER decisions
+
+`gliner2.5-decide-v1` makes routing and handoff decisions over several heads in one call. Pass `usecase: 'decide'` and a `labels` object that maps each decision to its options.
+
+```typescript
+const { text } = await generateText({
+  model: zerogpu('gliner2.5-decide-v1'),
+  prompt: 'Can you refund my last order? It arrived broken.',
+  providerOptions: {
+    zerogpu: {
+      metadata: {
+        usecase: 'decide',
+        labels: {
+          intent: ['payment_issue', 'refund', 'account_access', 'general_question'],
+          handoff: ['yes', 'no'],
+        },
+      },
+    },
+  },
+});
+```
+
+```json
+{"decisions":{"intent":"refund","handoff":"no"}}
+```
+
+#### DeBERTa zero-shot classification
+
+`deberta-v3-small` scores text against labels you choose. Pass the labels in `instructions` as a bracketed, comma-separated list.
+
+```typescript
+const { text } = await generateText({
+  model: zerogpu('deberta-v3-small'),
+  instructions: '[Sports,Technology,Finance]',
+  prompt: 'Apple unveiled its next-generation M5 chip.',
+});
+```
+
+```json
+{"Technology":0.7767035256605225,"Sports":0.1541566271737724,"Finance":0.06913984716570507}
+```
+
+### Embeddings with `embed` and `embedMany`
+
+`zerogpu.embeddingModel()` creates an embedding model for the AI SDK's `embed` (one value) and `embedMany` (a batch). Hits `POST /v1/embeddings`.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu.embeddingModel('bge-small-en-v1.5')` or `'all-minilm-l6-v2'`. |
+| `value` / `values` | Yes | none | The string, or array of strings, to embed. |
+| `maxParallelCalls` | No | `Infinity` | `embedMany` only. The provider accepts 256 values per request, and `embedMany` splits larger batches for you. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { cosineSimilarity, embedMany } from 'ai';
+
+const { embeddings, usage } = await embedMany({
+  model: zerogpu.embeddingModel('all-minilm-l6-v2'),
+  values: ['sunny day at the beach', 'rainy afternoon in the city', 'warm sand and ocean waves'],
+});
+
+console.log(embeddings.length, embeddings[0].length, usage);
+console.log(cosineSimilarity(embeddings[0], embeddings[2]).toFixed(3)); // beach vs. sand
+console.log(cosineSimilarity(embeddings[0], embeddings[1]).toFixed(3)); // beach vs. rain
+```
+
+```
+3 384 { tokens: 21 }
+0.531
+0.471
+```
+
+| Model | Dimensions | Max input tokens |
+|---|---:|---:|
+| `bge-small-en-v1.5` | 384 | 512 |
+| `all-minilm-l6-v2` | 384 | 256 |
+
+Response: `embedding` (or `embeddings`) is an array of numbers per input, in input order, and `usage.tokens` is the token count.
+
+### Speech with `generateSpeech`
+
+`zerogpu.speech('chatterbox-nano')` turns English text into audio. Hits `POST /v1/audio/speech`.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu.speech('chatterbox-nano')`. |
+| `text` | Yes | none | English text, up to 2,000 characters. Inline tags such as `[laugh]`, `[chuckle]`, and `[cough]` add cues. |
+| `voice` | No | `'alloy'` | OpenAI voice names (`alloy`, `echo`, `fable`, `nova`, `onyx`, `shimmer`). |
+| `outputFormat` | No | `'mp3'` | `mp3`, `wav`, `opus`, `aac`, `flac`, or `pcm`. Anything else falls back to mp3 with a warning. |
+| `providerOptions.zerogpu` | No | none | `seed`, `temperature`, `topP`, `topK`, `repetitionPenalty`. |
+
+`instructions`, `speed`, and `language` aren't supported; the provider ignores them and adds a warning.
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateSpeech } from 'ai';
+import { writeFile } from 'node:fs/promises';
+
+const { audio, warnings } = await generateSpeech({
+  model: zerogpu.speech('chatterbox-nano'),
+  text: 'Hello from ZeroGPU! [laugh]',
+  voice: 'echo',
+  outputFormat: 'wav',
+  providerOptions: { zerogpu: { seed: 42, temperature: 0.7 } },
+});
+
+await writeFile('./speech.wav', audio.uint8Array);
+console.log(audio.mediaType, audio.uint8Array.length, warnings);
+```
+
+```
+audio/wav 147918 []
+```
+
+Response: `audio` is a generated file with `uint8Array`, `base64`, and `mediaType`, plus any `warnings`. Voice cloning from a reference clip isn't available through the provider; call [`/v1/audio/speech`](/api-reference/audio-speech) directly with a `voice_sample` for that.
+
+### Transcription with `transcribe`
+
+`zerogpu.transcription('whisper-tiny')` turns speech into text. Hits `POST /v1/audio/transcriptions` and asks for the verbose result, so you get segments, language, and duration too.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu.transcription('whisper-tiny')`. |
+| `audio` | Yes | none | Audio bytes (`Buffer`, `Uint8Array`, or base64), up to 25 MB and 10 minutes. |
+| `providerOptions.zerogpu.language` | No | detected | ISO-639-1 code such as `en`. Setting it improves accuracy and latency. |
+| `providerOptions.zerogpu.temperature` | No | model default | Sampling temperature between 0 and 1. |
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { transcribe } from 'ai';
+import { readFile } from 'node:fs/promises';
+
+const result = await transcribe({
+  model: zerogpu.transcription('whisper-tiny'),
+  audio: await readFile('./reply.mp3'),
+  providerOptions: { zerogpu: { language: 'en' } },
+});
+
+console.log(result.text);
+console.log(result.language, result.durationInSeconds, result.segments.length);
+```
+
+```
+Hi, Dana. Thanks for your message. We've logged this as urgent priority and an engineer will call you back shortly.
+en 5.84 1
+```
+
+Response: `text` is the transcript, `segments` is a list of `{ text, startSecond, endSecond }`, `language` is the detected or supplied language, and `durationInSeconds` is the audio length.
+
+### Model capabilities
+
+Text generation models, all with streaming:
+
+| Model | Image input | Object generation | Tool usage | Tool streaming |
+|---|:---:|:---:|:---:|:---:|
+| `deepseek-v4.1-flash` | | ✅ | ✅ | ✅ |
+| `glm-5.3-flash` | ✅ | ✅ | ✅ | ✅ |
+| `gpt-4.1-mini` | ✅ | ✅ | ✅ | ✅ |
+| `gpt-5.4-nano` | ✅ | ✅ | ✅ | ✅ |
+| `gpt-5.6-luna` | ✅ | ✅ | ✅ | ✅ |
+| `gpt-6-luna` | ✅ | ✅ | ✅ | ✅ |
+| `gpt-oss-120b` | | ✅ | ✅ | ✅ |
+| `qwen3-30b-a3b-fp8` | | ✅ | ✅ | ✅ |
+| `qwen3.6-35b-a3b` | ✅ | ✅ | ✅ | ✅ |
+| `llama-3.1-8b-instruct-fast` | | ✅ | ✅ | ✅ |
+| `llama-3.2-3b-instruct-fast` | | | | |
+| `LFM2.5-1.2B-Instruct` | | | | |
+| `LFM2.5-1.2B-Thinking` | | | | |
+| `zlm-v1-tool-decisions` | | ✅ | ✅ | ✅ |
+
+Classification and extraction models, called with `generateText` only:
+
+| Model | Task |
+|---|---|
+| `zlm-v1-iab-classify-edge` | IAB content and audience classification |
+| `zlm-v2-iab-classify-edge-enriched` | IAB classification with IDs, tiers, topics, keywords, and intent |
+| `zlm-v1-iab-domain-classifier` | IAB classification of a domain name |
+| `zlm-v1-signal-extract` | Keyword and intent extraction |
+| `gliner2.5-base-v1` | Entity, structured data, and label extraction |
+| `gliner2.5-multi-v1` | Multilingual entity and structured data extraction |
+| `gliner2.5-decide-v1` | Zero-shot decisions and routing |
+| `deberta-v3-small` | Zero-shot classification with your own labels |
+
+The moderation models (`zlm-v1-moderation-edge`, `llama-guard-4-12b`) only run on [`/v1/moderations`](/api-reference/moderations), which the AI SDK has no function for; call them with the [JavaScript SDK](/integrations/sdk/javascript) instead.
+
+### Patterns and recipes
+
+**A cheap classifier in front of a chat model.** Run `gliner2.5-decide-v1` first to label the request, then send only the requests that need a written answer to a chat model. The decision call costs a fraction of a chat call, so spam and other dead ends never reach the expensive step:
+
+```typescript
+import { zerogpu } from '@zerogpu/ai-sdk-provider';
+import { generateText } from 'ai';
+
+async function handle(message: string) {
+  const { text } = await generateText({
+    model: zerogpu('gliner2.5-decide-v1'),
+    prompt: message,
+    providerOptions: {
+      zerogpu: {
+        metadata: { usecase: 'decide', labels: { type: ['question', 'complaint', 'spam'] } },
+      },
+    },
+  });
+  const label = JSON.parse(text).decisions.type as string;
+
+  if (label === 'spam') return null;
+
+  const { text: reply } = await generateText({
+    model: zerogpu('gpt-6-luna'),
+    prompt: `Write a short, friendly reply to this customer ${label}:\n\n${message}`,
+  });
+  return reply;
+}
+```
+
+Test your labels on real samples before you rely on a gate. Here, `gliner2.5-decide-v1` labeled "CLICK HERE to win a free iPhone!!!" as `spam`, while `deberta-v3-small` with `[question,complaint,spam]` scored the same text as a `question`. DeBERTa is better at topical labels such as `[Sports,Technology,Finance]`.
+
+**Tool routing on the 0.6B decision model.** `zlm-v1-tool-decisions` picks a tool and fills its arguments in one fast step. Define tools without `execute`, read `toolCalls`, and run the chosen tool yourself. Asked "Where is my order 7731?" with `searchOrders` and `createTicket` tools, it returns `[{ toolName: 'searchOrders', input: { orderId: '7731' } }]` with `finishReason: 'tool-calls'`.
+
+**Typed extraction instead of parsing prose.** For "pull these fields out of this text" jobs, use `Output.object` with a zod schema on `gpt-6-luna` or `gpt-5.4-nano`, or GLiNER's `usecase: 'json'` when the fields are short spans. Both give you data you can store directly, with no regex over free text.
+
+**Swap providers per step.** Because every AI SDK provider shares the same functions, you can mix ZeroGPU with another provider in one pipeline: transcribe, classify, and extract on ZeroGPU, and pass only the hard cases to a frontier model by changing the `model` line. The [voice-note cookbook](/cookbook/vercel-ai-sdk-voice-note-triage) chains `transcribe`, `Output.object`, and `generateSpeech` this way.
+
+### At a glance
+
+| Task | Entry point | Endpoint on ZeroGPU |
+|---|---|---|
+| Text generation | `generateText({ model: zerogpu('...') })` | `/v1/chat/completions` |
+| Streaming | `streamText(...)` | `/v1/chat/completions` |
+| Tool calling | `tools`, `toolChoice`, `stopWhen` | `/v1/chat/completions` |
+| Structured output | `output: Output.object({ schema })` | `/v1/chat/completions` |
+| Image input | `file` parts with `mediaType: 'image/*'` | `/v1/chat/completions` |
+| Reasoning control | `reasoning` or `providerOptions.zerogpu.reasoningEffort` | `/v1/chat/completions` |
+| IAB and signal extraction | `generateText` with a `zlm-v*` model | `/v1/chat/completions` |
+| GLiNER extraction and decisions | `generateText` with `providerOptions.zerogpu.metadata` | `/v1/chat/completions` |
+| Zero-shot labels | `generateText` with `deberta-v3-small` and `instructions` | `/v1/chat/completions` |
+| Embeddings | `embed`, `embedMany` with `zerogpu.embeddingModel(...)` | `/v1/embeddings` |
+| Speech | `generateSpeech` with `zerogpu.speech(...)` | `/v1/audio/speech` |
+| Transcription | `transcribe` with `zerogpu.transcription(...)` | `/v1/audio/transcriptions` |
+| Custom setup | `createZeroGPU({ apiKey, baseURL, projectId, headers, fetch })` | all |
+
+## Troubleshooting
+
+**`LoadAPIKeyError: ZeroGPU API key is missing`.** `ZEROGPU_API_KEY` isn't set in the process making the call. Export it in that shell, add it to `.env.local` in Next.js, or pass `createZeroGPU({ apiKey })`. In serverless deployments, add it to the project's environment variables and redeploy.
+
+**`AI_UnsupportedModelVersionError: Unsupported model version v4`, or a type error on `model`.** Your `ai` package is older than version 7. The provider implements the V4 model specification, which only AI SDK 7 accepts. Run `npm i ai@7`.
+
+**Install fails or the provider won't load on an older Node.js.** The provider requires Node.js 22 or newer. Check with `node -v` and upgrade.
+
+**`AI_APICallError` with status 403 `Forbidden`.** The API key is wrong or revoked. ZeroGPU returns 403, not 401, for an invalid key. Copy a fresh key from the [dashboard](https://platform.zerogpu.ai/dashboard).
+
+**404 `Model not found`.** The model ID has a typo or the wrong case. IDs are case-sensitive, so check them against the [model catalog](/docs/model-catalog).
+
+**`stream is not supported for this model`.** Classification and extraction models don't stream. `streamText` doesn't throw: it reports the error through `onError` (logged to the console by default) and `textStream` ends empty. Use `generateText` for these models.
+
+**400 `Tool calling is not supported for model`, or `NoObjectGeneratedError`.** `llama-3.2-3b-instruct-fast` and the LFM2.5 models don't support tools or structured output. Switch to a model with those marks in the [capability table](#model-capabilities), such as `gpt-6-luna`.
+
+**`JSON.parse` fails, or you get `[object Object]`, on a task model.** Task models return their result as a JSON string in `text`, not in `output`. Call `JSON.parse(text)` and don't combine them with `Output.object`.
+
+**`reasoning_effort` rejected with a 400.** The model doesn't support adjustable reasoning. Drop `reasoning` and `reasoningEffort` for `gpt-4.1-mini`, the Llama models, and the LFM2.5 models.
+
+**`Error while downloading file` on an image URL.** ZeroGPU fetches `https` image URLs itself, and some hosts block that download. Read the image yourself and pass the bytes as `data` instead.
+
+**400 on `generateSpeech` mentioning the 2,000 character limit.** `chatterbox-nano` accepts up to 2,000 characters per call. Split long text into sentences or paragraphs and concatenate the audio. If you see `unsupported` warnings for `instructions` or `speed`, remove those options; use inline tags like `[laugh]` to shape delivery.
+
+**429 responses under load.** You're being rate limited. The AI SDK retries 429s with backoff (`maxRetries`, default 2); raise it for bursty workloads, cap `maxParallelCalls` on `embedMany`, and move offline work to the [Batch API](/docs/batch/index).
+
+## Conclusion
+
+The AI SDK gives your TypeScript app one set of functions for every model, and `@zerogpu/ai-sdk-provider` puts ZeroGPU's whole lineup behind them: text models for chat and agents, task models for classification and extraction, plus embeddings, speech, and transcription. Point each step of your pipeline at the smallest ZeroGPU model that does the job, keep the same code, and pay a fraction of what a frontier model would cost for the high-volume work.
+
+<CardGroup cols={2}>
+	<Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+		Browse every model available on ZeroGPU and pick the best fit.
+	</Card>
+	<Card title="API Reference" icon="code" href="/api-reference/chat-completions">
+		Explore the OpenAI-compatible endpoints the provider calls.
+	</Card>
+	<Card title="Cookbook" icon="book" href="/cookbook/index">
+		Worked examples for classification, extraction, and batch jobs.
+	</Card>
+	<Card title="Join Discord" icon="discord" href="https://discord.gg/58XZuxKyq6">
+		Ask questions and share what you're building.
+	</Card>
+</CardGroup>
