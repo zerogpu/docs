@@ -94,6 +94,7 @@
             "pages": [
               "docs/edge-providers/index",
               "docs/edge-providers/get-started",
+              "docs/edge-providers/reporting-api",
               {
                 "group": "Edge SDKs",
                 "pages": [
