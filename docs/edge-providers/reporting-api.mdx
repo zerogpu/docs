@@ -122,7 +122,7 @@ curl "https://api-analytics.zerogpu.ai/app/devices?appId=YOUR_APP_ID&range=7d&li
 ```json Response
 {
   "appId": "4f0c2a1e-…",
-  "range": { "from": "2026-10-05T00:00:00.000Z", "to": "2026-10-06T00:00:00.000Z" },
+  "range": { "from": "2026-09-29T00:00:00.000Z", "to": "2026-10-06T00:00:00.000Z" },
   "filters": {},
   "limit": 100,
   "offset": 0,
@@ -149,7 +149,7 @@ curl "https://api-analytics.zerogpu.ai/app/earnings?appId=YOUR_APP_ID&range=30d&
 ```json Response
 {
   "appId": "4f0c2a1e-…",
-  "range": { "from": "2026-10-01T00:00:00.000Z", "to": "2026-10-08T00:00:00.000Z" },
+  "range": { "from": "2026-09-08T00:00:00.000Z", "to": "2026-10-08T00:00:00.000Z" },
   "filters": { "cust_param1": "user-123" },
   "requests": 311,
   "inputTokens": 120400,
@@ -159,7 +159,8 @@ curl "https://api-analytics.zerogpu.ai/app/earnings?appId=YOUR_APP_ID&range=30d&
 ```
 
 - Each `cust_param` is an exact match on the value recorded when the request ran. Pass several to narrow further: usage must match all of them.
-- Values are 1–128 characters of `A-Z a-z 0-9 . _ -`, the same rule the SDKs apply.
+- A filter value must be 1–128 characters of `A-Z a-z 0-9 . _ -`. Anything else answers `400`.
+- The Web and Android SDKs strip control characters and surrounding whitespace from a value before recording it, and truncate a value longer than 128 characters to its first 128. If your app sets longer values, filter with the truncated value.
 - With no `cust_param`, the totals equal `/app/edge-operator` for the same window.
 - Changing a device's macros later never moves earnings already recorded under the old value.
 
