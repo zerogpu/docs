@@ -20,6 +20,13 @@ The SDK follows your app's lifecycle: it contributes compute while the app is in
 
 The SDK's manifest declares `INTERNET` and `ACCESS_NETWORK_STATE` and sets `android:largeHeap="true"`. These merge into your app automatically.
 
+## Download
+
+| Source | |
+|---|---|
+| **Maven Central** | [`ai.zerogpu:android-sdk`](https://central.sonatype.com/artifact/ai.zerogpu/android-sdk) |
+| **GitHub** | [zerogpu/edge-android](https://github.com/zerogpu/edge-android): every version's `.aar` on [Releases](https://github.com/zerogpu/edge-android/releases) with SHA-256 checksums, plus a sample app |
+
 ## Installation
 
 Make sure Maven Central is a repository:
@@ -37,7 +44,7 @@ Add the dependency to your app module:
 
 ```kotlin build.gradle.kts
 dependencies {
-    implementation("ai.zerogpu:android-sdk:0.3.1")
+    implementation("ai.zerogpu:android-sdk:0.5.0")
 }
 ```
 
@@ -198,6 +205,8 @@ adb logcat -s ZeroGpuSdk:* ZeroGpuWebSocket:* ModelDownloader:*
 ```
 
 Once you see `status":"idle"` and `WebSocket ready for tasks`, the device is serving the network.
+
+Once the device is online, [check that it's eligible and earning](/edge/verify).
 
 ## Troubleshooting
 

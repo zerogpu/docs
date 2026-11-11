@@ -1,0 +1,83 @@
+---
+title: "Edge Providers"
+sidebarTitle: "Overview"
+description: "Turn idle compute across your app's device footprint into recurring revenue."
+---
+
+Edge Providers connect devices to the ZeroGPU network and earn from the AI inference those devices serve. While a device is idle, it serves small, fast inference tasks locally. ZeroGPU handles routing, model delivery and verification, so there are no servers for you to run.
+
+<Card title="Quickstart" icon="rocket" href="/edge/quickstart" horizontal>
+  Register, connect your first device, and confirm it's earning.
+</Card>
+
+## Two ways to contribute
+
+<Columns cols={2}>
+  <Card title="Download the agent" icon="download" href="/edge/agent">
+    **For machines you manage.** Install ZeroGPU Edge on Windows, macOS or Linux PCs, labs, servers or cloud VMs. It runs as a background service. No code needed.
+  </Card>
+  <Card title="Integrate an SDK" icon="code" href="/edge/platforms#sdk-integrations">
+    **For apps you ship.** Add the ZeroGPU SDK to your Android app, Chrome extension, website, Telegram Mini App, desktop app or Node.js service. Every device running it contributes.
+  </Card>
+</Columns>
+
+| | Downloadable agent | SDK integration |
+|---|---|---|
+| **What it is** | The ZeroGPU Edge app, installed on each machine | A library you build into your own app |
+| **Who installs it** | You or your IT team | Your users, when they install your app |
+| **Platforms** | Windows, macOS, Linux | Android, Chrome / Web, Telegram, Electron, Node.js and Docker |
+| **Where to get it** | [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge) | Maven Central, npm, the CDN loader, Docker Hub |
+| **Portal registration** | GPU Fleet | App |
+
+## Choose your platform
+
+### Downloadable agent
+
+<Columns cols={3}>
+  <Card title="Windows" icon="windows" href="/edge/agent/windows">
+    Windows 10 and 11, x64.
+  </Card>
+  <Card title="macOS" icon="apple" href="/edge/agent/macos">
+    macOS 12+, Apple Silicon and Intel.
+  </Card>
+  <Card title="Linux" icon="linux" href="/edge/agent/linux">
+    Ubuntu, Debian, Fedora, RHEL, Rocky.
+  </Card>
+</Columns>
+
+### SDK integrations
+
+<Columns cols={3}>
+  <Card title="Android" icon="android" href="/edge/sdk/android">
+    `ai.zerogpu:android-sdk`
+  </Card>
+  <Card title="Chrome / Web" icon="chrome" href="/edge/sdk/web">
+    Chrome extensions and websites.
+  </Card>
+  <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram">
+    One script tag.
+  </Card>
+  <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron">
+    `@zerogpu/worker` in Electron.
+  </Card>
+  <Card title="Server / npm" icon="server" href="/edge/sdk/server">
+    `@zerogpu/worker` on Node.js or Docker.
+  </Card>
+</Columns>
+
+## How you earn
+
+<Steps>
+  <Step title="Register">
+    Sign up in the [Edge Operator Portal](https://edge.zerogpu.ai/auth/sign-up) and add your app or GPU fleet. Once it's approved, you get its SDK key.
+  </Step>
+  <Step title="Connect devices">
+    Install the agent on your machines, or ship the SDK in your app, with that key.
+  </Step>
+  <Step title="Serve inference">
+    Connected devices serve inference requests from ZeroGPU customers while they're idle.
+  </Step>
+  <Step title="Get paid">
+    You earn a revenue share of every request your devices serve. See [Earnings and payouts](/edge/earnings).
+  </Step>
+</Steps>

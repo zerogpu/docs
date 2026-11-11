@@ -1,0 +1,243 @@
+/* Mintlify renders the products switcher as a small text-sm link; make it read as the primary Developers / Edge Providers toggle. */
+.nav-dropdown-products-selector-trigger {
+  height: 2.5rem !important;
+  padding: 0.5rem 0.875rem !important;
+  gap: 0.625rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background-color: rgb(34 197 94 / 0.12) !important;
+  border: 1px solid rgb(34 197 94 / 0.5) !important;
+  border-radius: 0.75rem !important;
+}
+
+.nav-dropdown-products-selector-trigger:hover,
+.nav-dropdown-products-selector-trigger[aria-expanded="true"] {
+  background-color: rgb(34 197 94 / 0.22) !important;
+  border-color: #22c55e !important;
+}
+
+.nav-dropdown-products-selector-trigger > svg:first-child {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  background-color: #4ade80 !important;
+}
+
+.nav-dropdown-products-selector-trigger > svg:last-child {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+  color: #4ade80 !important;
+}
+
+/* Site-wide Human | Agent switch and Agent view (agent-mode.js). */
+#zg-audience-switch {
+  display: inline-flex;
+  align-self: center;
+  flex-shrink: 0;
+  padding: 0.1875rem;
+  gap: 0.1875rem;
+  border: 1px solid rgb(34 197 94 / 0.45);
+  border-radius: 9999px;
+  background-color: rgb(34 197 94 / 0.08);
+}
+
+#zg-audience-switch button {
+  padding: 0.25rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+  color: #a3ada8;
+  background: transparent;
+  cursor: pointer;
+}
+
+#zg-audience-switch button:hover {
+  color: #ffffff;
+}
+
+#zg-audience-switch button.is-active {
+  color: #06120b;
+  background-color: #22c55e;
+}
+
+html[data-zg-audience="agent"] #content-area > :not(#zg-agent-view) {
+  display: none !important;
+}
+
+html[data-zg-audience="agent"] #table-of-contents-layout,
+html[data-zg-audience="agent"] #content-side-layout {
+  display: none !important;
+}
+
+#zg-agent-view {
+  margin: 0.5rem 0 3.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: #e7eeeb;
+}
+
+#zg-agent-view pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.zg-agent-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.875rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid rgb(34 197 94 / 0.45);
+  border-radius: 0.625rem;
+  background-color: rgb(34 197 94 / 0.07);
+}
+
+.zg-agent-badge {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #22c55e;
+}
+
+.zg-agent-source {
+  color: #e7eeeb;
+}
+
+.zg-agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.875rem;
+  margin-left: auto;
+}
+
+.zg-agent-btn {
+  padding: 0.2rem 0.625rem;
+  font: inherit;
+  font-weight: 600;
+  color: #06120b;
+  background-color: #22c55e;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.zg-agent-btn:hover {
+  background-color: #4ade80;
+}
+
+.zg-agent-actions a {
+  color: #4ade80;
+  text-decoration: none;
+}
+
+.zg-agent-actions a:hover {
+  text-decoration: underline;
+}
+
+#zg-agent-view .zg-agent-facts {
+  margin-top: 1rem;
+  padding: 0.75rem 0.875rem;
+  color: #a3ada8;
+  border-left: 2px solid #22c55e;
+  background-color: rgb(255 255 255 / 0.02);
+}
+
+.zg-agent-prompt {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px dashed rgb(255 255 255 / 0.15);
+  border-radius: 0.5rem;
+}
+
+.zg-agent-prompt summary {
+  cursor: pointer;
+  color: #4ade80;
+}
+
+#zg-agent-view .zg-agent-prompt pre {
+  margin-top: 0.625rem;
+}
+
+#zg-agent-view .zg-agent-markdown {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+}
+
+#zg-audience-switch {
+  margin: 0 1.5rem 0 0.75rem;
+}
+
+/* Agent mode tone: green-black background, monospace navigation, markdown-style group headings. */
+html[data-zg-audience="agent"] {
+  --background-dark: 4 15 9;
+}
+
+html[data-zg-audience="agent"] #sidebar,
+html[data-zg-audience="agent"] .nav-tabs,
+html[data-zg-audience="agent"] #zg-audience-switch {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html[data-zg-audience="agent"] #sidebar {
+  font-size: 0.8125rem;
+}
+
+html[data-zg-audience="agent"] .sidebar-title {
+  color: #22c55e;
+  text-transform: lowercase;
+}
+
+html[data-zg-audience="agent"] .sidebar-title::before {
+  content: "## ";
+  color: rgb(34 197 94 / 0.6);
+}
+
+html[data-zg-audience="agent"] #sidebar li a {
+  color: #a3d9b6;
+}
+
+html[data-zg-audience="agent"] #sidebar li a:hover {
+  color: #ffffff;
+}
+
+html[data-zg-audience="agent"] #navbar-transition {
+  border-bottom-color: rgb(34 197 94 / 0.25) !important;
+}
+
+html[data-zg-audience="agent"] .nav-tabs-item {
+  color: #a3d9b6;
+}
+
+/* docs.json fonts.heading.weight isn't applied to Google Fonts, so set the medium heading weight here. */
+#page-title,
+#content h1,
+#content h2,
+#content h3,
+#content h4 {
+  font-weight: 500 !important;
+}
+
+/* Page description under the title: Mintlify renders it text-lg (18px); keep it at body size. */
+#header .text-lg.prose {
+  font-size: 1rem !important;
+  line-height: 1.625rem !important;
+}
+
+/* Divider between sidebar groups. */
+#navigation-items > div + div {
+  margin-top: 1.25rem !important;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+}
+
+html[data-zg-audience="agent"] #navigation-items > div + div {
+  border-top-color: rgb(34 197 94 / 0.2);
+}

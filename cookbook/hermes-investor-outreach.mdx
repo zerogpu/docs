@@ -4,6 +4,14 @@ description: "Point Hermes Agent at ZeroGPU, then let it research investors, ran
 integration: hermes
 ---
 
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Point Hermes Agent at ZeroGPU and have it research investors, rank them against my pitch, and write a personalized email draft for each."
+  stack="Hermes Agent with the recipe's investor-outreach skill and ZeroGPU as the model provider."
+  verify="Run the workflow on the recipe's sample company profile and show me two of the drafts."
+/>
+
 This notebook demonstrates how to turn Hermes Agent into a fundraising research assistant, so that a single sentence produces five researched investors and five personalized email drafts sitting in your Gmail, ready for you to review and send. The agent reads your company profile, searches the live web for funds that match, pulls the messy prose into structured rows, ranks every candidate against your one-liner, writes an email that opens with something specific and true about each investor, and screens the copy before anything reaches your mailbox. By combining Hermes Agent with ZeroGPU's edge-optimized models, this notebook walks you through a workflow where the only step that needs a capable generative model is the writing, and everything around it - extraction, ranking, classification, summarization, moderation - runs on purpose-built small models at a fraction of the cost.
 
 For the full reference, see the [Hermes Agent integration guide](/integrations/hermes).

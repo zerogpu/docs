@@ -3,6 +3,14 @@ title: "🎓 Resume & profile extraction"
 description: "Step-by-step guide with example dataset. Text-only extraction, no OCR."
 ---
 
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Extract structured candidate data from resumes, LinkedIn-style profiles and job posts with the gliner2.5-base-v1 model (plain text, no OCR)."
+  stack="Python with requests calling POST /v1/responses."
+  verify="Run it on the recipe's example dataset and show me the extracted JSON for one resume."
+/>
+
 This tutorial walks through **three production-style use cases** for structured data extraction with the [gliner2.5-base-v1](/api-reference/models/gliner2-5-base-v1) model. You will use plain text only (resumes, LinkedIn-style exports, job posts). **Not** OCR or PDF parsing.
 
 <Note>
