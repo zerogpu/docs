@@ -21,8 +21,9 @@ Thumbs.db
 *.swo
 *~
 
-# Mintlify / build
-.mintlify/
+# Mintlify / build (Assistant.md holds the docs assistant's instructions and is tracked)
+.mintlify/*
+!.mintlify/Assistant.md
 
 # Local batch playground fixtures (keep on disk only)
 examples/batch-input-dummy.jsonl
