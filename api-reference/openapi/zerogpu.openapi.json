@@ -1060,7 +1060,8 @@
               "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier",
-              "zlm-v1-tool-decisions"
+              "zlm-v1-tool-decisions",
+              "unlimited-ocr"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },
@@ -1155,7 +1156,8 @@
               "zlm-v1-signal-extract",
               "zlm-v2-iab-classify-edge-enriched",
               "zlm-v1-iab-domain-classifier",
-              "zlm-v1-tool-decisions"
+              "zlm-v1-tool-decisions",
+              "unlimited-ocr"
             ],
             "example": "llama-3.1-8b-instruct-fast"
           },

@@ -3,7 +3,7 @@ title: "Text Generation"
 description: "Edge generative models for conversation and reasoning."
 ---
 
-Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8 and multimodal qwen3.6-35b-a3b, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, gpt-6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast and llama-3.2-3b-instruct-fast for high-volume summarization, Meta's llama-guard-4-12b for safety classification, and ZeroGPU's zlm-v1-tool-decisions for picking an agent's tools and generating their arguments. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8` and `llama-3.2-3b-instruct-fast`, which are Chat Completions only.
+Text generation models produce new text from an input prompt. ZeroGPU offers open-weight heavyweights — DeepSeek's deepseek-v4.1-flash, OpenAI's gpt-oss-120b, Alibaba's qwen3-30b-a3b-fp8 and multimodal qwen3.6-35b-a3b, and Z.ai's glm-5.3-flash — for reasoning and tool use, OpenAI's gpt-5.4-nano, gpt-5.6-luna, gpt-6-luna, and gpt-4.1-mini for cost-efficient high-volume work, plus conversational and reasoning models from Liquid AI, Meta's llama-3.1-8b-instruct-fast and llama-3.2-3b-instruct-fast for high-volume summarization, Meta's llama-guard-4-12b for safety classification, ZeroGPU's zlm-v1-tool-decisions for picking an agent's tools and generating their arguments, and Baidu's unlimited-ocr for turning PDFs and scanned documents into Markdown. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions) — except `qwen3-30b-a3b-fp8` and `llama-3.2-3b-instruct-fast`, which are Chat Completions only.
 
 | Model | Input /1M | Output /1M | Cached input /1M | Max tokens |
 | --- | ---: | ---: | ---: | ---: |
@@ -22,6 +22,7 @@ Text generation models produce new text from an input prompt. ZeroGPU offers ope
 | <a href="/api-reference/models/lfm2-5-1-2b-thinking" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Thinking/LFM2.5-1.2B-Thinking_liquid_ai_logo.png" alt="LFM2.5-1.2B-Thinking" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Thinking</code></a> | $0.02 | $0.05 | — | 32,768 |
 | <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | 16,384 |
 | <a href="/api-reference/models/zlm-v1-tool-decisions" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>zlm-v1-tool-decisions</code></a> | $0.05 | $0.15 | — | 24,576 |
+| <a href="/api-reference/models/unlimited-ocr" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>unlimited-ocr</code></a> | Per page | Per page | — | — |
 
 ## gpt-oss-120b
 
@@ -853,3 +854,59 @@ curl https://api.zerogpu.ai/v1/chat/completions \
 </CodeGroup>
 
 The model returns the tool it picked together with the arguments it generated for that tool — as `message.tool_calls` in Chat Completions, and as a tool-call item in the Responses output — or the text `NO_TOOL` when none of the supplied tools fits.
+
+## unlimited-ocr
+
+> Baidu's Unlimited-OCR is a 3B-parameter document-parsing and OCR model, served on ZeroGPU as a bf16 build. It reads PDFs, scanned documents, and images and returns clean Markdown, with tables as HTML and formulas as LaTeX, and it works through long multi-page documents in a few passes. It suits invoices, receipts, contracts, forms, tables, books, and reports, and it is billed per page rather than per token. When the input is a document rather than text you already have, this is the model.
+
+**References:** [Model docs](https://huggingface.co/baidu/Unlimited-OCR) • [Terms](https://huggingface.co/baidu/Unlimited-OCR/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash Responses API
+curl https://api.zerogpu.ai/v1/responses \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_file",
+          "file_url": "https://huggingface.co/baidu/Unlimited-OCR/resolve/8249d20b2822a7d8a4c22c8d8c9069b5ac36bda3/Unlimited-OCR.pdf"
+        }
+      ]
+    }
+  ],
+  "model": "unlimited-ocr"
+}'
+```
+
+```bash Chat Completions
+curl https://api.zerogpu.ai/v1/chat/completions \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+  "model": "unlimited-ocr",
+  "stream": true,
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "file": {
+            "filename": "Unlimited-OCR.pdf",
+            "file_data": "https://huggingface.co/baidu/Unlimited-OCR/resolve/8249d20b2822a7d8a4c22c8d8c9069b5ac36bda3/Unlimited-OCR.pdf"
+          },
+          "type": "file"
+        }
+      ]
+    }
+  ]
+}'
+```
+
+</CodeGroup>
+
+The model returns the parsed document as Markdown text, with tables as HTML and formulas as LaTeX; the Chat Completions example above sets `"stream": true`, so that Markdown arrives incrementally.
