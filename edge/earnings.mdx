@@ -1,0 +1,41 @@
+---
+title: "Earnings and Payouts"
+sidebarTitle: "Earnings & payouts"
+description: "How Edge Providers earn, where to track requests and earnings, and how to withdraw."
+---
+
+## How earnings work
+
+You earn a revenue share of every inference request your devices serve. Earnings follow served requests, not connected time: a device that's online but hasn't been sent work yet earns nothing until it serves its first request.
+
+How much work a device gets depends on network demand and on the device itself: how much memory and compute it has, how reliably it stays connected, and how long it has been part of the network. New devices get less work at first.
+
+## Track requests and earnings
+
+Open **Analytics** in the [Edge Operator Portal](https://edge.zerogpu.ai). Filter by app and date range.
+
+| Metric | What it shows |
+|---|---|
+| **Edge Requests** | Requests your devices served |
+| **Earnings** | What those requests earned |
+| **Unique Devices** | Devices seen over time |
+| **Device Fleet** | A map of devices seen in the last 24 hours |
+
+On **My Apps**, an app or fleet that's serving traffic shows as **Active/Earning**.
+
+<Tip>
+  Analytics can lag real time by a few minutes. If devices are connected but earnings stay at zero for more than a day, work through [Verify devices](/edge/verify), then contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) with your app name and platform.
+</Tip>
+
+## Break earnings down
+
+Tag the work each device serves with up to three reporting labels (`cust_param1`–`cust_param3`), for example by site, lab or customer segment. Use values only (letters, digits, `.`, `_`, `-`), never personal data.
+
+- **Agent:** `zerogpu-edge configure --cust-param1 …`, or the `CUST_PARAMn` MSI properties. See [agent configuration](/edge/agent#configuration).
+- **SDKs:** the [Android](/edge/sdk/android) and [Chrome / Web](/edge/sdk/web) guides show where to pass them.
+
+To break earnings down by reporting label, or pull them into your own dashboards and payout systems, use the [Reporting API](/edge/reporting-api).
+
+## Withdraw
+
+Withdraw your balance from **Withdrawals** in the portal.

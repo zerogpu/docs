@@ -1,0 +1,54 @@
+---
+title: "Troubleshooting"
+description: "Fix common problems connecting Edge devices, getting work, and seeing earnings."
+---
+
+Start with [Verify devices](/edge/verify): it walks through whether a device is connected, eligible for work, and earning. The problems below cover every platform; each platform guide also has its own troubleshooting table.
+
+## Registration and keys
+
+| Symptom | Fix |
+|---|---|
+| Key rejected, or `401` on registration | Use the SDK key (`zgpu-sdk-…`) of your app or fleet, not an API key (`zgpu-api-…`). Check the app or fleet is **Approved** on **My Apps**. |
+| App stuck in **Pending Review** | Review usually takes 24–48 hours. Contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) if it takes longer. |
+| Device registers but the platform isn't accepted | The platform must be one of the app types or device types you registered. Edit your app's setup on **My Apps**. |
+| `Registration politely refused` | Normal. The network is declining this device for now, and it retries by itself. |
+
+## Connected, but no work
+
+| Symptom | Fix |
+|---|---|
+| Device sits ready with no tasks | Work follows network demand, and new devices get less work at first. Keep it running. |
+| Device keeps starting over as new | Keep its stored identity: app data on Android and in browsers, `ZG_DATA_DIR` or the `/data` volume for `@zerogpu/worker`, and the agent's state folder. |
+| Phone or browser stops contributing | SDKs on phones and in browsers only run while the app is open, and phones pause when the battery is low (below 20% and not charging). |
+| Agent machine never serves | Check `--resource-policy`: with `idle-only` or `scheduled`, the machine only serves when idle or inside its schedule. Run `zerogpu-edge doctor`. |
+| User turned sharing off | Expected. Your app must give users a way to opt out. |
+
+## Installs and downloads
+
+| Symptom | Fix |
+|---|---|
+| Windows shows **Windows protected your PC** | The Windows installers aren't Authenticode-signed yet. Check the SHA-256, then select **More info → Run anyway**. See [Windows](/edge/agent/windows). |
+| A download looks wrong | Compare its SHA-256 with `SHA256SUMS` on [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge). Only download the agent from there. |
+| `npm install @zerogpu/…` fails with a `404` | Your `.npmrc` maps `@zerogpu` to another registry. Add `--@zerogpu:registry=https://registry.npmjs.org`. |
+| Chrome extension rejected for remote code | Vendor the SDK with `npx zerogpu init` instead of loading it from the CDN. See [Chrome / Web](/edge/sdk/web). |
+
+## Earnings
+
+| Symptom | Fix |
+|---|---|
+| Requests show, earnings don't | Analytics can lag by a few minutes. Check the date range and app filter. |
+| Zero earnings for more than a day with connected devices | Contact [hello@zerogpu.ai](mailto:hello@zerogpu.ai) with your app name and platform. |
+
+## Platform guides
+
+<Columns cols={2}>
+  <Card title="Windows agent" icon="windows" href="/edge/agent/windows#troubleshooting" />
+  <Card title="macOS agent" icon="apple" href="/edge/agent/macos#troubleshooting" />
+  <Card title="Linux agent" icon="linux" href="/edge/agent/linux#troubleshooting" />
+  <Card title="Android" icon="android" href="/edge/sdk/android#troubleshooting" />
+  <Card title="Chrome / Web" icon="chrome" href="/edge/sdk/web#troubleshooting" />
+  <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram#troubleshooting" />
+  <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron#troubleshooting" />
+  <Card title="Server / npm" icon="server" href="/edge/sdk/server#troubleshooting" />
+</Columns>

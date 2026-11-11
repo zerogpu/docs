@@ -4,6 +4,14 @@ description: "Use the Vercel AI SDK and the ZeroGPU provider to transcribe a cus
 integration: vercel-ai-sdk
 ---
 
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Triage a customer voicemail with the Vercel AI SDK: transcribe it with whisper-tiny, turn it into a typed support ticket, and speak an acknowledgment with chatterbox-nano."
+  stack="TypeScript with ai, @zerogpu/ai-sdk-provider, zod and tsx."
+  verify="Run triage on a sample voicemail and show me the ticket object."
+/>
+
 This cookbook shows how to turn a customer voicemail into a support ticket with three AI SDK calls: `transcribe` turns the audio into text, `generateText` with `Output.object` turns the text into a typed ticket with a summary, intent, priority, and caller details, and `generateSpeech` reads a short acknowledgment back to the caller. Every step runs on a small ZeroGPU model through the `@zerogpu/ai-sdk-provider` package, so the whole pipeline is a few dozen lines of TypeScript and costs about three cents per voicemail. By combining the Vercel AI SDK and ZeroGPU, this cookbook walks you through a practical voice pipeline you can drop into a support inbox, a call center queue, or a Next.js route.
 
 For the full reference, see the [Vercel AI SDK integration guide](/integrations/vercel-ai-sdk).

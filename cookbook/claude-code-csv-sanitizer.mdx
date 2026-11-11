@@ -4,6 +4,14 @@ description: "Use the zerogpu-router plugin so Claude Code can redact names, ema
 integration: claude-code-plugin
 ---
 
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Use the zerogpu-router plugin so Claude Code redacts names, emails and phone numbers from a CSV export, producing a clean copy and a PII audit log."
+  stack="Claude Code with the zerogpu-router plugin and zerogpu-cli (npm)."
+  verify="Sanitize a small sample CSV and show me the clean file and the audit log."
+/>
+
 This notebook demonstrates how to use the `zerogpu-router` plugin so that Claude Code can scrub personal data out of a raw CSV export, all from a single natural-language prompt. You hand Claude a `feedback_export.csv` whose free-text column is full of customer names, emails, and phone numbers, and you get back two files: a clean copy that is safe to share, and a PII audit log of exactly what was removed and where. By combining Claude Code's plugin system and ZeroGPU's PII-aware nano models, this notebook walks you through a practical pattern where Claude orchestrates the file work while ZeroGPU does the high-volume, well-defined redaction, so raw PII never has to live in your transcript.
 
 For the full reference, see the [Claude Code plugin integration guide](/integrations/claude-code-plugin).
