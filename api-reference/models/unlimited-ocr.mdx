@@ -1,0 +1,14 @@
+---
+title: "unlimited-ocr"
+sidebarTitle: "unlimited-ocr"
+description: "Model details for unlimited-ocr. Document parsing and OCR that returns clean Markdown, billed per page."
+openapi: "api-reference/openapi/playgrounds/unlimited-ocr.openapi.json POST /responses"
+---
+
+> Baidu's Unlimited-OCR is a 3B-parameter document-parsing and OCR model, served on ZeroGPU as a bf16 build. It reads PDFs, scanned documents, and images and returns clean Markdown, with tables as HTML and formulas as LaTeX, and it works through long multi-page documents in a few passes. It suits invoices, receipts, contracts, forms, tables, books, and reports, and it is billed per page rather than per token. When the input is a document rather than text you already have, this is the model.
+
+**References:** [Model docs](https://huggingface.co/baidu/Unlimited-OCR) • [Terms](https://huggingface.co/baidu/Unlimited-OCR/blob/main/LICENSE) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<Note>
+  Send the document as an `input_file` content part on `/v1/responses`, or as a `file` content part on `/v1/chat/completions`. Streaming (`"stream": true`) is supported on Chat Completions.
+</Note>
