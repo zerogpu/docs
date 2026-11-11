@@ -78,59 +78,58 @@
                 "pages": [
                   "docs/model-catalog",
                   "docs/open-weight",
-                  {
-                    "group": "By task",
-                    "expanded": false,
-                    "pages": [
-                      "docs/text-generation",
-                      "docs/audio",
-                      "docs/text-classification",
-                      "docs/moderation",
-                      "docs/embeddings",
-                      "docs/ad-tech"
-                    ]
-                  }
+                  "docs/text-generation",
+                  "docs/audio",
+                  "docs/text-classification",
+                  "docs/moderation",
+                  "docs/embeddings",
+                  "docs/ad-tech"
                 ]
               },
               {
                 "group": "API Reference",
                 "pages": [
-                  "api-reference/responses",
-                  "api-reference/chat-completions",
-                  "api-reference/moderations",
-                  "api-reference/systemone",
-                  "api-reference/embeddings",
                   {
-                    "group": "By model",
+                    "group": "Endpoints",
                     "pages": [
-                      "api-reference/models/gpt-oss-120b",
-                      "api-reference/models/qwen3-30b-a3b-fp8",
-                      "api-reference/models/qwen3-6-35b-a3b",
-                      "api-reference/models/deepseek-v4-1-flash",
-                      "api-reference/models/glm-5-3-flash",
-                      "api-reference/models/gpt-5-4-nano",
-                      "api-reference/models/gpt-5-6-luna",
-                      "api-reference/models/gpt-6-luna",
-                      "api-reference/models/gpt-4-1-mini",
-                      "api-reference/models/deberta-v3-small",
-                      "api-reference/models/gliner2-5-base-v1",
-                      "api-reference/models/gliner2-5-multi-v1",
-                      "api-reference/models/gliner2-5-decide-v1",
-                      "api-reference/models/lfm2-5-1-2b-instruct",
-                      "api-reference/models/lfm2-5-1-2b-thinking",
-                      "api-reference/models/llama-3-1-8b-instruct-fast",
-                      "api-reference/models/llama-3-2-3b-instruct-fast",
-                      "api-reference/models/llama-guard-4-12b",
-                      "api-reference/models/zlm-v1-iab-classify-edge",
-                      "api-reference/models/zlm-v2-iab-classify-edge-enriched",
-                      "api-reference/models/zlm-v1-iab-domain-classifier",
-                      "api-reference/models/zlm-v1-signal-extract",
-                      "api-reference/models/zlm-v1-moderation-edge",
-                      "api-reference/models/zlm-v1-tool-decisions",
-                      "api-reference/models/all-minilm-l6-v2",
-                      "api-reference/models/bge-small-en-v1-5",
-                      "api-reference/models/whisper-tiny",
-                      "api-reference/models/chatterbox-nano"
+                      "api-reference/responses",
+                      "api-reference/chat-completions",
+                      "api-reference/moderations",
+                      "api-reference/systemone",
+                      "api-reference/embeddings",
+                      {
+                        "group": "By model",
+                        "pages": [
+                          "api-reference/models/gpt-oss-120b",
+                          "api-reference/models/qwen3-30b-a3b-fp8",
+                          "api-reference/models/qwen3-6-35b-a3b",
+                          "api-reference/models/deepseek-v4-1-flash",
+                          "api-reference/models/glm-5-3-flash",
+                          "api-reference/models/gpt-5-4-nano",
+                          "api-reference/models/gpt-5-6-luna",
+                          "api-reference/models/gpt-6-luna",
+                          "api-reference/models/gpt-4-1-mini",
+                          "api-reference/models/deberta-v3-small",
+                          "api-reference/models/gliner2-5-base-v1",
+                          "api-reference/models/gliner2-5-multi-v1",
+                          "api-reference/models/gliner2-5-decide-v1",
+                          "api-reference/models/lfm2-5-1-2b-instruct",
+                          "api-reference/models/lfm2-5-1-2b-thinking",
+                          "api-reference/models/llama-3-1-8b-instruct-fast",
+                          "api-reference/models/llama-3-2-3b-instruct-fast",
+                          "api-reference/models/llama-guard-4-12b",
+                          "api-reference/models/zlm-v1-iab-classify-edge",
+                          "api-reference/models/zlm-v2-iab-classify-edge-enriched",
+                          "api-reference/models/zlm-v1-iab-domain-classifier",
+                          "api-reference/models/zlm-v1-signal-extract",
+                          "api-reference/models/zlm-v1-moderation-edge",
+                          "api-reference/models/zlm-v1-tool-decisions",
+                          "api-reference/models/all-minilm-l6-v2",
+                          "api-reference/models/bge-small-en-v1-5",
+                          "api-reference/models/whisper-tiny",
+                          "api-reference/models/chatterbox-nano"
+                        ]
+                      }
                     ]
                   },
                   {
