@@ -28,7 +28,8 @@ jobs:
           fi
           channel="${BASH_REMATCH[1]}"; ts="${BASH_REMATCH[2]}"
           release="${PR_TITLE#docs(release-notes): }"
-          release="${release//&/&amp;}"; release="${release//</&lt;}"; release="${release//>/&gt;}"
+          # sed, not ${var//}: bash 5.2's patsub_replacement turns "&" in a replacement into the match.
+          release="$(printf '%s' "$release" | sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g')"
           if [ "$MERGED" = "true" ]; then
             text=":white_check_mark: Merged${MERGED_BY:+ by $MERGED_BY}. $release will be on <https://docs.zerogpu.ai/edge/release-notes|the release notes> once the docs finish deploying."
           else
