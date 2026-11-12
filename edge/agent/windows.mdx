@@ -73,6 +73,24 @@ zerogpu-edge status
 
 The status shows the service registered and serving. You can also open **ZeroGPU Edge** from the Start menu. Then confirm the PC in the portal: [Verify devices](/edge/verify).
 
+## Stop and start
+
+To pause a PC, for example during maintenance, stop the service from PowerShell:
+
+```powershell
+Stop-Service ZeroGPUEdge -ErrorAction SilentlyContinue; (Get-Service ZeroGPUEdge).WaitForStatus('Stopped', '00:01:00')
+```
+
+The service finishes its in-flight tasks before it stops, which can take a few seconds. A plain `Stop-Service ZeroGPUEdge` also stops it, but may print an error while it's still wrapping up; the command above waits up to a minute for the service to stop instead.
+
+To start it again:
+
+```powershell
+Start-Service ZeroGPUEdge
+```
+
+A stopped service still starts again at the next boot.
+
 ## Uninstall
 
 Remove **ZeroGPU Edge** from **Settings → Apps → Installed apps**, or run:
