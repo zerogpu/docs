@@ -1,8 +1,17 @@
 ---
 title: "🦞 Build a PII-Safe Inbox Summarizer with Your OpenClaw Assistant"
+sidebarTitle: "Build a PII-Safe Inbox Summarizer with Your OpenClaw Assistant"
 description: "Forward messy messages to your OpenClaw assistant and have it redact PII, summarize the thread, and classify topic and urgency, offloading every cheap step to ZeroGPU's nano models."
 integration: openclaw
 ---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Set up an OpenClaw assistant that redacts PII, summarizes message threads, and classifies topic and urgency, offloading each step to ZeroGPU's nano models."
+  stack="OpenClaw with zerogpu-cli (npm)."
+  verify="Summarize one sample message thread and show me the redacted summary, topic and urgency."
+/>
 
 This notebook demonstrates how to turn your OpenClaw assistant into a PII-safe inbox summarizer, so that any long or messy message you forward it comes back as a short, shareable summary with a topic and urgency label, and never drags raw personal data into your primary model's context. You send a wall-of-text support email, a forwarded thread, or a noisy group-chat recap to the assistant in whatever chat app you already use, and it replies with the gist plus a couple of labels, having redacted the names, emails, and phone numbers first. By combining OpenClaw's chat-app gateway with ZeroGPU's edge-optimized nano models, this notebook walks you through a practical pattern where OpenClaw handles the conversation while ZeroGPU does the high-volume, well-defined summarize, classify, and redact work for a fraction of a frontier-model call.
 

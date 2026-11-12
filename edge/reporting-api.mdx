@@ -1,0 +1,191 @@
+---
+title: "Reporting API"
+description: "Pull your apps' requests, token usage, devices, and earnings into your own server, dashboards, and payout systems."
+---
+
+The Reporting API gives Edge Providers server-to-server access to the same numbers the [Edge Operator Portal](https://edge.zerogpu.ai) shows: requests and tokens served, devices registered, and estimated earnings for each app, overall, per device, or per end user.
+
+```
+https://api-analytics.zerogpu.ai
+```
+
+Every endpoint is a `GET` scoped to one of your apps. The endpoints come in two groups, the same as the **Try it** panel on the portal's Reporting page:
+
+| Group | Endpoints | Use it for |
+|---|---|---|
+| [Edge operator](#edge-operator) | `/app/edge-operator`, `/app/devices` | App totals and usage per device |
+| [By custom param](#by-custom-param) | `/app/earnings` | Requests, tokens and earnings for the `cust_param1`–`cust_param3` values your app sets, such as a user ID or campaign |
+
+## Create a reporting API key
+
+<Steps>
+  <Step title="Open the Reporting page">
+    Sign in to the [Edge Operator Portal](https://edge.zerogpu.ai) and select **Reporting** in the sidebar. Only account owners and admins see this page.
+  </Step>
+  <Step title="Create a key">
+    Select **Create key** and give it a name, for example *Nightly earnings export*. A key gives access to usage and earnings for every app on the account. An account can hold up to 10 keys, so each server or integration can have its own.
+  </Step>
+  <Step title="Copy it straight away">
+    The full key (`zgsk_…`) is shown **once**. Copy it, or confirm you've stored it somewhere safe, before you can close the dialog. After that the portal shows only its last four characters. If you lose a key, revoke it and create a new one.
+  </Step>
+</Steps>
+
+<Warning>
+  A reporting key reads your earnings. Keep it on your server, in an environment variable or secret manager, and never ship it in an app, extension, or web page. Revoking a key on the Reporting page makes requests with it fail with `401` immediately.
+</Warning>
+
+<Note>
+  The reporting key (`zgsk_…`) is for this API only. It is different from your app's SDK key (`zgpu-sdk-…`), which lets devices join the network, and from the API key (`zgpu-api-…`) used to call the ZeroGPU inference API.
+</Note>
+
+## Authentication
+
+Send the key as a bearer token:
+
+```bash
+Authorization: Bearer $ZGPU_REPORTING_KEY
+```
+
+## Common parameters
+
+| Parameter | Required | Description |
+|---|---|---|
+| `appId` | Yes | The app's ID (a UUID). Copy it from the app's row on **My Apps**; IDs are shown for approved apps. The app must belong to the account the key was created in. |
+| `range` | No | `1d`, `7d`, or `30d`, counting back from now. |
+| `from`, `to` | No | ISO 8601 timestamps, instead of `range`. Pass both. The window includes `from` and excludes `to`, so back-to-back windows such as consecutive days never count the same event twice. |
+
+With no window, totals cover all retained history (about 3 months).
+
+## Edge operator
+
+Totals for an app, and the same usage broken down by device.
+
+### App totals
+
+`GET /app/edge-operator` returns an app's requests, input and output tokens, registered devices, and estimated earnings for the window.
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api-analytics.zerogpu.ai/app/edge-operator?appId=YOUR_APP_ID&range=30d" \
+  -H "Authorization: Bearer $ZGPU_REPORTING_KEY"
+```
+
+```python Python
+import os, requests
+
+r = requests.get(
+    "https://api-analytics.zerogpu.ai/app/edge-operator",
+    params={"appId": "YOUR_APP_ID", "range": "30d"},
+    headers={"Authorization": f"Bearer {os.environ['ZGPU_REPORTING_KEY']}"},
+)
+r.raise_for_status()
+print(r.json())
+```
+
+```javascript Node.js
+const params = new URLSearchParams({ appId: "YOUR_APP_ID", range: "30d" });
+const res = await fetch(`https://api-analytics.zerogpu.ai/app/edge-operator?${params}`, {
+  headers: { Authorization: `Bearer ${process.env.ZGPU_REPORTING_KEY}` },
+});
+if (!res.ok) throw new Error(`Reporting API ${res.status}`);
+console.log(await res.json());
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "appId": "4f0c2a1e-…",
+  "appName": "My App",
+  "range": { "from": "2026-09-06T00:00:00.000Z", "to": "2026-10-06T00:00:00.000Z" },
+  "requests": 48210,
+  "inputTokens": 15586888,
+  "outputTokens": 8012345,
+  "registeredDevices": 2118,
+  "earningsUsd": 12.48
+}
+```
+
+| Field | Description |
+|---|---|
+| `requests` | Inference requests the app's devices served in the window. |
+| `registeredDevices` | Distinct devices that registered with the app's SDK key in the window. |
+| `earningsUsd` | Estimated earnings for the window, rounded to whole cents. It matches the figure the portal shows. |
+
+### Usage per device
+
+`GET /app/devices` returns requests and input and output tokens for each device, highest usage first.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `limit` | `100` | Devices per page, 1–1000. |
+| `offset` | `0` | Devices to skip. Keep paging while `hasMore` is `true`. |
+| `cust_param1`, `cust_param2`, `cust_param3` | none | Count only usage that carried these values, with the same rules as [By custom param](#by-custom-param). For example, pass your user ID to see which devices served that user. |
+
+```bash
+curl "https://api-analytics.zerogpu.ai/app/devices?appId=YOUR_APP_ID&range=7d&limit=100&offset=0" \
+  -H "Authorization: Bearer $ZGPU_REPORTING_KEY"
+```
+
+```json Response
+{
+  "appId": "4f0c2a1e-…",
+  "range": { "from": "2026-09-29T00:00:00.000Z", "to": "2026-10-06T00:00:00.000Z" },
+  "filters": {},
+  "limit": 100,
+  "offset": 0,
+  "hasMore": true,
+  "devices": [{ "deviceId": "db3db90d-…", "requests": 412, "inputTokens": 231194, "outputTokens": 123565 }]
+}
+```
+
+Usage that carried no device ID is reported as a single row with `deviceId: null`, so with no `cust_param` the rows always add up to the app totals. With a `cust_param`, only devices that served matching usage are listed.
+
+<Tip>
+  New traffic reorders devices between requests. To walk every device exactly once, pass a `from`/`to` window that has already ended.
+</Tip>
+
+## By custom param
+
+Your app can tag the work its devices serve with up to three custom params (`cust_param1`–`cust_param3`) through the SDK, for example your own user ID or a campaign tag. Use them to split requests and earnings by those values.
+
+### Earnings per custom param
+
+`GET /app/earnings` returns requests, tokens, and earnings for usage that carried the custom param values you pass.
+
+```bash
+curl "https://api-analytics.zerogpu.ai/app/earnings?appId=YOUR_APP_ID&range=30d&cust_param1=user-123" \
+  -H "Authorization: Bearer $ZGPU_REPORTING_KEY"
+```
+
+```json Response
+{
+  "appId": "4f0c2a1e-…",
+  "range": { "from": "2026-09-08T00:00:00.000Z", "to": "2026-10-08T00:00:00.000Z" },
+  "filters": { "cust_param1": "user-123" },
+  "requests": 311,
+  "inputTokens": 120400,
+  "outputTokens": 58210,
+  "earningsUsd": 0.42
+}
+```
+
+- Each `cust_param` is an exact match on the value recorded when the request ran. Pass several to narrow further: usage must match all of them.
+- A filter value must be 1–128 characters of `A-Z a-z 0-9 . _ -`. Anything else answers `400`.
+- The Web and Android SDKs strip control characters and surrounding whitespace from a value before recording it, and truncate a value longer than 128 characters to its first 128. If your app sets longer values, filter with the truncated value.
+- With no `cust_param`, the totals equal `/app/edge-operator` for the same window.
+- Changing a device's macros later never moves earnings already recorded under the old value.
+
+## Errors
+
+| Status | Meaning |
+|---|---|
+| `400` | Missing or invalid `appId`, `limit`, `offset`, `cust_param`, or window (for example, only one of `from` and `to`). |
+| `401` | Missing, malformed, unknown, or revoked key. |
+| `404` | The app doesn't exist, or it isn't in the account the key belongs to. |
+| `502`, `503` | Temporary upstream failure. Retry with backoff. |
+
+<Note>
+  All figures are estimates, matching what the portal shows. Narrow filters, such as a single end user, cover fewer events and are less precise than app totals.
+</Note>

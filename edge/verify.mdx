@@ -1,0 +1,85 @@
+---
+title: "Verify Devices"
+sidebarTitle: "Verify devices"
+description: "Check that your devices are connected, eligible for workloads, and reporting earnings."
+---
+
+Work through three checks after you install the agent or integrate an SDK: the device is **connected**, it's **eligible** for work, and it's **earning**.
+
+## 1. Connected
+
+The device has joined the network with your SDK key.
+
+<Tabs>
+  <Tab title="Android">
+    Construct the SDK with `enableLogs = true`, keep the app in the foreground, and watch logcat:
+
+    ```bash
+    adb logcat -s ZeroGpuSdk:* ZeroGpuWebSocket:*
+    ```
+
+    The device is connected once you see `WebSocket ready for tasks`.
+  </Tab>
+  <Tab title="Chrome Extension / Browser / Telegram">
+    Turn on console logs (`enableConsoleLogs="true"` on the script tag, or `enableConsoleLogs: true` in `offscreen.js`) and open the console. For a Chrome extension, that's **Inspect views: offscreen.html** on `chrome://extensions`. The SDK logs the device registering, loading a model, and becoming ready.
+
+    On a website, the handle returned by `initZeroGpuSdk` reports `status === "running"`. For an extension, `npx zerogpu doctor` checks the integration itself.
+  </Tab>
+  <Tab title="macOS app">
+    ```js
+    await worker.status(); // { running: true, ready: true, ... }
+    ```
+
+    `ready: true` means a model is loaded and the Mac is connected.
+  </Tab>
+  <Tab title="Agent">
+    ```bash
+    zerogpu-edge status
+    ```
+
+    The status shows the service registered and serving. The ZeroGPU Edge app shows the same under **Status**. If it doesn't, run `zerogpu-edge doctor`.
+  </Tab>
+  <Tab title="Server / npm">
+    ```bash
+    curl -s http://127.0.0.1:8080/healthz
+    ```
+
+    `"ready": true` means a model is loaded and the worker is connected.
+  </Tab>
+</Tabs>
+
+Then open **Analytics** in the [Edge Operator Portal](https://edge.zerogpu.ai). The **Device Fleet** map shows devices seen in the last 24 hours, and **Unique Devices** counts them over time.
+
+## 2. Eligible for workloads
+
+A connected device receives work when all of these hold:
+
+| Check | Where to look |
+|---|---|
+| The app or fleet is **Approved**, not Pending Review, Suspended, or Rejected | **My Apps** in the portal |
+| The platform you integrated is one of the app types or device types you registered | **My Apps** → your app's setup |
+| The device has the resources to run a model: free memory and storage, and on phones, a battery above 20% or charging | SDK logs (`degraded` events), `zerogpu-edge doctor` |
+| It's allowed to run right now: the app is open (mobile and browser), the Mac is on power (macOS desktop app SDK policy), or the agent machine is inside its `--resource-policy` window | Your integration, `zerogpu-edge status` |
+| The user hasn't turned resource sharing off | Your opt-out setting |
+
+<Note>
+  A registration that's "politely refused", or a device that sits ready without tasks, is normal. Work follows network demand, and new devices get less work at first. Keep devices running, and keep their stored identity (app data, `ZG_DATA_DIR`, the `/data` volume, or the agent's state folder): a reset device starts over as a newcomer.
+</Note>
+
+## 3. Earning
+
+Once a device serves its first request, it shows up in **Edge Requests** and **Earnings** on the portal's **Analytics** page. See [Earnings and payouts](/edge/earnings).
+
+## Platform guides
+
+<Columns cols={2}>
+  <Card title="Android" icon="android" href="/edge/sdk/android" />
+  <Card title="Chrome Extension" icon="chrome" href="/edge/sdk/chrome-extension" />
+  <Card title="Browser" icon="globe" href="/edge/sdk/browser" />
+  <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram" />
+  <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron" />
+  <Card title="Server / npm" icon="server" href="/edge/sdk/server" />
+  <Card title="Windows agent" icon="windows" href="/edge/agent/windows" />
+  <Card title="macOS agent" icon="apple" href="/edge/agent/macos" />
+  <Card title="Linux agent" icon="linux" href="/edge/agent/linux" />
+</Columns>

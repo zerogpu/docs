@@ -1,7 +1,16 @@
 ---
 title: "🦜 Screen Resumes with LangChain and ZeroGPU"
+sidebarTitle: "Screen Resumes with LangChain and ZeroGPU"
 integration: langchain
 ---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Screen a resume with LangChain and ZeroGPU: extract candidate entities, redact PII, and route the candidate with zero-shot classification."
+  stack="Python with langchain-zerogpu and pypdf."
+  verify="Run the full screening pipeline on a sample resume and show me the result."
+/>
 
 You can also run this cookbook in Colab [here](https://colab.research.google.com/drive/10OYr9s4kfp63twlN_FjXfuhtZpwjba6A?usp=sharing).
 

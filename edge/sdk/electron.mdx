@@ -1,7 +1,13 @@
 ---
-title: "macOS"
+title: "macOS Desktop Apps (Electron)"
+icon: "apple"
+sidebarTitle: "macOS desktop apps"
 description: "Turn Macs running your Electron desktop app into ZeroGPU edge inference nodes with @zerogpu/worker."
 ---
+
+<Tip>
+  Connecting Macs you manage, rather than shipping an app? Install [ZeroGPU Edge for macOS](/edge/agent/macos) instead.
+</Tip>
 
 ## Overview
 
@@ -17,6 +23,12 @@ Unlike the browser and Android SDKs, the worker doesn't watch battery, sleep, or
 | **Hardware** | Apple Silicon (`arm64`) or Intel (`x64`) Mac |
 | **Disk** | About 100 MB per assigned ONNX model (GGUF models: 2–5 GB), plus about 140 MB of native runtimes in your app bundle |
 | **Credentials** | An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |
+
+## Download
+
+| Source | |
+|---|---|
+| **npm** | [`@zerogpu/worker`](https://www.npmjs.com/package/@zerogpu/worker) |
 
 ## Installation
 
@@ -149,7 +161,7 @@ The worker is configured entirely through environment variables:
 | `ZG_ENV` | `production` | Use `staging` or `develop` only if ZeroGPU gave you access. |
 | `ZG_LOCAL_API_PORT` | a free port | The local API, bound to `127.0.0.1`. |
 | `ZG_LOCAL_API_TOKEN` | random, per launch | Only your app can call the local inference routes. |
-| `ZG_MODELS_DIR`, `ZG_DATA_DIR` | under `userData` | Survive app updates. Don't wipe them: a new identity makes the Mac a newcomer that gets less work at first. |
+| `ZG_MODELS_DIR`, `ZG_DATA_DIR` | under `userData` | Survive app updates. Don't wipe them: a new identity makes the Mac start over as a new device. |
 | `ZG_MAX_CONCURRENCY` | `1` | One inference at a time, gentle on a laptop. |
 | `ZG_LOG_LEVEL` | `warn` | Use `info` while integrating. |
 
@@ -235,11 +247,9 @@ Check status from your main process with `await worker.status()`:
 2. Open the worker log at `~/Library/Logs/<Your App>/zerogpu-worker.log`. A healthy first start looks like this:
 
    ```text
-   INFO  [main] ZeroGPU Worker starting (env=production, fallback=reject)
-   INFO  [register] Registering device 57d6219e-… with https://devices.zerogpu.ai/register (env=production)
-   INFO  [register] Registered. 1 model recipe(s) assigned
-   INFO  [models] Model zlm-v1-iab-classify-onnx@1 verified (4 files)
-   INFO  [lifecycle] Device ready: iab_classify
+   INFO  [main] ZeroGPU Worker starting (env=production, …)
+   INFO  [register] Registered. …
+   INFO  [lifecycle] Device ready: …
    ```
 
 3. Quit your app. The log ends with `[lifecycle] Shutdown (host_stop)`.
@@ -285,6 +295,8 @@ node node_modules/@zerogpu/worker/dist/cli.js
 ```
 
 Stop it with `SIGTERM`, allow 5 seconds for it to exit, and make sure it never outlives your app.
+
+Once the device is online, [check that it's eligible and earning](/edge/verify).
 
 ## Troubleshooting
 

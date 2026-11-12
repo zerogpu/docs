@@ -1,7 +1,16 @@
 ---
 title: "🏷️ Tag Customer Reviews Overnight with the ZeroGPU Batch API"
+sidebarTitle: "Tag Customer Reviews Overnight with the ZeroGPU Batch API"
 description: "Tag a CSV of customer reviews with sentiment and topics in one overnight job using the ZeroGPU Batch API and LFM2.5-1.2B-Instruct, then recover any failed rows by custom_id."
 ---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Tag a CSV of customer reviews with sentiment and topics in one overnight Batch API job on LFM2.5-1.2B-Instruct, then recover failed rows by custom_id."
+  stack="Python with requests and the ZeroGPU Files and Batch APIs (JSONL input)."
+  verify="Run it on a small sample reviews.csv and show me the first rows of tagged.csv."
+/>
 
 This notebook shows how to use the ZeroGPU Batch API to tag a CSV of customer reviews in a single asynchronous job. You hand the API a `reviews.csv` with one review per row, and you get back a `tagged.csv` with a `sentiment` label and a short list of `topics` for every row, plus a recoverable list of any rows that failed. By combining the Batch API's OpenAI-compatible JSONL flow with LFM2.5-1.2B-Instruct, this notebook walks you through a practical pattern where thousands of rows are tagged overnight at a fraction of the cost of synchronous calls, keyed back to their source rows by `custom_id`.
 

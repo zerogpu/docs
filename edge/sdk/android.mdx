@@ -1,5 +1,6 @@
 ---
 title: "Android"
+icon: "android"
 description: "Turn devices running your Android app into ZeroGPU edge inference nodes with the ZeroGPU Android SDK."
 ---
 
@@ -20,6 +21,13 @@ The SDK follows your app's lifecycle: it contributes compute while the app is in
 
 The SDK's manifest declares `INTERNET` and `ACCESS_NETWORK_STATE` and sets `android:largeHeap="true"`. These merge into your app automatically.
 
+## Download
+
+| Source | |
+|---|---|
+| **Maven Central** | [`ai.zerogpu:android-sdk`](https://central.sonatype.com/artifact/ai.zerogpu/android-sdk) |
+| **GitHub** | [github.com/zerogpu](https://github.com/zerogpu) |
+
 ## Installation
 
 Make sure Maven Central is a repository:
@@ -37,7 +45,7 @@ Add the dependency to your app module:
 
 ```kotlin build.gradle.kts
 dependencies {
-    implementation("ai.zerogpu:android-sdk:0.3.1")
+    implementation("ai.zerogpu:android-sdk:0.5.0")
 }
 ```
 
@@ -88,6 +96,23 @@ Optional constructor parameters:
 | `resourcePolicy` | `ResourcePolicy()` | Local limits: `maxModelBytes`, `memoryBudgetFraction`, `disableGuardrails`. |
 | `listener` | `null` | A `ZeroGpuListener` for lifecycle callbacks (see [Device lifecycle](#device-lifecycle)). |
 | `customParams` | `emptyMap()` | Up to three reporting slots, `cust_param1`–`cust_param3`. Values only; no personal data. |
+| `appId` | `null` | Optional. Your app's ID from the Edge Operator Portal. See [App ID and app name](#app-id-and-app-name-optional). |
+| `appName` | `null` | Optional. Your app's display name. |
+
+### App ID and app name (optional)
+
+Pass the app ID and name from the [Edge Operator Portal](https://edge.zerogpu.ai) so the inference this device serves is attributed to your app. Copy the ID from your app's row on **My Apps**. The SDK also sends your package name (`context.packageName`) as the app's native ID.
+
+```kotlin
+zeroGpu = ZeroGpuSdk(
+    context = this,
+    operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY,
+    appId = BuildConfig.ZEROGPU_APP_ID, // optional
+    appName = "My App",                // optional
+)
+```
+
+Both are optional and need SDK 0.5.0 or later. Leaving them unset never affects registration or inference; ZeroGPU then uses the app your SDK key belongs to.
 
 ## Authentication
 
@@ -121,10 +146,9 @@ zerogpu.operatorKey=zgpu-sdk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Registration is automatic. After `start()`, while the app is in the foreground, the SDK:
 
-1. Registers the device with the ZeroGPU device registry using your SDK key.
-2. Downloads its assigned model(s), verifies them, and caches them on device. Models are only re-downloaded when they change.
-3. Runs a warm-up inference.
-4. Opens a WebSocket and advertises the device as ready.
+1. Connects the device to ZeroGPU with your SDK key.
+2. Downloads a model and caches it on the device. Models are only downloaded again when they change.
+3. Marks the device ready to serve tasks.
 
 ## Start contributing compute
 
@@ -174,8 +198,6 @@ class MainActivity : ComponentActivity() {
     private val sdk = ZeroGpuSdk(
         context = this,
         operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
-        // baseUrl defaults to https://devices.zerogpu.ai
-        // env     defaults to "production"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -198,6 +220,8 @@ adb logcat -s ZeroGpuSdk:* ZeroGpuWebSocket:* ModelDownloader:*
 ```
 
 Once you see `status":"idle"` and `WebSocket ready for tasks`, the device is serving the network.
+
+Once the device is online, [check that it's eligible and earning](/edge/verify).
 
 ## Troubleshooting
 

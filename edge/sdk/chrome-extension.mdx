@@ -1,0 +1,194 @@
+---
+title: "Chrome Extension"
+icon: "chrome"
+description: "Contribute compute from the browsers running your Chrome extension with the ZeroGPU browser SDK."
+---
+
+## Overview
+
+The ZeroGPU browser SDK turns the browsers running your Chrome extension into on-device inference nodes on the ZeroGPU network. It runs in a background offscreen document: it downloads a small model, registers the device, and serves inference tasks locally in a Web Worker.
+
+Manifest V3 doesn't allow remotely hosted code, so the SDK is installed from npm and vendored into your extension with the `zerogpu` CLI.
+
+Building a website instead? See [Browser](/edge/sdk/browser). Building a Telegram Mini App? See [Telegram Mini Apps](/edge/sdk/telegram).
+
+## Requirements
+
+- A Manifest V3 Chrome extension.
+- Node.js and npm at build time only. Nothing from `node_modules` ships in your extension.
+- An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai).
+
+## Download
+
+| Source | |
+|---|---|
+| **npm** | [`@zerogpu/browser-extension-sdk`](https://www.npmjs.com/package/@zerogpu/browser-extension-sdk) |
+| **GitHub** | [github.com/zerogpu](https://github.com/zerogpu) |
+
+## Installation
+
+```bash
+npm install @zerogpu/browser-extension-sdk
+npx zerogpu init
+```
+
+`npx zerogpu init` copies the SDK runtime into `vendor/zerogpu/`, creates `offscreen.html`, `offscreen.js`, and `background.js` (it never overwrites your files), and adds what the SDK needs to `manifest.json`: the `offscreen` and `storage` permissions, a CSP entry allowing `'wasm-unsafe-eval'`, a host permission (`<all_urls>`) for model downloads, and an `externally_connectable` entry for the ZeroGPU settings page.
+
+<Warning>
+  **Heads up:** this setup adds a broad host permission (`<all_urls>`) to your manifest. The SDK requires it. When people install your extension, Chrome will note that it can access data on all websites. The SDK never reads or changes browsing data.
+</Warning>
+
+Using your own service worker? Merge the generated `background.js` snippet into it, and add `"prebuild": "zerogpu vendor"` to your build scripts.
+
+## Initialization
+
+Open the generated `offscreen.js` and add your SDK key:
+
+```js offscreen.js
+import { initZeroGpuOffscreen } from "./vendor/zerogpu/zerogpu-offscreen.js";
+
+initZeroGpuOffscreen({
+  edgeOperatorKey: "zgpu-sdk-your-key",
+  enableConsoleLogs: true
+});
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `edgeOperatorKey` | yes | Your SDK key. |
+| `enableConsoleLogs` | no | Log SDK activity to the offscreen console. |
+| `inferenceWorker` | no | Run inference in the SDK's worker. Default `true`. |
+| `appUserId` | no | A stable identifier for the current user. |
+| `customParams` | no | `{ cust_param1, cust_param2, cust_param3 }` reporting slots. |
+| `appId` | no | Your app's ID from the Edge Operator Portal. See [App ID and app name](#app-id-and-app-name-optional). |
+| `appName` | no | Your extension's display name. |
+| `externalAppId` | no | Sent automatically as your extension ID (`chrome.runtime.id`). |
+
+### App ID and app name (optional)
+
+Pass the app ID and name from the [Edge Operator Portal](https://edge.zerogpu.ai) so the inference this browser serves is attributed to your extension. Copy the ID from your app's row on **My Apps**.
+
+```js offscreen.js
+initZeroGpuOffscreen({
+  edgeOperatorKey: "zgpu-sdk-your-key",
+  appId: "your-app-id",     // optional
+  appName: "My Extension"   // optional
+});
+```
+
+Both are optional and need `@zerogpu/browser-extension-sdk` 0.5.1 or later. Leaving them unset never affects registration or inference; ZeroGPU then uses the app your SDK key belongs to.
+
+## Add the opt-out link
+
+Add this to your settings page, usually in the popup, to allow end users to opt out of ZeroGPU at any time:
+
+```html popup.html
+<a data-zerogpu-settings>Resource sharing</a>
+<script src="vendor/zerogpu/zerogpu-settings-link.js"></script>
+```
+
+The script fills in the link from your extension's ID at load time, so the same two lines work in an unpacked build and a published one. Style the link to match your UI.
+
+## Authentication
+
+The SDK authenticates with your **SDK key** (`zgpu-sdk-…`), passed as `edgeOperatorKey`. The key can only join devices to your fleet; it can't call the inference API or spend credits. Still, inject it at build time rather than committing it.
+
+## Register device
+
+Registration is automatic. When the SDK starts with your SDK key, it checks the device can run a model, downloads one, and connects the device to ZeroGPU. Models are cached, so later starts are faster. To match the device to a model, the SDK shares coarse device information, such as platform, CPU cores, approximate memory, and battery level.
+
+## Start contributing compute
+
+The SDK runs in a background offscreen document and starts automatically whenever your extension loads.
+
+## Stop / pause
+
+Users must be able to turn resource sharing off. New installs are opted in; while a user is opted out, the offscreen document is never created, so nothing starts or connects. The choice persists across restarts.
+
+Turn it off with the [opt-out link](#add-the-opt-out-link), or control it from your service worker:
+
+```js
+await ZeroGpuBackground.getZeroGpuConsent();
+await ZeroGpuBackground.setZeroGpuConsent(false); // stops the SDK, stays off
+```
+
+If your consent flow requires an explicit yes first, write `false` on install and flip it when the user agrees.
+
+## Device lifecycle
+
+Before downloading models, the SDK checks memory and storage, and blocks downloads when the battery is below 20% and the device isn't charging.
+
+## Example integration
+
+1. Go to `chrome://extensions`, turn on **Developer mode**, and click **Load unpacked**.
+2. On your extension's card, open **Inspect views: offscreen.html**.
+3. With `enableConsoleLogs: true`, watch the SDK start, register the device, load a model, and become ready.
+
+Check your setup at any time:
+
+```bash
+npx zerogpu doctor
+```
+
+To pick up new SDK versions, see [Keep the SDK up to date](#keep-the-sdk-up-to-date).
+
+Once the device is online, [check that it's eligible and earning](/edge/verify).
+
+## Keep the SDK up to date
+
+Manifest V3 extensions can't change their code at runtime, so your users get a new SDK version when you publish a new build of your extension. Whenever the SDK version changes, the runtime in `vendor/zerogpu/` must be refreshed with `npx zerogpu vendor`.
+
+<Steps>
+  <Step title="Re-vendor on every build">
+    Add a `prebuild` script to `package.json`, so every build copies the installed SDK runtime into your extension:
+
+    ```json package.json
+    { "scripts": { "prebuild": "zerogpu vendor" } }
+    ```
+  </Step>
+  <Step title="Let Dependabot open update PRs">
+    Add `.github/dependabot.yml` so a pull request opens whenever a new SDK version ships:
+
+    ```yaml .github/dependabot.yml
+    version: 2
+    updates:
+      - package-ecosystem: "npm"
+        directory: "/"
+        schedule: { interval: "weekly" }
+    ```
+
+    Using Renovate instead? Add a `renovate.json` with `{ "extends": ["config:recommended"] }`.
+  </Step>
+  <Step title="Merge, bump, and republish">
+    When the update PR lands, bump `"version"` in `manifest.json` and publish the new build. The Chrome Web Store then updates installed users automatically.
+  </Step>
+</Steps>
+
+The version range in `package.json` controls which updates the bot proposes:
+
+| Range | Accepts |
+|---|---|
+| `"^1.2.0"` | Any compatible `1.x` update (recommended) |
+| `"~1.2.0"` | Patch updates only (`1.2.x`) |
+| `"1.2.0"` | Nothing automatic; you bump it yourself |
+
+Prefer to update by hand? Run `npm update @zerogpu/browser-extension-sdk`, then `npx zerogpu vendor` and `npx zerogpu doctor`, and republish. With no build tooling at all, `npx -p @zerogpu/browser-extension-sdk zerogpu vendor` refreshes `vendor/zerogpu/` without adding a dependency.
+
+## Chrome Web Store submission
+
+When you submit, paste this justification for the "offscreen" permission:
+
+```text
+The offscreen is used to run an AI inference engine (ZeroGPU SDK) that requires DOM APIs and Web Workers, which are unavailable in the MV3 service worker. A single offscreen document hosts this engine. It renders no UI and does not access web pages or browsing data.
+```
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Rejected at registration / `401` | The SDK key is wrong or inactive. Check it in the Edge Operator Portal. |
+| `Inference worker unavailable; models run on the main thread` | The vendored worker is missing or stale; run `npx zerogpu vendor`. |
+| CSP error mentioning `'wasm-unsafe-eval'` | Your manifest's CSP must allow `'wasm-unsafe-eval'`. Re-run `npx zerogpu init` or `npx zerogpu doctor`. |
+| Import fails / runtime files missing | Run `npx zerogpu vendor` and confirm `vendor/zerogpu/` exists. |
+| Model download blocked | Allow the model host in your manifest's host permissions; `npx zerogpu doctor` flags this. |
+| Out of date after an update | `npx zerogpu doctor` reports drift; run `npx zerogpu vendor`. |

@@ -1,0 +1,192 @@
+---
+title: "Quickstart"
+description: "Register as an Edge Provider, connect your first device with the ZeroGPU Edge agent or an SDK, and start earning."
+---
+
+This guide takes you from a new account to a device serving inference on the ZeroGPU edge network.
+
+<Steps>
+  <Step title="Register your app or fleet">
+    Sign up at the [Edge Operator Portal](https://edge.zerogpu.ai/auth/sign-up), then choose **Add New App** and pick what you're connecting:
+
+    <Tabs>
+      <Tab title="App">
+        For an app your users run: Telegram Mini App, Chrome extension, website, or Android.
+
+        | Field | What to enter |
+        |---|---|
+        | **App name** | The name of your app |
+        | **Website / store URL** | Your website, store listing, or Telegram `t.me` link |
+        | **Category** | Productivity, Utilities, Creative, Finance, News, Lifestyle, or Gaming |
+        | **Estimated users** | Your approximate monthly active users |
+        | **Primary region** | Where most of your users are |
+        | **App types** | The platforms you'll integrate: Telegram Mini App, Chrome Extension, Browser, Android. For a macOS desktop (Electron) app, choose **Others** and describe it. |
+      </Tab>
+      <Tab title="GPU Fleet">
+        For machines you manage with the downloadable agent (PCs, Macs, lab or office computers, servers, cloud VMs), and for servers or containers running `@zerogpu/worker`.
+
+        | Field | What to enter |
+        |---|---|
+        | **Fleet name** | A name for this group of machines |
+        | **Website / organization URL** | Your organization's website |
+        | **Category** | University / Research Lab, Gaming Center, Cloud / Data Center, Enterprise IT, or Other |
+        | **Estimated devices** | How many machines you plan to connect |
+        | **Primary region** | Where most of the machines are |
+        | **Device types** | macOS, Windows, and/or Linux / Server |
+      </Tab>
+    </Tabs>
+
+    Accept the terms and select **Submit for approval**. Your app or fleet shows as **Pending Review** on **My Apps**; review usually takes 24–48 hours. Once it's **Approved**, open it in the portal to copy its **SDK key**.
+
+    <Note>
+      The SDK key (`zgpu-sdk-…`) is for Edge Providers: it lets your devices join the network, and ZeroGPU Edge calls it the *operator key*. It is different from the API key (`zgpu-api-…`) used to *call* the ZeroGPU API. Don't mix them up.
+    </Note>
+  </Step>
+
+  <Step title="Select your platform">
+    **Downloadable agent**, for machines you manage. Get it from [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge).
+
+    <Columns cols={3}>
+      <Card title="Windows" icon="windows" href="/edge/agent/windows" />
+      <Card title="macOS" icon="apple" href="/edge/agent/macos" />
+      <Card title="Linux" icon="linux" href="/edge/agent/linux" />
+    </Columns>
+
+    **SDK integration**, for apps you ship.
+
+    <Columns cols={3}>
+      <Card title="Android" icon="android" href="/edge/sdk/android" />
+      <Card title="Chrome Extension" icon="chrome" href="/edge/sdk/chrome-extension" />
+      <Card title="Browser" icon="globe" href="/edge/sdk/browser" />
+      <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram" />
+      <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron" />
+      <Card title="Server / npm" icon="server" href="/edge/sdk/server" />
+    </Columns>
+
+    Each guide covers requirements, downloads, setup, and troubleshooting. [Platforms and downloads](/edge/platforms) compares them all.
+  </Step>
+
+  <Step title="Install">
+    <Tabs>
+      <Tab title="Android">
+        ```kotlin build.gradle.kts
+        dependencies {
+            implementation("ai.zerogpu:android-sdk:0.5.0")
+        }
+        ```
+      </Tab>
+      <Tab title="Web">
+        ```html
+        <script async src="https://js-sdk.zerogpu.ai/dist/loader.js"></script>
+        ```
+      </Tab>
+      <Tab title="Chrome extension">
+        ```bash
+        npm install @zerogpu/browser-extension-sdk
+        npx zerogpu init
+        ```
+      </Tab>
+      <Tab title="Telegram Mini Apps">
+        ```html
+        <script async src="https://js-sdk.zerogpu.ai/dist/loader.js"></script>
+        ```
+      </Tab>
+      <Tab title="macOS desktop app">
+        ```bash
+        npm install @zerogpu/worker
+        ```
+      </Tab>
+      <Tab title="Server">
+        ```bash
+        docker pull zerogpu/worker
+        # or
+        npm install -g @zerogpu/worker
+        ```
+      </Tab>
+      <Tab title="Agent">
+        Download the installer for each machine from [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge):
+
+        | OS | Guided install | Managed / silent install |
+        |---|---|---|
+        | Windows 10/11 | `ZeroGPU-Setup.exe` | `ZeroGPU-Edge.msi` |
+        | macOS 14+ (Apple silicon) or 13.4+ (Intel) | `ZeroGPU.dmg` | `zerogpu-edge.pkg` |
+        | Linux | `.deb` (Ubuntu, Debian) or `.rpm` (Fedora, RHEL, Rocky) | the same packages |
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Add your SDK key">
+    Keep the key out of source control and inject it at build or deploy time.
+
+    <Tabs>
+      <Tab title="Android">
+        ```kotlin
+        val sdk = ZeroGpuSdk(
+            context = applicationContext,
+            operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
+        )
+        ```
+      </Tab>
+      <Tab title="Web / Telegram">
+        ```html
+        <script
+          async
+          src="https://js-sdk.zerogpu.ai/dist/loader.js"
+          edgeOperatorKey="zgpu-sdk-your-key"
+        ></script>
+        ```
+      </Tab>
+      <Tab title="Chrome extension">
+        ```js offscreen.js
+        import { initZeroGpuOffscreen } from "./vendor/zerogpu/zerogpu-offscreen.js";
+
+        initZeroGpuOffscreen({ edgeOperatorKey: "zgpu-sdk-your-key" });
+        ```
+      </Tab>
+      <Tab title="macOS desktop app">
+        ```js
+        const worker = new ZeroGpuWorker({ operatorKey: ZEROGPU_OPERATOR_KEY });
+        ```
+      </Tab>
+      <Tab title="Server">
+        ```bash
+        docker run -d -e ZG_OPERATOR_KEY_FILE=/run/secrets/zg_key \
+          -v /path/to/zg_key:/run/secrets/zg_key:ro \
+          -v zg-models:/models -v zg-state:/data zerogpu/worker
+        ```
+      </Tab>
+      <Tab title="Agent">
+        The guided installers ask for the key. For managed installs, pass it on the command line:
+
+        ```bash
+        # Windows
+        msiexec /i ZeroGPU-Edge.msi /qn OPERATOR_KEY="zgpu-sdk-your-key"
+
+        # macOS and Linux, after installing the package
+        sudo zerogpu-edge configure --operator-key "zgpu-sdk-your-key" --restart
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Start contributing compute">
+    Registration is automatic: with a valid key, the device joins the network by itself.
+
+    - **Android and macOS desktop apps:** call `start()`.
+    - **Browsers, Telegram Mini Apps, and Chrome extensions:** the SDK starts as soon as it's initialized with your key.
+    - **Server:** the worker starts with the container or process.
+    - **Agent:** ZeroGPU Edge starts as a background service and starts again at every boot.
+
+    From then on the device serves inference tasks from the network. You never feed it tasks or poll it.
+  </Step>
+
+  <Step title="Confirm the device is online and earning">
+    Check **My Apps** and **Analytics** in the [Edge Operator Portal](https://edge.zerogpu.ai). Apps and fleets serving traffic show as **Active/Earning**. [Verify devices](/edge/verify) covers every platform's checks, and [Earnings and payouts](/edge/earnings) explains what you're paid.
+
+    A connected device only receives work when the network needs it, so it may sit ready for a while before its first task.
+  </Step>
+</Steps>
+
+<Warning>
+  **Tell your users.** In an app, show your users the End User Disclosure from the Edge Operator Portal, word for word, with your app's name, before the SDK starts, and get their agreement. Give them a way to turn resource sharing off.
+</Warning>

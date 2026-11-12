@@ -1,0 +1,107 @@
+---
+title: "Server / npm"
+icon: "server"
+description: "Run @zerogpu/worker on Node.js servers or as a Docker container to contribute server compute to the ZeroGPU edge network."
+---
+
+<Tip>
+  Connecting whole Windows, macOS or Linux machines? The [downloadable agent](/edge/agent) installs as a system service with no code. Use `@zerogpu/worker` when you want ZeroGPU inside your own Node.js service, container platform or orchestration.
+</Tip>
+
+## Overview
+
+`@zerogpu/worker` is the ZeroGPU edge worker for servers. Each running worker joins the network as one device: it registers with your SDK key, downloads its assigned models, and serves inference tasks. Its connection to ZeroGPU is outbound only.
+
+It ships two ways:
+
+| Source | Use it for |
+|---|---|
+| **npm**: [`@zerogpu/worker`](https://www.npmjs.com/package/@zerogpu/worker) | Running on a Node.js host, or as a child process of your own service |
+| **Docker Hub**: [`zerogpu/worker`](https://hub.docker.com/r/zerogpu/worker) | Kubernetes, ECS, Nomad, or any container host. Run as many containers as you like; each is one device. |
+
+## Requirements
+
+| Requirement | Value |
+|---|---|
+| **Runtime** | Node.js 20 or newer, or Docker |
+| **Platform** | Docker image: Linux x86_64. npm: Linux or macOS. A GPU is optional: models run on the CPU, and the `:cuda` image runs GGUF models on an NVIDIA GPU. |
+| **Disk** | About 100 MB per assigned ONNX model (GGUF models: 2–5 GB) |
+| **Network** | Outbound HTTPS and WebSocket to `*.zerogpu.ai`. |
+| **Credentials** | An SDK key (`zgpu-sdk-…`) from a GPU Fleet in the [Edge Operator Portal](https://edge.zerogpu.ai) |
+
+## Install and run
+
+<Tabs>
+  <Tab title="Docker">
+    Store the key as a secret and mount it, then run the image with a volume for models and one for the device's identity:
+
+    ```bash
+    docker run -d --name zerogpu-worker \
+      -e ZG_OPERATOR_KEY_FILE=/run/secrets/zg_key \
+      -v /path/to/zg_key:/run/secrets/zg_key:ro \
+      -v zg-models:/models \
+      -v zg-state:/data \
+      zerogpu/worker
+    ```
+
+    On an NVIDIA host, use `zerogpu/worker:cuda` and add `--gpus all`.
+  </Tab>
+  <Tab title="npm">
+    ```bash
+    npm install -g @zerogpu/worker
+
+    ZG_OPERATOR_KEY="zgpu-sdk-your-key" \
+    ZG_MODELS_DIR=/var/lib/zerogpu/models \
+    ZG_DATA_DIR=/var/lib/zerogpu/data \
+    zerogpu-worker
+    ```
+
+    Run it under your process manager (systemd, PM2, supervisord) so it restarts with the host.
+  </Tab>
+</Tabs>
+
+<Warning>
+  Never bake the SDK key into an image or commit it. Pass it at runtime: `ZG_OPERATOR_KEY_FILE` with a secret mount is preferred over `ZG_OPERATOR_KEY`.
+</Warning>
+
+## Configuration
+
+| Variable | Required | Meaning |
+|---|---|---|
+| `ZG_OPERATOR_KEY` / `ZG_OPERATOR_KEY_FILE` | **Yes** | Your fleet's SDK key, or a file containing it |
+| `ZG_MODELS_DIR` | No | Model cache. In Docker, mount a volume at `/models`. Keeping it avoids re-downloading models on every restart. |
+| `ZG_DATA_DIR` | No | Device identity. In Docker, mount a volume at `/data`. Without it, every restart is a new device and starts over. |
+| `ZG_MAX_CONCURRENCY` | No | Caps how many inferences run at once |
+
+The inference a worker serves is attributed to the app your SDK key belongs to.
+
+## Check a worker
+
+The worker serves a health endpoint on its local port (default `8080`):
+
+```bash
+curl -s http://127.0.0.1:8080/healthz
+```
+
+```json
+{ "status": "ready", "ready": true, "network": { "completedTasks": 3, "failedTasks": 0 } }
+```
+
+`ready` turns `true` once a model is loaded and warmed up. `network.completedTasks` counts tasks ZeroGPU sent to this worker. Keep the local port inside your own network; never expose it to the internet.
+
+## Stop
+
+Send `SIGTERM` (`docker stop` does this). The worker leaves the network, unloads its models, and exits within about 5 seconds.
+
+Once workers are online, [verify they're connected](/edge/verify) and [track earnings](/edge/earnings).
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Exits immediately: `ZG_OPERATOR_KEY … is required` | The key didn't reach the worker's environment, or the secret file path is wrong. |
+| `Registration auth failure (401)` | The key isn't a valid SDK key, or the fleet isn't **Approved** yet. |
+| `Registration politely refused: <reason>` | Normal: the network is declining this device for now. The worker retries by itself. |
+| `ready: false` for a long time | Models are still downloading. Check free disk space in the models directory. |
+| Connected, but `completedTasks` stays at `0` | The network hasn't needed this device yet. Keep `ZG_DATA_DIR` (or `/data`) persistent so the device keeps its history. |
+| `npm install` fails with a `404` from another registry | Your `.npmrc` maps `@zerogpu` elsewhere. Use `npm install -g @zerogpu/worker --@zerogpu:registry=https://registry.npmjs.org`. |
