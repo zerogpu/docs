@@ -1,0 +1,94 @@
+---
+title: "chatterbox"
+sidebarTitle: "chatterbox"
+description: "Model details for chatterbox. The original 0.5B ChatterboxTTS, with zero-shot voice cloning."
+openapi: "api-reference/openapi/playgrounds/chatterbox.openapi.json POST /audio/speech"
+---
+
+<Note>
+	This model is routable only on `/v1/audio/speech`. To clone a voice, send
+	`multipart/form-data` with a `voice_sample` file.
+</Note>
+
+> Resemble AI's Chatterbox is the original 0.5B-parameter ChatterboxTTS model, the larger sibling of chatterbox-nano. It speaks your text in a built-in voice, or clones a speaker zero-shot from a short reference clip you upload with the request, and inline tags such as `[dramatic]`, `[sarcastic]`, and `[happy]` steer delivery. It runs on the same `POST /v1/audio/speech` endpoint, and its generated audio is billed per second, rounded up to the next whole second per request, rather than per whole minute.
+
+**References:** [Model card](https://huggingface.co/ResembleAI/chatterbox) • [License](https://github.com/resemble-ai/chatterbox/blob/master/LICENSE) • [Terms](https://zerogpu.ai/terms) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+## Limits
+
+| Limit | Value |
+| --- | --- |
+| `input` length | 2,000 characters. Requests near the limit can time out with `524`. |
+| `voice_sample` duration | 6 to 30 seconds |
+| `voice_sample` size | 10 MB |
+| `voice_sample` formats | mp3, m4a, wav, flac, ogg, webm, mp4 |
+
+Billing is per second of generated audio, rounded up to the next whole second per request, at $0.015 per minute. See [Speech](/api-reference/audio-speech) for the full field list.
+
+<RequestExample>
+
+```bash cURL (JSON)
+curl --location 'https://api.zerogpu.ai/v1/audio/speech' \
+  --header 'content-type: application/json' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --data '{
+  "model": "chatterbox",
+  "input": "[dramatic] Oh, another AI model that needs eight GPUs just to say hello? [sarcastic] How adorable. [shush] Do not tell anyone... [happy] I run on the edge.",
+  "voice": "default",
+  "response_format": "mp3",
+  "seed": 42,
+  "temperature": 0.8,
+  "top_p": 0.95,
+  "repetition_penalty": 1.2
+}' \
+  --output speech.mp3
+```
+
+```bash cURL (voice cloning)
+curl --location 'https://api.zerogpu.ai/v1/audio/speech' \
+  --header 'x-api-key: YOUR_API_KEY' \
+  --form 'model="chatterbox"' \
+  --form 'input="Testing model to generate voice. Hey how are you today?"' \
+  --form 'response_format="mp3"' \
+  --form 'seed="42"' \
+  --form 'voice_sample=@"/path/to/file"' \
+  --output speech.mp3
+```
+
+```python Python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.zerogpu.ai/v1",
+    api_key="YOUR_API_KEY",  # sent as Authorization: Bearer
+)
+
+with client.audio.speech.with_streaming_response.create(
+    model="chatterbox",
+    voice="alloy",  # OpenAI voice names map to the built-in voice
+    input="Hello from ZeroGPU.",
+    response_format="mp3",
+) as response:
+    response.stream_to_file("speech.mp3")
+```
+
+```javascript JavaScript
+import fs from "node:fs";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://api.zerogpu.ai/v1",
+  apiKey: "YOUR_API_KEY", // sent as Authorization: Bearer
+});
+
+const speech = await client.audio.speech.create({
+  model: "chatterbox",
+  voice: "alloy", // OpenAI voice names map to the built-in voice
+  input: "Hello from ZeroGPU.",
+  response_format: "mp3",
+});
+
+fs.writeFileSync("speech.mp3", Buffer.from(await speech.arrayBuffer()));
+```
+
+</RequestExample>
