@@ -1,0 +1,43 @@
+name: Release notes PR closed
+
+# SDK releases open release-notes/<sdk>-<version> PRs here (zerogpu/release-notes-action sdk-docs)
+# and announce them in #nick-fury-gtm as Nick Fury. When one is merged or closed, this replies in
+# that announcement's thread, found from the `slack=<channel>:<ts>` key in the PR body's marker.
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  reply:
+    if: ${{ startsWith(github.head_ref, 'release-notes/') && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reply in the announcement thread
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.NICKFURY_SLACK_BOT_TOKEN }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+        run: |
+          if [[ ! "$PR_BODY" =~ nick-fury:sdk-release[^\>]*slack=([A-Z0-9]+):([0-9.]+) ]]; then
+            echo "::notice::No Slack thread recorded in the PR body; nothing to reply to."
+            exit 0
+          fi
+          channel="${BASH_REMATCH[1]}"; ts="${BASH_REMATCH[2]}"
+          release="${PR_TITLE#docs(release-notes): }"
+          release="${release//&/&amp;}"; release="${release//</&lt;}"; release="${release//>/&gt;}"
+          if [ "$MERGED" = "true" ]; then
+            text=":white_check_mark: Merged${MERGED_BY:+ by $MERGED_BY}. $release will be on <https://docs.zerogpu.ai/edge/release-notes|the release notes> once the docs finish deploying."
+          else
+            text="Closed without merging, so $release isn't in the release notes."
+          fi
+          jq -n --arg channel "$channel" --arg ts "$ts" --arg text "$text" \
+            '{channel: $channel, thread_ts: $ts, text: $text, unfurl_links: false}' \
+            | curl -sS https://slack.com/api/chat.postMessage \
+                -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                -H 'Content-Type: application/json; charset=utf-8' \
+                --data @- \
+            | jq -e '.ok' > /dev/null || { echo "::error::Slack did not accept the reply"; exit 1; }
