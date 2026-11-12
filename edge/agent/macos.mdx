@@ -1,5 +1,6 @@
 ---
 title: "macOS"
+icon: "apple"
 description: "Install ZeroGPU Edge on Macs and managed Mac fleets."
 ---
 
@@ -13,7 +14,7 @@ ZeroGPU Edge runs on macOS as a system background service under its own restrict
 
 | Requirement | Value |
 |---|---|
-| **macOS** | macOS 12 Monterey or later |
+| **macOS** | macOS 14 Sonoma or later on Apple silicon; macOS 13.4 or later on Intel. The installer refuses older versions. |
 | **Architecture** | Apple Silicon (arm64) or Intel (x86_64) |
 | **GPU** | Used automatically on Apple Silicon. Intel Macs are supported and get smaller models. |
 | **Credentials** | Your fleet's SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |

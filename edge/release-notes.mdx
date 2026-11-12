@@ -1,0 +1,32 @@
+---
+title: "Release notes"
+icon: "clock-rotate-left"
+description: "New versions of the ZeroGPU Edge agent and SDKs."
+---
+
+New releases of the [downloadable agent](/edge/agent) and every [SDK](/edge/platforms#sdk-integrations), newest first.
+
+{/* release-notes:entries — .github/workflows/edge-release-notes.yml adds new entries below this line */}
+
+<Update label="2026-11-10" description="ZeroGPU Edge agent 0.7.5" tags={["Agent"]}>
+  New version of ZeroGPU Edge for Windows, macOS, and Linux. Download it from [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge); machines with automatic updates on install it within a day.
+</Update>
+
+<Update label="2026-11-10" description="Android SDK 0.5.0" tags={["Android"]}>
+  - Optional `appId` and `appName` attribute the inference a device serves to your app. The SDK also sends your package name. See [App ID and app name](/edge/sdk/android#app-id-and-app-name-optional).
+
+  ```kotlin
+  implementation("ai.zerogpu:android-sdk:0.5.0")
+  ```
+</Update>
+
+<Update label="2026-11-10" description="Browser SDK 0.5.1" tags={["Chrome Extension", "Browser", "Telegram"]}>
+  - Optional `appId` and `appName` attribute the inference a device serves to your app. Chrome extensions send their extension ID automatically. See [App ID and app name](/edge/sdk/chrome-extension#app-id-and-app-name-optional).
+  - Devices recover on their own after a short period where they can't run a model.
+
+  Websites and Telegram Mini Apps on the loader script get this version automatically. Chrome extensions: `npm install @zerogpu/browser-extension-sdk@0.5.1`, then `npx zerogpu vendor`.
+</Update>
+
+<Update label="2026-10-30" description="Server / npm worker 0.5.0" tags={["Server / npm"]}>
+  `@zerogpu/worker` 0.5.0 is available on [npm](https://www.npmjs.com/package/@zerogpu/worker) and [Docker Hub](https://hub.docker.com/r/zerogpu/worker).
+</Update>

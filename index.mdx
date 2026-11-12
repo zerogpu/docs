@@ -1,133 +1,53 @@
 ---
 title: "Introduction"
-description: "Run high-volume AI tasks on specialized small and nano language models across an edge-powered network - faster and cheaper, through one OpenAI-compatible API."
+description: "Orchestrating the world's idle compute to accelerate AI."
 ---
 
-ZeroGPU is the compute efficiency layer for AI inference. It runs repeatable, high-volume AI tasks on specialized small and nano language models across an edge-powered network - so the same workloads run faster and cheaper than on centralized GPUs.
+Welcome to ZeroGPU. Build AI applications and agents on a global inference network that puts idle compute to work. Access specialized and open-weight models for text, audio, and video through one OpenAI-compatible API, with infrastructure and routing handled for you.
 
-Send a request to one OpenAI-compatible endpoint; ZeroGPU picks the right small or nano model and runs it on the right compute. Frontier models for reasoning. ZeroGPU for repeatable execution - classification, extraction, moderation, summarization, routing - at the scale AI demands.
+Around the world, phones, laptops, and desktops have computing capacity sitting unused. ZeroGPU is already tapping into this capacity, connecting participating devices into a distributed network for AI inference.
 
-## Make your first call
+Our mission is to orchestrate the world's idle compute to accelerate AI. We're building toward the world's largest distributed cloud for AI acceleration, making existing compute useful and accessible to developers everywhere.
 
-Find your API key in the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+## Global compute. Inference closer to you.
 
-<Note>
-  The `x-project-id` header is optional. Send it only to scope a request to a specific project.
-</Note>
+With devices distributed globally, ZeroGPU can route supported workloads to nearby, available compute. Geographic routing helps reduce network latency, while orchestration considers model compatibility, device capacity, and current load to serve requests efficiently.
 
-```bash wrap
-curl --location 'https://api.zerogpu.ai/v1/responses' \
-  --header 'content-type: application/json' \
-  --header 'x-api-key: YOUR_API_KEY' \
-  --data '{
-  "input": "Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-  "model": "zlm-v1-iab-classify-edge"
-}'
-```
+The network combines edge devices with server and cloud capacity, supporting different model sizes and workload requirements through the same API.
 
-Already using the OpenAI SDK? Point it at ZeroGPU:
+## What you can build
 
-```python wrap
-from openai import OpenAI
-
-client = OpenAI(
-    base_url="https://api.zerogpu.ai/v1",
-    api_key="unused",  # ZeroGPU authenticates via the header below
-    default_headers={
-        "x-api-key": "YOUR_API_KEY",
-    },
-)
-
-resp = client.responses.create(
-    model="zlm-v1-iab-classify-edge",
-    input="Technology has quietly reshaped the rhythm of everyday life, weaving itself into routines so seamlessly that it often goes unnoticed. From the moment a smartphone alarm wakes someone in the morning to the final glance at a glowing screen before sleep, digital systems guide communication, navigation, work, and entertainment. This transformation did not happen overnight. It emerged through decades of incremental innovation, each new tool building upon the last, until the modern world became deeply interconnected.One of the most significant changes has been the speed at which information travels.",
-)
-```
-
-🎉 Either call returns the same classification result:
-
-```json
-{
-  "audience": [
-    { "name": "Technology & Computing", "score": 0.8194953318627214 },
-    { "name": "Consumer Electronics", "score": 0.7730970665427267 },
-    { "name": "IT and Internet Support", "score": 0.6476231908025892 }
-  ],
-  "content": {
-    "iab_1_0": [
-      { "name": "Technology & Computing", "score": 0.8130967783784443 },
-      { "name": "Automotive", "score": 0.6588144281246334 }
-    ],
-    "iab_2_2": [
-      { "name": "Technology & Computing", "score": 0.8130967783784443 },
-      { "name": "Wearable Technology", "score": 0.7080836335415118 },
-      { "name": "Auto Infotainment Technologies", "score": 0.6588144281246334 }
-    ]
-  }
-}
-```
-
-## What you can run
-
-<Columns cols={3}>
-  <Card title="Text classification" icon="tags" href="/docs/text-classification">
+<Columns cols={2}>
+  <Card title="AI agents" icon="robot">
+    Select tools, generate arguments, and power conversations.
   </Card>
-
-  <Card title="Text generation" icon="pen-nib" href="/docs/text-generation">
+  <Card title="Intelligent workflows" icon="diagram-project">
+    Classify content, extract information, moderate text, and summarize documents.
   </Card>
-
-  <Card title="Open Weight" icon="cubes" href="/docs/open-weight">
+  <Card title="Generative applications" icon="pen-nib">
+    Build with models for chat, reasoning, and coding.
+  </Card>
+  <Card title="Video understanding" icon="film">
+    Analyze video content, answer questions about clips, and summarize what happens.
+  </Card>
+  <Card title="Search and audio experiences" icon="waveform-lines">
+    Generate embeddings, transcribe speech, and create audio.
   </Card>
 </Columns>
 
-## What you get
+## Start building
 
-<Columns cols={3}>
-  <Card title="Lower cost and latency" icon="gauge-high">
-    Specialized small and nano models on distributed compute. ~10x faster and 50%\+ cheaper on production tasks.
-  </Card>
+Create an API key, choose a model, and send your first request.
 
-  <Card title="One OpenAI-compatible API" icon="plug">
-    `POST /v1/responses`; integrate with minimal code changes.
-  </Card>
-
-  <Card title="Built for production" icon="chart-line">
-    Token usage, latency, and volume per request, with project isolation for dev, staging, and production.
-  </Card>
-</Columns>
-
-## How it works
-
-<Steps>
-  <Step title="Create a project">
-    One organization, multiple projects. Each gets its own API key and dashboard.
-  </Step>
-  <Step title="Send requests">
-    POST to `/v1/responses` with your key and model. Response comes back as structured JSON.
-  </Step>
-  <Step title="Monitor everything">
-    Token usage, request volume, latency, error rates: all visible in the dashboard. Debug individual requests in Logs.
-  </Step>
-</Steps>
-
-Workload analysis → Model selection → Edge orchestration. ZeroGPU classifies each task, picks the fastest viable model, and routes it to the right compute. See [How ZeroGPU works](/docs/how-zerogpu-works) for the full picture.
-
-## Go deeper
-
-<Columns cols={3}>
+<Columns cols={2}>
   <Card title="Quickstart" icon="play" href="/docs/quickstart">
+    Make your first request in minutes.
   </Card>
-
-  <Card title="How ZeroGPU works" icon="diagram-project" href="/docs/how-zerogpu-works">
-  </Card>
-
   <Card title="Model Catalog" icon="table-list" href="/docs/model-catalog">
-  </Card>
-
-  <Card title="API Reference" icon="terminal" href="/api-reference/responses">
+    Find the model that fits your task.
   </Card>
 </Columns>
 
-<Card title="Be an Edge Provider" icon="tower-broadcast" href="/edge" cta="View Edge Provider SDKs" horizontal>
-  Contribute compute from your idle devices to the ZeroGPU edge network and help power distributed AI inference.
-</Card>
+<Tip>
+  Building with a coding agent? Point it to [llms.txt](https://docs.zerogpu.ai/llms.txt) to discover the documentation, model capabilities, and integration guides.
+</Tip>

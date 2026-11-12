@@ -1,5 +1,6 @@
 ---
 title: "Server / npm"
+icon: "server"
 description: "Run @zerogpu/worker on Node.js servers or as a Docker container to contribute server compute to the ZeroGPU edge network."
 ---
 
@@ -25,7 +26,7 @@ It ships two ways:
 | **Runtime** | Node.js 20 or newer, or Docker |
 | **Platform** | Docker image: Linux x86_64. npm: Linux or macOS. A GPU is optional: models run on the CPU, and the `:cuda` image runs GGUF models on an NVIDIA GPU. |
 | **Disk** | About 100 MB per assigned ONNX model (GGUF models: 2–5 GB) |
-| **Network** | Outbound HTTPS and WebSocket to `*.zerogpu.ai`. `HTTPS_PROXY` is honored. |
+| **Network** | Outbound HTTPS and WebSocket to `*.zerogpu.ai`. |
 | **Credentials** | An SDK key (`zgpu-sdk-…`) from a GPU Fleet in the [Edge Operator Portal](https://edge.zerogpu.ai) |
 
 ## Install and run
@@ -69,9 +70,10 @@ It ships two ways:
 |---|---|---|
 | `ZG_OPERATOR_KEY` / `ZG_OPERATOR_KEY_FILE` | **Yes** | Your fleet's SDK key, or a file containing it |
 | `ZG_MODELS_DIR` | No | Model cache. In Docker, mount a volume at `/models`. Keeping it avoids re-downloading models on every restart. |
-| `ZG_DATA_DIR` | No | Device identity. In Docker, mount a volume at `/data`. Without it, every restart is a new device and starts over as a newcomer. |
+| `ZG_DATA_DIR` | No | Device identity. In Docker, mount a volume at `/data`. Without it, every restart is a new device and starts over. |
 | `ZG_MAX_CONCURRENCY` | No | Caps how many inferences run at once |
-| `HTTPS_PROXY` | No | Corporate egress proxy |
+
+The inference a worker serves is attributed to the app your SDK key belongs to.
 
 ## Check a worker
 

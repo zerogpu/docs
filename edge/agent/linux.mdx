@@ -1,5 +1,6 @@
 ---
 title: "Linux"
+icon: "linux"
 description: "Install ZeroGPU Edge on Linux desktops, servers, and cloud VMs."
 ---
 
@@ -10,6 +11,7 @@ ZeroGPU Edge runs on Linux as the `zerogpu-edge` systemd service, under its own 
 | Requirement | Value |
 |---|---|
 | **Distributions** | Ubuntu and Debian (`.deb`); Fedora, RHEL, and Rocky Linux (`.rpm`). systemd is required. |
+| **glibc** | 2.30 or newer, for example Ubuntu 20.04+, Debian 11+, or RHEL / Rocky 9+. The package refuses to install on older systems such as RHEL 8. Language models (llama.cpp) need glibc 2.34 on x86_64 or 2.38 on ARM64; below that, the machine serves the other models. |
 | **Architecture** | x86_64 (amd64) or ARM64 (aarch64) |
 | **GPU (optional)** | NVIDIA (CUDA) or a Vulkan-capable GPU. Without one, the machine serves models on the CPU. |
 | **Credentials** | Your fleet's SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai) |

@@ -1,5 +1,6 @@
 ---
 title: "Telegram Mini Apps"
+icon: "telegram"
 description: "Connect your Telegram Mini App to ZeroGPU and contribute device compute to the edge network with one script tag."
 ---
 
@@ -11,7 +12,7 @@ Telegram Mini Apps run on the ZeroGPU browser SDK: one script tag in your Mini A
 
 - A Telegram Mini App (a web app opened inside Telegram).
 - An SDK key (`zgpu-sdk-…`) from the [Edge Operator Portal](https://edge.zerogpu.ai). When you add your app, select **Telegram Mini App** as an app type and use your `t.me` link as the website.
-- The same browser requirements as the [Chrome / Web SDK](/edge/sdk/web#requirements): WebAssembly, IndexedDB, and Web Workers, all available in Telegram's in-app browser.
+- The same browser requirements as the [Browser SDK](/edge/sdk/browser#requirements): WebAssembly, IndexedDB, and Web Workers, all available in Telegram's in-app browser.
 
 ## Download
 
@@ -40,7 +41,24 @@ The simplest setup is auto-init: put your SDK key on the script tag and the SDK 
 ></script>
 ```
 
-For manual init, use `ZeroGpuSdk.initZeroGpuSdk({ edgeOperatorKey })` exactly as in the [Chrome / Web SDK](/edge/sdk/web#initialization). All the same options apply.
+For manual init, use `ZeroGpuSdk.initZeroGpuSdk({ edgeOperatorKey })` exactly as in the [Browser SDK](/edge/sdk/browser#initialization). All the same options apply.
+
+### App ID and app name (optional)
+
+Pass the app ID and name from the [Edge Operator Portal](https://edge.zerogpu.ai) so the inference these devices serve is attributed to your Mini App. Copy the ID from your app's row on **My Apps**, and pass your bot username as the native ID:
+
+```html
+<script
+  async
+  src="https://js-sdk.zerogpu.ai/dist/loader.js"
+  edgeOperatorKey="zgpu-sdk-your-key"
+  data-app-id="your-app-id"
+  data-app-name="My Mini App"
+  data-external-app-id="my_bot"
+></script>
+```
+
+All three are optional: leaving them unset never affects registration or inference, and ZeroGPU then uses the app your SDK key belongs to.
 
 ## Authentication
 
@@ -50,9 +68,9 @@ The SDK authenticates with your **SDK key** (`zgpu-sdk-…`), passed as `edgeOpe
 
 Registration is automatic. Inside Telegram, the SDK:
 
-- Detects `window.Telegram.WebApp` and registers the device with the `telegram-webapp` platform.
+- Detects that it's running inside Telegram.
 - Uses the Telegram user ID as `appUserId`, so you don't need to pass it.
-- Downloads and caches its assigned model, then opens a connection for tasks.
+- Downloads and caches a model, then connects the device to ZeroGPU.
 
 ## Start contributing compute
 
@@ -73,7 +91,7 @@ There is no separate pause call. Closing the Mini App also stops contribution.
 
 ## Device lifecycle
 
-The lifecycle matches the [Chrome / Web SDK](/edge/sdk/web#device-lifecycle): `starting`, `running`, `degraded`, `shutdown`, or `error`, with `degraded`, `recovered`, and `shutdown` events.
+The lifecycle matches the [Browser SDK](/edge/sdk/browser#device-lifecycle): `starting`, `running`, `degraded`, `shutdown`, or `error`, with `degraded`, `recovered`, and `shutdown` events.
 
 Telegram's in-app WebViews behave differently from regular browsers, so the SDK adapts its memory and storage checks there, and includes a guard that stops it from restarting repeatedly if the WebView keeps crashing and reloading.
 
@@ -110,4 +128,4 @@ Once the device is online, [check that it's eligible and earning](/edge/verify).
 | No SDK activity in the console | Add `enableConsoleLogs="true"` to the script tag. |
 | `Init skipped: crash-loop guard active` | The WebView crashed repeatedly while loading the model, so the SDK is in a cooldown. It starts again once the cooldown ends. |
 
-See [Chrome / Web troubleshooting](/edge/sdk/web#troubleshooting) for worker and CSP issues.
+See [Browser troubleshooting](/edge/sdk/browser#troubleshooting) for worker and CSP issues.

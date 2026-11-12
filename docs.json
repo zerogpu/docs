@@ -79,7 +79,7 @@
                   "docs/model-catalog",
                   "docs/open-weight",
                   {
-                    "group": "By task",
+                    "group": "By Task",
                     "expanded": false,
                     "pages": [
                       "docs/text-generation",
@@ -189,29 +189,12 @@
             ]
           },
           {
-            "tab": "Integrations & Cookbook",
+            "tab": "Integrations",
             "groups": [
               {
-                "group": "Overview",
+                "group": "Integrations",
                 "pages": [
                   "integrations/index",
-                  "cookbook/index",
-                  {
-                    "group": "Official SDKs",
-                    "expanded": false,
-                    "pages": [
-                      "integrations/sdk/go",
-                      "integrations/sdk/javascript",
-                      "integrations/sdk/python",
-                      "integrations/sdk/ruby",
-                      "integrations/sdk/rust"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Frameworks & Tools",
-                "pages": [
                   "integrations/claude-code-plugin",
                   "integrations/claude-skill",
                   "integrations/sprites",
@@ -224,6 +207,27 @@
                 ]
               },
               {
+                "group": "Official SDKs",
+                "pages": [
+                  "integrations/sdk/go",
+                  "integrations/sdk/javascript",
+                  "integrations/sdk/python",
+                  "integrations/sdk/ruby",
+                  "integrations/sdk/rust"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Cookbook",
+            "groups": [
+              {
+                "group": "Cookbook",
+                "pages": [
+                  "cookbook/index"
+                ]
+              },
+              {
                 "group": "Tutorials",
                 "pages": [
                   "cookbook/data-extraction-tutorial",
@@ -231,7 +235,7 @@
                 ]
               },
               {
-                "group": "Recipes",
+                "group": "Integrations & plugins",
                 "pages": [
                   "cookbook/claude-code-csv-sanitizer",
                   "cookbook/langchain-resume-screening",
@@ -273,7 +277,8 @@
             "group": "SDK Integrations",
             "pages": [
               "edge/sdk/android",
-              "edge/sdk/web",
+              "edge/sdk/chrome-extension",
+              "edge/sdk/browser",
               "edge/sdk/telegram",
               "edge/sdk/electron",
               "edge/sdk/server"
@@ -285,7 +290,8 @@
               "edge/verify",
               "edge/reporting-api",
               "edge/earnings",
-              "edge/troubleshooting"
+              "edge/troubleshooting",
+              "edge/release-notes"
             ]
           }
         ]
@@ -368,7 +374,11 @@
     },
     {
       "source": "/docs/edge-providers/sdk/web",
-      "destination": "/edge/sdk/web"
+      "destination": "/edge/sdk/chrome-extension"
+    },
+    {
+      "source": "/edge/sdk/web",
+      "destination": "/edge/sdk/chrome-extension"
     },
     {
       "source": "/docs/edge-providers/sdk/telegram",

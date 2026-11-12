@@ -1,34 +1,39 @@
 ---
-title: "How ZeroGPU works"
-description: "ZeroGPU turns idle compute into one programmable inference layer - specialized small models, an edge-powered network, and routing handled for you."
+title: "How it works"
+description: "You choose the model. ZeroGPU orchestrates the compute."
 ---
 
-ZeroGPU turns idle compute into one programmable inference layer. You send a request; we run it on a specialized small or nano model, on the cheapest compute that can serve it well.
+ZeroGPU connects your application to a global network of participating edge devices, servers, and cloud infrastructure. You access models through an API while ZeroGPU manages where supported workloads run.
 
-## Specialized small and nano models
+<Steps>
+  <Step title="Choose a model">
+    Pick a model from the [catalog](/docs/model-catalog) that fits your task. Use specialized models for classification, extraction, moderation, and tool selection, or explore models for text generation, reasoning, audio, and video understanding.
 
-ZeroGPU runs purpose-built ZLMs (ZeroGPU Language Models) for high-volume tasks like IAB classification and signal extraction, alongside a catalog of open small and nano models - DeBERTa, GLiNER, LFM2.5, Llama 3.1 8B. Small enough to run at the edge, good enough for production. See the [Model Catalog](/docs/model-catalog).
+    Each model's documentation describes its supported inputs, endpoints, and capabilities.
+  </Step>
+  <Step title="Send your request">
+    Call the model's supported endpoint with your API key, model ID, and input. Use an OpenAI-compatible SDK or make an HTTP request directly.
 
-## An edge-powered network
+    Your application specifies the model. ZeroGPU handles the infrastructure needed to serve it.
+  </Step>
+  <Step title="ZeroGPU routes the workload">
+    For workloads supported on the edge, orchestration evaluates compatible devices based on availability, capacity, current load, and geographic location.
 
-Requests run across a hybrid of:
+    With devices distributed globally, ZeroGPU can bring inference closer to where requests originate. This helps reduce network latency while matching workloads to compute that can run them efficiently.
 
-<Columns cols={3}>
-  <Card title="Edge devices" icon="mobile-screen">
-    Phones, gaming PCs.
-  </Card>
-  <Card title="Optimized edge servers" icon="server">
-    Mid-sized models, higher load.
-  </Card>
-  <Card title="Cloud fallback" icon="cloud">
-    Consistent performance and burst capacity.
-  </Card>
-</Columns>
+    Routing considers both proximity and execution capacity to support responsive inference.
+  </Step>
+  <Step title="Receive your result">
+    The model runs on supported infrastructure and returns its output through the API. Depending on the model and endpoint, this may be generated text, structured data, embeddings, or audio, with streaming available where supported.
 
-## Routing
+    Execution options vary by model. Edge devices contribute available compute, while servers and cloud infrastructure support other workloads and fallback where available.
 
-For each request, ZeroGPU picks the right model and the right compute by capability, availability, and load - and routes geographically to cut latency. You call one endpoint; the orchestration is handled for you.
+    Use the [ZeroGPU dashboard](https://platform.zerogpu.ai) to inspect requests and monitor usage, latency, and errors.
+  </Step>
+</Steps>
 
-<Note>
-  This is network-side routing (which model, which compute). It's distinct from the ZeroGPU Router in the skills/plugins, which decides - on the client side - which steps of an agent run to offload to ZeroGPU at all. See [Integrations → Claude Code Plugin](/integrations/claude-code-plugin).
-</Note>
+## The network behind your API
+
+Participating devices contribute computing capacity that would otherwise sit idle. ZeroGPU coordinates that capacity across locations and hardware, turning distributed resources into an accessible network for AI inference.
+
+You build the application. ZeroGPU brings the compute together.

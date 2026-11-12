@@ -1,5 +1,6 @@
 ---
 title: "Android"
+icon: "android"
 description: "Turn devices running your Android app into ZeroGPU edge inference nodes with the ZeroGPU Android SDK."
 ---
 
@@ -95,6 +96,23 @@ Optional constructor parameters:
 | `resourcePolicy` | `ResourcePolicy()` | Local limits: `maxModelBytes`, `memoryBudgetFraction`, `disableGuardrails`. |
 | `listener` | `null` | A `ZeroGpuListener` for lifecycle callbacks (see [Device lifecycle](#device-lifecycle)). |
 | `customParams` | `emptyMap()` | Up to three reporting slots, `cust_param1`–`cust_param3`. Values only; no personal data. |
+| `appId` | `null` | Optional. Your app's ID from the Edge Operator Portal. See [App ID and app name](#app-id-and-app-name-optional). |
+| `appName` | `null` | Optional. Your app's display name. |
+
+### App ID and app name (optional)
+
+Pass the app ID and name from the [Edge Operator Portal](https://edge.zerogpu.ai) so the inference this device serves is attributed to your app. Copy the ID from your app's row on **My Apps**. The SDK also sends your package name (`context.packageName`) as the app's native ID.
+
+```kotlin
+zeroGpu = ZeroGpuSdk(
+    context = this,
+    operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY,
+    appId = BuildConfig.ZEROGPU_APP_ID, // optional
+    appName = "My App",                // optional
+)
+```
+
+Both are optional and need SDK 0.5.0 or later. Leaving them unset never affects registration or inference; ZeroGPU then uses the app your SDK key belongs to.
 
 ## Authentication
 
@@ -128,10 +146,9 @@ zerogpu.operatorKey=zgpu-sdk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Registration is automatic. After `start()`, while the app is in the foreground, the SDK:
 
-1. Registers the device with the ZeroGPU device registry using your SDK key.
-2. Downloads its assigned model(s), verifies them, and caches them on device. Models are only re-downloaded when they change.
-3. Runs a warm-up inference.
-4. Opens a WebSocket and advertises the device as ready.
+1. Connects the device to ZeroGPU with your SDK key.
+2. Downloads a model and caches it on the device. Models are only downloaded again when they change.
+3. Marks the device ready to serve tasks.
 
 ## Start contributing compute
 
@@ -181,8 +198,6 @@ class MainActivity : ComponentActivity() {
     private val sdk = ZeroGpuSdk(
         context = this,
         operatorKey = BuildConfig.ZEROGPU_OPERATOR_KEY, // "zgpu-sdk-…"
-        // baseUrl defaults to https://devices.zerogpu.ai
-        // env     defaults to "production"
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {

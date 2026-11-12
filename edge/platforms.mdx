@@ -15,8 +15,8 @@ ZeroGPU Edge is a background service with a small status app. Install it on each
 | Platform | Supported systems | Installers | Guide |
 |---|---|---|---|
 | **Windows** | Windows 10 and 11, x64 | `ZeroGPU-Setup.exe` (guided), `ZeroGPU-Edge.msi` (managed) | [Windows](/edge/agent/windows) |
-| **macOS** | macOS 12+, Apple Silicon and Intel | `ZeroGPU.dmg` (guided), `zerogpu-edge.pkg` (MDM) | [macOS](/edge/agent/macos) |
-| **Linux** | Ubuntu, Debian, Fedora, RHEL, Rocky; x86_64 and ARM64 | `.deb`, `.rpm` | [Linux](/edge/agent/linux) |
+| **macOS** | macOS 14+ on Apple silicon, 13.4+ on Intel | `ZeroGPU.dmg` (guided), `zerogpu-edge.pkg` (MDM) | [macOS](/edge/agent/macos) |
+| **Linux** | glibc 2.30+ (Ubuntu 20.04+, Debian 11+, Fedora, RHEL / Rocky 9+); x86_64 and ARM64 | `.deb`, `.rpm` | [Linux](/edge/agent/linux) |
 
 Versioned files are at `https://apps.zerogpu.ai/edge/releases/<version>/`, with a `SHA256SUMS` file next to them. Installed machines update themselves.
 
@@ -27,8 +27,8 @@ ZeroGPU on GitHub: [github.com/zerogpu](https://github.com/zerogpu).
 | Platform | Package | Install | Guide |
 |---|---|---|---|
 | **Android** | [`ai.zerogpu:android-sdk`](https://central.sonatype.com/artifact/ai.zerogpu/android-sdk) | Maven Central | [Android](/edge/sdk/android) |
-| **Chrome extensions** | [`@zerogpu/browser-extension-sdk`](https://www.npmjs.com/package/@zerogpu/browser-extension-sdk) | npm, vendored with `npx zerogpu init` | [Chrome / Web](/edge/sdk/web) |
-| **Websites** | `https://js-sdk.zerogpu.ai/dist/loader.js` | Script tag, or the npm package | [Chrome / Web](/edge/sdk/web) |
+| **Chrome extensions** | [`@zerogpu/browser-extension-sdk`](https://www.npmjs.com/package/@zerogpu/browser-extension-sdk) | npm, vendored with `npx zerogpu init` | [Chrome Extension](/edge/sdk/chrome-extension) |
+| **Websites** | `https://js-sdk.zerogpu.ai/dist/loader.js` | Script tag, or the npm package | [Browser](/edge/sdk/browser) |
 | **Telegram Mini Apps** | `https://js-sdk.zerogpu.ai/dist/loader.js` | Script tag | [Telegram](/edge/sdk/telegram) |
 | **macOS desktop apps** | [`@zerogpu/worker`](https://www.npmjs.com/package/@zerogpu/worker) | npm, in an Electron utility process | [macOS desktop apps](/edge/sdk/electron) |
 | **Server / npm** | [`@zerogpu/worker`](https://www.npmjs.com/package/@zerogpu/worker), [`zerogpu/worker`](https://hub.docker.com/r/zerogpu/worker) | npm or Docker | [Server / npm](/edge/sdk/server) |
@@ -36,6 +36,19 @@ ZeroGPU on GitHub: [github.com/zerogpu](https://github.com/zerogpu).
 <Note>
   Have a Mac or Linux server you just want to connect, not an app to ship? Use the [downloadable agent](#downloadable-agent). The SDKs are for building ZeroGPU into your own software.
 </Note>
+
+## App ID and app name (optional)
+
+Every app you register in the [Edge Operator Portal](https://edge.zerogpu.ai) gets an **app ID** (a UUID). Copy it from the app's row on **My Apps**; IDs are shown once an app is approved. The same ID identifies the app in the [Reporting API](/edge/reporting-api).
+
+The SDKs can send the app ID and your app's name when a device registers, so the inference the device serves is attributed to that app. Both are optional. If a device doesn't send them, ZeroGPU uses the app your SDK key belongs to and that app's name from the portal.
+
+| Platform | App ID (optional) | App name (optional) | Native ID (optional) |
+|---|---|---|---|
+| [Android](/edge/sdk/android#app-id-and-app-name-optional) (0.5.0+) | `appId` | `appName` | Package name, sent automatically |
+| [Chrome Extension](/edge/sdk/chrome-extension#app-id-and-app-name-optional) (0.5.1+) | `appId` | `appName` | Extension ID, sent automatically |
+| [Browser](/edge/sdk/browser#app-id-and-app-name-optional) | `appId` or `data-app-id` | `appName` or `data-app-name` | `externalAppId` or `data-external-app-id` |
+| [Telegram Mini Apps](/edge/sdk/telegram#app-id-and-app-name-optional) | `data-app-id` | `data-app-name` | Your bot username, as `data-external-app-id` |
 
 ## Which key to use
 

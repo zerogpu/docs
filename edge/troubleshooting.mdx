@@ -31,7 +31,7 @@ Start with [Verify devices](/edge/verify): it walks through whether a device is 
 | Windows shows **Windows protected your PC** | The Windows installers aren't Authenticode-signed yet. Check the SHA-256, then select **More info → Run anyway**. See [Windows](/edge/agent/windows). |
 | A download looks wrong | Compare its SHA-256 with `SHA256SUMS` on [apps.zerogpu.ai/edge](https://apps.zerogpu.ai/edge). Only download the agent from there. |
 | `npm install @zerogpu/…` fails with a `404` | Your `.npmrc` maps `@zerogpu` to another registry. Add `--@zerogpu:registry=https://registry.npmjs.org`. |
-| Chrome extension rejected for remote code | Vendor the SDK with `npx zerogpu init` instead of loading it from the CDN. See [Chrome / Web](/edge/sdk/web). |
+| Chrome extension rejected for remote code | Vendor the SDK with `npx zerogpu init` instead of loading it from the CDN. See [Chrome Extension](/edge/sdk/chrome-extension). |
 
 ## Earnings
 
@@ -47,7 +47,8 @@ Start with [Verify devices](/edge/verify): it walks through whether a device is 
   <Card title="macOS agent" icon="apple" href="/edge/agent/macos#troubleshooting" />
   <Card title="Linux agent" icon="linux" href="/edge/agent/linux#troubleshooting" />
   <Card title="Android" icon="android" href="/edge/sdk/android#troubleshooting" />
-  <Card title="Chrome / Web" icon="chrome" href="/edge/sdk/web#troubleshooting" />
+  <Card title="Chrome Extension" icon="chrome" href="/edge/sdk/chrome-extension#troubleshooting" />
+  <Card title="Browser" icon="globe" href="/edge/sdk/browser#troubleshooting" />
   <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram#troubleshooting" />
   <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron#troubleshooting" />
   <Card title="Server / npm" icon="server" href="/edge/sdk/server#troubleshooting" />

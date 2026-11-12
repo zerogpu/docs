@@ -20,7 +20,7 @@ The device has joined the network with your SDK key.
 
     The device is connected once you see `WebSocket ready for tasks`.
   </Tab>
-  <Tab title="Chrome / Web / Telegram">
+  <Tab title="Chrome Extension / Browser / Telegram">
     Turn on console logs (`enableConsoleLogs="true"` on the script tag, or `enableConsoleLogs: true` in `offscreen.js`) and open the console. For a Chrome extension, that's **Inspect views: offscreen.html** on `chrome://extensions`. The SDK logs the device registering, loading a model, and becoming ready.
 
     On a website, the handle returned by `initZeroGpuSdk` reports `status === "running"`. For an extension, `npx zerogpu doctor` checks the integration itself.
@@ -74,7 +74,8 @@ Once a device serves its first request, it shows up in **Edge Requests** and **E
 
 <Columns cols={2}>
   <Card title="Android" icon="android" href="/edge/sdk/android" />
-  <Card title="Chrome / Web" icon="chrome" href="/edge/sdk/web" />
+  <Card title="Chrome Extension" icon="chrome" href="/edge/sdk/chrome-extension" />
+  <Card title="Browser" icon="globe" href="/edge/sdk/browser" />
   <Card title="Telegram Mini Apps" icon="telegram" href="/edge/sdk/telegram" />
   <Card title="macOS desktop apps" icon="apple" href="/edge/sdk/electron" />
   <Card title="Server / npm" icon="server" href="/edge/sdk/server" />
