@@ -131,7 +131,8 @@
                       "api-reference/models/all-minilm-l6-v2",
                       "api-reference/models/bge-small-en-v1-5",
                       "api-reference/models/whisper-tiny",
-                      "api-reference/models/chatterbox-nano"
+                      "api-reference/models/chatterbox-nano",
+                      "api-reference/models/chatterbox"
                     ]
                   },
                   {

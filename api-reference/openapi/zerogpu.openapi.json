@@ -2116,11 +2116,12 @@
           "model": {
             "type": "string",
             "enum": [
-              "chatterbox-nano"
+              "chatterbox-nano",
+              "chatterbox"
             ],
             "default": "chatterbox-nano",
             "example": "chatterbox-nano",
-            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+            "description": "Model identifier. The endpoint serves `chatterbox-nano` and `chatterbox`."
           },
           "input": {
             "type": "string",
@@ -2215,11 +2216,12 @@
           "model": {
             "type": "string",
             "enum": [
-              "chatterbox-nano"
+              "chatterbox-nano",
+              "chatterbox"
             ],
             "default": "chatterbox-nano",
             "example": "chatterbox-nano",
-            "description": "Model identifier. The endpoint serves `chatterbox-nano`."
+            "description": "Model identifier. The endpoint serves `chatterbox-nano` and `chatterbox`."
           },
           "input": {
             "type": "string",

@@ -33,7 +33,7 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 | <a href="/api-reference/models/lfm2-5-1-2b-instruct" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/LFM2.5-1.2B-Instruct/liquid_ai_logo.png" alt="LFM2.5-1.2B-Instruct" width="22" height="22" noZoom /> <code>LFM2.5-1.2B-Instruct</code></a> | $0.02 | $0.05 | — | Text Generation | 32,768 |
 | <a href="/api-reference/models/qwen3-6-35b-a3b" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6215ca5692c0ecfba9186921/hrRM50-6XcdWgg2AKpENG.jpeg" alt="qwen3.6-35b-a3b" width="22" height="22" noZoom /> <code>qwen3.6-35b-a3b</code></a> | $0.20 | $1.50 | $0.20 | Text Generation | 16,384 |
 | <a href="/api-reference/models/zlm-v1-tool-decisions" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>zlm-v1-tool-decisions</code></a> | $0.05 | $0.15 | — | Text Generation | 24,576 |
-| <a href="/api-reference/models/unlimited-ocr" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><code>unlimited-ocr</code></a> | Per page | Per page | — | Text Generation | — |
+| <a href="/api-reference/models/unlimited-ocr" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/64f187a2cc1c03340ac30498/TYYUxK8xD1AxExFMWqbZD.png" alt="unlimited-ocr" width="22" height="22" noZoom /> <code>unlimited-ocr</code></a> | Per page | Per page | — | Text Generation | — |
 | <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.04 | $0.10 | — | Text Classification | 400 |
 | <a href="/api-reference/models/gliner2-5-decide-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-decide-v1" width="22" height="22" noZoom /> <code>gliner2.5-decide-v1</code></a> | $0.004 | Not billed | — | Text Classification | — |
 | <a href="/api-reference/models/all-minilm-l6-v2" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/all-minilm-l6-v2/all-minilm-l6-v2.png" alt="all-minilm-l6-v2" width="22" height="22" noZoom /> <code>all-minilm-l6-v2</code></a> | $0.004 | Not billed | — | Text Embedding | 512 |
@@ -41,12 +41,13 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 
 `unlimited-ocr` is billed per page of document rather than per token, so its per-token columns read `Per page`. It is called on `/v1/responses` and `/v1/chat/completions` like the other text models.
 
-[Audio models](/docs/audio) are called on `POST /v1/audio/transcriptions` and `POST /v1/audio/speech` rather than `/v1/responses`, and are billed per minute of audio instead of per token, rounded up to the next whole minute with a one-minute minimum.
+[Audio models](/docs/audio) are called on `POST /v1/audio/transcriptions` and `POST /v1/audio/speech` rather than `/v1/responses`, and are billed per minute of audio instead of per token, rounded up to the next whole minute with a one-minute minimum. `chatterbox` is metered at the same per-minute rate but rounded up to the next whole second of generated audio, per request.
 
 | Model | Price /min | Task | Limits |
 | --- | ---: | --- | --- |
 | <a href="/api-reference/models/whisper-tiny" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gpt-oss-120b/gpt-oss-120b.png" alt="whisper-tiny" width="22" height="22" noZoom /> <code>whisper-tiny</code></a> | $0.02 | Speech-to-Text | 25 MB, 10 minutes of audio |
 | <a href="/api-reference/models/chatterbox-nano" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox-nano" width="22" height="22" noZoom /> <code>chatterbox-nano</code></a> | $0.01 | Text-to-Speech | 2,000 characters |
+| <a href="/api-reference/models/chatterbox" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox" width="22" height="22" noZoom /> <code>chatterbox</code></a> | $0.015 | Text-to-Speech | 2,000 characters |
 
 ## Detailed model cards
 
@@ -330,8 +331,19 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
 
     Resemble AI's Chatterbox Nano is a 110M-parameter English text-to-speech model built for fast, low-cost speech generation. It speaks your text in a built-in voice, or clones a speaker…
   </Card>
+  <Card href="/api-reference/models/chatterbox">
+    <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/6000a0456a2a91af974298cf/qmxSbcVBCwUtVez918IkQ.png" alt="chatterbox" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
+      <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>chatterbox</div>
+    </div>
+
+    <div style={{marginTop:"0.45rem"}}><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Text-to-Speech</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>Voice cloning</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>0.5B params</span><span style={{display:"inline-block",borderRadius:"9999px",border:"1px solid rgba(128,128,128,0.3)",background:"rgba(128,128,128,0.12)",padding:"1px 9px",fontSize:"12px",fontWeight:500,marginRight:"6px",marginBottom:"6px"}}>\$0.015 / minute</span></div>
+
+    Resemble AI's Chatterbox is the original 0.5B-parameter ChatterboxTTS model, the larger sibling of chatterbox-nano. It speaks your text in a built-in voice, or clones a speaker zero-shot…
+  </Card>
   <Card href="/api-reference/models/unlimited-ocr">
     <div style={{display:"flex",alignItems:"center",gap:"0.65rem",marginTop:"-0.25rem"}}>
+      <img src="https://cdn-avatars.huggingface.co/v1/production/uploads/64f187a2cc1c03340ac30498/TYYUxK8xD1AxExFMWqbZD.png" alt="unlimited-ocr" width="32" height="32" noZoom style={{flexShrink:0,borderRadius:"7px",margin:"1rem 0"}} />
       <div style={{fontWeight:600,fontSize:"1.1rem",lineHeight:"1.3"}}>unlimited-ocr</div>
     </div>
 
@@ -351,7 +363,7 @@ Sections on this page: [At a glance](#at-a-glance) (pricing table), [Detailed mo
     16 models: `deepseek-v4.1-flash`, `glm-5.3-flash`, `gpt-5.4-nano`, `gpt-5.6-luna`, `gpt-6-luna`, `gpt-4.1-mini`, `gpt-oss-120b`, `qwen3-30b-a3b-fp8`, `qwen3.6-35b-a3b`, `llama-3.1-8b-instruct-fast`, `llama-3.2-3b-instruct-fast`, `llama-guard-4-12b`, `LFM2.5-1.2B-Thinking`, `LFM2.5-1.2B-Instruct`, `zlm-v1-tool-decisions`, `unlimited-ocr`
   </Card>
   <Card title="Audio Models" icon="microphone" href="/docs/audio">
-    2 models: `whisper-tiny`, `chatterbox-nano`
+    3 models: `whisper-tiny`, `chatterbox-nano`, `chatterbox`
   </Card>
   <Card title="Text Classification" icon="tags" href="/docs/text-classification">
     8 models: `zlm-v2-iab-classify-edge-enriched`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier`, `deberta-v3-small`, `zlm-v1-signal-extract`, `gliner2.5-base-v1`, `gliner2.5-multi-v1`, `gliner2.5-decide-v1`
