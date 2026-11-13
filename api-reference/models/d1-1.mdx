@@ -1,0 +1,19 @@
+---
+title: "d1.1"
+sidebarTitle: "d1.1"
+description: "Model details for d1.1. LiquidAI's decision model, served on /v1/systemone with a 65,536-token limit."
+openapi: "api-reference/openapi/playgrounds/d1_1.openapi.json POST /systemone"
+---
+
+<Note>
+	`d1.1` is routable only on `POST /v1/systemone`. It generates no text, so it is not
+	available on `/v1/responses` or `/v1/chat/completions`.
+</Note>
+
+> LiquidAI's d1.1 is a decision model and the successor to d1. You send a state — text, JSON or images — together with several named questions, and every question is answered in a single forward pass: a `noul` question returns the probability of yes, a `choice` question picks one of your named options with a confidence and the full probabilities, and a `score` question rates the state on 2 to 10 ordered levels. No text is generated, so output tokens are always 0 and only input is billed. It is built for intent classification, agent routing, moderation, commercial-intent detection, triage and LLM-as-a-judge checks, and it does not chat, stream or call tools.
+
+## System One
+
+The request and response follow the [System One](/api-reference/systemone) decision schema. Unlike the ZLM classifiers, d1.1 has no taxonomy of its own: every question is answered against the criteria you supply.
+
+**References:** [Terms](https://www.liquid.ai/terms-conditions) • [Privacy](https://zerogpu.ai/privacy-policy)

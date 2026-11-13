@@ -436,6 +436,10 @@ def main():
     chat_enum = model_prop("CreateChatCompletionRequest").get("enum", [])
     embedding_enum = model_prop("CreateEmbeddingRequest").get("enum", [])
     moderation_prop = json.dumps(model_prop("CreateModerationRequest"))
+    systemone_prop = json.dumps(model_prop("SystemOneRequest"))
+    transcription_enum = model_prop("CreateTranscriptionRequest").get("enum", [])
+    speech_enum = model_prop("CreateSpeechRequest").get("enum", [])
+    speech_multipart_enum = model_prop("CreateSpeechMultipartRequest").get("enum", [])
 
     print(f"API: {len(models)} models — {', '.join(api_ids)}")
     print(f"mode: {'FIX (table cells rewritten in place)' if args.fix else 'report only'}\n")
@@ -511,9 +515,31 @@ def main():
             if task_api == "Text Moderation":
                 if mid not in moderation_prop:
                     notes.append(f"{oa}: not referenced by CreateModerationRequest.model")
+            elif m.get("taskType") == "decision":
+                # A decision model is routable only on /v1/systemone: it generates no
+                # text, so it belongs in SystemOneRequest.model, not in the
+                # Responses/Chat enums. Same shape as the moderation case above —
+                # SystemOneRequest.model carries no enum, so the whole property is
+                # searched.
+                if mid not in systemone_prop:
+                    notes.append(f"{oa}: not referenced by SystemOneRequest.model")
             elif task_api == "Text Embedding":
                 if mid not in embedding_enum:
                     missing.append(f"{oa}: absent from the CreateEmbeddingRequest model enum")
+            elif m.get("taskType") == "transcription":
+                # Audio models are routable only on /v1/audio/*, never on Responses or
+                # Chat, so their own request schema is the one to check.
+                if mid not in transcription_enum:
+                    missing.append(
+                        f"{oa}: absent from the CreateTranscriptionRequest model enum"
+                    )
+            elif m.get("taskType") == "speech":
+                for schema, enum in (
+                    ("CreateSpeechRequest", speech_enum),
+                    ("CreateSpeechMultipartRequest", speech_multipart_enum),
+                ):
+                    if mid not in enum:
+                        missing.append(f"{oa}: absent from the {schema} model enum")
             else:
                 # The payload does not say which endpoints a model is routable on:
                 # llama-3.1-8b-instruct-fast has sample_responses_body: null yet is fully
