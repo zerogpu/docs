@@ -3,10 +3,11 @@ title: "Text Classification"
 description: "Edge models that map text to labels, IAB taxonomy, and audience signals."
 ---
 
-Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech, a general zero-shot classifier where you supply the candidate labels, and the schema-based GLiNER2.5 models, which classify, extract entities, fill a JSON schema, and make dynamic-label decisions such as intent and routing from the same request. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions).
+Text classification models map a passage to predefined labels or categories. ZeroGPU offers IAB taxonomy classifiers tuned for ad tech, a general zero-shot classifier where you supply the candidate labels, and the schema-based GLiNER2.5 models, which classify, extract entities, fill a JSON schema, and make dynamic-label decisions such as intent and routing from the same request. LiquidAI's `d1.1` decision model sits alongside them, answering named yes/no, multiple-choice, and rubric questions about any state. Each request is shown for both the [Responses API](/api-reference/responses) and the OpenAI-compatible [Chat Completions API](/api-reference/chat-completions); `d1.1` is served only on [System One](/api-reference/systemone).
 
 | Model | Input /1M | Output /1M | Max tokens |
 | --- | ---: | ---: | ---: |
+| <a href="/api-reference/models/d1-1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://cdn-avatars.huggingface.co/v1/production/uploads/61b8e2ba285851687028d395/EsTgVtnM2IqVRKgPdfqcB.png" alt="d1.1" width="22" height="22" noZoom /> <code>d1.1</code></a> | $0.015 | Not billed | 65,536 |
 | <a href="/api-reference/models/zlm-v1-iab-classify-edge" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-iab-classify-edge" width="22" height="22" noZoom /> <code>zlm-v1-iab-classify-edge</code></a> | $0.02 | $0.05 | 400 |
 | <a href="/api-reference/models/zlm-v2-iab-classify-edge-enriched" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge-enriched/logo_dark.png" alt="zlm-v2-iab-classify-edge-enriched" width="22" height="22" noZoom /> <code>zlm-v2-iab-classify-edge-enriched</code></a> | $0.05 | $0.15 | 800 |
 | <a href="/api-reference/models/zlm-v1-iab-domain-classifier" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-domain-classifier/logo_dark.png" alt="zlm-v1-iab-domain-classifier" width="22" height="22" noZoom /> <code>zlm-v1-iab-domain-classifier</code></a> | $0.02 | $0.05 | 100 |
@@ -14,7 +15,57 @@ Text classification models map a passage to predefined labels or categories. Zer
 | <a href="/api-reference/models/zlm-v1-signal-extract" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/zlm-v1-iab-classify-edge/logo_dark.png" alt="zlm-v1-signal-extract" width="22" height="22" noZoom /> <code>zlm-v1-signal-extract</code></a> | $0.04 | $0.10 | 400 |
 | <a href="/api-reference/models/gliner2-5-base-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-base-v1" width="22" height="22" noZoom /> <code>gliner2.5-base-v1</code></a> | $0.02 | $0.05 | — |
 | <a href="/api-reference/models/gliner2-5-multi-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-multi-v1" width="22" height="22" noZoom /> <code>gliner2.5-multi-v1</code></a> | $0.02 | $0.05 | — |
-| <a href="/api-reference/models/gliner2-5-decide-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-decide-v1" width="22" height="22" noZoom /> <code>gliner2.5-decide-v1</code></a> | $0.004 | Not billed | — |
+| <a href="/api-reference/models/gliner2-5-decide-v1" style={{display:"inline-flex",alignItems:"center",gap:"0.5rem",textDecoration:"none",color:"inherit",wordBreak:"break-word",borderBottom:"none"}}><img src="https://models-favicon.zerogpu.ai/gliner2-base-v1/fastino.png" alt="gliner2.5-decide-v1" width="22" height="22" noZoom /> <code>gliner2.5-decide-v1</code></a> | $0.01 | Not billed | — |
+
+## d1.1
+
+<Note>
+	This model is routable only on `/v1/systemone` (see
+	[System One](/api-reference/systemone)). It does not chat, stream, or call
+	tools, so it 400s on `/v1/responses` and `/v1/chat/completions`. Send the
+	content to judge as `state` and up to 16 named `questions` about it.
+</Note>
+
+> LiquidAI's d1.1 is a decision model and the successor to d1. Send a state — text, JSON, or images — together with several named questions, and every question is answered in a single forward pass: `noul` returns the probability of yes, `choice` picks one of your named options with a confidence and the full probability distribution, and `score` rates the state on 2 to 10 ordered levels. It generates no text, so output tokens are always 0 and only the input is billed, across a 65,536-token state. It is built for intent classification, agent routing, moderation, commercial-intent detection, triage, and LLM-as-a-judge checks, and it does not chat, stream, or call tools.
+
+**References:** [Terms](https://www.liquid.ai/terms-conditions) • [Privacy](https://zerogpu.ai/privacy-policy)
+
+<CodeGroup>
+
+```bash System One
+curl https://api.zerogpu.ai/v1/systemone \
+  -H "content-type: application/json" \
+  -H "x-api-key: YOUR_API_KEY" \
+  -d '{
+  "model": "d1.1",
+  "state": "Can you refund my last order? It arrived broken and I want to speak to someone.",
+  "questions": {
+    "handoff": {
+      "type": "noul",
+      "instructions": "Does this request need a human agent?"
+    },
+    "intent": {
+      "type": "choice",
+      "instructions": "Which intent best describes this request?",
+      "criteria": {
+        "refund": "Asking for money back",
+        "payment_issue": "A payment failed or was charged twice",
+        "account_access": "Cannot sign in or recover an account",
+        "general_question": "Anything else"
+      }
+    },
+    "urgency": {
+      "type": "score",
+      "instructions": "How urgent is this request?",
+      "criteria": ["None", "Low", "Medium", "High"]
+    }
+  }
+}'
+```
+
+</CodeGroup>
+
+Each answer comes back under its question's name, with calibrated probabilities and a `usage` block whose `output_tokens` is always 0 — see [System One](/api-reference/systemone) for the answer shapes of `noul`, `choice`, and `score`.
 
 ## zlm-v1-iab-classify-edge
 

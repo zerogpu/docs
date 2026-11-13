@@ -7,10 +7,11 @@ openapi: "api-reference/openapi/zerogpu.openapi.json POST /systemone"
 
 Send the content as `state` and ask up to 16 named `questions` about it in one call. Each answer comes back under the question's name, with calibrated probabilities. The request and response follow the [TypeSafe System One](https://api.typesafe.ai/openapi.json) decision schema, so an existing System One client works by changing the base URL and API key.
 
-System One is available on four models, in addition to their existing endpoints:
+System One is available on five models. For `d1.1` it is the only endpoint; the ZLM classifiers also keep their existing ones:
 
 | Model | Also served on | Good for |
 | --- | --- | --- |
+| [`d1.1`](/api-reference/models/d1-1) | System One only | Does this need a human? Which intent is it? How urgent is it? |
 | [`zlm-v1-moderation-edge`](/api-reference/models/zlm-v1-moderation-edge) | `/moderations` | Is this unsafe? Which moderation category applies? How severe is it? |
 | [`zlm-v1-iab-classify-edge`](/api-reference/models/zlm-v1-iab-classify-edge) | `/chat/completions`, `/responses` | Which IAB category matches? Does it belong to category X? How strongly? |
 | [`zlm-v1-iab-domain-classifier`](/api-reference/models/zlm-v1-iab-domain-classifier) | `/chat/completions`, `/responses` | The same questions about a domain. `state` must be a URL or domain. |
@@ -27,6 +28,8 @@ System One is available on four models, in addition to their existing endpoints:
 Each model scores the content against its own labels: the 13 OpenAI moderation categories plus an overall unsafe score, or the IAB Content 2.2 and Audience 1.1 taxonomies. A question whose criteria name those labels is answered directly from the model's scores. A category name covers its whole branch, so `Technology and computing` also counts `Laptops`. Brand-safety questions on the IAB models read the Sensitive Topics branch, and commercial-intent questions read the Purchase Intent audiences.
 
 A question whose criteria are not among the model's labels is answered by zero-shot classification instead. You can mix both kinds in one request.
+
+`d1.1` has no fixed label set of its own. It is a decision model, so every question is answered in a single forward pass from the `state` and the question's own criteria.
 
 ## Limits and billing
 

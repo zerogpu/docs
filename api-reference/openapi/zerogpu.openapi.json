@@ -2321,7 +2321,7 @@
         "properties": {
           "model": {
             "type": "string",
-            "description": "A model that supports System One: `zlm-v1-moderation-edge`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier` or `zlm-v2-iab-classify-edge-enriched`.",
+            "description": "A model that supports System One: `d1.1`, `zlm-v1-moderation-edge`, `zlm-v1-iab-classify-edge`, `zlm-v1-iab-domain-classifier` or `zlm-v2-iab-classify-edge-enriched`.",
             "example": "zlm-v1-iab-classify-edge"
           },
           "state": {
