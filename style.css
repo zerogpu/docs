@@ -241,3 +241,73 @@ html[data-zg-audience="agent"] .nav-tabs-item {
 html[data-zg-audience="agent"] #navigation-items > div + div {
   border-top-color: rgb(34 197 94 / 0.2);
 }
+
+/* The rules above were written for dark mode; light mode (the default) needs darker text and lines to stay readable on the #F1F4F2 background. */
+html:not(.dark) .nav-dropdown-products-selector-trigger {
+  color: #166534 !important;
+}
+
+html:not(.dark) .nav-dropdown-products-selector-trigger > svg:first-child {
+  background-color: #15803d !important;
+}
+
+html:not(.dark) .nav-dropdown-products-selector-trigger > svg:last-child {
+  color: #15803d !important;
+}
+
+html:not(.dark) #zg-audience-switch button {
+  color: #52605a;
+}
+
+html:not(.dark) #zg-audience-switch button:hover {
+  color: #0f1a14;
+}
+
+html:not(.dark) #zg-audience-switch button.is-active {
+  color: #06120b;
+}
+
+html:not(.dark) #zg-agent-view,
+html:not(.dark) .zg-agent-source {
+  color: #1f2a24;
+}
+
+html:not(.dark) .zg-agent-badge,
+html:not(.dark) .zg-agent-actions a,
+html:not(.dark) .zg-agent-prompt summary {
+  color: #15803d;
+}
+
+html:not(.dark) #zg-agent-view .zg-agent-facts {
+  color: #52605a;
+  background-color: rgb(0 0 0 / 0.03);
+}
+
+html:not(.dark) .zg-agent-prompt {
+  border-color: rgb(0 0 0 / 0.15);
+}
+
+html:not(.dark) #zg-agent-view .zg-agent-markdown {
+  border-top-color: rgb(0 0 0 / 0.1);
+}
+
+html:not(.dark) #navigation-items > div + div {
+  border-top-color: rgb(0 0 0 / 0.08);
+}
+
+html:not(.dark)[data-zg-audience="agent"] .sidebar-title {
+  color: #15803d;
+}
+
+html:not(.dark)[data-zg-audience="agent"] .sidebar-title::before {
+  color: rgb(21 128 61 / 0.6);
+}
+
+html:not(.dark)[data-zg-audience="agent"] #sidebar li a,
+html:not(.dark)[data-zg-audience="agent"] .nav-tabs-item {
+  color: #166534;
+}
+
+html:not(.dark)[data-zg-audience="agent"] #sidebar li a:hover {
+  color: #052e16;
+}
