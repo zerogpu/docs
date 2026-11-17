@@ -4,13 +4,18 @@
   "name": "ZeroGPU",
   "description": "ZeroGPU is the compute efficiency layer for AI inference. It runs repeatable, high-volume tasks - classification, extraction, PII redaction, moderation, summarization, routing - on specialized small and nano language models across an edge-powered network, faster and cheaper than centralized GPUs, through one OpenAI-compatible API. Edge Providers connect Android, Chrome, Telegram, desktop and server devices to the network and earn from the inference they serve.",
   "colors": {
-    "primary": "#22C55E",
+    "primary": "#15803D",
     "light": "#4ADE80",
     "dark": "#16A34A"
   },
   "appearance": {
-    "default": "dark",
-    "strict": true
+    "default": "light",
+    "strict": false
+  },
+  "background": {
+    "color": {
+      "light": "#F1F4F2"
+    }
   },
   "fonts": {
     "heading": {
