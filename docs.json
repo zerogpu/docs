@@ -210,7 +210,9 @@
                   "integrations/langchain",
                   "integrations/litellm",
                   "integrations/mcp",
+                  "integrations/models-dev",
                   "integrations/openclaw",
+                  "integrations/opencode",
                   "integrations/vercel-ai-sdk"
                 ]
               },
@@ -252,7 +254,8 @@
                   "cookbook/claude-support-ticket-routing",
                   "cookbook/openclaw-inbox-summarizer",
                   "cookbook/hermes-investor-outreach",
-                  "cookbook/vercel-ai-sdk-voice-note-triage"
+                  "cookbook/vercel-ai-sdk-voice-note-triage",
+                  "cookbook/opencode-store-search"
                 ]
               }
             ]

@@ -1,0 +1,595 @@
+---
+title: "Models.dev"
+description: "Find ZeroGPU's models, prices, and limits in the open models.dev catalog, and use them from OpenCode, Mastra, Kilo CLI, and other models.dev-based tools with nothing but an API key."
+icon: "database"
+---
+
+Models.dev is an open-source database of AI model specifications, pricing, and capabilities, created by the maintainers of SST and used to power the [OpenCode](/integrations/opencode) coding agent. Every provider is described in TOML files in the public [anomalyco/models.dev](https://github.com/anomalyco/models.dev) repository, and the site publishes them as browsable provider pages and JSON endpoints such as `api.json`. Agents, frameworks, and CLIs read this catalog to learn which providers exist, which environment variable holds each provider's key, which base URL to call, and what every model can do and costs. ZeroGPU is listed as a provider (added in [anomalyco/models.dev#9460](https://github.com/anomalyco/models.dev/pull/9460)), so tools built on models.dev already know how to reach ZeroGPU's models.
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+This guide covers ZeroGPU's listing on [models.dev](https://models.dev/providers/zerogpu/), for developers who want ZeroGPU's model metadata in machine-readable form and for anyone using a tool built on the catalog. You'll look up ZeroGPU in the catalog, make a first call with the base URL and model ID it lists, then work through every surface the listing exposes: the provider page, the v1 and experimental v2 JSON APIs, the provider-agnostic catalogs, the logo, and the AI SDK package it points to. The second half covers the tools that read models.dev and how to use ZeroGPU in each one: OpenCode, Mastra, Kilo CLI, VoltAgent, Kit, Kimi Code CLI, and the tokenlens and Symfony AI metadata libraries. By the end you'll know where ZeroGPU works out of the box, what each tool needs, and how to read ZeroGPU's prices and limits from code.
+
+## Cookbook
+
+For a runnable, real-world example, see [Add Search to a React Store with OpenCode and ZeroGPU](/cookbook/opencode-store-search). It connects ZeroGPU in OpenCode straight from its models.dev listing, picks DeepSeek V4.1 Flash, and has the agent add a working product search box to a small React store in about 20 seconds for under a cent. Check it out to see the listing put to work in a real agent run. For every OpenCode option, see the [OpenCode integration guide](/integrations/opencode).
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/OM9PR2yHqCU?si=KUHaEx63hr4oU38Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- A chat model from the [model catalog](/docs/model-catalog) that models.dev lists. This guide uses `deepseek-v4.1-flash`.
+- `curl` and `jq`, to read the catalog from a terminal.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`) and export it. Models.dev lists `ZEROGPU_API_KEY` as ZeroGPU's key variable, so most tools that read the catalog look for it there.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+### Install Models.dev
+
+There's nothing to install: models.dev is a public website and JSON API. To query it from a terminal you only need `curl` and `jq`:
+
+```bash
+brew install jq   # or: apt-get install jq
+```
+
+To use ZeroGPU through a tool built on the catalog, install that tool instead. See [Tools that use the catalog](#tools-that-use-the-catalog).
+
+### Your first request
+
+Read ZeroGPU's base URL from the catalog, then call a model it lists at that URL with your key:
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+
+# 1. Look up ZeroGPU's endpoint in the models.dev catalog
+BASE_URL=$(curl -s https://models.dev/api.json | jq -r '.zerogpu.api')
+echo "$BASE_URL"
+
+# 2. Call a model from the catalog at that endpoint
+curl -s "$BASE_URL/chat/completions" \
+  -H "Authorization: Bearer $ZEROGPU_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "deepseek-v4.1-flash",
+    "messages": [{"role": "user", "content": "Reply with the word ok"}]
+  }' | jq -r '.choices[0].message.content'
+```
+
+```
+https://api.zerogpu.ai/v1
+ok
+```
+
+The base URL, the key's variable name, and the model ID all came from the catalog. That's exactly what models.dev-based tools do for you when you pick ZeroGPU in them.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, what it reads or calls, its parameters, a runnable example, and what you get back.
+
+### What the catalog lists for ZeroGPU
+
+The ZeroGPU listing has one provider entry and thirteen model entries. Tools read the provider entry to wire up authentication and the endpoint, and the model entries to show prices, limits, and capabilities.
+
+**Provider fields** (from `https://models.dev/api.json`, key `zerogpu`):
+
+| Field | Value | What tools use it for |
+|---|---|---|
+| `id` | `zerogpu` | Provider prefix in model references, such as `zerogpu/deepseek-v4.1-flash`. |
+| `name` | `ZeroGPU` | Display name in provider pickers. |
+| `api` | `https://api.zerogpu.ai/v1` | OpenAI-compatible base URL. |
+| `env` | `["ZEROGPU_API_KEY"]` | Environment variable the API key is read from. |
+| `npm` | `@ai-sdk/openai-compatible` | AI SDK package used to call the provider. |
+| `doc` | `https://docs.zerogpu.ai/docs/model-catalog` | Link to ZeroGPU's model catalog. |
+
+**Chat models** (in both the v1 and v2 APIs, and on the provider page). Prices are USD per 1M tokens.
+
+| Model ID | Name | Base model | Context | Max output | Input | Output | Cache read | Reasoning | Input types |
+|---|---|---|---:|---:|---:|---:|---:|---|---|
+| `deepseek-v4.1-flash` | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash` | 1,048,576 | 65,536 | $0.30 | $1.20 | $0.003 | Toggle, effort | Text |
+| `glm-5.3-flash` | GLM-5.3-Flash | `zhipuai/glm-5.3-flash` | 1,048,576 | 32,768 | $0.10 | $0.35 | n/a | Effort, always on | Text, image, PDF |
+| `gpt-4.1-mini` | GPT-4.1 mini | `openai/gpt-4.1-mini` | 1,047,576 | 32,768 | $0.40 | $1.60 | $0.10 | No | Text, image, PDF |
+| `gpt-5.4-nano` | GPT-5.4 nano | `openai/gpt-5.4-nano` | 400,000 | 128,000 | $0.20 | $1.25 | $0.02 | Effort | Text, image, PDF |
+| `gpt-5.6-luna` | GPT-5.6 Luna | `openai/gpt-5.6-luna` | 272,000 | 128,000 | $0.20 | $1.20 | $0.20 | Effort | Text, image, PDF |
+| `gpt-oss-120b` | GPT OSS 120B | `openai/gpt-oss-120b` | 131,072 | 131,072 | $0.15 | $0.60 | n/a | Always on | Text |
+| `llama-3.1-8b-instruct-fast` | Llama-3.1-8B-Instruct | `meta/llama-3.1-8b-instruct` | 131,072 | 8,192 | $0.15 | $0.28 | n/a | No | Text |
+| `qwen3-30b-a3b-fp8` | Qwen3 30B A3B | `alibaba/qwen3-30b-a3b` | 32,768 | 16,384 | $0.10 | $0.45 | n/a | Toggle | Text |
+| `qwen3.6-35b-a3b` | Qwen3.6 35B-A3B | `alibaba/qwen3.6-35b-a3b` | 262,144 | 16,384 | $0.20 | $1.50 | $0.20 | Toggle | Text, image, video |
+
+All nine chat models are flagged for tool calling, structured output, and temperature. `gpt-5.4-nano` also carries a 272,000-token input limit inside its 400,000-token context. Models with a cache-read price use implicit prefix caching, so repeated long prompts are billed at the cache rate with no markers needed.
+
+**Specialized models** (experimental v2 API only, not offered as chat models):
+
+| Model ID | Type | Base model | Price |
+|---|---|---|---|
+| `all-minilm-l6-v2` | Embedding | `sentence-transformers/all-minilm-l6-v2` | $0.004 per 1M input tokens, 256-token input |
+| `bge-small-en-v1.5` | Embedding | `baai/bge-small-en-v1.5` | $0.004 per 1M input tokens, 512-token input |
+| `whisper-tiny` | Transcription | `openai/whisper-tiny` | $0.02 per minute of input audio |
+| `chatterbox-nano` | Speech | `resemble-ai/chatterbox-nano` | $0.01 per minute of generated audio |
+
+**Reasoning controls.** The "Reasoning" column maps to these request fields on ZeroGPU's chat completions endpoint:
+
+| Model | Control | Request field | Values |
+|---|---|---|---|
+| `deepseek-v4.1-flash` | Toggle, off by default | `thinking.type` | `enabled`, `disabled` |
+| `deepseek-v4.1-flash` | Effort, when thinking is on | `reasoning_effort` | `low`, `high`, `max` |
+| `glm-5.3-flash` | Effort, always reasons | `reasoning_effort` | `low`, `high`, `max` |
+| `gpt-5.4-nano` | Effort | `reasoning_effort` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.6-luna` | Effort | `reasoning_effort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-oss-120b` | Always on, no caller control | none | n/a |
+| `qwen3-30b-a3b-fp8`, `qwen3.6-35b-a3b` | Toggle | `chat_template_kwargs.enable_thinking` | `true`, `false` |
+
+The [model catalog](/docs/model-catalog) is the source of truth for ZeroGPU pricing and limits. Models.dev is updated by pull request, so see [Troubleshooting](#troubleshooting) if the two drift. ZeroGPU also serves chat models that models.dev doesn't list yet, such as `gpt-6-luna` and `LFM2.5-1.2B-Instruct`; you can call them directly, or [add them to OpenCode by hand](/integrations/opencode#add-unlisted-zerogpu-models).
+
+### Provider page
+
+The human-readable view of the listing. It renders the catalog at [models.dev/providers/zerogpu](https://models.dev/providers/zerogpu/) with the provider ID, AI SDK package, API URL, a link to ZeroGPU's docs, and a searchable, sortable table of the nine chat models.
+
+| Column | Description |
+|---|---|
+| Model | Display name, with the canonical lab model ID underneath (for example `deepseek/deepseek-v4.1-flash`). |
+| Model ID | The ID you send to ZeroGPU and use after `zerogpu/` in models.dev-based tools. |
+| Context | Maximum context window in tokens. |
+| Output | Maximum output tokens. |
+| Price | Input / output USD per 1M tokens. |
+| Reasoning, Tool Call, Structured, Temperature | Capability flags, Yes or No. |
+
+```bash
+open https://models.dev/providers/zerogpu/
+```
+
+Response: the page lists **Models 9**, **Package** `@ai-sdk/openai-compatible`, **API** `https://api.zerogpu.ai/v1`, and a **Provider docs** link. Type in the search box to filter rows by name or ID. Model pages on models.dev also list ZeroGPU among the providers that serve each model, which is how readers comparing hosts for, say, DeepSeek V4.1 Flash find ZeroGPU.
+
+### `api.json` (v1 API)
+
+The main machine-readable endpoint, and the one most tools read. `GET https://models.dev/api.json` returns one object keyed by provider ID. ZeroGPU's entry holds the provider fields above plus a `models` map of the nine chat models.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `type` | No | chat models only | Comma-separated specialized model types to include. `decision` is the currently supported value, and `all` returns every type v1 publishes. ZeroGPU's embedding, transcription, and speech models are v2 only and never appear in v1. |
+
+```bash
+curl -s https://models.dev/api.json | jq '.zerogpu.models["deepseek-v4.1-flash"]'
+```
+
+```json
+{
+  "id": "deepseek-v4.1-flash",
+  "name": "DeepSeek V4.1 Flash",
+  "description": "DeepSeek V4.1 Flash model for reasoning and agentic coding",
+  "family": "deepseek-flash",
+  "attachment": false,
+  "reasoning": true,
+  "reasoning_options": [
+    { "type": "toggle" },
+    { "type": "effort", "values": ["low", "high", "max"] }
+  ],
+  "tool_call": true,
+  "structured_output": true,
+  "temperature": true,
+  "knowledge": "2025-05",
+  "release_date": "2026-09-10",
+  "last_updated": "2026-09-10",
+  "modalities": { "input": ["text"], "output": ["text"] },
+  "open_weights": true,
+  "limit": { "context": 1048576, "output": 65536 },
+  "cost": { "input": 0.3, "output": 1.2, "cache_read": 0.003 },
+  "canonical_model_id": "deepseek/deepseek-v4.1-flash"
+}
+```
+
+The fields you'll use most:
+
+| Field | Description |
+|---|---|
+| `cost.input`, `cost.output`, `cost.cache_read` | USD per 1M input, output, and cached input tokens. |
+| `limit.context`, `limit.input`, `limit.output` | Token limits. `limit.input` is only present when it differs from the context window. |
+| `reasoning`, `reasoning_options` | Whether the model reasons, and whether it offers a toggle, effort levels, or neither. |
+| `tool_call`, `structured_output`, `temperature` | Capability flags. |
+| `modalities.input` | Accepted inputs, such as `text`, `image`, `pdf`, `video`. |
+| `canonical_model_id` | The lab model this entry serves, for joining with provider-agnostic metadata. |
+
+### Experimental v2 API
+
+The richer catalog, and the only place ZeroGPU's embedding, transcription, and speech models appear. `GET https://models.dev/experimental/v2.0/api.json` returns every model type by default, with a `type` on each model, MIME-level modalities, and a structured `capabilities` object.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `type` | No | every type | Filter to one or more types, such as `chat`. |
+| `include` | No | none | Opt-in providers to add to the catalog. Not needed for ZeroGPU, which is in the default catalog. |
+
+```bash
+curl -s https://models.dev/experimental/v2.0/api.json \
+  | jq -r '.zerogpu.models[] | "\(.type)\t\(.id)"' | sort
+```
+
+```
+chat	deepseek-v4.1-flash
+chat	glm-5.3-flash
+chat	gpt-4.1-mini
+chat	gpt-5.4-nano
+chat	gpt-5.6-luna
+chat	gpt-oss-120b
+chat	llama-3.1-8b-instruct-fast
+chat	qwen3-30b-a3b-fp8
+chat	qwen3.6-35b-a3b
+embedding	all-minilm-l6-v2
+embedding	bge-small-en-v1.5
+speech	chatterbox-nano
+transcription	whisper-tiny
+```
+
+The v2 `capabilities` object carries the reasoning controls in structured form, which is what OpenCode builds its [reasoning variants](/integrations/opencode#reasoning-variants) from:
+
+```bash
+curl -s https://models.dev/experimental/v2.0/api.json \
+  | jq '.zerogpu.models["deepseek-v4.1-flash"].capabilities | {tools, reasoning, cache, structured_output}'
+```
+
+```json
+{
+  "tools": { "supported": true },
+  "reasoning": { "supported": true, "toggle": true, "effort": ["low", "high", "max"] },
+  "cache": { "implicit": true },
+  "structured_output": true
+}
+```
+
+### `models.json` and `catalog.json`
+
+Provider-agnostic metadata about each model, independent of where it's served. `GET https://models.dev/models.json` returns facts about the models themselves, and `GET https://models.dev/catalog.json` returns provider entries and model metadata in one response. Join ZeroGPU's entries to them with `canonical_model_id` (v1) or `canonical_id` (v2).
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `type` | No | chat models only | Same filter as `api.json`; `all` returns every type. |
+
+```bash
+curl -s https://models.dev/api.json \
+  | jq -r '.zerogpu.models[] | "\(.id) = \(.canonical_model_id)"' | sort
+```
+
+```
+deepseek-v4.1-flash = deepseek/deepseek-v4.1-flash
+glm-5.3-flash = zhipuai/glm-5.3-flash
+gpt-4.1-mini = openai/gpt-4.1-mini
+gpt-5.4-nano = openai/gpt-5.4-nano
+gpt-5.6-luna = openai/gpt-5.6-luna
+gpt-oss-120b = openai/gpt-oss-120b
+llama-3.1-8b-instruct-fast = meta/llama-3.1-8b-instruct
+qwen3-30b-a3b-fp8 = alibaba/qwen3-30b-a3b
+qwen3.6-35b-a3b = alibaba/qwen3.6-35b-a3b
+```
+
+Use the right-hand IDs to look up lab-level facts in `models.json`, or to compare ZeroGPU's price for a model against every other provider that serves it in `catalog.json`. The left-hand IDs are the ones you send to ZeroGPU.
+
+### Logo
+
+ZeroGPU's mark, served for any tool that shows provider logos. `GET https://models.dev/logos/{provider}.svg` with `zerogpu` as the provider returns a single-colour SVG drawn with `currentColor`, so it takes on the surrounding text colour when inlined.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `provider` (path) | Yes | none | Provider ID. Use `zerogpu`. An unknown ID returns models.dev's default logo. |
+
+```bash
+curl -s -o zerogpu.svg https://models.dev/logos/zerogpu.svg
+```
+
+Response: an `image/svg+xml` file with a square `0 0 1024 1024` viewBox. Inline the SVG markup (rather than using an `<img>` tag) if you want it to follow your theme's text colour.
+
+### AI SDK: `@ai-sdk/openai-compatible`
+
+The `npm` field in ZeroGPU's listing tells AI SDK-based tools which package to call it with. You can build the same provider straight from the catalog in your own TypeScript code, and price each call with the catalog's numbers.
+
+| Option | Required | Default | Description |
+|---|---|---|---|
+| `name` | Yes | none | Provider name. Use the catalog `id`, `zerogpu`. |
+| `baseURL` | Yes | none | The catalog `api` value, `https://api.zerogpu.ai/v1`. |
+| `apiKey` | Yes | none | Read from the variable named in the catalog `env`, `ZEROGPU_API_KEY`. |
+| `headers` | No | none | Extra headers, such as `x-project-id`. |
+
+```bash
+npm install ai @ai-sdk/openai-compatible
+```
+
+```typescript TypeScript
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const catalog = await fetch('https://models.dev/api.json').then((r) => r.json());
+const entry = catalog.zerogpu;
+
+const zerogpu = createOpenAICompatible({
+  name: entry.id,
+  baseURL: entry.api,
+  apiKey: process.env[entry.env[0]],
+});
+
+const modelId = 'gpt-5.4-nano';
+const { text, usage } = await generateText({
+  model: zerogpu(modelId),
+  prompt: 'Classify this ticket as billing, bug, or other. Reply with one word: "I was charged twice this month."',
+});
+
+const { cost } = entry.models[modelId];
+const usd = ((usage.inputTokens ?? 0) * cost.input + (usage.outputTokens ?? 0) * cost.output) / 1_000_000;
+console.log(text, `($${usd.toFixed(6)})`);
+```
+
+```
+billing ($0.000012)
+```
+
+Response: `text` is the model's reply and `usage` holds token counts, which multiply against the catalog's per-1M prices. For ZeroGPU's classification, extraction, embedding, and audio models with typed helpers, use the dedicated [`@zerogpu/ai-sdk-provider`](/integrations/vercel-ai-sdk) package instead.
+
+### Tools that use the catalog
+
+These tools read the models.dev catalog to decide which providers and models they offer, so ZeroGPU becomes available in them without a dedicated integration. How soon it shows up depends on whether the tool fetches the catalog at runtime or bundles a snapshot at release time.
+
+| Tool | Kind | How it gets the catalog | ZeroGPU status (November 2026) |
+|---|---|---|---|
+| [OpenCode](#opencode) | Coding agent CLI | Built on models.dev | Available. Full guide on the [OpenCode integration page](/integrations/opencode). |
+| [Mastra](#mastra) | TypeScript agent framework | Provider registry generated from models.dev | Available in `@mastra/core` 1.85.0 and later. |
+| [Kilo CLI](#kilo-cli) | Coding agent CLI (fork of OpenCode) | Bundled snapshot, refreshed hourly at runtime | Available after the first catalog refresh. |
+| [VoltAgent](#voltagent) | TypeScript agent framework | Bundled snapshot, refreshed every 30 minutes outside production | Works in development; production needs a release with a newer snapshot. |
+| [Kit](#kit) | Go coding agent CLI | Embedded snapshot, updated with `kit update-models` | Run `kit update-models` first. |
+| [Kimi Code CLI](#kimi-code-cli) | Coding agent CLI | Fetched at runtime, built-in snapshot as fallback | Available from the provider picker. |
+| [tokenlens and Symfony AI](#metadata-libraries-tokenlens-and-symfony-ai) | Metadata libraries | Fetch or sync the catalog | Metadata only; you still call ZeroGPU yourself. |
+
+Every tool below uses the same model IDs as the [chat model table](#what-the-catalog-lists-for-zerogpu) and the same `ZEROGPU_API_KEY`, so one key works across all of them.
+
+### OpenCode
+
+OpenCode, the open-source coding agent from the team behind models.dev, reads its providers straight from the catalog. ZeroGPU appears in `/connect` and `/models` with no configuration.
+
+| Setting | Value |
+|---|---|
+| Model reference | `zerogpu/<model-id>`, optionally with `#variant` |
+| API key | `/connect`, `opencode auth login`, or `ZEROGPU_API_KEY` on the background server |
+| Pick a model | `/models`, `opencode run --model`, or `model` in `opencode.json(c)` |
+
+```bash
+opencode run --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
+```
+
+Response: the agent's reply streams to the terminal, and the session is billed at the catalog prices. For `/connect`, per-agent models, reasoning variants, provider overrides, and adding ZeroGPU models models.dev doesn't list yet, see the [OpenCode integration guide](/integrations/opencode). For a full agent run, see the [OpenCode cookbook](/cookbook/opencode-store-search).
+
+### Mastra
+
+[Mastra](https://mastra.ai) is a TypeScript framework for building agents and workflows. Its model router takes `provider/model` strings and generates its provider registry from models.dev, and it has a [ZeroGPU provider page](https://mastra.ai/models/providers/zerogpu) listing all nine models. Requests go to ZeroGPU's OpenAI-compatible `/chat/completions` endpoint.
+
+| Setting | Value |
+|---|---|
+| Model string | `zerogpu/<model-id>`, for example `zerogpu/deepseek-v4.1-flash` |
+| API key | `ZEROGPU_API_KEY`, read automatically |
+| Minimum version | `@mastra/core` 1.85.0 |
+| Catalog refresh | Hourly in development; off by default in production (`MASTRA_AUTO_REFRESH_PROVIDERS=false` disables it) |
+
+```bash
+npm install @mastra/core@latest
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+
+const agent = new Agent({
+  id: 'ticket-triage',
+  name: 'Ticket triage',
+  instructions: 'Classify each support ticket as billing, bug, or other. Reply with one word.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+});
+
+const result = await agent.generate('I was charged twice for my subscription this month.');
+console.log(result.text);
+```
+
+```
+billing
+```
+
+Response: `result.text` holds the reply. Swap the model string to move the agent to any other ZeroGPU model, such as `zerogpu/gpt-5.4-nano` for cheaper classification.
+
+### Kilo CLI
+
+[Kilo CLI](https://kilo.ai/docs/cli) is a fork of OpenCode from Kilo Code, and the Kilo VS Code extension shares its model catalog. It ships a snapshot of models.dev and refreshes it every hour, so ZeroGPU appears once that refresh has run.
+
+| Setting | Value |
+|---|---|
+| Model reference | `zerogpu/<model-id>` |
+| API key | `/connect`, `kilo auth login --provider zerogpu`, or `ZEROGPU_API_KEY` |
+| Pick a model | `/models` |
+| List models | `kilo models zerogpu` |
+| Catalog refresh | Hourly; `KILO_DISABLE_MODELS_FETCH` turns it off |
+
+```bash
+kilo auth login --provider zerogpu
+kilo models zerogpu
+```
+
+Response: `kilo models zerogpu` lists the nine `zerogpu/...` references. Start `kilo`, run `/models`, and pick a model marked ZeroGPU. If ZeroGPU isn't listed yet, the catalog hasn't refreshed since your snapshot; leave Kilo running and check again later.
+
+### VoltAgent
+
+[VoltAgent](https://voltagent.dev) is a TypeScript agent framework whose model router accepts `provider/model` strings and reads provider keys from the environment variables in its registry. The registry is a snapshot generated from models.dev and bundled with each release, refreshed every 30 minutes when `NODE_ENV` isn't `production`.
+
+| Setting | Value |
+|---|---|
+| Model string | `zerogpu/<model-id>` |
+| API key | `ZEROGPU_API_KEY`, read from the registry's env list |
+| Catalog refresh | Every 30 minutes outside production |
+| Current snapshot | Doesn't include ZeroGPU yet |
+
+```typescript TypeScript
+import { Agent } from '@voltagent/core';
+
+const agent = new Agent({
+  name: 'assistant',
+  instructions: 'You answer in one short sentence.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+});
+
+const result = await agent.generateText('What is a context window?');
+console.log(result.text);
+```
+
+Response: in development, the router resolves `zerogpu/...` after its first refresh from models.dev. In production, refreshing is off, so ZeroGPU works only once a VoltAgent release bundles a snapshot that includes it.
+
+### Kit
+
+[Kit](https://go-kit.dev) is a coding agent CLI written in Go. Any provider in the models.dev database can be used as `provider/model`, but Kit embeds a catalog snapshot, and the current release predates ZeroGPU's listing, so update it first.
+
+| Setting | Value |
+|---|---|
+| Model reference | `--model`, `-m`, in `provider/model` format |
+| API key | `kit auth login zerogpu`, or `ZEROGPU_API_KEY` |
+| List models | `kit models zerogpu` |
+| Update catalog | `kit update-models` (from models.dev, a URL, a file, or `embedded`) |
+
+```bash
+kit update-models
+kit auth login zerogpu
+kit models zerogpu
+kit --model zerogpu/deepseek-v4.1-flash
+```
+
+Response: after `update-models`, `kit models zerogpu` lists the nine ZeroGPU models, and `--model zerogpu/deepseek-v4.1-flash` starts Kit on DeepSeek V4.1 Flash.
+
+### Kimi Code CLI
+
+[Kimi Code CLI](https://www.kimi.com/code) from Moonshot treats models.dev providers as known third-party providers: pick one, enter a key, and choose a default model. It fetches the catalog at runtime and falls back to a built-in snapshot when models.dev is unreachable.
+
+| Setting | Value |
+|---|---|
+| Add a provider | `/provider` in the interface, or `kimi provider` in a shell |
+| API key | Typed in when you add ZeroGPU; `ZEROGPU_API_KEY` isn't read automatically |
+| Refresh the catalog | `/provider refresh` |
+
+```text
+/provider
+```
+
+Response: pick **ZeroGPU**, paste your key, and choose a default model such as `deepseek-v4.1-flash`. Deprecated and alpha models are excluded from the picker.
+
+### Metadata libraries: tokenlens and Symfony AI
+
+These libraries read models.dev for prices, limits, and capabilities but don't call ZeroGPU for you. Use them to price, budget, or validate calls you make through the ZeroGPU API or another client.
+
+| Library | Language | How to use ZeroGPU's entry | Notes |
+|---|---|---|---|
+| [tokenlens](https://github.com/xn1cklas/tokenlens) | TypeScript | `fetchModels({ provider: 'zerogpu' })` from `@tokenlens/fetch` | Its bundled catalog predates ZeroGPU, so fetch at runtime. Version dots are normalized to dashes in IDs. |
+| [Symfony AI](https://symfony.com/doc/current/ai/components/platform/models-dev.html) | PHP | `new ModelCatalog('zerogpu')` from `symfony/models-dev` | The package includes ZeroGPU from v226.0. You pass the base URL and key to the Generic platform yourself. |
+
+```typescript TypeScript
+import { fetchModels } from '@tokenlens/fetch';
+
+const zerogpu = await fetchModels({ provider: 'zerogpu' });
+console.log(zerogpu);
+```
+
+Response: ZeroGPU's catalog data from models.dev, including the `cost` and `limit` values shown above. Some tools use models.dev only for metadata such as context length and still need ZeroGPU configured by hand; for example, Hermes Agent has its own [ZeroGPU setup guide](/integrations/hermes).
+
+### Patterns and recipes
+
+**One key, every tool.** Export `ZEROGPU_API_KEY` once in your shell profile. OpenCode, Mastra, Kilo CLI, VoltAgent, and Kit all read that variable because models.dev lists it, and the model IDs are identical across them, so `zerogpu/deepseek-v4.1-flash` means the same model in your coding agent and your production agent.
+
+**Pick the cheapest model that fits a job.** Filter the catalog by the capabilities and limits a task needs, then sort by price. This finds the three cheapest ZeroGPU models with tool calling and at least 200,000 tokens of context:
+
+```bash
+curl -s https://models.dev/api.json | jq -r '
+  [.zerogpu.models[] | select(.tool_call and .limit.context >= 200000)]
+  | sort_by(.cost.output) | .[:3][]
+  | "\(.id)\t$\(.cost.input) in / $\(.cost.output) out"'
+```
+
+```
+glm-5.3-flash	$0.1 in / $0.35 out
+deepseek-v4.1-flash	$0.3 in / $1.2 out
+gpt-5.6-luna	$0.2 in / $1.2 out
+```
+
+Cheapest isn't always best for agent work. In the [OpenCode cookbook](/cookbook/opencode-store-search) runs, DeepSeek V4.1 Flash edited files cleanly every time, while GPT-5.6 Luna's file-edit tool calls failed twice before the agent recovered. Shortlist by price, then pick by how the model behaves in your tool.
+
+**Estimate a run's cost before you start.** Multiply expected tokens by the catalog's per-1M prices. A coding task that sends about 15,000 input tokens and gets 1,000 output tokens back on DeepSeek V4.1 Flash costs about `15,000 x $0.30/1M + 1,000 x $1.20/1M = $0.0057`, in line with the $0.0047 to $0.0060 the cookbook's search-box feature cost. Cached prefixes on models with a cache-read price bring repeated turns down further.
+
+**Keep your own model list in sync.** If you maintain a gateway config or model picker, regenerate it from the catalog on a schedule instead of hand-editing it. Comparing `jq -r '.zerogpu.models | keys[]'` against the previous run tells you exactly which ZeroGPU models were added or removed.
+
+### At a glance
+
+| Surface | Where | Use it to |
+|---|---|---|
+| Provider listing | `zerogpu` in the catalog | Get ZeroGPU's endpoint, key variable, and AI SDK package. |
+| Provider page | [models.dev/providers/zerogpu](https://models.dev/providers/zerogpu/) | Browse and compare the nine chat models. |
+| `api.json` | `https://models.dev/api.json` | Read chat model prices, limits, and capabilities from code. |
+| Experimental v2 API | `https://models.dev/experimental/v2.0/api.json` | Get all thirteen models, including embedding and audio, with structured capabilities. |
+| `models.json`, `catalog.json` | `https://models.dev/models.json`, `/catalog.json` | Join ZeroGPU's models to lab-level metadata and other providers. |
+| Logo | `https://models.dev/logos/zerogpu.svg` | Show ZeroGPU's mark in your UI. |
+| `@ai-sdk/openai-compatible` | Your TypeScript code | Call ZeroGPU with the catalog's settings and price each call. |
+| OpenCode | `/connect`, `/models` | Run a coding agent on ZeroGPU. See the [OpenCode guide](/integrations/opencode). |
+| Mastra | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU. |
+| Kilo CLI | `/connect`, `/models` | Run Kilo's coding agent on ZeroGPU. |
+| VoltAgent | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU (development today). |
+| Kit | `kit update-models`, `--model` | Run Kit's coding agent on ZeroGPU. |
+| Kimi Code CLI | `/provider` | Add ZeroGPU as a third-party provider. |
+| tokenlens, Symfony AI | Your code | Read ZeroGPU's prices and limits for budgeting. |
+
+## Troubleshooting
+
+**ZeroGPU doesn't appear in a models.dev-based tool.** The tool is using a catalog snapshot from before ZeroGPU was listed on 2026-11-14. Upgrade Mastra to `@mastra/core` 1.85.0 or later, run `kit update-models` for Kit, run `/provider refresh` in Kimi Code CLI, and give Kilo CLI time for its hourly refresh. VoltAgent needs a newer release for production use.
+
+**The tool can't find your key.** Most models.dev-based tools read `ZEROGPU_API_KEY` from the environment of the process that makes the request. Export it before starting the tool, or store it with the tool's own login command (`/connect`, `kilo auth login --provider zerogpu`, `kit auth login zerogpu`). Kimi Code CLI doesn't read the variable; enter the key in `/provider`.
+
+**`404` or "model not found" when calling a catalog model on ZeroGPU.** You sent the canonical lab ID or the display name instead of the model ID. Send `llama-3.1-8b-instruct-fast`, not `meta/llama-3.1-8b-instruct` or `Llama-3.1-8B-Instruct`. In tools, prefix it with the provider: `zerogpu/llama-3.1-8b-instruct-fast`.
+
+**`401 Unauthorized`.** The key is wrong, revoked, or has a stray space from pasting. Create a fresh key in the [dashboard](https://platform.zerogpu.ai/dashboard) and send it as `Authorization: Bearer <key>`.
+
+**Embedding or audio models are missing from `api.json` or a tool's model list.** `all-minilm-l6-v2`, `bge-small-en-v1.5`, `whisper-tiny`, and `chatterbox-nano` are v2-only and aren't chat models, so v1 and chat-focused tools leave them out. Read them from the [experimental v2 API](#experimental-v2-api) and call them through the [ZeroGPU API](/api-reference/introduction) or the [AI SDK provider](/integrations/vercel-ai-sdk).
+
+**A model in ZeroGPU's catalog isn't on models.dev.** Models.dev lists nine of ZeroGPU's chat models; others, such as `gpt-6-luna`, `gpt-oss-20b`, and `LFM2.5-1.2B-Instruct`, aren't listed yet. Call them directly at `https://api.zerogpu.ai/v1`, or add them to OpenCode as [custom models](/integrations/opencode#add-unlisted-zerogpu-models).
+
+**A price or limit on models.dev doesn't match ZeroGPU's catalog.** Models.dev is updated by pull request, so it can lag a pricing or limit change. The [model catalog](/docs/model-catalog) is authoritative; open an issue or pull request on [anomalyco/models.dev](https://github.com/anomalyco/models.dev) to update the listing.
+
+**models.dev shows no cache price for a model ZeroGPU lists a cached-input rate for.** The listing marks caching off for `glm-5.3-flash`, `gpt-oss-120b`, `llama-3.1-8b-instruct-fast`, and `qwen3-30b-a3b-fp8` because repeated long-prefix requests returned no cached tokens when it was added. Tools that price from models.dev will charge those prompts at the full input rate, so their cost estimates are an upper bound; ZeroGPU bills by its catalog.
+
+**`.zerogpu` comes back `null` from `jq`.** You queried `models.json`, which is provider-agnostic and has no provider keys. Use `api.json` or the experimental v2 API for provider entries.
+
+**A tokenlens lookup for a ZeroGPU model misses.** tokenlens normalizes version dots to dashes in model IDs. Look the model up by its normalized form, or read the provider entry returned by `fetchModels({ provider: 'zerogpu' })` directly.
+
+**No reasoning text shows up in a tool.** ZeroGPU doesn't return reasoning text on the chat completions API, so the listing doesn't mark any model as interleaved and tools have nothing to display. The model still reasons, and reasoning tokens are billed as output.
+
+## Conclusion
+
+Being listed on models.dev means ZeroGPU is already wired into the tools built on the catalog: OpenCode, Mastra, Kilo CLI, Kit, and Kimi Code CLI users connect a key and pick a model, and developers read ZeroGPU's endpoint, prices, and limits from one public JSON file. Combined with ZeroGPU's low-cost, low-latency models, that makes it a one-minute switch to run agents and high-volume tasks for fractions of a cent.
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model available on ZeroGPU and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/opencode-store-search">
+    Add a search box to a React store with OpenCode on ZeroGPU.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>

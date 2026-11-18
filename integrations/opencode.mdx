@@ -1,0 +1,563 @@
+---
+title: "OpenCode"
+description: "Connect ZeroGPU in OpenCode with /connect, pick any of its models.dev-listed models in /models, and run the open-source coding agent on ZeroGPU from the terminal, scripts, and CI."
+icon: "laptop-code"
+---
+
+OpenCode is an open-source AI coding agent that runs in your terminal, with a full-screen interface, a `run` command for scripts and CI, and desktop builds. It reads and edits your code, runs commands, and can be extended with agents, skills, commands, plugins, and MCP servers. Its provider and model catalog comes from [models.dev](/integrations/models-dev), so every provider listed there shows up in OpenCode's `/connect` and `/models` pickers without extra configuration. ZeroGPU is listed on models.dev, which means you can run OpenCode on ZeroGPU's models with nothing but an API key.
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+This guide covers running OpenCode v2 on ZeroGPU, for developers who want a low-cost model provider behind their coding agent. You'll connect your ZeroGPU key, pick a ZeroGPU model, and run your first prompt, then work through every surface OpenCode exposes for a provider: `/connect` and `opencode auth`, environment variables and the background server, `/models` and `opencode models`, `opencode run`, the default model, per-agent models, reasoning variants, provider overrides, and adding ZeroGPU models that models.dev doesn't list yet. By the end you'll have OpenCode writing features on ZeroGPU for fractions of a cent per task.
+
+## Cookbook
+
+For a runnable, real-world example, see [Add Search to a React Store with OpenCode and ZeroGPU](/cookbook/opencode-store-search). It connects ZeroGPU in OpenCode, picks DeepSeek V4.1 Flash, and has the agent add a working product search box to a small React store in about 20 seconds for under a cent. Check it out to see `/connect`, `/models`, and a real agent run end to end.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/OM9PR2yHqCU?si=KUHaEx63hr4oU38Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- OpenCode v2. This guide uses the v2 configuration format (`providers`, `settings`, `agents`).
+- A project directory to run OpenCode in.
+- A chat model from the [model catalog](/docs/model-catalog). This guide uses `deepseek-v4.1-flash`, which handled OpenCode's file edits cleanly in our tests.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`). You'll paste it into `/connect`, or export it as `ZEROGPU_API_KEY`, the variable models.dev lists for ZeroGPU.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+### Install OpenCode
+
+```bash
+curl -fsSL https://opencode.ai/v2/install | bash
+```
+
+Homebrew and npm work too:
+
+```bash
+brew install anomalyco/tap/opencode-v2
+# or
+npm install -g @opencode/cli
+```
+
+Confirm the version:
+
+```bash
+opencode --version
+```
+
+```
+opencode v2.3.0
+```
+
+### Your first request
+
+Start OpenCode in your project, connect ZeroGPU, and pick a model. This is the flow from the video:
+
+```bash
+cd your-project
+opencode
+```
+
+```text
+/connect
+```
+
+Type `zero`, pick **ZeroGPU**, paste your key, and press **Enter**. Then:
+
+```text
+/models
+```
+
+Type `deepseek` and pick **DeepSeek V4.1 Flash** marked **ZeroGPU**. Type a prompt and press **Enter**. The line under the reply reads `DeepSeek V4.1 Flash · ZeroGPU`, and the sidebar shows what the session has cost so far.
+
+To check the connection from a shell without opening the interface:
+
+```bash
+opencode run --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
+```
+
+```
+ok
+```
+
+Prefer not to store the key? Export it and start a private server from the same shell, so the server sees the variable:
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+opencode run --standalone --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
+```
+
+Either way, OpenCode sends requests to `https://api.zerogpu.ai/v1`, the endpoint models.dev lists for ZeroGPU.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, what it reads or calls on ZeroGPU, its parameters, a runnable example, and what you get back.
+
+### How OpenCode finds ZeroGPU
+
+OpenCode builds its provider list from the models.dev catalog. ZeroGPU's listing gives OpenCode everything it needs, so there's no provider block to write:
+
+| Catalog field | ZeroGPU value | How OpenCode uses it |
+|---|---|---|
+| Provider ID | `zerogpu` | Prefix in model references, such as `zerogpu/deepseek-v4.1-flash`. |
+| Name | `ZeroGPU` | Label in `/connect` and `/models`. |
+| Endpoint | `https://api.zerogpu.ai/v1` | Base URL for every request. |
+| Key variable | `ZEROGPU_API_KEY` | Environment variable OpenCode checks for a key. |
+| Runtime package | `@opencode/ai/providers/openai-compatible` | Sends OpenAI-format chat completions to ZeroGPU. |
+
+These nine ZeroGPU models appear in `/models`. Prices are USD per 1M tokens, and variants are explained in [Reasoning variants](#reasoning-variants).
+
+| Model reference | Context | Max output | Input | Output | Variants |
+|---|---:|---:|---:|---:|---|
+| `zerogpu/deepseek-v4.1-flash` | 1,048,576 | 65,536 | $0.30 | $1.20 | `none`, `low`, `high`, `max` |
+| `zerogpu/glm-5.3-flash` | 1,048,576 | 32,768 | $0.10 | $0.35 | `low`, `high`, `max` |
+| `zerogpu/gpt-4.1-mini` | 1,047,576 | 32,768 | $0.40 | $1.60 | none |
+| `zerogpu/gpt-5.4-nano` | 400,000 | 128,000 | $0.20 | $1.25 | `none`, `low`, `medium`, `high`, `xhigh` |
+| `zerogpu/gpt-5.6-luna` | 272,000 | 128,000 | $0.20 | $1.20 | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `zerogpu/gpt-oss-120b` | 131,072 | 131,072 | $0.15 | $0.60 | none |
+| `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | 8,192 | $0.15 | $0.28 | none |
+| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | 16,384 | $0.10 | $0.45 | `none` |
+| `zerogpu/qwen3.6-35b-a3b` | 262,144 | 16,384 | $0.20 | $1.50 | `none` |
+
+All nine support tool calling, which OpenCode needs to read files, edit code, and run commands. For cache prices, input types, and the full metadata, see the [Models.dev integration guide](/integrations/models-dev). ZeroGPU models that models.dev doesn't list yet can be added by hand; see [Add unlisted ZeroGPU models](#add-unlisted-zerogpu-models).
+
+### `/connect`
+
+Connects ZeroGPU and stores your API key in OpenCode's credential store, from inside the interactive interface.
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| Provider | Yes | none | Type `zero` to filter the list, then pick **ZeroGPU**. |
+| API key | Yes | none | Your `zgpu-api-...` key. It's masked as you paste it. |
+
+```text
+/connect
+```
+
+Response: ZeroGPU's models become available in `/models` right away. The stored key is shared by every OpenCode client on your machine, so you only connect once.
+
+### `opencode auth`
+
+The command-line side of `/connect`, for managing stored credentials from a shell.
+
+| Subcommand | Description |
+|---|---|
+| `list` | List integrations and credentials, with where each key comes from. |
+| `login` | Connect an integration, the same flow as `/connect`. |
+| `logout` | Log out of a saved account. |
+| `export` | Print stored credentials, including secrets, as JSON. |
+| `import` | Import credentials exported by `auth export`. |
+| `switch` | Switch the active account for an integration. |
+
+```bash
+opencode auth list
+```
+
+```
+ZeroGPU    ZeroGPU                     stored
+```
+
+`stored` means the key came from `/connect` or `auth login`. A key read from `ZEROGPU_API_KEY` shows `environment` instead. To remove a stored ZeroGPU key:
+
+```bash
+opencode auth logout zerogpu ZeroGPU
+```
+
+Treat `opencode auth export` output like a password file: it contains your key in plain text.
+
+### Environment variable and the background server
+
+OpenCode runs one shared background server per user, and every OpenCode window and command connects to it. The server, not your current shell, is what reads `ZEROGPU_API_KEY`, so the variable only counts if the server can see it.
+
+| Command or flag | Description |
+|---|---|
+| `--standalone` | Run this command with a private server started from the current shell, so it inherits the shell's environment. |
+| `opencode service stop` | Stop the shared server. The next `opencode` command starts a fresh one from the shell it runs in. |
+| `opencode service start` | Start the shared server explicitly. |
+| `opencode service set env <NAME> <VALUE>` | Set an environment variable on the shared server. |
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+opencode service stop
+opencode
+```
+
+Response: the restarted server picks up `ZEROGPU_API_KEY`, and `opencode auth list` shows ZeroGPU with the source `environment`. If a stored key and the variable both exist, check `auth list` to see which one is active.
+
+### `/models`
+
+Picks the model for the current session. Once ZeroGPU is connected, its nine models appear, each labeled **ZeroGPU**. The choice applies to this session and doesn't change your config.
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| Filter text | No | none | Part of a name or ID, for example `deepseek`. |
+| Model | Yes | last used | The row marked **ZeroGPU**. |
+
+```text
+/models
+```
+
+Response: the session switches to the selected model. Typing `deepseek` also matches `deepseek-v4.1-flash-free` from OpenCode Zen, so check for the **ZeroGPU** label before you pick.
+
+### `opencode models`
+
+Lists every model reference available to you from a shell, which is the quickest way to copy an exact ID for `--model` or config.
+
+```bash
+opencode models | grep zerogpu
+```
+
+```
+zerogpu/deepseek-v4.1-flash
+zerogpu/glm-5.3-flash
+zerogpu/gpt-4.1-mini
+zerogpu/gpt-5.4-nano
+zerogpu/gpt-5.6-luna
+zerogpu/gpt-oss-120b
+zerogpu/llama-3.1-8b-instruct-fast
+zerogpu/qwen3-30b-a3b-fp8
+zerogpu/qwen3.6-35b-a3b
+```
+
+Models you add in config (see below) show up here too.
+
+### `opencode run`
+
+Runs one prompt without opening the interface, for scripts and CI. The agent works through the task with as many `POST /v1/chat/completions` calls to ZeroGPU as it needs, editing files in place.
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--model`, `-m` | No | configured default | `zerogpu/<model-id>`, optionally with `#variant`. |
+| `--auto` | No | off | Auto-approve permissions that aren't explicitly denied. |
+| `--format` | No | `default` | `json` prints machine-readable events. |
+| `--file`, `-f` | No | none | Attach a file to the message. |
+| `--agent` | No | default agent | Agent to run the prompt with. |
+| `--worktree`, `-w` | No | off | Start the session in a new git worktree, optionally named. |
+| `--archived` | No | off | Keep the session out of session lists, for scripted runs. |
+| `--continue`, `-c` | No | off | Continue the last session. |
+| `--title` | No | generated | Session title. |
+| `--thinking` | No | off | Show thinking blocks. |
+| `--standalone` | No | off | Use a private server instead of the shared one. |
+
+```bash
+opencode run --model zerogpu/deepseek-v4.1-flash \
+  "Add a search box above the products that filters the cards as you type, with a \"No products found\" message when nothing matches."
+```
+
+Response: the agent's messages, tool calls, and edits stream to the terminal, and the changed files are left in your working directory. In the [cookbook](/cookbook/opencode-store-search), this exact prompt added a working search box in 17 to 18 seconds for $0.0047 to $0.0060.
+
+### Default model
+
+Sets a ZeroGPU model as the default for new sessions. Put it in `opencode.json(c)` at your project root (or in `.opencode/`), or in `~/.config/opencode/opencode.json(c)` for every project. Project files override the global one.
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `model` | No | newest available model | `zerogpu/<model-id>`. The root default doesn't keep a `#variant`. |
+
+```jsonc opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "zerogpu/deepseek-v4.1-flash",
+}
+```
+
+Response: new sessions start on DeepSeek V4.1 Flash while ZeroGPU is connected. A model already chosen for a session takes precedence, and switching models in `/models` never rewrites the file.
+
+### Agents
+
+Gives individual agents their own ZeroGPU model. OpenCode's built-ins are `build` and `plan` (primary agents) and `general` and `explore` (subagents). A subagent uses its configured model, or inherits the session's model when none is set, so you can keep a capable model on `build` and send read-only searching to a cheaper one.
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `agents.<id>.model` | No | session model | `zerogpu/<model-id>`, optionally with `#variant`. |
+| `agents.<id>.mode` | No | `primary` for new agents | `primary`, `subagent`, or `all`. |
+| `agents.<id>.description` | Recommended for subagents | none | Shown to the model choosing which subagent to launch. |
+| `agents.<id>.steps` | No | unlimited | Maximum model steps before the agent must summarize. |
+| `agents.<id>.permissions` | No | inherited | Ordered allow, ask, and deny rules. |
+| `agents.<id>.disabled` | No | `false` | Remove a built-in or custom agent. |
+
+```jsonc opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "zerogpu/deepseek-v4.1-flash",
+  "agents": {
+    "explore": { "model": "zerogpu/gpt-5.4-nano" },
+  },
+}
+```
+
+Custom agents work the same way. This read-only reviewer runs on GPT-5.6 Luna with high reasoning effort:
+
+```markdown .opencode/agents/reviewer.md
+---
+description: Reviews changes for correctness and regressions
+mode: subagent
+model: zerogpu/gpt-5.6-luna#high
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "*"
+    effect: deny
+---
+Review the current changes. List findings in severity order with file and line references.
+```
+
+Response: when you ask "Use the reviewer subagent to review my current changes", OpenCode launches it on `zerogpu/gpt-5.6-luna#high`, while the main session stays on DeepSeek V4.1 Flash.
+
+### Reasoning variants
+
+Variants are named presets for one model, selected by adding `#variant` to a model reference. OpenCode builds them from each model's reasoning controls on models.dev: a thinking toggle adds a `none` variant that turns reasoning off, and effort levels add one variant per level. The [model table](#how-opencode-finds-zerogpu) lists the variants for every ZeroGPU model.
+
+| Where | Example |
+|---|---|
+| One run | `opencode run --model zerogpu/gpt-5.6-luna#high "..."` |
+| An agent | `model: zerogpu/glm-5.3-flash#max` in the agent's frontmatter |
+
+```bash
+opencode run --model zerogpu/gpt-5.6-luna#high "Review this migration plan for data-loss risks"
+```
+
+On ZeroGPU, DeepSeek V4.1 Flash and Qwen3.6 35B-A3B start with thinking **off**. To add a variant that turns it on, define your own and set ZeroGPU's request fields in its `body` (`thinking.type` for DeepSeek, `chat_template_kwargs.enable_thinking` for Qwen):
+
+```jsonc opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "zerogpu": {
+      "models": {
+        "deepseek-v4.1-flash": {
+          "variants": [
+            { "id": "think", "body": { "thinking": { "type": "enabled" }, "reasoning_effort": "high" } },
+          ],
+        },
+        "qwen3.6-35b-a3b": {
+          "variants": [
+            { "id": "think", "body": { "chat_template_kwargs": { "enable_thinking": true } } },
+          ],
+        },
+      },
+    },
+  },
+}
+```
+
+```bash
+opencode run --model zerogpu/deepseek-v4.1-flash#think "Find the race condition in src/queue.ts"
+```
+
+Response: requests for that run carry the variant's body fields on top of the provider and model defaults. ZeroGPU doesn't return reasoning text on this API, so you'll see the answer but no thinking blocks, even with `--thinking`.
+
+### Provider and model overrides
+
+Customizes how OpenCode calls ZeroGPU without redefining the provider. The models.dev entry still supplies the endpoint, package, models, and prices; `providers.zerogpu` only adds or overrides.
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `settings.baseURL` | No | `https://api.zerogpu.ai/v1` | Send ZeroGPU traffic through a proxy or gateway. |
+| `headers` | No | none | Extra HTTP headers, such as `x-project-id` to scope usage to a ZeroGPU project. |
+| `body` | No | none | JSON fields merged into every request body. |
+| `settings.headerTimeout` | No | 5 minutes | Milliseconds to wait for response headers, or `false` to disable. |
+| `settings.chunkTimeout` | No | 15 minutes | Milliseconds to wait between streamed chunks, or `false` to disable. |
+| `models.<id>.disabled` | No | `false` | Hide a ZeroGPU model from `/models`. |
+| `models.<id>.variants` | No | from catalog | Add or replace variants. |
+
+```jsonc opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "zerogpu": {
+      "headers": { "x-project-id": "your-project-id" },
+      "models": {
+        "llama-3.1-8b-instruct-fast": { "disabled": true },
+        "qwen3-30b-a3b-fp8": { "disabled": true },
+      },
+    },
+  },
+}
+```
+
+Response: every ZeroGPU request carries the project header, and the two hidden models drop out of `/models`. OpenCode applies provider values first, then model values, then the selected variant.
+
+### Add unlisted ZeroGPU models
+
+ZeroGPU serves more chat models than models.dev lists. Add any of them under `providers.zerogpu.models` and they appear in `/models` next to the catalog ones. For a model that isn't in the catalog, OpenCode assumes tool support, text and image input, a 200,000-token context, and 32,000 output tokens unless you say otherwise, so set the real values.
+
+| Model ID | Context | Max output | Input | Output | Cached input | Notes |
+|---|---:|---:|---:|---:|---:|---|
+| `gpt-6-luna` | 272,000 | 128,000 | $0.10 | $0.50 | $0.01 | Text and image input, tool calling, adjustable reasoning. |
+| `gpt-oss-20b` | 131,072 | not listed | $0.02 | $0.10 | $0.01 | Lighter, cheaper sibling of `gpt-oss-120b`; always reasons. |
+| `llama-3.2-3b-instruct-fast` | 131,072 | 8,192 | $0.05 | $0.30 | $0.025 | Low-cost summarization. |
+| `LFM2.5-1.2B-Instruct` | 32,768 | 8,192 | $0.02 | $0.05 | n/a | Edge chat model; ID is case-sensitive. |
+| `LFM2.5-1.2B-Thinking` | 32,768 | 8,192 | $0.02 | $0.05 | n/a | Edge reasoning model; ID is case-sensitive. |
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `models.<key>` | Yes | none | The ID you'll use in OpenCode, as in `zerogpu/<key>`. |
+| `modelID` | No | the key | The ID sent to ZeroGPU, when it differs from the key. |
+| `name` | No | the key | Display name in `/models`. |
+| `capabilities.tools` | No | `true` | Whether OpenCode gives the model tools. Coding sessions need it to read and edit files. |
+| `capabilities.input`, `capabilities.output` | No | text and image in, text out | Accepted and produced media types. |
+| `capabilities.reasoning` | No | none | `{ "supported": true }`, plus `toggle` or `effort` to generate variants. |
+| `limit.context`, `limit.output` | No | 200,000 and 32,000 | Token limits. |
+| `cost.input`, `cost.output`, `cost.cache.read` | No | none | USD per 1M tokens, used for the sidebar cost. |
+
+```jsonc opencode.jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "providers": {
+    "zerogpu": {
+      "models": {
+        "gpt-6-luna": {
+          "name": "GPT-6 Luna",
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"],
+            "reasoning": { "supported": true },
+          },
+          "limit": { "context": 272000, "output": 128000 },
+          "cost": { "input": 0.10, "output": 0.50, "cache": { "read": 0.01 } },
+        },
+        "gpt-oss-20b": {
+          "name": "GPT OSS 20B",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"],
+            "reasoning": { "supported": true },
+          },
+          "limit": { "context": 131072 },
+          "cost": { "input": 0.02, "output": 0.10, "cache": { "read": 0.01 } },
+        },
+        "llama-3.2-3b-instruct-fast": {
+          "name": "Llama-3.2-3B-Instruct",
+          "capabilities": { "tools": false, "input": ["text"], "output": ["text"] },
+          "limit": { "context": 131072, "output": 8192 },
+          "cost": { "input": 0.05, "output": 0.30, "cache": { "read": 0.025 } },
+        },
+        "lfm2.5-1.2b-instruct": {
+          "modelID": "LFM2.5-1.2B-Instruct",
+          "name": "LFM2.5 1.2B Instruct",
+          "capabilities": { "tools": false, "input": ["text"], "output": ["text"] },
+          "limit": { "context": 32768, "output": 8192 },
+          "cost": { "input": 0.02, "output": 0.05 },
+        },
+        "lfm2.5-1.2b-thinking": {
+          "modelID": "LFM2.5-1.2B-Thinking",
+          "name": "LFM2.5 1.2B Thinking",
+          "capabilities": {
+            "tools": false,
+            "input": ["text"],
+            "output": ["text"],
+            "reasoning": { "supported": true },
+          },
+          "limit": { "context": 32768, "output": 8192 },
+          "cost": { "input": 0.02, "output": 0.05 },
+        },
+      },
+    },
+  },
+}
+```
+
+```bash
+opencode run --model zerogpu/gpt-6-luna "Explain what src/App.tsx renders in two sentences"
+```
+
+Response: the added models show up in `opencode models` and `/models` under ZeroGPU and are billed at ZeroGPU's rates. The `gpt-oss-20b` entry sets only `context` because the model catalog lists only its context window. The Llama 3.2 and LFM2.5 entries set `tools: false`: these small models are built for fast chat and summarization rather than multi-step agent loops, so use them for questions and explanations, not for sessions that edit files. Prices here are from the [model catalog](/docs/model-catalog) in November 2026; check it for current values. When models.dev adds one of these models, delete its entry so the catalog's data takes over.
+
+### Patterns and recipes
+
+**Capable build agent, cheap explorer.** Keep `zerogpu/deepseek-v4.1-flash` as the default model and set the `explore` subagent to `zerogpu/gpt-5.4-nano`, as in [Agents](#agents). Code search and file reading are the bulk of an agent's tokens, and they don't need the bigger model.
+
+**Think on demand.** Leave DeepSeek V4.1 Flash on its fast, thinking-off default for everyday edits, and reach for the `think` variant from [Reasoning variants](#reasoning-variants) only on the hard bug: `opencode run --model zerogpu/deepseek-v4.1-flash#think "..."`. You pay for reasoning tokens only on the runs that need them.
+
+**Headless runs in CI.** Combine `--worktree` so the agent works on a separate checkout, `--auto` so it never waits for approval, `--archived` to keep scripted sessions out of your list, and `--format json` for a parseable log:
+
+```bash
+opencode run --worktree=ci-fix --auto --archived --format json \
+  --model zerogpu/deepseek-v4.1-flash \
+  "Run the test suite and fix any failing tests" > opencode-run.json
+```
+
+**Price a task before you scale it.** Multiply expected tokens by the per-1M prices in the [model table](#how-opencode-finds-zerogpu). A task that sends about 15,000 input tokens and gets 1,000 back on DeepSeek V4.1 Flash costs about `15,000 x $0.30/1M + 1,000 x $1.20/1M = $0.0057`, in line with the cookbook's $0.0047 to $0.0060. Cached prefixes bring repeat turns down further on models with a cache price.
+
+### At a glance
+
+| Surface | Where | Use it to |
+|---|---|---|
+| `/connect` | Interactive interface | Store your ZeroGPU key. |
+| `opencode auth` | CLI | List, add, remove, export, or switch stored keys. |
+| `ZEROGPU_API_KEY` | Background server environment | Use a key without storing it. |
+| `/models` | Interactive interface | Pick a ZeroGPU model for the session. |
+| `opencode models` | CLI | Copy exact `zerogpu/...` references. |
+| `opencode run` | CLI | Run a prompt on ZeroGPU from scripts and CI. |
+| `model` | `opencode.json(c)` | Start new sessions on a ZeroGPU model. |
+| `agents` | `opencode.json(c)` or `.opencode/agents/*.md` | Give agents and subagents their own ZeroGPU model. |
+| `#variant` | Model references | Choose reasoning effort, or turn thinking on or off. |
+| `providers.zerogpu` | `opencode.json(c)` | Add headers, proxy the endpoint, hide models, or add unlisted ones. |
+
+## Troubleshooting
+
+**ZeroGPU doesn't appear in `/connect` or `/models`.** Your OpenCode build predates ZeroGPU's models.dev listing, or an old background server is still running. Run `opencode upgrade`, then `opencode service stop`, and start `opencode` again.
+
+**You exported `ZEROGPU_API_KEY` but ZeroGPU still isn't connected.** The shared background server started before you exported the key, and it's the server that reads the environment. Run `opencode service stop` and then `opencode` from the shell that has the variable, use `--standalone`, or store the key with `/connect`.
+
+**ZeroGPU stays connected after you remove the key.** A stored key and an environment variable are separate sources. Run `opencode auth list` to see which is active, `opencode auth logout zerogpu ZeroGPU` to remove a stored key, and unset `ZEROGPU_API_KEY` and restart the background server to remove the other.
+
+**`/models` shows two DeepSeek V4.1 Flash rows.** The other one is `deepseek-v4.1-flash-free` from OpenCode Zen. Pick the row marked **ZeroGPU**, or pass `--model zerogpu/deepseek-v4.1-flash`. Setting `OPENCODE_DISABLE_FREE_MODELS=1` on the server hides free models.
+
+**`Model unavailable: zerogpu/<id>`.** The ID doesn't match the catalog, or ZeroGPU isn't connected in this project. Catalog IDs are lowercase and exact, such as `zerogpu/qwen3.6-35b-a3b`. For a model you added in config, the reference uses the `models` map key, not `modelID`. Run `opencode models | grep zerogpu` for valid references.
+
+**A `#variant` fails with a model-resolution error.** Variant names come from each model's catalog data, so `#medium` exists on `gpt-5.6-luna` but not on `deepseek-v4.1-flash`, and `gpt-oss-120b` has none. Check the [model table](#how-opencode-finds-zerogpu) or define the variant yourself.
+
+**`401 Unauthorized` on the first message.** The key is wrong, revoked, or picked up a stray space when pasted. Create a fresh key in the [dashboard](https://platform.zerogpu.ai/dashboard) and run `/connect` again.
+
+**An added LFM2.5 model returns a model-not-found error.** ZeroGPU model IDs are case-sensitive. Keep the lowercase key for OpenCode, but set `modelID` to the exact `LFM2.5-1.2B-Instruct` or `LFM2.5-1.2B-Thinking`.
+
+**The agent's file edits fail and it retries.** Some models handle OpenCode's file-edit tool better than others. In our tests DeepSeek V4.1 Flash edited cleanly every time, while GPT-5.6 Luna's edits failed twice before it recovered. Switch models in `/models` if edits keep failing.
+
+**The sidebar cost reads $0.00 or $0.01.** OpenCode rounds the session cost to the cent, and a small task on ZeroGPU costs a fraction of one. Multiply the session's token counts by the prices in the [model table](#how-opencode-finds-zerogpu) for the exact figure.
+
+**No thinking blocks appear on a reasoning model.** ZeroGPU doesn't return reasoning text on the chat completions API, so there's nothing for OpenCode to display. The reasoning still happens and is billed as output tokens.
+
+## Conclusion
+
+OpenCode reads ZeroGPU straight from models.dev, so going from install to a coding agent on ZeroGPU is one `/connect` and one `/models` pick. With per-agent models, reasoning variants, and headless runs, you can put cheap, fast models on the routine work and keep deeper reasoning for the tasks that need it, at a fraction of a cent per feature.
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model available on ZeroGPU and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/opencode-store-search">
+    Add a search box to a React store with OpenCode on ZeroGPU.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>

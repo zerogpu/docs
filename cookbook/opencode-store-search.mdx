@@ -1,0 +1,461 @@
+---
+title: "🛒 Add Search to a React Store with OpenCode and ZeroGPU"
+sidebarTitle: "Add Search to a React Store with OpenCode and ZeroGPU"
+description: "Connect ZeroGPU in OpenCode through its models.dev listing, pick DeepSeek V4.1 Flash, and have the agent add a working product search box to a React store in about 20 seconds for under a cent."
+integration: opencode
+---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Connect ZeroGPU in OpenCode and have the agent add a live product search box with a 'No products found' state to a React store, running on DeepSeek V4.1 Flash."
+  stack="OpenCode v2 with ZeroGPU from the models.dev catalog, on a Vite, React, TypeScript and Tailwind app."
+  verify="Open the store, search for tent and kayak, and show me the results."
+/>
+
+This notebook demonstrates how to run the OpenCode coding agent on ZeroGPU and ship a real feature with it. You start with Trail Shop, a small React store that lists eight products with no way to search them, connect your ZeroGPU key in OpenCode, pick DeepSeek V4.1 Flash, and ask for a search box in one sentence. The agent reads the code, writes the feature, checks its own work, and the store updates in your browser, in about 20 seconds and for under a cent. By combining OpenCode and ZeroGPU, this notebook walks you through a practical pattern for handing everyday feature work to a coding agent on a low-cost model provider, with no provider configuration at all because ZeroGPU is listed on models.dev.
+
+For the full reference, see the [OpenCode integration guide](/integrations/opencode). For how ZeroGPU's listing works and which other tools read it, see the [Models.dev integration guide](/integrations/models-dev).
+
+In this notebook, you'll explore:
+
+- **OpenCode**: An open-source AI coding agent for the terminal that reads your code, edits files, and runs commands. Its provider catalog comes from models.dev, so ZeroGPU shows up in `/connect` and `/models` with no extra setup. Here it reads the store's code, writes the search feature, and type-checks its own work.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that OpenCode reads its providers from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from.
+
+This setup not only demonstrates a practical application of agentic feature work on a low-cost model, but also provides a flexible framework that can be adapted to other real-world scenarios requiring fast, inexpensive code changes driven by plain-language requests.
+
+## 🎥 Watch the Video Guide
+
+If you prefer a visual walkthrough, check out the accompanying video guide below:
+
+<iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/OM9PR2yHqCU"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+## 📦 Installation
+
+First, install the OpenCode CLI. This cookbook uses OpenCode v2:
+
+```bash
+curl -fsSL https://opencode.ai/v2/install | bash
+opencode --version
+```
+
+```
+opencode v2.3.0
+```
+
+Prefer a package manager? `brew install anomalyco/tap/opencode-v2` or `npm install -g @opencode/cli` installs the same CLI.
+
+ZeroGPU needs no SDK here. OpenCode already knows ZeroGPU's endpoint and models from models.dev, so all it needs is your key. You'll also need Node.js 20 or newer for the store, plus `jq` for one optional catalog lookup. See the [OpenCode integration guide](/integrations/opencode) for every way to connect.
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your API key for ZeroGPU. This ensures that OpenCode can reach ZeroGPU's models securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
+
+Copy the key now; you'll paste it into OpenCode's `/connect` in a moment, which stores it for every OpenCode session on your machine. If you'd rather keep it in your environment instead, export it under the name models.dev lists for ZeroGPU:
+
+```bash
+# Optional: use an environment variable instead of /connect
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+OpenCode reads environment variables from its shared background server, so if one is already running, restart it with `opencode service stop` after exporting.
+
+## 🗂️ Finding ZeroGPU on Models.dev
+
+OpenCode doesn't ship a hard-coded ZeroGPU integration. It reads ZeroGPU's entry from the models.dev catalog, which you can browse at [models.dev/providers/zerogpu](https://models.dev/providers/zerogpu/) or query directly:
+
+```bash
+curl -s https://models.dev/api.json | jq '.zerogpu | {name, api, env, models: (.models | keys)}'
+```
+
+```json
+{
+  "name": "ZeroGPU",
+  "api": "https://api.zerogpu.ai/v1",
+  "env": [
+    "ZEROGPU_API_KEY"
+  ],
+  "models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-4.1-mini",
+    "gpt-5.4-nano",
+    "gpt-5.6-luna",
+    "gpt-oss-120b",
+    "llama-3.1-8b-instruct-fast",
+    "qwen3-30b-a3b-fp8",
+    "qwen3.6-35b-a3b"
+  ]
+}
+```
+
+That's the whole integration: the endpoint OpenCode will call, the variable it checks for a key, and the nine models it will offer. You'll use `deepseek-v4.1-flash`, listed at $0.30 per 1M input tokens and $1.20 per 1M output tokens, with a 1,048,576-token context window.
+
+## 🏕️ Building the Trail Shop Starter
+
+Trail Shop is a Vite, React, TypeScript, and Tailwind app with a header, a hero, and a grid of eight product cards. Create the project and install its dependencies:
+
+```bash
+mkdir trail-shop && cd trail-shop
+npm init -y
+npm pkg set type=module scripts.dev="vite --port 5173 --strictPort" scripts.build="vite build"
+npm install react react-dom
+npm install -D vite @vitejs/plugin-react tailwindcss @tailwindcss/vite typescript @types/react @types/react-dom
+```
+
+Add the build configuration:
+
+```typescript vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
+```
+
+```json tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}
+```
+
+```html index.html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trail Shop</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+Now the app itself. `src/index.css` pulls in Tailwind, and `src/main.tsx` mounts the app:
+
+```css src/index.css
+@import "tailwindcss";
+```
+
+```tsx src/main.tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+```
+
+The product data is the part the search will filter. Each product has a `name` and a `category`:
+
+```typescript src/data/products.ts
+export type Product = {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  emoji: string;
+  tint: string;
+};
+
+export const products: Product[] = [
+  { id: 1, name: "Trail Runner 2.0", category: "Footwear", price: 129, emoji: "👟", tint: "bg-emerald-50" },
+  { id: 2, name: "Alpine Hiking Boots", category: "Footwear", price: 189, emoji: "🥾", tint: "bg-orange-50" },
+  { id: 3, name: "Ultralight Tent", category: "Camping", price: 349, emoji: "⛺", tint: "bg-sky-50" },
+  { id: 4, name: "Summit Daypack 28L", category: "Packs", price: 89, emoji: "🎒", tint: "bg-rose-50" },
+  { id: 5, name: "Storm Rain Jacket", category: "Clothing", price: 149, emoji: "🧥", tint: "bg-violet-50" },
+  { id: 6, name: "Night Trail Headlamp", category: "Accessories", price: 45, emoji: "🔦", tint: "bg-amber-50" },
+  { id: 7, name: "Merino Trail Socks", category: "Clothing", price: 24, emoji: "🧦", tint: "bg-teal-50" },
+  { id: 8, name: "Camp Cook Set", category: "Camping", price: 69, emoji: "🍳", tint: "bg-stone-100" },
+];
+```
+
+Two small components render the header and each product card:
+
+```tsx src/components/Header.tsx
+const links = ["Shop", "New", "Sale"];
+
+export default function Header() {
+  return (
+    <header className="border-b border-stone-200 bg-white">
+      <div className="mx-auto flex max-w-6xl items-center gap-10 px-6 py-4">
+        <a href="#" className="text-xl font-bold tracking-tight">
+          ⛰️ Trail Shop
+        </a>
+        <nav className="flex flex-1 gap-6 text-sm font-medium text-stone-500">
+          {links.map((link) => (
+            <a key={link} href="#" className="hover:text-emerald-700">
+              {link}
+            </a>
+          ))}
+        </nav>
+        <span className="text-sm font-semibold">🛒 Cart (0)</span>
+      </div>
+    </header>
+  );
+}
+```
+
+```tsx src/components/ProductCard.tsx
+import type { Product } from "../data/products";
+
+export default function ProductCard({ product }: { product: Product }) {
+  return (
+    <article
+      data-product
+      className="overflow-hidden rounded-2xl border border-stone-200 bg-white transition hover:-translate-y-1 hover:shadow-xl"
+    >
+      <div className={`grid aspect-[4/3] place-items-center text-7xl ${product.tint}`}>{product.emoji}</div>
+      <div className="p-5">
+        <p className="text-xs font-semibold tracking-wider text-stone-500 uppercase">{product.category}</p>
+        <h3 className="mt-1 text-lg font-semibold">{product.name}</h3>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-lg font-bold">${product.price}</span>
+          <button className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+            Add to cart
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+```
+
+And `src/App.tsx` puts it together. This is the file the agent will change:
+
+```tsx src/App.tsx
+import Header from "./components/Header";
+import ProductCard from "./components/ProductCard";
+import { products } from "./data/products";
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-stone-50 text-stone-900">
+      <Header />
+      <main className="mx-auto max-w-6xl px-6 py-10">
+        <section className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight">Gear for every trail</h1>
+          <p className="mt-2 text-lg text-stone-500">Lightweight, weatherproof, built to last.</p>
+        </section>
+
+        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </section>
+      </main>
+    </div>
+  );
+}
+```
+
+Commit the starter so you can see exactly what the agent changes, and reset between runs:
+
+```bash
+printf "node_modules/\ndist/\n" > .gitignore
+git init -q && git add -A && git commit -qm "trail-shop starter"
+```
+
+Finally, start the dev server in a second terminal and open [http://localhost:5173](http://localhost:5173). Keep it running: Vite reloads the page by itself whenever the agent saves a file.
+
+```bash
+npm run dev
+```
+
+You should see the header, "Gear for every trail", and eight product cards, with no search box.
+
+## 🔌 Access Agentic Coding with ZeroGPU
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will connect ZeroGPU in OpenCode, pick DeepSeek V4.1 Flash, and ask it one question about the store as an example.
+
+Start OpenCode in the `trail-shop` folder:
+
+```bash
+opencode
+```
+
+Connect ZeroGPU. Type `/connect`, press **Enter**, type `zero`, and pick **ZeroGPU**. Paste your key (it's masked as you paste) and press **Enter**:
+
+```text
+/connect
+```
+
+Now pick the model. Type `/models`, press **Enter**, type `deepseek`, and pick **DeepSeek V4.1 Flash** marked **ZeroGPU**. Typing `deepseek` also shows `deepseek-v4.1-flash-free` from OpenCode Zen, so make sure the row you pick says **ZeroGPU**:
+
+```text
+/models
+```
+
+Every ZeroGPU model on models.dev is in this list, and they all support the tool calling OpenCode needs. Check the connection with a quick question. You can type it into the session, or run it from a shell with `opencode run`:
+
+```bash
+opencode run --model zerogpu/deepseek-v4.1-flash "In one sentence, what does src/App.tsx render?"
+```
+
+```
+src/App.tsx renders the Trail Shop page: the header, a "Gear for every trail" hero, and a grid of the eight products from src/data/products.ts, each shown with a ProductCard.
+```
+
+🎉 **ZeroGPU effortlessly plugs into OpenCode straight from its models.dev listing, providing a no-config, low-cost model provider for AI integration!**
+
+## 🔎 Adding Product Search with OpenCode
+
+_This section asks the agent for a real feature in one sentence. OpenCode does the reading, editing, and checking, and every model call behind it runs on ZeroGPU._
+
+Lay out your screen so you can watch it happen: OpenCode in a terminal, `src/App.tsx` open in your editor above it, and the store in your browser.
+
+### Step 1: Ask for the feature
+
+Type this prompt into the OpenCode session and press **Enter**. Then keep your hands off for about 20 seconds:
+
+```text
+Add a search box above the products that filters the cards as you type, with a "No products found" message when nothing matches.
+```
+
+### Step 2: Watch the agent work
+
+OpenCode reads `src/App.tsx`, the product data, and the card component, then edits `src/App.tsx` in place, so you'll see the file change in your editor. OpenCode's default agent is allowed to edit files and run commands, so there's nothing to approve. Before it replies, the agent checks its own work with a type check or build. That's expected; let it finish.
+
+When the reply lands, the line under it reads `DeepSeek V4.1 Flash · ZeroGPU`. Here's the change it made, from `git diff`:
+
+```bash
+git diff
+```
+
+```
+diff --git a/src/App.tsx b/src/App.tsx
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,8 +1,21 @@
++import { useMemo, useState } from "react";
+ import Header from "./components/Header";
+ import ProductCard from "./components/ProductCard";
+ import { products } from "./data/products";
+ 
+ export default function App() {
++  const [query, setQuery] = useState("");
++
++  const filteredProducts = useMemo(() => {
++    const trimmed = query.trim().toLowerCase();
++    if (!trimmed) return products;
++    return products.filter(
++      (product) =>
++        product.name.toLowerCase().includes(trimmed) ||
++        product.category.toLowerCase().includes(trimmed),
++    );
++  }, [query]);
++
+   return (
+     <div className="min-h-screen bg-stone-50 text-stone-900">
+       <Header />
+@@ -12,11 +25,29 @@ export default function App() {
+           <p className="mt-2 text-lg text-stone-500">Lightweight, weatherproof, built to last.</p>
+         </section>
+ 
+-        <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+-          {products.map((product) => (
+-            <ProductCard key={product.id} product={product} />
+-          ))}
++        <section className="mb-8">
++          <label htmlFor="product-search" className="sr-only">
++            Search products
++          </label>
++          <input
++            id="product-search"
++            type="search"
++            value={query}
++            onChange={(e) => setQuery(e.target.value)}
++            placeholder="Search products..."
++            className="w-full rounded-full border border-stone-200 bg-white px-5 py-3 text-stone-900 shadow-sm outline-none placeholder:text-stone-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
++          />
+         </section>
++
++        {filteredProducts.length > 0 ? (
++          <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
++            {filteredProducts.map((product) => (
++              <ProductCard key={product.id} product={product} />
++            ))}
++          </section>
++        ) : (
++          <p className="py-16 text-center text-lg text-stone-500">No products found</p>
++        )}
+       </main>
+     </div>
+   );
+```
+
+The agent added a `query` state, filtered products by name and category with `useMemo`, put an accessible search input above the grid, and swapped in the empty-state message when nothing matches. The exact styling and wording change a little from run to run (full width or half width, a different summary), but the behavior is the same every time.
+
+### Step 3: Check the cost
+
+Look at the sidebar for the session's cost. In our test runs, the whole feature took 17 to 18 seconds and cost **$0.0047** and **$0.0060**. OpenCode rounds the sidebar to the cent, so it may read $0.00 or $0.01; either way, it's under a cent.
+
+That figure comes straight from the catalog prices you looked up earlier. A run that sends roughly 15,000 input tokens and gets about 1,000 back costs `15,000 x $0.30/1M + 1,000 x $1.20/1M = $0.0057`.
+
+### Step 4: Try the search
+
+Switch to the browser. There's no need to refresh: Vite already reloaded the page when the agent saved. Click the search box and type a few queries:
+
+```
+tent    →  Ultralight Tent
+kayak   →  No products found
+trail   →  Trail Runner 2.0, Night Trail Headlamp, Merino Trail Socks
+```
+
+### Step 5: Run it again headlessly (optional)
+
+To try the same task from a script, reset the store and hand the prompt to `opencode run`. This is the same run without the interface, which is how you'd use it in CI:
+
+```bash
+git reset --hard -q && git clean -fdq
+opencode run --model zerogpu/deepseek-v4.1-flash \
+  "Add a search box above the products that filters the cards as you type, with a \"No products found\" message when nothing matches."
+```
+
+Each run costs about half a cent. If edits ever fail and the agent retries, stay on DeepSeek V4.1 Flash: in our tests it edited cleanly every time, while GPT-5.6 Luna's file-edit calls failed twice before it recovered.
+
+🎉 From a single sentence, OpenCode on ZeroGPU read the store, wrote a working search box with an empty state, type-checked its own change, and shipped it to your browser in about 20 seconds, for under a cent. Your key stays saved in OpenCode, so every future session can pick a ZeroGPU model straight from `/models`.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running an OpenCode workflow with ZeroGPU for adding a search feature to a React store. You can adapt and expand this example for various other scenarios requiring fast, inexpensive code changes driven by plain-language requests.
+
+Key tools utilized in this notebook include:
+
+- **OpenCode**: An open-source AI coding agent for the terminal that reads your code, edits files, and runs commands. Its provider catalog comes from models.dev, so ZeroGPU shows up in `/connect` and `/models` with no extra setup. Here it reads the store's code, writes the search feature, and type-checks its own work.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that OpenCode reads its providers from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring fast, inexpensive code changes driven by plain-language requests.
