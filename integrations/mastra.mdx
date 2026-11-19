@@ -1,0 +1,724 @@
+---
+title: "Mastra"
+description: "Build Mastra agents and workflows on ZeroGPU with one model string. Mastra's model router reads ZeroGPU from models.dev, so 'zerogpu/<model-id>' and a ZEROGPU_API_KEY are all you need, with no extra package."
+icon: "diagram-project"
+---
+
+Mastra is an open-source TypeScript framework for building AI agents and workflows. It gives you agents with tools and memory, graph-based workflows, structured output, model fallbacks, and Mastra Studio, a local playground where you chat with your agents and inspect every tool call. Its model router takes a single `provider/model` string and generates its provider registry from [models.dev](/integrations/models-dev), so every provider listed there works in Mastra without installing a provider package. ZeroGPU is listed on models.dev, which means `model: 'zerogpu/deepseek-v4.1-flash'` and a `ZEROGPU_API_KEY` are all it takes to run a Mastra agent on ZeroGPU.
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+This guide covers building Mastra agents on ZeroGPU, for TypeScript developers who want a low-cost, low-latency model provider behind their agents and workflows. You'll set your key, point an agent at a ZeroGPU model string, and make your first call, then work through every surface Mastra exposes for a provider: the model router string, the OpenAI-compatible config object, unlisted ZeroGPU models, `generate()` and `stream()`, tools, memory, structured output, model settings, provider options for reasoning, fallbacks, dynamic model selection, workflows, and Mastra Studio. By the end you'll have tool-calling agents running on ZeroGPU for well under a cent per answer.
+
+## Cookbook
+
+For a runnable, real-world example, see [Build a Trail Gear Agent with Mastra and ZeroGPU](/cookbook/mastra-trail-guide). It builds a gear assistant for an outdoor store with two tools, a live weather forecast and the shop's catalog, runs it on DeepSeek V4.1 Flash in Mastra Studio, and then switches to GPT-5.6 Luna mid-conversation. Both answers together cost well under a cent. Check it out to see the model router, tools, memory, and Studio working end to end.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/t83MdJS-Qso?si=evl961ktC4f-vtXq" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- Node.js 22.13 or later.
+- `@mastra/core` 1.85.0 or later, the first release whose provider registry includes ZeroGPU.
+- A chat model from the [model catalog](/docs/model-catalog) that models.dev lists. This guide uses `deepseek-v4.1-flash`, which called every tool reliably in our tests.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`) and export it as `ZEROGPU_API_KEY`, the variable models.dev lists for ZeroGPU. Mastra reads it automatically for every `zerogpu/*` model.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+You can put the same line in a `.env` file at your project root instead. `mastra dev` loads `.env.development`, `.env.local`, and `.env` for you.
+
+```bash .env
+ZEROGPU_API_KEY=zgpu-api-...
+```
+
+### Install Mastra
+
+Add Mastra to an existing TypeScript project. `@mastra/core` holds agents, tools, workflows, and the model router, and the `mastra` CLI runs Mastra Studio:
+
+```bash
+npm install @mastra/core@latest zod
+npm install -D mastra@latest typescript @types/node
+```
+
+To start from scratch instead, `npm create mastra@latest` scaffolds a new project. Either way, there's no ZeroGPU package to install.
+
+### Your first request
+
+Create an agent with a ZeroGPU model string and call it once:
+
+```typescript hello.ts
+import { Agent } from '@mastra/core/agent';
+
+const agent = new Agent({
+  id: 'hello',
+  name: 'Hello',
+  instructions: 'You answer in one short sentence.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+});
+
+const result = await agent.generate('Reply with the word ok');
+console.log(result.text);
+```
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+npx tsx hello.ts
+```
+
+```
+ok
+```
+
+Mastra looked up `zerogpu` in its registry, read your key from `ZEROGPU_API_KEY`, and sent an OpenAI-compatible `POST /chat/completions` request to `https://api.zerogpu.ai/v1`, the endpoint models.dev lists for ZeroGPU.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, what it calls on ZeroGPU, its parameters, a runnable example, and what you get back.
+
+### How Mastra finds ZeroGPU
+
+Mastra's model router ships a provider registry generated from the models.dev catalog. ZeroGPU's entry gives the router everything it needs, so there's no provider to register:
+
+| Registry field | ZeroGPU value | How Mastra uses it |
+|---|---|---|
+| Provider ID | `zerogpu` | Prefix in model strings, such as `zerogpu/deepseek-v4.1-flash`. |
+| Name | `ZeroGPU` | Label in Mastra Studio's model picker and on the [mastra.ai provider page](https://mastra.ai/models/providers/zerogpu). |
+| URL | `https://api.zerogpu.ai/v1` | Base URL for every request. |
+| API key variable | `ZEROGPU_API_KEY` | Read from the environment and sent as `Authorization: Bearer <key>`. |
+| Gateway | `models.dev` | Where the entry comes from. |
+| Client | OpenAI-compatible chat completions | Requests go to `POST /chat/completions`, with JSON-schema structured output enabled. |
+
+These nine ZeroGPU models are in the registry. Prices are USD per 1M tokens, and the reasoning controls are explained in [Provider options and reasoning](#provider-options-and-reasoning).
+
+| Model string | Context | Max output | Input | Output | Reasoning |
+|---|---:|---:|---:|---:|---|
+| `zerogpu/deepseek-v4.1-flash` | 1,048,576 | 65,536 | $0.30 | $1.20 | Toggle (off by default), effort |
+| `zerogpu/glm-5.3-flash` | 1,048,576 | 32,768 | $0.10 | $0.35 | Effort, always on |
+| `zerogpu/gpt-4.1-mini` | 1,047,576 | 32,768 | $0.40 | $1.60 | No |
+| `zerogpu/gpt-5.4-nano` | 400,000 | 128,000 | $0.20 | $1.25 | Effort |
+| `zerogpu/gpt-5.6-luna` | 272,000 | 128,000 | $0.20 | $1.20 | Effort |
+| `zerogpu/gpt-oss-120b` | 131,072 | 131,072 | $0.15 | $0.60 | Always on |
+| `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | 8,192 | $0.15 | $0.28 | No |
+| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | 16,384 | $0.10 | $0.45 | Toggle |
+| `zerogpu/qwen3.6-35b-a3b` | 262,144 | 16,384 | $0.20 | $1.50 | Toggle (off by default) |
+
+All nine support tool calling and structured output. For cache prices, input types, and the full catalog metadata, see the [Models.dev integration guide](/integrations/models-dev). In development, Mastra refreshes the registry from models.dev every hour; in production it uses the registry bundled with your installed `@mastra/core` unless you set `MASTRA_AUTO_REFRESH_PROVIDERS=true`. ZeroGPU models that models.dev doesn't list yet can be added by hand; see [Unlisted ZeroGPU models](#unlisted-zerogpu-models).
+
+### Model router string
+
+The simplest way to use ZeroGPU: pass `zerogpu/<model-id>` as an agent's `model`. Mastra resolves the provider, the endpoint, and the key for you, and the string is typed, so your editor autocompletes the nine ZeroGPU model IDs.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `zerogpu/<model-id>`, for example `zerogpu/deepseek-v4.1-flash`. |
+| `maxRetries` | No | `0` | Retries for a failed model call before the call errors. |
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+
+export const triage = new Agent({
+  id: 'ticket-triage',
+  name: 'Ticket triage',
+  instructions: 'Classify each support ticket as billing, bug, or other. Reply with one word.',
+  model: 'zerogpu/gpt-5.4-nano',
+  maxRetries: 2,
+});
+
+const result = await triage.generate('I was charged twice for my subscription this month.');
+console.log(result.text);
+```
+
+```
+billing
+```
+
+Response: every call from this agent goes to ZeroGPU's `gpt-5.4-nano`. Change the string to move the agent to any other ZeroGPU model; nothing else changes.
+
+### OpenAI-compatible config object
+
+Use an object instead of a string when one agent needs its own key, extra headers, or a different endpoint. Mastra still treats it as a ZeroGPU model.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `id` | Yes (or `providerId` and `modelId`) | none | `zerogpu/<model-id>`. |
+| `providerId`, `modelId` | Yes (or `id`) | none | The same reference split in two, for example `zerogpu` and `deepseek-v4.1-flash`. |
+| `url` | No | `https://api.zerogpu.ai/v1` from the registry | Send ZeroGPU traffic through a proxy or gateway. |
+| `apiKey` | No | `ZEROGPU_API_KEY` | A key for this agent only. |
+| `headers` | No | none | Extra HTTP headers, such as `x-project-id` to scope usage to a ZeroGPU project. |
+| `api` | No | `chat` | Keep `chat`; ZeroGPU serves OpenAI-compatible chat completions. |
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+
+export const supportAgent = new Agent({
+  id: 'support',
+  name: 'Support',
+  instructions: 'You help customers with orders and returns.',
+  model: {
+    id: 'zerogpu/deepseek-v4.1-flash',
+    apiKey: process.env.ZEROGPU_SUPPORT_KEY,
+    headers: { 'x-project-id': 'your-project-id' },
+  },
+});
+```
+
+Response: this agent's requests carry its own key and the project header, while other agents keep using `ZEROGPU_API_KEY`. The `x-project-id` header is optional; leave it out unless you track usage per project.
+
+### Unlisted ZeroGPU models
+
+ZeroGPU serves more chat models than models.dev lists. To use one, give Mastra the endpoint yourself with the `providerId` and `modelId` form. Model IDs are sent exactly as written, and they're case-sensitive.
+
+| Model ID | Context | Max output | Input | Output | Tool calling | Notes |
+|---|---:|---:|---:|---:|---|---|
+| `gpt-6-luna` | 272,000 | 128,000 | $0.10 | $0.50 | Yes | Text and image input, adjustable reasoning. |
+| `gpt-oss-20b` | 131,072 | not listed | $0.02 | $0.10 | Yes | Lighter, cheaper sibling of `gpt-oss-120b`; always reasons. |
+| `llama-3.2-3b-instruct-fast` | 131,072 | 8,192 | $0.05 | $0.30 | No | Low-cost summarization. |
+| `LFM2.5-1.2B-Instruct` | 32,768 | 8,192 | $0.02 | $0.05 | No | Edge chat model. |
+| `LFM2.5-1.2B-Thinking` | 32,768 | 8,192 | $0.02 | $0.05 | No | Edge reasoning model. |
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `providerId` | Yes | none | `zerogpu`. |
+| `modelId` | Yes | none | The exact ZeroGPU model ID from the table. |
+| `url` | Yes | none | `https://api.zerogpu.ai/v1`. |
+| `apiKey` | Yes | none | `process.env.ZEROGPU_API_KEY`. |
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+
+const zerogpu = (modelId: string) => ({
+  providerId: 'zerogpu',
+  modelId,
+  url: 'https://api.zerogpu.ai/v1',
+  apiKey: process.env.ZEROGPU_API_KEY,
+});
+
+export const summarizer = new Agent({
+  id: 'summarizer',
+  name: 'Summarizer',
+  instructions: 'Summarize the text in two sentences.',
+  model: zerogpu('LFM2.5-1.2B-Instruct'),
+});
+
+const result = await summarizer.generate(
+  'Our spring sale starts Monday. Tents, packs, and boots are 20% off through Sunday, and members get free shipping on every order.',
+);
+console.log(result.text);
+```
+
+```
+Trail Shop's spring sale runs Monday through Sunday, with 20% off tents, packs, and boots. Members also get free shipping on every order.
+```
+
+Response: the agent calls `LFM2.5-1.2B-Instruct` at ZeroGPU's rates. Give the Llama 3.2 and LFM2.5 models agents without tools: they're built for fast chat and summarization and reject tool definitions. Prices are from the [model catalog](/docs/model-catalog) in November 2026. When models.dev adds one of these models, switch back to the plain `zerogpu/<model-id>` string.
+
+### `agent.generate()`
+
+Runs the agent to completion and returns the final answer. When the agent has tools, Mastra loops: each step is one `POST /chat/completions` call to ZeroGPU, tool calls run locally, and their results go back to the model until it answers.
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `messages` | Yes | none | A string, a message object, or an array of messages. |
+| `options.maxSteps` | No | Mastra default | Maximum model steps. Each tool round trip is one step. |
+| `options.memory` | No | none | `{ thread, resource }`, to load and save conversation history. See [Memory](#memory). |
+| `options.modelSettings` | No | agent defaults | `temperature`, `maxOutputTokens`, and other sampling settings. See [Model settings and defaults](#model-settings-and-defaults). |
+| `options.providerOptions` | No | none | ZeroGPU request fields under the `zerogpu` key. See [Provider options and reasoning](#provider-options-and-reasoning). |
+| `options.structuredOutput` | No | none | `{ schema }`, to get a typed `object` back. See [Structured output](#structured-output). |
+| `options.toolChoice` | No | `auto` | `auto`, `none`, `required`, or a specific tool. |
+| `options.activeTools` | No | all tools | Limit this call to some of the agent's tools. |
+| `options.requestContext` | No | none | Values that dynamic models, instructions, and tools can read. |
+| `options.instructions` | No | agent instructions | Override the instructions for this call. |
+
+```typescript TypeScript
+import { mastra } from './src/mastra/index.ts';
+
+const agent = mastra.getAgent('trailGuide');
+const result = await agent.generate("I'm going hiking near Seattle tomorrow. What should I bring from the shop?");
+
+console.log(result.text);
+console.log(result.toolCalls.map((call) => call.payload.toolName));
+console.log(result.totalUsage);
+```
+
+```
+Tomorrow near Seattle looks wet, with rain showers, a high of 49°F, and an 80% chance of rain.
+
+- **Storm Rain Jacket** ($149): fully waterproof with a hood, for a day of steady showers.
+- **Alpine Hiking Boots** ($189): waterproof with ankle support for muddy trails.
+- **Summit Daypack 28L** ($89): the built-in rain cover keeps your layers dry.
+- **Merino Trail Socks** ($24): merino stays warm even when it gets wet.
+
+**Total: $451**
+[ 'getForecast', 'searchProducts' ]
+{ inputTokens: 5912, outputTokens: 214, totalTokens: 6126 }
+```
+
+| Response field | Description |
+|---|---|
+| `text` | The final answer. |
+| `toolCalls`, `toolResults` | The tool calls the model made, as `{ payload: { toolName, args } }`, and what each tool returned. |
+| `steps` | Every model step, with its own text, tool calls, and usage. |
+| `usage`, `totalUsage` | Token counts for the last step, and for the whole run. |
+| `finishReason` | Why the last step stopped, such as `stop` or `length`. |
+| `object` | The typed result when `structuredOutput` is set. |
+
+### `agent.stream()`
+
+Same options as `generate()`, but returns as soon as ZeroGPU starts responding, so you can show text as it arrives.
+
+| Property or method | Description |
+|---|---|
+| `textStream` | Async iterable of text chunks. |
+| `fullStream` | Every event, including tool calls, tool results, and step boundaries. |
+| `text`, `totalUsage` | Promises for the final text and the run's token counts. |
+| `getFullOutput()` | Waits for the run and returns the same object as `generate()`. |
+
+```typescript TypeScript
+import { mastra } from './src/mastra/index.ts';
+
+const stream = await mastra.getAgent('trailGuide').stream('Planning a dry day hike near Denver on Saturday. What do I need?');
+
+for await (const chunk of stream.textStream) {
+  process.stdout.write(chunk);
+}
+console.log('\n', await stream.totalUsage);
+```
+
+Response: the answer prints token by token after the tool steps finish. All nine registry models stream on ZeroGPU.
+
+### Tools
+
+Tools let the model fetch data or take actions. Every ZeroGPU model in the registry supports tool calling, so Mastra sends your tool schemas with each request and runs whichever tool the model picks.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `id` | Yes | none | Tool ID, such as `get-forecast`. |
+| `description` | Yes | none | What the tool does. The model reads it to decide when to call the tool. |
+| `inputSchema` | No | none | Zod schema for the arguments the model must send. |
+| `outputSchema` | No | none | Zod schema for what `execute` returns. |
+| `execute` | Yes | none | Async function that receives the validated input and returns the result. |
+
+```typescript src/mastra/tools/search-products.ts
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { products } from '../data/products.ts';
+
+export const searchProducts = createTool({
+  id: 'search-products',
+  description: 'Search the Trail Shop catalog. Both filters are optional; call with no input to get everything.',
+  inputSchema: z.object({
+    category: z.enum(['Footwear', 'Camping', 'Packs', 'Clothing', 'Accessories']).optional(),
+    maxPrice: z.number().optional().describe('Highest price in USD'),
+  }),
+  execute: async ({ category, maxPrice }) => ({
+    products: products.filter(
+      (p) => (!category || p.category === category) && (maxPrice === undefined || p.price <= maxPrice),
+    ),
+  }),
+});
+```
+
+Pass tools to an agent as a map. The keys are the tool names the model sees:
+
+```typescript TypeScript
+export const trailGuide = new Agent({
+  id: 'trail-guide',
+  name: 'Trail Guide',
+  instructions: 'Check the forecast with get-forecast, then look up gear with search-products.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+  tools: { getForecast, searchProducts },
+});
+```
+
+Response: when the model calls a tool, Mastra validates the arguments against `inputSchema`, runs `execute`, and sends the result back to ZeroGPU for the next step. In our tests DeepSeek V4.1 Flash called both of the cookbook's tools on every run. Keep descriptions specific and say in the instructions when each tool should be used.
+
+### Memory
+
+Memory keeps a conversation's history so follow-ups like "Keep it under $250" work. Add `Memory` from `@mastra/memory` to the agent and storage to your Mastra instance, then pass a thread and a resource with each call.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `memory` (agent) | No | none | `new Memory()`, optionally with `options` such as `lastMessages`. |
+| `storage` (Mastra instance) | Yes, with memory | none | Where threads are saved, such as `LibSQLStore` from `@mastra/libsql`. |
+| `memory.thread` (call) | Yes, with memory | none | Conversation ID. |
+| `memory.resource` (call) | Yes, with memory | none | Owner of the conversation, such as a user ID. |
+
+```bash
+npm install @mastra/memory@latest @mastra/libsql@latest
+```
+
+```typescript src/mastra/index.ts
+import { Mastra } from '@mastra/core';
+import { LibSQLStore } from '@mastra/libsql';
+import { trailGuide } from './agents/trail-guide.ts';
+
+export const mastra = new Mastra({
+  agents: { trailGuide },
+  storage: new LibSQLStore({ id: 'mastra-storage', url: 'file:./mastra.db' }),
+});
+```
+
+```typescript TypeScript
+import { mastra } from './src/mastra/index.ts';
+
+const agent = mastra.getAgent('trailGuide');
+const memory = { thread: 'seattle-hike', resource: 'customer-42' };
+
+await agent.generate("I'm going hiking near Seattle tomorrow. What should I bring from the shop?", { memory });
+const followUp = await agent.generate('Keep it under $250.', { memory });
+console.log(followUp.text);
+```
+
+```
+Here's a lighter list for tomorrow's showers:
+
+- **Storm Rain Jacket** ($149): the one piece you really need in steady rain.
+- **Summit Daypack 28L** ($89): its rain cover keeps everything else dry.
+
+**Total: $238**
+```
+
+Response: the second call loads the first exchange from storage, so the model updates the earlier list instead of starting over. Use `url: ':memory:'` for throwaway demos (history is lost when the process stops) and a file or hosted database for anything you want to keep.
+
+### Structured output
+
+Returns a typed object instead of free text. Mastra's ZeroGPU client sends your schema as a JSON-schema `response_format`, and every registry model supports it.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `structuredOutput.schema` | Yes | none | Zod schema (or JSON Schema) for the result. |
+| `structuredOutput.model` | No | the agent's model | A separate model for a second structuring pass. |
+| `structuredOutput.errorStrategy` | No | `strict` | `strict`, `warn`, or `fallback` when the output doesn't match. |
+| `structuredOutput.fallbackValue` | No | none | Value to return with `errorStrategy: 'fallback'`. |
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+import { z } from 'zod';
+
+const tripParser = new Agent({
+  id: 'trip-parser',
+  name: 'Trip parser',
+  instructions: 'Extract trip details from the customer message.',
+  model: 'zerogpu/gpt-5.4-nano',
+});
+
+const result = await tripParser.generate(
+  'Two nights camping near Bend next weekend, budget around $300, and I already have boots.',
+  {
+    structuredOutput: {
+      schema: z.object({
+        location: z.string(),
+        activity: z.enum(['day hike', 'camping', 'trail running', 'other']),
+        nights: z.number(),
+        budgetUsd: z.number().nullable(),
+        alreadyOwns: z.array(z.string()),
+      }),
+    },
+  },
+);
+console.log(result.object);
+```
+
+```
+{
+  location: 'Bend',
+  activity: 'camping',
+  nights: 2,
+  budgetUsd: 300,
+  alreadyOwns: [ 'boots' ]
+}
+```
+
+Response: `result.object` is typed from the schema. Small models such as `gpt-5.4-nano` handle extraction like this well, at a fraction of a chat model's cost.
+
+### Model settings and defaults
+
+Sampling settings for a call, set per call in `modelSettings` or for every call in the agent's `defaultOptions`.
+
+| Setting | Sent to ZeroGPU as | Description |
+|---|---|---|
+| `temperature` | `temperature` | Randomness, from `0` for repeatable answers upward. |
+| `maxOutputTokens` | `max_tokens` | Cap on output tokens per step. |
+| `topP` | `top_p` | Nucleus sampling. |
+| `frequencyPenalty`, `presencePenalty` | `frequency_penalty`, `presence_penalty` | Discourage repetition. |
+| `stopSequences` | `stop` | Strings that end the response. |
+| `seed` | `seed` | Seed for more repeatable sampling. |
+
+```typescript TypeScript
+export const trailGuide = new Agent({
+  id: 'trail-guide',
+  name: 'Trail Guide',
+  instructions: 'You are the gear assistant for Trail Shop.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+  tools: { getForecast, searchProducts },
+  defaultOptions: {
+    maxSteps: 5,
+    modelSettings: { temperature: 0.2, maxOutputTokens: 800 },
+  },
+});
+```
+
+Response: every call starts from these defaults, and options passed to `generate()` or `stream()` override them. `topK` isn't part of the OpenAI-compatible API, so Mastra drops it with a warning.
+
+### Provider options and reasoning
+
+Passes ZeroGPU request fields straight through. Mastra names its ZeroGPU client `zerogpu`, so fields under `providerOptions.zerogpu` are merged into the request body. `reasoningEffort` is the one renamed field: it's sent as `reasoning_effort`.
+
+| Model | Control | `providerOptions.zerogpu` | Values |
+|---|---|---|---|
+| `deepseek-v4.1-flash` | Toggle, off by default | `thinking: { type }` | `enabled`, `disabled` |
+| `deepseek-v4.1-flash` | Effort, when thinking is on | `reasoningEffort` | `low`, `high`, `max` |
+| `glm-5.3-flash` | Effort, always reasons | `reasoningEffort` | `low`, `high`, `max` |
+| `gpt-5.4-nano` | Effort | `reasoningEffort` | `none`, `low`, `medium`, `high`, `xhigh` |
+| `gpt-5.6-luna` | Effort | `reasoningEffort` | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `gpt-oss-120b` | Always on, no caller control | none | n/a |
+| `qwen3-30b-a3b-fp8`, `qwen3.6-35b-a3b` | Toggle | `chat_template_kwargs: { enable_thinking }` | `true`, `false` |
+
+```typescript TypeScript
+import { mastra } from './src/mastra/index.ts';
+
+const agent = mastra.getAgent('trailGuide');
+
+// DeepSeek V4.1 Flash: turn thinking on for one hard request
+const result = await agent.generate('Plan a three-day loop near Mount Rainier and pick gear for each day.', {
+  providerOptions: {
+    zerogpu: { thinking: { type: 'enabled' }, reasoningEffort: 'high' },
+  },
+});
+console.log(result.text);
+```
+
+For GPT-5.6 Luna, set only the effort: `providerOptions: { zerogpu: { reasoningEffort: 'high' } }`. For the Qwen models, toggle thinking with `providerOptions: { zerogpu: { chat_template_kwargs: { enable_thinking: true } } }`.
+
+Response: the run reasons before answering and the reasoning tokens are billed as output. ZeroGPU doesn't return reasoning text on this API, so `result.reasoningText` stays empty and Studio shows no thinking blocks.
+
+### Model fallbacks
+
+Pass an array of models and Mastra moves to the next one when a model keeps failing. Because every entry can be a ZeroGPU model, one key covers the whole chain.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | A model string, config object, or function. |
+| `maxRetries` | No | `0` | Retries on this model before moving to the next. |
+| `enabled` | No | `true` | Skip this entry without removing it. |
+| `modelSettings` | No | none | Settings for this entry only. |
+| `providerOptions` | No | none | ZeroGPU request fields for this entry only. |
+| `headers` | No | none | Extra headers for this entry only. |
+
+```typescript TypeScript
+export const trailGuide = new Agent({
+  id: 'trail-guide',
+  name: 'Trail Guide',
+  instructions: 'You are the gear assistant for Trail Shop.',
+  tools: { getForecast, searchProducts },
+  model: [
+    { model: 'zerogpu/deepseek-v4.1-flash', maxRetries: 2 },
+    { model: 'zerogpu/gpt-5.6-luna', maxRetries: 1, providerOptions: { zerogpu: { reasoningEffort: 'low' } } },
+    { model: 'zerogpu/glm-5.3-flash', maxRetries: 1 },
+  ],
+});
+```
+
+Response: calls go to DeepSeek V4.1 Flash first. If it errors three times, the same request goes to GPT-5.6 Luna, then GLM-5.3-Flash.
+
+### Dynamic model selection
+
+`model` can be a function that picks a model per request from the request context, for example by customer tier or task size.
+
+| Field | Required | Default | Description |
+|---|---|---|---|
+| `model` | Yes | none | `({ requestContext }) => model`, returning a string, config object, or fallback array. |
+| `requestContext` (call option) | No | empty | A `RequestContext` with the values the function reads. |
+
+```typescript TypeScript
+import { Agent } from '@mastra/core/agent';
+import { RequestContext } from '@mastra/core/request-context';
+
+const assistant = new Agent({
+  id: 'assistant',
+  name: 'Assistant',
+  instructions: 'You answer customer questions about orders and gear.',
+  model: ({ requestContext }) =>
+    requestContext.get('tier') === 'pro' ? 'zerogpu/gpt-5.6-luna' : 'zerogpu/gpt-5.4-nano',
+});
+
+const requestContext = new RequestContext();
+requestContext.set('tier', 'pro');
+
+const result = await assistant.generate('Which of my orders shipped this week?', { requestContext });
+```
+
+Response: pro customers get GPT-5.6 Luna and everyone else gets GPT-5.4 nano, from the same agent and the same key.
+
+### Workflows
+
+Workflows chain steps with typed inputs and outputs. `createStep(agent)` turns an agent into a step that takes `{ prompt }` and returns `{ text }`, so a ZeroGPU agent drops into any workflow.
+
+| Function | Description |
+|---|---|
+| `createStep(agent)` | A step that runs the agent on `inputData.prompt`. |
+| `createStep({ id, inputSchema, outputSchema, execute })` | A step with your own logic, for example to build the prompt. |
+| `createWorkflow({ id, inputSchema, outputSchema })` | A workflow; chain steps with `.then()` and finish with `.commit()`. |
+| `workflow.createRun()` then `run.start({ inputData })` | Run it and get `{ status, result }`. |
+
+```typescript TypeScript
+import { createStep, createWorkflow } from '@mastra/core/workflows';
+import { z } from 'zod';
+import { trailGuide } from './src/mastra/agents/trail-guide.ts';
+
+const buildPrompt = createStep({
+  id: 'build-prompt',
+  inputSchema: z.object({ city: z.string(), budgetUsd: z.number() }),
+  outputSchema: z.object({ prompt: z.string() }),
+  execute: async ({ inputData }) => ({
+    prompt: `I'm hiking near ${inputData.city} tomorrow. Keep the gear under $${inputData.budgetUsd}.`,
+  }),
+});
+
+export const gearList = createWorkflow({
+  id: 'gear-list',
+  inputSchema: z.object({ city: z.string(), budgetUsd: z.number() }),
+  outputSchema: z.object({ text: z.string() }),
+})
+  .then(buildPrompt)
+  .then(createStep(trailGuide))
+  .commit();
+
+const run = await gearList.createRun();
+const result = await run.start({ inputData: { city: 'Portland', budgetUsd: 200 } });
+if (result.status === 'success') console.log(result.result.text);
+```
+
+Response: the agent step runs on ZeroGPU with its tools, and `result.result.text` holds its answer. Register the workflow in `new Mastra({ workflows: { gearList } })` to run it from Studio too.
+
+### Mastra Studio (`mastra dev`)
+
+`mastra dev` starts a local server for your Mastra instance and opens Mastra Studio, where you chat with agents, watch tool calls, and switch models without editing code.
+
+| Command or setting | Description |
+|---|---|
+| `mastra dev` (or an `npm run dev` script that runs it) | Start the server and Studio. It loads `.env.development`, `.env.local`, and `.env`. |
+| `http://localhost:4111` | Studio's default address. |
+| `/agents/<agent-id>/threads/new` | A new chat with one agent, for example `/agents/trail-guide/threads/new`. |
+| Model picker | The model name under the message box. Lists every ZeroGPU model and marks ZeroGPU as connected when `ZEROGPU_API_KEY` is set. |
+| Tool call rows | Each tool call appears as a row you can open to see its input and output. |
+
+```json package.json
+{
+  "scripts": {
+    "dev": "mastra dev"
+  }
+}
+```
+
+```bash
+npm run dev
+```
+
+```
+Studio: http://localhost:4111
+```
+
+Response: open the agent, type a message, and the reply streams in with a row for each tool call. Pick another ZeroGPU model in the picker and the next message goes to it, with the conversation so far kept in memory. In the [cookbook](/cookbook/mastra-trail-guide), DeepSeek V4.1 Flash called both tools and answered in 11 to 14 seconds, and the GPT-5.6 Luna follow-up took 10 to 15 seconds.
+
+### Patterns and recipes
+
+**Cheap triage in front of a capable agent.** Put a small model on the decision and a stronger one on the answer. A `gpt-5.4-nano` agent with [structured output](#structured-output) classifies the request, and only gear questions reach the tool-using agent on `deepseek-v4.1-flash`:
+
+```typescript TypeScript
+const intent = await router.generate(message, {
+  structuredOutput: { schema: z.object({ intent: z.enum(['gear', 'order', 'other']) }) },
+});
+
+const reply = intent.object.intent === 'gear'
+  ? await mastra.getAgent('trailGuide').generate(message, { memory })
+  : await support.generate(message, { memory });
+```
+
+**Think on demand.** Keep DeepSeek V4.1 Flash on its fast, thinking-off default for everyday turns, and pass `providerOptions: { zerogpu: { thinking: { type: 'enabled' } } }` only on requests that need planning, as in [Provider options and reasoning](#provider-options-and-reasoning). You pay for reasoning tokens only where they help.
+
+**A fallback chain on one key.** List two or three ZeroGPU models in a [fallback array](#model-fallbacks). They share `ZEROGPU_API_KEY` and the same tool definitions, so a failover changes nothing for your tools or your billing setup.
+
+**Price a run before you scale it.** Multiply `result.totalUsage` by the per-1M prices in the [model table](#how-mastra-finds-zerogpu). A tool-calling turn that sends about 6,000 input tokens and gets 200 back on DeepSeek V4.1 Flash costs about `6,000 x $0.30/1M + 200 x $1.20/1M = $0.0020`, which is why the cookbook's two answers together cost well under a cent.
+
+### At a glance
+
+| Surface | Where | Use it to |
+|---|---|---|
+| `zerogpu/<model-id>` | Agent `model` | Run an agent on a ZeroGPU model with no setup. |
+| Config object | Agent `model` | Set a per-agent key, headers such as `x-project-id`, or a proxy URL. |
+| `providerId` + `modelId` + `url` | Agent `model` | Use ZeroGPU models that models.dev doesn't list yet. |
+| `agent.generate()` | Your code | Get a complete answer, with tool calls and usage. |
+| `agent.stream()` | Your code | Show the answer as it arrives. |
+| `createTool()` | `tools` on the agent | Give a ZeroGPU model data and actions. |
+| `Memory` | `memory` on the agent, `storage` on Mastra | Keep conversation history across calls. |
+| `structuredOutput` | Call options | Get a typed object back. |
+| `modelSettings`, `defaultOptions` | Call options, agent config | Set temperature, output limits, and step counts. |
+| `providerOptions.zerogpu` | Call options, fallback entries | Turn thinking on or off and set reasoning effort. |
+| Fallback array | Agent `model` | Fail over between ZeroGPU models. |
+| `model` function | Agent `model` | Pick a ZeroGPU model per request. |
+| `createStep(agent)` | Workflows | Use a ZeroGPU agent as a workflow step. |
+| `mastra dev` | CLI, Studio | Chat with agents, inspect tool calls, and switch ZeroGPU models. |
+
+## Troubleshooting
+
+**`zerogpu/...` isn't accepted as a model, or TypeScript rejects the string.** Your `@mastra/core` predates ZeroGPU's models.dev listing. Run `npm install @mastra/core@latest` to get 1.85.0 or later, then restart `mastra dev`.
+
+**The agent replies with an error about a missing API key.** The process running Mastra can't see `ZEROGPU_API_KEY`. Export it in the same terminal before `npm run dev`, or put it in `.env` at the project root, then restart. Run `[ -n "$ZEROGPU_API_KEY" ] && echo set` to check without printing the key.
+
+**`401` or `403 invalid_api_key` on the first message.** The key is wrong, revoked, or picked up a stray space when pasted. Create a fresh key in the [dashboard](https://platform.zerogpu.ai/dashboard) and update the variable or `.env`.
+
+**Studio's model picker shows other providers as not connected.** That's expected. Studio lists every provider in Mastra's registry and marks only the ones whose key variable is set. With just `ZEROGPU_API_KEY` set, ZeroGPU is the only connected provider.
+
+**`npm run dev` says "Another development server instance is already running".** An earlier `mastra dev` is still running for this folder. Stop it with **Ctrl + C** in its terminal; if there isn't one, delete `.mastra/dev.lock` and run `npm run dev` again.
+
+**Chats disappear when you restart `mastra dev`.** Your storage uses `url: ':memory:'`, which keeps threads only while the process runs. Switch `LibSQLStore` to `url: 'file:./mastra.db'` to keep them.
+
+**The agent answers without calling its tools, or recommends products the tool didn't return.** Say in the instructions which tool to call and when, and to recommend only what the tools return. Model choice matters too: in our tests DeepSeek V4.1 Flash called both tools on every run. If the agent stops right after a tool call with no answer, raise `maxSteps`.
+
+**`model not found` for a model that isn't in the registry.** The router only knows the nine listed models. For others, use the [`providerId` and `modelId` form with `url`](#unlisted-zerogpu-models), and send the exact, case-sensitive ID, such as `LFM2.5-1.2B-Instruct`.
+
+**An LFM2.5 or Llama 3.2 agent fails as soon as it has tools.** These models don't accept tool definitions. Give them agents without `tools`, and keep tool-calling agents on a registry model.
+
+**Production doesn't see a model that development does.** Development refreshes the registry from models.dev every hour, while production uses the registry bundled with your installed `@mastra/core`. Upgrade `@mastra/core`, or set `MASTRA_AUTO_REFRESH_PROVIDERS=true` in production.
+
+**No thinking blocks appear with reasoning turned on.** ZeroGPU doesn't return reasoning text on the chat completions API, so there's nothing for Mastra or Studio to show. The model still reasons, and the reasoning tokens are billed as output.
+
+## Conclusion
+
+Mastra reads ZeroGPU straight from models.dev, so moving an agent onto ZeroGPU is one model string and one environment variable, with no provider package. Tools, memory, structured output, fallbacks, and Studio all work the same way they do with any other provider, and with ZeroGPU's low-cost models a tool-calling answer costs a fraction of a cent.
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model available on ZeroGPU and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/mastra-trail-guide">
+    Build a trail gear agent with Mastra on ZeroGPU.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>

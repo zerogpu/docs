@@ -209,6 +209,7 @@
                   "integrations/hermes",
                   "integrations/langchain",
                   "integrations/litellm",
+                  "integrations/mastra",
                   "integrations/mcp",
                   "integrations/models-dev",
                   "integrations/openclaw",
@@ -255,7 +256,8 @@
                   "cookbook/openclaw-inbox-summarizer",
                   "cookbook/hermes-investor-outreach",
                   "cookbook/vercel-ai-sdk-voice-note-triage",
-                  "cookbook/opencode-store-search"
+                  "cookbook/opencode-store-search",
+                  "cookbook/mastra-trail-guide"
                 ]
               }
             ]

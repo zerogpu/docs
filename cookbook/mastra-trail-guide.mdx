@@ -1,0 +1,460 @@
+---
+title: "🥾 Build a Trail Gear Agent with Mastra and ZeroGPU"
+sidebarTitle: "Build a Trail Gear Agent with Mastra and ZeroGPU"
+description: "Build a Mastra agent on ZeroGPU with one model string: it checks a live forecast, searches a store's catalog, and recommends hiking gear in Mastra Studio, then switches to another ZeroGPU model mid-chat, for well under a cent."
+integration: mastra
+---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Build a Mastra agent on ZeroGPU that checks a live weather forecast and searches a store's product catalog to recommend hiking gear, then switch it to another ZeroGPU model mid-chat in Mastra Studio."
+  stack="Mastra (@mastra/core 1.85 or later) with ZeroGPU from the models.dev catalog, DeepSeek V4.1 Flash and GPT-5.6 Luna, Open-Meteo for the forecast, Zod, and @mastra/memory with in-memory LibSQL storage."
+  verify="Open Mastra Studio, ask the Trail Guide what to bring for a hike near Seattle tomorrow, then ask it to keep it under $250, and show me both answers."
+/>
+
+This notebook demonstrates how to build a tool-calling agent with Mastra and run it on ZeroGPU with a single model string. You'll build Trail Guide, the gear assistant for a small outdoor store called Trail Shop: it checks a live weather forecast, searches the shop's catalog, and recommends gear with prices and a total. Then you'll chat with it in Mastra Studio and switch to a different ZeroGPU model in the middle of the conversation. By combining Mastra and ZeroGPU, this notebook walks you through a practical pattern for running real agents with tools and memory on a low-cost model provider, with no provider package at all, because Mastra reads ZeroGPU straight from models.dev.
+
+For the full reference, see the [Mastra integration guide](/integrations/mastra). For how ZeroGPU's listing works and which other tools read it, see the [Models.dev integration guide](/integrations/models-dev).
+
+In this notebook, you'll explore:
+
+- **Mastra**: An open-source TypeScript framework for building AI agents and workflows, with tools, memory, and Mastra Studio for chatting with agents locally. Its model router generates its providers from models.dev, so `zerogpu/<model-id>` works with no extra setup. Here it runs the Trail Guide agent, its two tools, and the chat in Studio.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that Mastra builds its model router from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from in Studio.
+- **Open-Meteo**: A free, open weather forecast API that needs no key. The agent's forecast tool calls it for a live 3-day forecast of wherever the customer is hiking.
+
+This setup not only demonstrates a practical application of tool-calling agents on a low-cost model, but also provides a flexible framework that can be adapted to other real-world scenarios requiring agents that combine live data, your own catalog, and conversation memory to give grounded recommendations.
+
+## 🎥 Watch the Video Guide
+
+If you prefer a visual walkthrough, check out the accompanying video guide below:
+
+<iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/t83MdJS-Qso"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+## 📦 Installation
+
+First, create the project and install Mastra with all its dependencies. You'll need Node.js 22.13 or later:
+
+```bash
+mkdir trail-guide && cd trail-guide
+npm init -y
+npm pkg set type=module scripts.dev="mastra dev"
+npm install @mastra/core @mastra/memory @mastra/libsql zod
+npm install -D mastra typescript @types/node
+```
+
+That's every package. `@mastra/core` brings agents, tools, and the model router, `@mastra/memory` and `@mastra/libsql` let the agent remember the conversation, and the `mastra` CLI runs Mastra Studio. This cookbook was built with `@mastra/core` 1.85.0 and `mastra` 1.40.1; you need `@mastra/core` 1.85.0 or later, the first release that includes ZeroGPU.
+
+ZeroGPU needs no SDK here. Mastra already knows ZeroGPU's endpoint and models from models.dev, so all it needs is your key. Add a TypeScript config so imports with `.ts` extensions resolve:
+
+```json tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "outDir": "dist"
+  },
+  "include": ["src/**/*"]
+}
+```
+
+See the [Mastra integration guide](/integrations/mastra) for every way to configure a ZeroGPU model.
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your API key for ZeroGPU. This ensures that Mastra can reach ZeroGPU's models securely. Open-Meteo is free and needs no key, so ZeroGPU's is the only one.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
+
+Export it in the terminal you'll run Mastra from, under the name models.dev lists for ZeroGPU. Mastra picks it up automatically for every `zerogpu/*` model:
+
+```bash
+# Mastra reads this for every zerogpu/* model
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+Prefer a file? `mastra dev` also loads a `.env` file from the project root. Keep a placeholder in `.env.example` so teammates know which variable to set, and put your real key only in `.env`:
+
+```bash .env.example
+# Mastra picks this up automatically for every zerogpu/* model.
+# Get a key at https://platform.zerogpu.ai
+ZEROGPU_API_KEY=your-api-key
+```
+
+## 🗂️ Finding ZeroGPU on Models.dev and Mastra
+
+Mastra doesn't ship a hand-written ZeroGPU integration. Its model router is generated from the models.dev catalog, so ZeroGPU's listing at [models.dev/providers/zerogpu](https://models.dev/providers/zerogpu/) is what puts ZeroGPU in Mastra. You can query the same entry Mastra reads:
+
+```bash
+curl -s https://models.dev/api.json | jq '.zerogpu | {name, api, env, models: (.models | keys)}'
+```
+
+```json
+{
+  "name": "ZeroGPU",
+  "api": "https://api.zerogpu.ai/v1",
+  "env": [
+    "ZEROGPU_API_KEY"
+  ],
+  "models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-4.1-mini",
+    "gpt-5.4-nano",
+    "gpt-5.6-luna",
+    "gpt-oss-120b",
+    "llama-3.1-8b-instruct-fast",
+    "qwen3-30b-a3b-fp8",
+    "qwen3.6-35b-a3b"
+  ]
+}
+```
+
+Mastra publishes the result as its own [ZeroGPU provider page](https://mastra.ai/models/providers/zerogpu), with the same nine models. That's the whole integration: the endpoint Mastra will call, the variable it reads your key from, and the models you can name as `zerogpu/<model-id>`. You'll start on `deepseek-v4.1-flash`, listed at $0.30 per 1M input tokens and $1.20 per 1M output tokens, and switch to `gpt-5.6-luna` ($0.20 in, $1.20 out) later.
+
+## 🔌 Access Tool-Calling Agents with ZeroGPU
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will make one call to a Mastra agent on DeepSeek V4.1 Flash as an example.
+
+Create a throwaway `check.ts` in the project root. The only ZeroGPU-specific part is the `model` string:
+
+```typescript check.ts
+import { Agent } from '@mastra/core/agent';
+
+const agent = new Agent({
+  id: 'check',
+  name: 'Check',
+  instructions: 'You answer in one short sentence.',
+  model: 'zerogpu/deepseek-v4.1-flash',
+});
+
+const result = await agent.generate('What is one piece of gear every hiker should carry in the rain?');
+console.log(result.text);
+```
+
+```bash
+npx tsx check.ts
+```
+
+```
+A waterproof rain jacket with a hood, since staying dry is the best way to stay warm on a wet trail.
+```
+
+Behind that one line, Mastra found `zerogpu` in its registry, read `ZEROGPU_API_KEY`, and sent the request to `https://api.zerogpu.ai/v1/chat/completions`. You can delete `check.ts` now.
+
+🎉 **ZeroGPU effortlessly plugs into Mastra straight from its models.dev listing, providing a one-line, no-package model provider for AI integration!**
+
+## 🏕️ Building the Trail Guide Agent with Mastra
+
+_This section builds a real agent with two tools and memory, runs it in Mastra Studio, and switches it to a second ZeroGPU model mid-chat. Every model call behind it runs on ZeroGPU._
+
+When you're done, the project looks like this:
+
+```
+trail-guide/
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── src/mastra/
+    ├── index.ts
+    ├── agents/trail-guide.ts
+    ├── data/products.ts
+    └── tools/
+        ├── get-forecast.ts
+        └── search-products.ts
+```
+
+### Step 1: Add the shop's catalog
+
+Trail Shop sells eight products in five categories. This is the data the agent will search, and the only products it's allowed to recommend:
+
+```typescript src/mastra/data/products.ts
+export type Product = {
+  name: string;
+  category: 'Footwear' | 'Camping' | 'Packs' | 'Clothing' | 'Accessories';
+  price: number;
+  description: string;
+};
+
+export const products: Product[] = [
+  { name: 'Trail Runner 2.0', category: 'Footwear', price: 129, description: 'Light, grippy trail shoe for dry, fast hikes.' },
+  { name: 'Alpine Hiking Boots', category: 'Footwear', price: 189, description: 'Waterproof leather boots with ankle support for mud and snow.' },
+  { name: 'Ultralight Tent', category: 'Camping', price: 349, description: '2-person, 1.1 kg, storm-rated for overnight trips.' },
+  { name: 'Summit Daypack 28L', category: 'Packs', price: 89, description: '28-liter day pack with a built-in rain cover.' },
+  { name: 'Storm Rain Jacket', category: 'Clothing', price: 149, description: 'Fully waterproof, breathable shell with a hood.' },
+  { name: 'Night Trail Headlamp', category: 'Accessories', price: 45, description: '400-lumen rechargeable headlamp for early starts and short days.' },
+  { name: 'Merino Trail Socks', category: 'Clothing', price: 24, description: 'Warm merino wool socks that stay warm when wet.' },
+  { name: 'Camp Cook Set', category: 'Camping', price: 69, description: 'Stove, pot and mug for a hot meal on the trail.' },
+];
+```
+
+### Step 2: Build the forecast tool
+
+The first tool turns a place name into coordinates with Open-Meteo's geocoding API, then fetches a 3-day forecast in Fahrenheit. It labels the days **Today**, **Tomorrow**, and the next weekday, so the model doesn't have to work out dates:
+
+```typescript src/mastra/tools/get-forecast.ts
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+
+// Free Open-Meteo API, no key needed.
+export const getForecast = createTool({
+  id: 'get-forecast',
+  description: 'Get the 3-day weather forecast for a place.',
+  inputSchema: z.object({
+    location: z.string().describe('City or town name, e.g. "Seattle"'),
+  }),
+  execute: async ({ location }) => {
+    const geo = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1`,
+    ).then((r) => r.json());
+    const place = geo.results?.[0];
+    if (!place) return { error: `No place called "${location}"` };
+
+    const { daily } = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}` +
+        '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+        '&temperature_unit=fahrenheit&timezone=auto&forecast_days=3',
+    ).then((r) => r.json());
+
+    return {
+      location: `${place.name}, ${place.admin1 ?? place.country}`,
+      days: daily.time.map((date: string, i: number) => ({
+        day: i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : weekday(date),
+        conditions: describe(daily.weather_code[i]),
+        highF: Math.round(daily.temperature_2m_max[i]),
+        lowF: Math.round(daily.temperature_2m_min[i]),
+        chanceOfRain: `${daily.precipitation_probability_max[i]}%`,
+      })),
+    };
+  },
+});
+
+function weekday(date: string) {
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+}
+
+function describe(code: number) {
+  if (code === 0) return 'Clear';
+  if (code <= 3) return 'Partly cloudy';
+  if (code <= 48) return 'Fog';
+  if (code <= 57) return 'Drizzle';
+  if (code <= 67) return 'Rain';
+  if (code <= 77) return 'Snow';
+  if (code <= 82) return 'Rain showers';
+  if (code <= 86) return 'Snow showers';
+  return 'Thunderstorms';
+}
+```
+
+### Step 3: Build the catalog search tool
+
+The second tool filters the catalog by category and maximum price. Both filters are optional, so the model can also ask for everything and choose for itself:
+
+```typescript src/mastra/tools/search-products.ts
+import { createTool } from '@mastra/core/tools';
+import { z } from 'zod';
+import { products } from '../data/products.ts';
+
+export const searchProducts = createTool({
+  id: 'search-products',
+  description: 'Search the Trail Shop catalog. Both filters are optional; call with no input to get everything.',
+  inputSchema: z.object({
+    category: z.enum(['Footwear', 'Camping', 'Packs', 'Clothing', 'Accessories']).optional(),
+    maxPrice: z.number().optional().describe('Highest price in USD'),
+  }),
+  execute: async ({ category, maxPrice }) => ({
+    products: products.filter(
+      (p) => (!category || p.category === category) && (maxPrice === undefined || p.price <= maxPrice),
+    ),
+  }),
+});
+```
+
+### Step 4: Create the agent
+
+Now the agent itself. The instructions tell it to check the forecast first, then search the catalog, and to answer in a fixed shape: one sentence about the weather, 3 to 4 products, and a total. The `model` line is the whole ZeroGPU integration:
+
+```typescript src/mastra/agents/trail-guide.ts
+import { Agent } from '@mastra/core/agent';
+import { Memory } from '@mastra/memory';
+import { getForecast } from '../tools/get-forecast.ts';
+import { searchProducts } from '../tools/search-products.ts';
+
+export const trailGuide = new Agent({
+  id: 'trail-guide',
+  name: 'Trail Guide',
+  instructions: `
+    You are the gear assistant for Trail Shop, an outdoor store.
+    When a customer describes a trip, check the forecast with get-forecast,
+    then look up what the shop sells with search-products.
+    Reply with one sentence about the weather, then 3-4 products from the
+    catalog as a bulleted list (name, price, and a short reason tied to the
+    forecast), then the total. Only recommend products the tool returned.
+    For follow-up requests, just update the list and the total.
+  `,
+  model: 'zerogpu/deepseek-v4.1-flash',
+  tools: { getForecast, searchProducts },
+  memory: new Memory(),
+});
+```
+
+DeepSeek V4.1 Flash is the model in Mastra's own ZeroGPU example, and it called both tools in every test run. `new Memory()` is what lets the agent handle a follow-up like "Keep it under $250" later on.
+
+### Step 5: Register the agent with Mastra
+
+The Mastra instance is what Studio loads. It registers the agent and gives memory somewhere to store the conversation. `:memory:` keeps it in memory, so every restart starts with a clean chat:
+
+```typescript src/mastra/index.ts
+import { Mastra } from '@mastra/core';
+import { LibSQLStore } from '@mastra/libsql';
+import { trailGuide } from './agents/trail-guide.ts';
+
+export const mastra = new Mastra({
+  agents: { trailGuide },
+  storage: new LibSQLStore({ id: 'mastra-storage', url: ':memory:' }),
+});
+```
+
+### Step 6: Start Mastra Studio
+
+From the terminal where `ZEROGPU_API_KEY` is set, start the dev server:
+
+```bash
+npm run dev
+```
+
+```
+[STORAGE] LibSQLDB: Migration completed
+Studio: http://localhost:4111
+```
+
+It's ready in about 2 seconds. The storage line is normal; it's LibSQL setting up the in-memory database. Open [http://localhost:4111/agents/trail-guide/threads/new](http://localhost:4111/agents/trail-guide/threads/new) to start a chat with Trail Guide.
+
+### Step 7: Look at the model picker
+
+Click the model name under the message box, **DeepSeek V4.1 Flash**. The list shows all nine ZeroGPU models, straight from models.dev, with ZeroGPU marked as connected because `ZEROGPU_API_KEY` is set. The other providers in the picker are the rest of Mastra's registry; they show as not connected until you set their keys. Click **DeepSeek V4.1 Flash** again to close the list.
+
+### Step 8: Ask for gear
+
+Type this prompt and press **Enter**. Then keep your hands off for about 15 seconds:
+
+```text
+I'm going hiking near Seattle tomorrow. What should I bring from the shop?
+```
+
+Two rows appear first, **GetForecast** and **SearchProducts**: the agent checks the weather, then looks up the catalog. Then the answer streams in. In our tests, DeepSeek V4.1 Flash called both tools and answered in 11 to 14 seconds:
+
+```
+Tomorrow near Seattle looks wet, with rain showers, a high of 49°F, and an 80% chance of rain.
+
+- **Storm Rain Jacket** ($149): fully waterproof with a hood, for a day of steady showers.
+- **Alpine Hiking Boots** ($189): waterproof with ankle support for muddy trails.
+- **Summit Daypack 28L** ($89): the built-in rain cover keeps your layers dry.
+- **Merino Trail Socks** ($24): merino stays warm even when it gets wet.
+
+**Total: $451**
+```
+
+The forecast is live, so the weather sentence and the products the agent picks change from day to day. Seattle usually gives a rainy-gear answer, and any city works.
+
+### Step 9: Inspect the tool call
+
+Click the **GetForecast** row to open it. The input is what the model sent, and the output is what the tool returned from Open-Meteo:
+
+```json
+{ "location": "Seattle" }
+```
+
+```json
+{
+  "location": "Seattle, Washington",
+  "days": [
+    { "day": "Today", "conditions": "Rain", "highF": 51, "lowF": 44, "chanceOfRain": "90%" },
+    { "day": "Tomorrow", "conditions": "Rain showers", "highF": 49, "lowF": 41, "chanceOfRain": "80%" },
+    { "day": "Saturday", "conditions": "Partly cloudy", "highF": 50, "lowF": 39, "chanceOfRain": "25%" }
+  ]
+}
+```
+
+These are real tool calls with live weather data, decided and summarized by a model running on ZeroGPU. Click the row again to close it. The **SearchProducts** row works the same way and shows the catalog entries the agent chose from.
+
+### Step 10: Switch models mid-chat
+
+Click the model name and pick **GPT-5.6 Luna**. Then send a follow-up:
+
+```text
+Keep it under $250.
+```
+
+The new model picks up the conversation from memory and trims the list. In our tests, GPT-5.6 Luna answered in 10 to 15 seconds:
+
+```
+Here's a lighter list for tomorrow's showers:
+
+- **Storm Rain Jacket** ($149): the one piece you really need in steady rain.
+- **Summit Daypack 28L** ($89): its rain cover keeps everything else dry.
+
+**Total: $238**
+```
+
+The exact list changes from run to run; our test runs came back at $218 and $238, both under the budget. Switching models doesn't need a new key or any code change, because both are ZeroGPU models.
+
+### Step 11: Check the cost
+
+Both answers together cost well under a cent. Each one is a few model steps, mostly input tokens: the instructions, the tool schemas, and the tool results. You can price any run from the catalog numbers you looked up earlier. A turn that sends about 6,000 input tokens and gets 200 back on DeepSeek V4.1 Flash costs about `6,000 x $0.30/1M + 200 x $1.20/1M = $0.0020`.
+
+### Step 12: Call the agent from code (optional)
+
+Studio is for trying things out. In your app, call the same agent through the Mastra instance and give it a memory thread so follow-ups work:
+
+```typescript ask.ts
+import { mastra } from './src/mastra/index.ts';
+
+const agent = mastra.getAgent('trailGuide');
+const memory = { thread: 'seattle-hike', resource: 'customer-42' };
+
+const first = await agent.generate("I'm going hiking near Seattle tomorrow. What should I bring from the shop?", { memory });
+console.log(first.text);
+
+const followUp = await agent.generate('Keep it under $250.', { memory });
+console.log(followUp.text);
+```
+
+```bash
+npx tsx ask.ts
+```
+
+You get the same two answers as in Studio. To restart the Studio demo with a clean chat, press **Ctrl + C** where `npm run dev` is running and start it again: the in-memory storage clears, and the agent is back on DeepSeek V4.1 Flash.
+
+🎉 From one model string, Mastra on ZeroGPU checked a live forecast, searched the shop's catalog, recommended grounded gear with a total, and then kept the conversation going on a second ZeroGPU model, in about 15 seconds per answer and for well under a cent. Your key is all Mastra needs, so any agent you build next can use any of ZeroGPU's nine models by name.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running a Mastra workflow with ZeroGPU for building a tool-calling gear assistant. You can adapt and expand this example for various other scenarios requiring agents that combine live data, your own catalog, and conversation memory to give grounded recommendations.
+
+Key tools utilized in this notebook include:
+
+- **Mastra**: An open-source TypeScript framework for building AI agents and workflows, with tools, memory, and Mastra Studio for chatting with agents locally. Its model router generates its providers from models.dev, so `zerogpu/<model-id>` works with no extra setup. Here it runs the Trail Guide agent, its two tools, and the chat in Studio.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that Mastra builds its model router from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from in Studio.
+- **Open-Meteo**: A free, open weather forecast API that needs no key. The agent's forecast tool calls it for a live 3-day forecast of wherever the customer is hiking.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring agents that combine live data, your own catalog, and conversation memory to give grounded recommendations.

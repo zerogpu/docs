@@ -16,6 +16,8 @@ This guide covers ZeroGPU's listing on [models.dev](https://models.dev/providers
 
 For a runnable, real-world example, see [Add Search to a React Store with OpenCode and ZeroGPU](/cookbook/opencode-store-search). It connects ZeroGPU in OpenCode straight from its models.dev listing, picks DeepSeek V4.1 Flash, and has the agent add a working product search box to a small React store in about 20 seconds for under a cent. Check it out to see the listing put to work in a real agent run. For every OpenCode option, see the [OpenCode integration guide](/integrations/opencode).
 
+For a TypeScript agent built on the same listing, see [Build a Trail Gear Agent with Mastra and ZeroGPU](/cookbook/mastra-trail-guide). It gives a Mastra agent a live forecast tool and a store catalog, runs it on DeepSeek V4.1 Flash in Mastra Studio, and switches to GPT-5.6 Luna mid-chat, for well under a cent. For every Mastra option, see the [Mastra integration guide](/integrations/mastra).
+
 <Note>
 	For more worked examples, browse the [cookbook index](/cookbook/index) for
 	end-to-end walkthroughs of classification, extraction, and PII workflows on
@@ -24,7 +26,13 @@ For a runnable, real-world example, see [Add Search to a React Store with OpenCo
 
 ## Video walkthrough
 
+**OpenCode on ZeroGPU:**
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/OM9PR2yHqCU?si=KUHaEx63hr4oU38Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+**Mastra on ZeroGPU:**
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/t83MdJS-Qso?si=evl961ktC4f-vtXq" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Quickstart
 
@@ -347,7 +355,7 @@ These tools read the models.dev catalog to decide which providers and models the
 | Tool | Kind | How it gets the catalog | ZeroGPU status (November 2026) |
 |---|---|---|---|
 | [OpenCode](#opencode) | Coding agent CLI | Built on models.dev | Available. Full guide on the [OpenCode integration page](/integrations/opencode). |
-| [Mastra](#mastra) | TypeScript agent framework | Provider registry generated from models.dev | Available in `@mastra/core` 1.85.0 and later. |
+| [Mastra](#mastra) | TypeScript agent framework | Provider registry generated from models.dev | Available in `@mastra/core` 1.85.0 and later. Full guide on the [Mastra integration page](/integrations/mastra). |
 | [Kilo CLI](#kilo-cli) | Coding agent CLI (fork of OpenCode) | Bundled snapshot, refreshed hourly at runtime | Available after the first catalog refresh. |
 | [VoltAgent](#voltagent) | TypeScript agent framework | Bundled snapshot, refreshed every 30 minutes outside production | Works in development; production needs a release with a newer snapshot. |
 | [Kit](#kit) | Go coding agent CLI | Embedded snapshot, updated with `kit update-models` | Run `kit update-models` first. |
@@ -406,7 +414,7 @@ console.log(result.text);
 billing
 ```
 
-Response: `result.text` holds the reply. Swap the model string to move the agent to any other ZeroGPU model, such as `zerogpu/gpt-5.4-nano` for cheaper classification.
+Response: `result.text` holds the reply. Swap the model string to move the agent to any other ZeroGPU model, such as `zerogpu/gpt-5.4-nano` for cheaper classification. For tools, memory, structured output, reasoning options, fallbacks, Mastra Studio, and ZeroGPU models models.dev doesn't list yet, see the [Mastra integration guide](/integrations/mastra). For a full agent run, see the [Mastra cookbook](/cookbook/mastra-trail-guide).
 
 ### Kilo CLI
 
@@ -544,7 +552,7 @@ Cheapest isn't always best for agent work. In the [OpenCode cookbook](/cookbook/
 | Logo | `https://models.dev/logos/zerogpu.svg` | Show ZeroGPU's mark in your UI. |
 | `@ai-sdk/openai-compatible` | Your TypeScript code | Call ZeroGPU with the catalog's settings and price each call. |
 | OpenCode | `/connect`, `/models` | Run a coding agent on ZeroGPU. See the [OpenCode guide](/integrations/opencode). |
-| Mastra | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU. |
+| Mastra | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU. See the [Mastra guide](/integrations/mastra). |
 | Kilo CLI | `/connect`, `/models` | Run Kilo's coding agent on ZeroGPU. |
 | VoltAgent | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU (development today). |
 | Kit | `kit update-models`, `--model` | Run Kit's coding agent on ZeroGPU. |
