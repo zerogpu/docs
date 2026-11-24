@@ -1,0 +1,637 @@
+---
+title: "🎬 Build a Movie Watchlist with Kilo CLI and ZeroGPU"
+sidebarTitle: "Build a Movie Watchlist with Kilo CLI and ZeroGPU"
+description: "Connect ZeroGPU in Kilo CLI through its models.dev listing, pick DeepSeek V4.1 Flash, and have the agent build a complete watchlist feature across four files of a React movie app in about 23 seconds for half a cent."
+integration: kilo-cli
+---
+
+import { AgentRecipe } from "/snippets/agent-recipe.jsx";
+
+<AgentRecipe
+  goal="Connect ZeroGPU in Kilo CLI and have the agent build a watchlist for a React movie app: hearts save and remove films, the header shows a live count and switches between all and saved films, and the list survives a refresh, running on DeepSeek V4.1 Flash."
+  stack="Kilo CLI with ZeroGPU from the models.dev catalog, on a Vite, React, TypeScript and Tailwind app."
+  verify="Open the app, save three films, switch to the saved view, refresh the page, and show me that the watchlist is still there."
+/>
+
+This notebook demonstrates how to run the Kilo CLI coding agent on ZeroGPU and ship a real multi-file feature with it. You start with Marquee, a dark, poster-driven movie-night app whose heart buttons and Watchlist button don't do anything yet, connect your ZeroGPU key in Kilo, pick DeepSeek V4.1 Flash, and describe the feature in one sentence. The agent reads the app, creates a localStorage hook, wires up three components, checks its own build, and the app updates in your browser, in about 23 seconds and for about half a cent. By combining Kilo CLI and ZeroGPU, this notebook walks you through a practical pattern for handing everyday feature work to a coding agent on a low-cost model provider, with no provider configuration at all because ZeroGPU is listed on models.dev.
+
+For the full reference, see the [Kilo CLI integration guide](/integrations/kilo-cli). For how ZeroGPU's listing works and which other tools read it, see the [Models.dev integration guide](/integrations/models-dev).
+
+In this notebook, you'll explore:
+
+- **Kilo CLI**: The terminal edition of Kilo Code, an open-source coding agent that reads your code, edits files, and runs commands. It's a fork of OpenCode and builds its provider list from models.dev, so ZeroGPU shows up in `/connect` and `/models` with no extra setup. Here it reads the app, writes the watchlist feature across four files, and builds the project to check its work.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that Kilo reads its providers from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from.
+
+This setup not only demonstrates a practical application of agentic feature work on a low-cost model, but also provides a flexible framework that can be adapted to other real-world scenarios requiring fast, inexpensive, multi-file code changes driven by plain-language requests.
+
+## 🎥 Watch the Video Guide
+
+If you prefer a visual walkthrough, check out the accompanying video guide below:
+
+<iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/mem6jezDdvg"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen
+></iframe>
+
+## 📦 Installation
+
+First, install the Kilo CLI:
+
+```bash
+npm install -g @kilocode/cli
+kilo --version
+```
+
+```
+7.8.32
+```
+
+Prefer another installer? `curl -fsSL https://kilo.ai/cli/install | bash` or `brew install Kilo-Org/tap/kilo` installs the same `kilo` command.
+
+ZeroGPU needs no SDK here. Kilo already knows ZeroGPU's endpoint and models from models.dev, so all it needs is your key. You'll also need Node.js 20 or newer for the app, plus `jq` for one optional catalog lookup. See the [Kilo CLI integration guide](/integrations/kilo-cli) for every way to connect.
+
+## 🔑 Setting Up API Keys
+
+You'll need to set up your API key for ZeroGPU. This ensures that Kilo can reach ZeroGPU's models securely.
+
+You can go to [here](https://platform.zerogpu.ai/dashboard) to get an API key from ZeroGPU. The key starts with `zgpu-api-`.
+
+Copy the key now; you'll paste it into Kilo's `/connect` in a moment, which stores it for every Kilo session on your machine. Kilo shows the key in plain text while you paste it there, so if you're recording or sharing your screen, store it from a shell instead, where it's masked:
+
+```bash
+# Optional: store the key with masked input instead of /connect
+kilo auth login --provider zerogpu
+```
+
+If you'd rather keep the key in your environment, export it under the name models.dev lists for ZeroGPU, then start Kilo from the same shell:
+
+```bash
+# Optional: use an environment variable instead of storing the key
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+## 🗂️ Finding ZeroGPU on Models.dev
+
+Kilo doesn't ship a hard-coded ZeroGPU integration. It reads ZeroGPU's entry from the models.dev catalog, which you can browse at [models.dev/providers/zerogpu](https://models.dev/providers/zerogpu/) or query directly:
+
+```bash
+curl -s https://models.dev/api.json | jq '.zerogpu | {name, api, env, models: (.models | keys)}'
+```
+
+```json
+{
+  "name": "ZeroGPU",
+  "api": "https://api.zerogpu.ai/v1",
+  "env": [
+    "ZEROGPU_API_KEY"
+  ],
+  "models": [
+    "deepseek-v4.1-flash",
+    "glm-5.3-flash",
+    "gpt-4.1-mini",
+    "gpt-5.4-nano",
+    "gpt-5.6-luna",
+    "gpt-oss-120b",
+    "llama-3.1-8b-instruct-fast",
+    "qwen3-30b-a3b-fp8",
+    "qwen3.6-35b-a3b"
+  ]
+}
+```
+
+That's the whole integration: the endpoint Kilo will call, the variable it checks for a key, and the nine models it will offer. You'll use `deepseek-v4.1-flash`, listed at \$0.30 per 1M input tokens, \$1.20 per 1M output tokens, and \$0.003 per 1M cached input tokens, with a 1,048,576-token context window. That last price matters for a coding agent, as you'll see in the cost breakdown below.
+
+## 🍿 Building the Marquee Starter
+
+Marquee is a Vite, React, TypeScript, and Tailwind app with a sticky header, a hero, and a grid of ten film posters. Each poster has a heart button, and the header has a Watchlist button with a count, but none of them do anything yet. Create the project and install its dependencies:
+
+```bash
+mkdir marquee && cd marquee
+npm init -y
+npm pkg set type=module scripts.dev="vite --port 5174 --strictPort" scripts.build="vite build"
+npm install react react-dom
+npm install -D vite @vitejs/plugin-react tailwindcss @tailwindcss/vite typescript @types/react @types/react-dom
+```
+
+Add the build configuration:
+
+```typescript vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
+```
+
+```json tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}
+```
+
+```html index.html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marquee</title>
+  </head>
+  <body class="bg-zinc-950">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+Now the app itself. `src/index.css` pulls in Tailwind, and `src/main.tsx` mounts the app:
+
+```css src/index.css
+@import "tailwindcss";
+```
+
+```tsx src/main.tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+```
+
+The film data is what the watchlist will save. Each film has an `id`, which is what the agent will store:
+
+```typescript src/data/films.ts
+export type Film = {
+  id: number;
+  title: string;
+  year: number;
+  runtime: string;
+  genre: string;
+  rating: number;
+  poster: string;
+};
+
+export const films: Film[] = [
+  { id: 1, title: "Orbit of Ash", year: 2025, runtime: "2h 18m", genre: "Sci-Fi", rating: 8.7, poster: "/posters/orbit-of-ash.jpg" },
+  { id: 2, title: "Midnight Bakery", year: 2024, runtime: "1h 42m", genre: "Comedy", rating: 7.9, poster: "/posters/midnight-bakery.jpg" },
+  { id: 3, title: "The Quiet Fox", year: 2023, runtime: "1h 35m", genre: "Animation", rating: 8.4, poster: "/posters/the-quiet-fox.jpg" },
+  { id: 4, title: "Velvet Heist", year: 2025, runtime: "2h 04m", genre: "Thriller", rating: 8.1, poster: "/posters/velvet-heist.jpg" },
+  { id: 5, title: "Signal Lost", year: 2022, runtime: "1h 58m", genre: "Sci-Fi", rating: 7.6, poster: "/posters/signal-lost.jpg" },
+  { id: 6, title: "Paper Kingdoms", year: 2024, runtime: "2h 11m", genre: "Fantasy", rating: 8.3, poster: "/posters/paper-kingdoms.jpg" },
+  { id: 7, title: "Neon Tides", year: 2025, runtime: "1h 49m", genre: "Romance", rating: 7.4, poster: "/posters/neon-tides.jpg" },
+  { id: 8, title: "Glacier Run", year: 2023, runtime: "1h 52m", genre: "Adventure", rating: 8.0, poster: "/posters/glacier-run.jpg" },
+  { id: 9, title: "Jazz After Dark", year: 2021, runtime: "2h 07m", genre: "Drama", rating: 8.5, poster: "/posters/jazz-after-dark.jpg" },
+  { id: 10, title: "Robot Garden", year: 2024, runtime: "1h 31m", genre: "Animation", rating: 8.2, poster: "/posters/robot-garden.jpg" },
+];
+```
+
+Drop ten portrait (3:4) images into `public/posters/` with the file names above. The films are made up, and the posters in the video are original AI-generated key art, but any images work. The app runs fine without them too: each card falls back to a dark tile with the title on top.
+
+Two components render the header and each film card. Note the heart button and the Watchlist button with its hard-coded `0`:
+
+```tsx src/components/Header.tsx
+const links = ["Browse", "New", "Top rated"];
+
+export default function Header() {
+  return (
+    <header className="sticky top-0 z-10 border-b border-white/10 bg-zinc-950/80 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center gap-10 px-6 py-4">
+        <a href="#" className="text-xl font-black tracking-tight">
+          🎬{" "}
+          <span className="bg-linear-to-r from-amber-200 to-rose-400 bg-clip-text text-transparent">Marquee</span>
+        </a>
+        <nav className="flex flex-1 gap-6 text-sm font-medium text-zinc-400">
+          {links.map((link) => (
+            <a key={link} href="#" className="hover:text-white">
+              {link}
+            </a>
+          ))}
+        </nav>
+        <button className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10">
+          ♡ Watchlist
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">0</span>
+        </button>
+      </div>
+    </header>
+  );
+}
+```
+
+```tsx src/components/FilmCard.tsx
+import type { Film } from "../data/films";
+
+export default function FilmCard({ film }: { film: Film }) {
+  return (
+    <article data-film className="group">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900 shadow-lg shadow-black/50 ring-1 ring-white/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
+        <img
+          src={film.poster}
+          alt=""
+          className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-105"
+        />
+        <span className="absolute top-3 left-3 rounded-full bg-black/50 px-2.5 py-1 text-xs font-bold backdrop-blur">
+          ★ {film.rating.toFixed(1)}
+        </span>
+        <button
+          aria-label="Add to watchlist"
+          className="absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-black/50 text-lg backdrop-blur hover:bg-black/70"
+        >
+          ♡
+        </button>
+        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/50 to-transparent p-4 pt-16">
+          <h3 className="text-lg leading-tight font-bold">{film.title}</h3>
+        </div>
+      </div>
+      <p className="mt-3 text-sm text-zinc-400">
+        {film.year} · {film.runtime} · {film.genre}
+      </p>
+    </article>
+  );
+}
+```
+
+And `src/App.tsx` puts it together. The agent will change this file and both components:
+
+```tsx src/App.tsx
+import FilmCard from "./components/FilmCard";
+import Header from "./components/Header";
+import { films } from "./data/films";
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <Header />
+      <main className="mx-auto max-w-7xl px-6 py-10">
+        <section className="mb-8">
+          <h1 className="text-4xl font-black tracking-tight">Movie night, sorted.</h1>
+          <p className="mt-2 text-lg text-zinc-400">Ten picks worth staying up for.</p>
+        </section>
+
+        <section className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
+          {films.map((film) => (
+            <FilmCard key={film.id} film={film} />
+          ))}
+        </section>
+      </main>
+    </div>
+  );
+}
+```
+
+Last, give the agent two facts about the project in an `AGENTS.md`, which Kilo reads automatically. Without it, an agent that wants to check its work may try to start its own server or open a browser, which stops to ask for permission:
+
+```markdown AGENTS.md
+# Marquee
+
+React 19 + Vite + Tailwind CSS v4 + TypeScript.
+
+- The Vite dev server is already running on http://localhost:5174 with hot reload, and changes are checked in the browser by hand. Don't start another server or run browser tests.
+- To verify a change, run `npm run build`.
+```
+
+Commit the starter so you can see exactly what the agent changes, and reset between runs:
+
+```bash
+printf "node_modules/\ndist/\n" > .gitignore
+git init -q && git add -A && git commit -qm "marquee starter"
+```
+
+Finally, start the dev server in a second terminal and open [http://localhost:5174](http://localhost:5174). Keep it running: Vite reloads the page by itself whenever the agent saves a file.
+
+```bash
+npm run dev
+```
+
+You should see the header with **♡ Watchlist 0**, "Movie night, sorted.", and ten film posters. Click a heart: nothing happens yet.
+
+## 🔌 Access Agentic Coding with ZeroGPU
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live. In this section, we will connect ZeroGPU in Kilo, pick DeepSeek V4.1 Flash, and ask it one question about the app as an example.
+
+Start Kilo in the `marquee` folder:
+
+```bash
+kilo
+```
+
+Connect ZeroGPU. Type `/connect`, press **Enter**, type `zero`, and press **Enter** on **ZeroGPU**. Paste your key and press **Enter**. (Skip this if you stored the key with `kilo auth login` or exported `ZEROGPU_API_KEY`.)
+
+```text
+/connect
+```
+
+Now pick the model. Type `/models`, press **Enter**, and type `zerogpu`: Kilo lists ZeroGPU's nine models under a **ZeroGPU** header, with a panel showing each model's prices and context window. Press **↑** once to land on **DeepSeek V4.1 Flash**, press **Enter**, then press **Enter** again on **Default** when Kilo asks for a variant. (Typing `deepseek` instead lists Kilo Gateway's DeepSeek models first, so filter by `zerogpu`.)
+
+```text
+/models
+```
+
+The footer under the input box now reads `Code · DeepSeek V4.1 Flash ZeroGPU`. Every ZeroGPU model in this list supports the tool calling Kilo needs. To confirm they all answer, run a roll call from a shell:
+
+```bash
+kilo roll-call '^zerogpu/' --prompt "Reply with the word ok"
+```
+
+```
+Model                              | Access | Snippet | Latency
+---------------------------------------------------------------
+zerogpu/deepseek-v4.1-flash        | YES    | ok      | 1921ms
+zerogpu/gpt-5.6-luna               | YES    | ok      | 3242ms
+zerogpu/qwen3.6-35b-a3b            | YES    | ok      | 3252ms
+zerogpu/gpt-4.1-mini               | YES    | ok      | 3264ms
+zerogpu/gpt-oss-120b               | YES    | ok      | 3942ms
+zerogpu/gpt-5.4-nano               | YES    | ok      | 2146ms
+zerogpu/llama-3.1-8b-instruct-fast | YES    | Ok      | 1115ms
+zerogpu/glm-5.3-flash              | YES    | ok      | 1346ms
+zerogpu/qwen3-30b-a3b-fp8          | YES    |   ok    | 1824ms
+
+9 accessible, 0 failed
+```
+
+Check the connection with a quick question. You can type it into the session, or run it from a shell with `kilo run`:
+
+```bash
+kilo run --model zerogpu/deepseek-v4.1-flash "In one sentence, what does src/App.tsx render?"
+```
+
+```
+> code · deepseek-v4.1-flash
+→ Read src/App.tsx
+A dark-themed movie-night page with a `Header`, a hero heading ("Movie night, sorted.") and subtitle, and a responsive grid of `FilmCard`s mapped from the `films` data.
+```
+
+🎉 **ZeroGPU effortlessly plugs into Kilo CLI straight from its models.dev listing, providing a no-config, low-cost model provider for AI integration!**
+
+## 🎬 Building the Watchlist with Kilo CLI
+
+_This section asks the agent for a real multi-file feature in one sentence. Kilo does the reading, editing, and checking, and every model call behind it runs on ZeroGPU._
+
+Lay out your screen so you can watch it happen: Kilo in a terminal, `src/App.tsx` open in your editor above it, and the app in your browser. Give the terminal at least 125 columns so Kilo can show its sidebar with the session's cost.
+
+### Step 1: Ask for the feature
+
+Type this prompt into the Kilo session and press **Enter**. Then keep your hands off for about 25 seconds:
+
+```text
+Make the watchlist work: hearts save films, the header shows the count and switches between all and saved films, and it survives a refresh.
+```
+
+### Step 2: Watch the agent work
+
+Kilo reads the app, the film data, and both components, writes a new `src/hooks/useWatchlist.ts`, and rewrites `App.tsx`, `Header.tsx`, and `FilmCard.tsx`, so you'll see the files change in your editor. Kilo's default Code agent is allowed to edit files and run commands, so there's nothing to approve. Before it replies, the agent runs `npm run build` to check its work, as `AGENTS.md` asked. That's expected; let it finish.
+
+When the reply lands, the line under it reads `Code · DeepSeek V4.1 Flash` with the time the turn took. Here's the change from the run in the video, from `git diff` (with the new hook file included):
+
+```bash
+git add -N src/hooks && git diff
+```
+
+```
+diff --git a/src/App.tsx b/src/App.tsx
+--- a/src/App.tsx
++++ b/src/App.tsx
+@@ -1,22 +1,37 @@
++import { useState } from "react";
+ import FilmCard from "./components/FilmCard";
+ import Header from "./components/Header";
+ import { films } from "./data/films";
++import { useWatchlist } from "./hooks/useWatchlist";
+ 
+ export default function App() {
++  const { saved, toggle, has } = useWatchlist();
++  const [showSaved, setShowSaved] = useState(false);
++
++  const visible = showSaved ? films.filter((film) => saved.includes(film.id)) : films;
++
+   return (
+     <div className="min-h-screen bg-zinc-950 text-zinc-100">
+-      <Header />
++      <Header count={saved.length} showSaved={showSaved} onToggleView={() => setShowSaved((v) => !v)} />
+       <main className="mx-auto max-w-7xl px-6 py-10">
+         <section className="mb-8">
+-          <h1 className="text-4xl font-black tracking-tight">Movie night, sorted.</h1>
+-          <p className="mt-2 text-lg text-zinc-400">Ten picks worth staying up for.</p>
++          <h1 className="text-4xl font-black tracking-tight">
++            {showSaved ? "Your watchlist." : "Movie night, sorted."}
++          </h1>
++          <p className="mt-2 text-lg text-zinc-400">
++            {showSaved ? "Everything you've saved for later." : "Ten picks worth staying up for."}
++          </p>
+         </section>
+ 
+-        <section className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
+-          {films.map((film) => (
+-            <FilmCard key={film.id} film={film} />
+-          ))}
+-        </section>
++        {visible.length === 0 ? (
++          <p className="text-zinc-400">No saved films yet. Tap a ♡ to add one.</p>
++        ) : (
++          <section className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
++            {visible.map((film) => (
++              <FilmCard key={film.id} film={film} saved={has(film.id)} onToggle={toggle} />
++            ))}
++          </section>
++        )}
+       </main>
+     </div>
+   );
+diff --git a/src/components/FilmCard.tsx b/src/components/FilmCard.tsx
+--- a/src/components/FilmCard.tsx
++++ b/src/components/FilmCard.tsx
+@@ -1,6 +1,14 @@
+ import type { Film } from "../data/films";
+ 
+-export default function FilmCard({ film }: { film: Film }) {
++export default function FilmCard({
++  film,
++  saved,
++  onToggle,
++}: {
++  film: Film;
++  saved: boolean;
++  onToggle: (id: number) => void;
++}) {
+   return (
+     <article data-film className="group">
+       <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-900 shadow-lg shadow-black/50 ring-1 ring-white/10 transition duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl">
+@@ -13,10 +21,14 @@ export default function FilmCard({ film }: { film: Film }) {
+           ★ {film.rating.toFixed(1)}
+         </span>
+         <button
+-          aria-label="Add to watchlist"
+-          className="absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-black/50 text-lg backdrop-blur hover:bg-black/70"
++          aria-label={saved ? "Remove from watchlist" : "Add to watchlist"}
++          aria-pressed={saved}
++          onClick={() => onToggle(film.id)}
++          className={`absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-black/50 text-lg backdrop-blur hover:bg-black/70 ${
++            saved ? "text-rose-400" : "text-white"
++          }`}
+         >
+-          ♡
++          {saved ? "♥" : "♡"}
+         </button>
+         <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/50 to-transparent p-4 pt-16">
+           <h3 className="text-lg leading-tight font-bold">{film.title}</h3>
+diff --git a/src/components/Header.tsx b/src/components/Header.tsx
+--- a/src/components/Header.tsx
++++ b/src/components/Header.tsx
+@@ -1,6 +1,14 @@
+ const links = ["Browse", "New", "Top rated"];
+ 
+-export default function Header() {
++export default function Header({
++  count,
++  showSaved,
++  onToggleView,
++}: {
++  count: number;
++  showSaved: boolean;
++  onToggleView: () => void;
++}) {
+   return (
+     <header className="sticky top-0 z-10 border-b border-white/10 bg-zinc-950/80 backdrop-blur">
+       <div className="mx-auto flex max-w-7xl items-center gap-10 px-6 py-4">
+@@ -15,9 +23,15 @@ export default function Header() {
+             </a>
+           ))}
+         </nav>
+-        <button className="flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10">
+-          ♡ Watchlist
+-          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">0</span>
++        <button
++          aria-pressed={showSaved}
++          onClick={onToggleView}
++          className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold ${
++            showSaved ? "border-rose-400/40 bg-rose-400/15 text-rose-200" : "border-white/15 hover:bg-white/10"
++          }`}
++        >
++          ♡ {showSaved ? "Saved" : "Watchlist"}
++          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{count}</span>
+         </button>
+       </div>
+     </header>
+diff --git a/src/hooks/useWatchlist.ts b/src/hooks/useWatchlist.ts
+new file mode 100644
+--- /dev/null
++++ b/src/hooks/useWatchlist.ts
+@@ -0,0 +1,35 @@
++import { useCallback, useEffect, useState } from "react";
++
++const STORAGE_KEY = "marquee.watchlist";
++
++function readStored(): number[] {
++  try {
++    const raw = localStorage.getItem(STORAGE_KEY);
++    if (!raw) return [];
++    const parsed = JSON.parse(raw);
++    if (!Array.isArray(parsed)) return [];
++    return parsed.filter((id): id is number => typeof id === "number");
++  } catch {
++    return [];
++  }
++}
++
++export function useWatchlist() {
++  const [saved, setSaved] = useState<number[]>(readStored);
++
++  useEffect(() => {
++    try {
++      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
++    } catch {
++      // ignore write failures (private mode, quota, etc.)
++    }
++  }, [saved]);
++
++  const toggle = useCallback((id: number) => {
++    setSaved((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
++  }, []);
++
++  const has = useCallback((id: number) => saved.includes(id), [saved]);
++
++  return { saved, toggle, has };
++}
+```
+
+The agent pulled the watchlist into a `useWatchlist` hook that loads saved film IDs from localStorage (ignoring anything malformed), writes them back on every change, and exposes `toggle` and `has`. It lifted the state into `App`, filtered the grid when the saved view is on, swapped the heading, and added an empty state. The heart got a filled, rose-colored ♥ with `aria-pressed` and a matching label, and the header button got the live count and a highlighted "Saved" state. The exact structure, styling, and wording change from run to run (sometimes the hook lives inside `App.tsx`, sometimes the button reads "All films"), but the behavior was the same in every test.
+
+### Step 3: Check the cost
+
+Look at the sidebar for the session's cost. It reads **\$0.01**, because Kilo rounds to the cent. The run in the video took **23.1 seconds** and cost **\$0.0056**. To see the exact figure for your own runs, use `kilo stats`:
+
+```bash
+kilo stats --project "" --models
+```
+
+Here's where the half cent came from. A coding agent resends its system prompt and the conversation on every step, so most of its input is a prefix ZeroGPU has already seen, billed at the cached rate:
+
+```
+fresh input   5,582 tokens x $0.30/1M  = $0.0017
+cached input  175,232 tokens x $0.003/1M = $0.0005
+output        2,849 tokens x $1.20/1M  = $0.0034
+                                    total $0.0056
+```
+
+Without caching, those 175,232 tokens would have cost \$0.0526 on their own, about ten times the whole run. Across four more runs of the same prompt from a shell, the feature took 22 to 62 seconds and cost \$0.0045 to \$0.0105.
+
+### Step 4: Try the watchlist
+
+Switch to the browser. There's no need to refresh: Vite already reloaded the page when the agent saved. Then:
+
+```
+Click ♡ on Orbit of Ash, The Quiet Fox, Jazz After Dark  →  three red hearts, header count 3
+Click the Watchlist button                               →  only those three films
+Refresh the page                                         →  hearts still red, count still 3
+Click the three red hearts in the saved view             →  the empty state
+```
+
+### Step 5: Run it again headlessly (optional)
+
+To try the same task from a script, reset the app and hand the prompt to `kilo run`. This is the same run without the interface, which is how you'd use it in CI:
+
+```bash
+git reset --hard -q && git clean -fdq
+kilo run --model zerogpu/deepseek-v4.1-flash \
+  "Make the watchlist work: hearts save films, the header shows the count and switches between all and saved films, and it survives a refresh."
+```
+
+Each run costs about a cent or less. Add `--auto` when running unattended: `kilo run` can't stop to ask for permission, so anything that would normally ask, such as reading files outside the project, ends the run unless you allow it.
+
+🎉 From a single sentence, Kilo CLI on ZeroGPU read the app, built a complete watchlist across four files, checked its own build, and shipped it to your browser in about 23 seconds, for about half a cent. Your key stays saved in Kilo, so every future session can pick a ZeroGPU model straight from `/models`.
+
+## 🌟 Highlights
+
+This notebook has guided you through setting up and running a Kilo CLI workflow with ZeroGPU for building a watchlist feature in a React movie app. You can adapt and expand this example for various other scenarios requiring fast, inexpensive, multi-file code changes driven by plain-language requests.
+
+Key tools utilized in this notebook include:
+
+- **Kilo CLI**: The terminal edition of Kilo Code, an open-source coding agent that reads your code, edits files, and runs commands. It's a fork of OpenCode and builds its provider list from models.dev, so ZeroGPU shows up in `/connect` and `/models` with no extra setup. Here it reads the app, writes the watchlist feature across four files, and builds the project to check its work.
+- **ZeroGPU**: A compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+- **Models.dev**: An open-source database of AI model specifications, pricing, and capabilities that Kilo reads its providers from. ZeroGPU's listing supplies the endpoint, the API key variable, and the nine chat models you'll pick from.
+
+This comprehensive setup allows you to adapt and expand the example for various scenarios requiring fast, inexpensive, multi-file code changes driven by plain-language requests.

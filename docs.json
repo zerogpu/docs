@@ -207,6 +207,7 @@
                   "integrations/claude-skill",
                   "integrations/sprites",
                   "integrations/hermes",
+                  "integrations/kilo-cli",
                   "integrations/langchain",
                   "integrations/litellm",
                   "integrations/mastra",
@@ -257,6 +258,7 @@
                   "cookbook/hermes-investor-outreach",
                   "cookbook/vercel-ai-sdk-voice-note-triage",
                   "cookbook/opencode-store-search",
+                  "cookbook/kilo-movie-watchlist",
                   "cookbook/mastra-trail-guide"
                 ]
               }
