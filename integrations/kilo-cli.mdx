@@ -1,0 +1,677 @@
+---
+title: "Kilo CLI"
+description: "Connect ZeroGPU in Kilo CLI with /connect or kilo auth login, pick any of its models.dev-listed models in /models, and run the open-source coding agent on ZeroGPU from the terminal, scripts, and CI."
+icon: "code"
+---
+
+Kilo CLI is the terminal edition of Kilo Code, an open-source (MIT) coding agent that also ships as VS Code and JetBrains extensions. It's a fork of OpenCode, with a full-screen terminal interface, a `kilo run` command for scripts and CI, five built-in agents (Code, Ask, Plan, Debug, and Orchestrator), and support for skills, commands, MCP servers, and plugins. Kilo builds its provider and model list from the [models.dev](/integrations/models-dev) catalog, which it caches locally and refreshes in the background, so every provider listed there shows up in `/connect` and `/models` without extra configuration. ZeroGPU is listed on models.dev, which means you can run Kilo on ZeroGPU's models with nothing but an API key.
+
+ZeroGPU is a compute-efficient inference provider for apps and agents. We run purpose-built small and nano language models across an edge network for the high-volume tasks you run constantly - classification, extraction, moderation, routing, summarization - at ~10x lower latency and 50%+ lower cost than frontier-model workflows. Auto-scaling, with zero GPU infrastructure to manage. Plug in and you're live.
+
+## Overview
+
+This guide covers running Kilo CLI on ZeroGPU, for developers who want a low-cost model provider behind their coding agent. You'll connect your ZeroGPU key, pick a ZeroGPU model, and run your first prompt, then work through every surface Kilo exposes for a provider: `/connect` and `kilo auth`, the `ZEROGPU_API_KEY` variable, `/models` and `kilo models`, `kilo run`, `kilo roll-call`, `kilo stats`, the default model, per-agent models, reasoning variants, provider overrides and filters, and adding ZeroGPU models that models.dev doesn't list yet. Every command, flag, and config key here was checked against Kilo CLI 7.8.32. By the end you'll have Kilo building features on ZeroGPU for about a cent each.
+
+## Cookbook
+
+For a runnable, real-world example, see [Build a Movie Watchlist with Kilo CLI and ZeroGPU](/cookbook/kilo-movie-watchlist). It connects ZeroGPU in Kilo with `/connect`, picks DeepSeek V4.1 Flash, and has the agent build a complete watchlist feature for a React movie app (save and remove films, a live count, a saved-films view, and persistence across refreshes) across four files in about 23 seconds, for \$0.0056. Check it out to see `/connect`, `/models`, and a real multi-file agent run end to end.
+
+<Note>
+	For more worked examples, browse the [cookbook index](/cookbook/index) for
+	end-to-end walkthroughs of classification, extraction, and PII workflows on
+	ZeroGPU's small models.
+</Note>
+
+## Video walkthrough
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mem6jezDdvg?si=4CvH-LrwKbFER2AF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Quickstart
+
+### Prerequisites
+
+- A ZeroGPU [API key](https://platform.zerogpu.ai/dashboard) (starts with `zgpu-api-`).
+- Kilo CLI. This guide was tested with version 7.8.32.
+- A project directory to run Kilo in, ideally a git repository so you can review and undo the agent's changes.
+- A chat model from the [model catalog](/docs/model-catalog). This guide uses `deepseek-v4.1-flash`, which built every feature cleanly in our tests.
+
+### Get your ZeroGPU API key
+
+1. Sign in to the [ZeroGPU dashboard](https://platform.zerogpu.ai/dashboard).
+2. Open **API Keys** and click **Create key**.
+3. Copy the key (starts with `zgpu-api-`). You'll paste it into `/connect` or `kilo auth login`, or export it as `ZEROGPU_API_KEY`, the variable models.dev lists for ZeroGPU.
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+```
+
+### Install Kilo CLI
+
+```bash
+npm install -g @kilocode/cli
+```
+
+The install script and Homebrew work too:
+
+```bash
+curl -fsSL https://kilo.ai/cli/install | bash
+# or
+brew install Kilo-Org/tap/kilo
+```
+
+Confirm the version:
+
+```bash
+kilo --version
+```
+
+```
+7.8.32
+```
+
+### Your first request
+
+Start Kilo in your project, connect ZeroGPU, and pick a model. This is the flow from the video:
+
+```bash
+cd your-project
+kilo
+```
+
+```text
+/connect
+```
+
+Type `zero`, press **Enter** on **ZeroGPU**, paste your key, and press **Enter**. Kilo shows the key in plain text while you paste it, so if you're sharing your screen, store it beforehand with `kilo auth login --provider zerogpu`, which masks it (see [`kilo auth`](#kilo-auth)). Then:
+
+```text
+/models
+```
+
+Type `zerogpu` to list ZeroGPU's nine models, pick **DeepSeek V4.1 Flash**, and press **Enter** on **Default** when Kilo asks for a variant. The footer under the input box now reads `Code · DeepSeek V4.1 Flash ZeroGPU`. Type a prompt and press **Enter**.
+
+To check the connection from a shell without opening the interface:
+
+```bash
+kilo run --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
+```
+
+```
+> code · deepseek-v4.1-flash
+
+ok
+```
+
+Prefer not to store the key? Export `ZEROGPU_API_KEY` and start Kilo from the same shell. Kilo reads the variable from its own environment, so there's no background server to restart. Either way, Kilo sends requests to `https://api.zerogpu.ai/v1`, the endpoint models.dev lists for ZeroGPU.
+
+## Usage
+
+Every section below follows the same shape: what the surface does, what it reads or calls on ZeroGPU, its parameters, a runnable example, and what you get back.
+
+### How Kilo finds ZeroGPU
+
+Kilo builds its provider list from the models.dev catalog, which it caches at `~/.cache/kilo/models.json` and refreshes in the background. ZeroGPU's listing gives Kilo everything it needs, so there's no provider block to write:
+
+| Catalog field | ZeroGPU value | How Kilo uses it |
+|---|---|---|
+| Provider ID | `zerogpu` | Prefix in model references, such as `zerogpu/deepseek-v4.1-flash`. |
+| Name | `ZeroGPU` | Label in `/connect`, `/models`, and the footer. |
+| Endpoint | `https://api.zerogpu.ai/v1` | Base URL for every request. |
+| Key variable | `ZEROGPU_API_KEY` | Environment variable Kilo checks for a key. |
+| Runtime package | `@ai-sdk/openai-compatible` | Sends OpenAI-format chat completions to ZeroGPU. |
+
+These nine ZeroGPU models appear in `/models`. Prices are USD per 1M tokens, and variants are explained in [Reasoning variants](#reasoning-variants).
+
+| Model reference | Context | Max output | Input | Output | Cached input | Variants |
+|---|---:|---:|---:|---:|---:|---|
+| `zerogpu/deepseek-v4.1-flash` | 1,048,576 | 65,536 | \$0.30 | \$1.20 | \$0.003 | `low`, `high`, `max` |
+| `zerogpu/glm-5.3-flash` | 1,048,576 | 32,768 | \$0.10 | \$0.35 | n/a | `low`, `high`, `max` |
+| `zerogpu/gpt-4.1-mini` | 1,047,576 | 32,768 | \$0.40 | \$1.60 | \$0.10 | n/a |
+| `zerogpu/gpt-5.4-nano` | 400,000 | 128,000 | \$0.20 | \$1.25 | \$0.02 | `none`, `low`, `medium`, `high`, `xhigh` |
+| `zerogpu/gpt-5.6-luna` | 272,000 | 128,000 | \$0.20 | \$1.20 | \$0.20 | `none`, `low`, `medium`, `high`, `xhigh`, `max` |
+| `zerogpu/gpt-oss-120b` | 131,072 | 131,072 | \$0.15 | \$0.60 | n/a | n/a |
+| `zerogpu/llama-3.1-8b-instruct-fast` | 131,072 | 8,192 | \$0.15 | \$0.28 | n/a | n/a |
+| `zerogpu/qwen3-30b-a3b-fp8` | 32,768 | 16,384 | \$0.10 | \$0.45 | n/a | n/a |
+| `zerogpu/qwen3.6-35b-a3b` | 262,144 | 16,384 | \$0.20 | \$1.50 | \$0.20 | n/a |
+
+All nine support tool calling, which Kilo needs to read files, edit code, and run commands, and all nine answered a [`kilo roll-call`](#kilo-roll-call) in 1.1 to 3.9 seconds. For input types and the full metadata, see the [Models.dev integration guide](/integrations/models-dev). ZeroGPU models that models.dev doesn't list yet can be added by hand; see [Add unlisted ZeroGPU models](#add-unlisted-zerogpu-models).
+
+### `/connect`
+
+Connects ZeroGPU and stores your API key in Kilo's credential file, from inside the interactive interface.
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| Provider | Yes | none | Type `zero` to filter the list, then press **Enter** on **ZeroGPU**. |
+| API key | Yes | none | Your `zgpu-api-...` key. Kilo shows it in plain text as you paste. |
+
+```text
+/connect
+```
+
+Response: the key is saved to `~/.local/share/kilo/auth.json`, and ZeroGPU's models appear in `/models` right away. The next time you open `/connect`, ZeroGPU carries a ✓ like your other connected providers. Every Kilo session on your machine shares the stored key, so you only connect once.
+
+### `kilo auth`
+
+The command-line side of `/connect`, for managing stored credentials from a shell. `kilo auth login` masks the key as you paste it, which makes it the better choice when your screen is visible to others.
+
+| Subcommand | Flags | Description |
+|---|---|---|
+| `list` (alias `ls`) | none | List stored credentials and the provider keys found in your environment. |
+| `login [url]` | `--provider`, `-p`: provider ID or name, skips provider selection. `--method`, `-m`: login method label, skips method selection. | Store a key, the same flow as `/connect`. |
+| `logout [provider]` | none | Remove a stored credential. |
+
+```bash
+kilo auth login --provider zerogpu
+```
+
+```
+┌  Add credential
+│
+◇  Enter your API key
+│  ▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪▪
+│
+└  Done
+```
+
+Check where Kilo is getting its ZeroGPU key:
+
+```bash
+kilo auth list
+```
+
+```
+┌  Credentials ~/.local/share/kilo/auth.json
+│
+●  ZeroGPU api
+│
+└  1 credentials
+
+┌  Environment
+│
+●  ZeroGPU ZEROGPU_API_KEY
+│
+└  1 environment variable
+```
+
+`Credentials` lists keys stored with `/connect` or `auth login`, and `Environment` lists keys Kilo found in its environment. To remove a stored ZeroGPU key:
+
+```bash
+kilo auth logout zerogpu
+```
+
+```
+┌  Remove credential
+│
+└  Logout successful
+```
+
+### `ZEROGPU_API_KEY`
+
+Uses a ZeroGPU key without storing it. Kilo reads the variable from the environment of the process you start, whether that's the interactive interface or `kilo run`, so it works for CI and for anyone who keeps keys in a secrets manager.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `ZEROGPU_API_KEY` | No, if a key is stored | none | Your `zgpu-api-...` key. Must be set before `kilo` starts. |
+
+```bash
+export ZEROGPU_API_KEY="zgpu-api-..."
+kilo run --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
+```
+
+Response: the run uses the exported key, and `kilo auth list` shows ZeroGPU under `Environment`. A Kilo window that was already open before you exported the variable doesn't see it; quit and start `kilo` again from the same shell.
+
+### `/models`
+
+Picks the model for the current agent. Once ZeroGPU is connected, its nine models appear under a **ZeroGPU** header, and a panel on the right shows the highlighted model's provider, prices per 1M tokens (input, output, and cached), context window, and whether it reasons.
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| Filter text | No | none | Type `zerogpu` to list only ZeroGPU's models. Typing a model name such as `deepseek` lists Kilo Gateway's models of that name first. |
+| Model | Yes | last used | A row under the **ZeroGPU** header. **Ctrl + F** marks it as a favorite. |
+| Variant | Only for models with variants | `Default` | Kilo asks right after you pick a model that has [variants](#reasoning-variants). **Default** sends no reasoning setting. |
+
+```text
+/models
+```
+
+Response: the footer switches to `Code · DeepSeek V4.1 Flash ZeroGPU`, and the line under each reply shows the model and how long the turn took, such as `Code · DeepSeek V4.1 Flash · 24.9s`. Kilo remembers the pick for that agent in `~/.local/state/kilo/model.json`, so the next `kilo` starts on the same model.
+
+### `kilo models`
+
+Lists every model reference available to you from a shell, which is the quickest way to copy an exact ID for `--model` or config.
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `[provider]` | No | all providers | Provider ID to filter by, such as `zerogpu`. |
+| `--verbose` | No | off | Print each model's metadata as JSON, including prices, limits, capabilities, and variants. |
+| `--refresh` | No | off | Refresh the cached models.dev catalog before listing. |
+
+```bash
+kilo models zerogpu
+```
+
+```
+zerogpu/deepseek-v4.1-flash
+zerogpu/glm-5.3-flash
+zerogpu/gpt-4.1-mini
+zerogpu/gpt-5.4-nano
+zerogpu/gpt-5.6-luna
+zerogpu/gpt-oss-120b
+zerogpu/llama-3.1-8b-instruct-fast
+zerogpu/qwen3-30b-a3b-fp8
+zerogpu/qwen3.6-35b-a3b
+```
+
+With `--verbose`, each reference is followed by its metadata. This is an excerpt for DeepSeek V4.1 Flash:
+
+```json
+{
+  "id": "deepseek-v4.1-flash",
+  "providerID": "zerogpu",
+  "name": "DeepSeek V4.1 Flash",
+  "api": {
+    "id": "deepseek-v4.1-flash",
+    "url": "https://api.zerogpu.ai/v1",
+    "npm": "@ai-sdk/openai-compatible"
+  },
+  "cost": { "input": 0.3, "output": 1.2, "cache": { "read": 0.003, "write": 0 } },
+  "limit": { "context": 1048576, "output": 65536 },
+  "variants": {
+    "low": { "reasoningEffort": "low" },
+    "high": { "reasoningEffort": "high" },
+    "max": { "reasoningEffort": "max" }
+  }
+}
+```
+
+Models you add in config (see below) show up here too, and models you hide with a filter drop out.
+
+### `kilo run`
+
+Runs one prompt without opening the interface, for scripts and CI. The agent works through the task with as many `POST /v1/chat/completions` calls to ZeroGPU as it needs, editing files in place.
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--model`, `-m` | No | `model` from config | `zerogpu/<model-id>`. |
+| `--variant` | No | none | Reasoning variant, such as `high`. See [Reasoning variants](#reasoning-variants). |
+| `--agent` | No | `code` | Agent to run the prompt with. |
+| `--format` | No | `default` | `json` prints raw JSON events, one per line. |
+| `--file`, `-f` | No | none | Attach one or more files to the message. |
+| `--auto` | No | off | Auto-approve permission prompts that aren't explicitly denied. |
+| `--continue`, `-c` | No | off | Continue the last session. |
+| `--session`, `-s` | No | none | Continue a specific session by ID. |
+| `--fork` | No | off | Fork the session before continuing (with `--continue` or `--session`). |
+| `--title` | No | generated | Session title. |
+| `--dir` | No | current directory | Directory to run in. |
+| `--attach` | No | none | Attach to a running Kilo server, such as `http://localhost:4096`. |
+| `--thinking` | No | off | Show thinking blocks. |
+| `--interactive`, `-i` | No | off | Run in interactive split-footer mode. |
+
+```bash
+kilo run --model zerogpu/deepseek-v4.1-flash \
+  "Make the watchlist work: hearts save films, the header shows the count and switches between all and saved films, and it survives a refresh."
+```
+
+Response: a `> code · deepseek-v4.1-flash` header, then the agent's reads, edits, and commands as they happen, and a final summary. Changed files stay in your working directory. In the [cookbook](/cookbook/kilo-movie-watchlist), this exact prompt built the feature for \$0.0045 to \$0.0105, usually in 22 to 26 seconds. In `kilo run`, any permission that would normally ask, such as reading outside the project, is rejected automatically and ends the run; pass `--auto` or allow it in config (see [Troubleshooting](#troubleshooting)).
+
+### `kilo roll-call`
+
+Sends a short prompt to every model matching a pattern and reports which ones answered and how fast. Run it after connecting ZeroGPU, or in CI, to confirm your key and the models you depend on before a long session.
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `<filter>` | Yes | none | Regular expression matched against `provider/model`, such as `^zerogpu/`. |
+| `--prompt` | No | `Hello` | Prompt to send to each model. |
+| `--timeout` | No | `25000` | Milliseconds to wait for each model. |
+| `--parallel` | No | `5` | Number of models to call at once. |
+| `--output` | No | `table` | `table`, `json`, or `md`. |
+| `--verbose`, `--quiet` | No | off | More detail, or no progress and decoration. |
+
+```bash
+kilo roll-call '^zerogpu/' --prompt "Reply with the word ok"
+```
+
+```
+Model                              | Access | Snippet | Latency
+---------------------------------------------------------------
+zerogpu/deepseek-v4.1-flash        | YES    | ok      | 1921ms
+zerogpu/gpt-5.6-luna               | YES    | ok      | 3242ms
+zerogpu/qwen3.6-35b-a3b            | YES    | ok      | 3252ms
+zerogpu/gpt-4.1-mini               | YES    | ok      | 3264ms
+zerogpu/gpt-oss-120b               | YES    | ok      | 3942ms
+zerogpu/gpt-5.4-nano               | YES    | ok      | 2146ms
+zerogpu/llama-3.1-8b-instruct-fast | YES    | Ok      | 1115ms
+zerogpu/glm-5.3-flash              | YES    | ok      | 1346ms
+zerogpu/qwen3-30b-a3b-fp8          | YES    |   ok    | 1824ms
+
+9 accessible, 0 failed
+```
+
+Each probe is one small chat completion billed at the model's normal rate, so a full roll call costs a fraction of a cent.
+
+### `kilo stats`
+
+Summarizes token usage and cost across your sessions, with a per-model breakdown that shows exactly what ZeroGPU work has cost. The sidebar rounds to the cent; this is the precise figure.
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--days` | No | all time | Only count the last N days. |
+| `--models` | No | hidden | Show per-model statistics, optionally only the top N. |
+| `--tools` | No | all | Number of tools to show in the tool usage table. |
+| `--project` | No | all projects | Filter by project; an empty string means the current project. |
+
+```bash
+kilo stats --days 2 --models
+```
+
+```
+┌────────────────────────────────────────────────────────┐
+│                      MODEL USAGE                       │
+├────────────────────────────────────────────────────────┤
+│ zerogpu/deepseek-v4.1-flash                            │
+│  Messages                                          108 │
+│  Input Tokens                                   226.9K │
+│  Output Tokens                                   32.3K │
+│  Cache Read                                       2.0M │
+│  Cache Write                                         0 │
+│  Cost                                          $0.1128 │
+└────────────────────────────────────────────────────────┘
+```
+
+Response: overview, cost and token, model usage, and tool usage tables. The excerpt above is two days of testing for this guide and its cookbook, more than a dozen feature runs on DeepSeek V4.1 Flash, for \$0.11 in total. Note the cache reads: Kilo resends the same long prefix on every step, and DeepSeek V4.1 Flash bills cached input at \$0.003 per 1M tokens.
+
+### Default model
+
+Sets the ZeroGPU model Kilo uses when you haven't picked one. Put it in `kilo.json` or `kilo.jsonc` at your project root (or in `.kilo/`), or in `~/.config/kilo/kilo.jsonc` for every project. Project files override the global one.
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `model` | No | Kilo's default | `zerogpu/<model-id>` for new sessions and `kilo run`. |
+| `small_model` | No | Kilo's default | `zerogpu/<model-id>` for session titles and summaries. |
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "zerogpu/deepseek-v4.1-flash",
+  "small_model": "zerogpu/gpt-5.4-nano",
+}
+```
+
+Response: `kilo run` uses DeepSeek V4.1 Flash whenever you don't pass `--model`, and titles and summaries go to GPT-5.4 nano. In the interactive interface, a model you picked in `/models` takes precedence: Kilo reopens on your last pick for each agent, so `model` only applies until you pick one. Start with `kilo -m zerogpu/<model-id>` to override both for one session without changing the remembered pick.
+
+### Agents
+
+Gives individual agents their own ZeroGPU model. Kilo's primary agents are `code` (the default), `ask`, `plan`, `debug`, and `orchestrator`; its subagents are `explore` and `general`. A subagent without a model of its own runs on the session's model, so you can keep a capable model on `code` and send read-only searching to a cheaper one.
+
+| Agent | Mode | What it does |
+|---|---|---|
+| `code` | Primary | The default agent. Reads, edits, and runs commands within its permissions. |
+| `ask` | Primary | Answers questions and explains code without making changes. |
+| `plan` | Primary | Writes plans; every other file change is denied. |
+| `debug` | Primary | Diagnoses and fixes issues with a systematic debugging method. |
+| `orchestrator` | Primary | Splits complex tasks across specialized agents in parallel. |
+| `explore` | Subagent | Fast, read-only codebase search. |
+| `general` | Subagent | Researches questions and runs multi-step tasks in parallel. |
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `agent.<name>.model` | No | session model | `zerogpu/<model-id>`. |
+| `agent.<name>.variant` | No | none | Reasoning variant for this agent, such as `high`. |
+| `agent.<name>.steps` | No | unlimited | Maximum agentic iterations. |
+| `agent.<name>.mode` | No | `primary` for new agents | `primary`, `subagent`, or `all`. |
+| `agent.<name>.description` | Recommended for subagents | none | Shown to the model choosing which subagent to launch. |
+| `agent.<name>.permission` | No | inherited | `allow`, `ask`, or `deny` per tool, such as `edit` or `bash`. |
+| `agent.<name>.prompt` | No | built-in | System prompt for a custom agent. |
+| `agent.<name>.disable` | No | `false` | Remove a built-in or custom agent. |
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "zerogpu/deepseek-v4.1-flash",
+  "agent": {
+    "explore": { "model": "zerogpu/gpt-5.4-nano", "variant": "low" },
+    "debug": { "model": "zerogpu/gpt-5.6-luna", "variant": "high" },
+  },
+}
+```
+
+Custom agents can also live in markdown files under `.kilo/agent/` (or `~/.config/kilo/agent/` for every project). This read-only reviewer runs on GPT-5.6 Luna with high reasoning effort:
+
+```markdown .kilo/agent/reviewer.md
+---
+description: Reviews changes for correctness and regressions
+mode: subagent
+model: zerogpu/gpt-5.6-luna
+variant: high
+permission:
+  edit: deny
+  bash: deny
+---
+Review the current changes. List findings in severity order with file and line references.
+```
+
+Response: `kilo debug agent reviewer` shows the agent with `zerogpu/gpt-5.6-luna`, variant `high`, and edits and shell commands denied. When you ask "Use the reviewer subagent to review my current changes", Kilo launches it on GPT-5.6 Luna while the main session stays on DeepSeek V4.1 Flash.
+
+### Reasoning variants
+
+Variants are named reasoning presets for one model. Kilo builds them from each model's reasoning controls on models.dev, and each built-in variant sets `reasoning_effort` on the request to ZeroGPU. The [model table](#how-kilo-finds-zerogpu) lists the variants for every ZeroGPU model.
+
+| Where | How |
+|---|---|
+| `/models` | Pick the variant when Kilo asks, right after the model. |
+| Interactive session | **Ctrl + T** cycles the current model's variants, and the footer shows the active one, such as `DeepSeek V4.1 Flash ZeroGPU · high`. |
+| One run | `kilo run --variant high ...` |
+| An agent | `variant` in the agent's config or frontmatter. |
+
+```bash
+kilo run --model zerogpu/gpt-5.6-luna --variant high "Review this migration plan for data-loss risks"
+```
+
+On ZeroGPU, DeepSeek V4.1 Flash and Qwen3.6 35B-A3B start with thinking **off**. To turn it on, define your own variant and put ZeroGPU's request fields in it: Kilo sends `reasoningEffort` as `reasoning_effort` and passes any other field into the request body as is. A `variants` map replaces the variants Kilo generates for that model, so list every variant you want to keep:
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "zerogpu": {
+      "models": {
+        "deepseek-v4.1-flash": {
+          "variants": {
+            "low": { "reasoningEffort": "low" },
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" },
+            "think": { "thinking": { "type": "enabled" }, "reasoningEffort": "high" },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+```bash
+kilo run --model zerogpu/deepseek-v4.1-flash --variant think "Find the race condition in src/queue.ts"
+```
+
+Response: requests for that run carry `"thinking": {"type": "enabled"}` and `"reasoning_effort": "high"`. A variant name the model doesn't have is ignored without an error, so a typo silently runs with no reasoning setting. ZeroGPU doesn't return reasoning text on this API, so you'll see the answer but no thinking blocks, even with `--thinking`.
+
+### Provider overrides and filters
+
+Customizes how Kilo calls ZeroGPU, and which models and providers it shows, without redefining the provider. The models.dev entry still supplies the endpoint, package, models, and prices; `provider.zerogpu` only adds or overrides.
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `provider.zerogpu.options.baseURL` | No | `https://api.zerogpu.ai/v1` | Send ZeroGPU traffic through a proxy or gateway. |
+| `provider.zerogpu.options.headers` | No | none | Extra HTTP headers, such as `x-project-id` to scope usage to a ZeroGPU project. |
+| `provider.zerogpu.options.timeout` | No | Kilo's default | Request timeout in milliseconds. |
+| `provider.zerogpu.whitelist` | No | all models | Only show these ZeroGPU model IDs. |
+| `provider.zerogpu.blacklist` | No | none | Hide these ZeroGPU model IDs. |
+| `enabled_providers` | No | all | Load only these providers, such as `["zerogpu"]`. |
+| `disabled_providers` | No | none | Never load these providers, such as `["kilo"]` for Kilo Gateway. |
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "zerogpu": {
+      "options": {
+        "headers": { "x-project-id": "your-project-id" },
+      },
+      "blacklist": ["llama-3.1-8b-instruct-fast", "qwen3-30b-a3b-fp8"],
+    },
+  },
+}
+```
+
+Response: every ZeroGPU request carries the project header, and the two hidden models drop out of `/models` and `kilo models`. Run `kilo config check` after editing; it prints `No config warnings.` when the file is valid.
+
+### Add unlisted ZeroGPU models
+
+ZeroGPU serves more chat models than models.dev lists. Add one under `provider.zerogpu.models` and it appears in `/models` next to the catalog ones. Kilo sends its tool definitions with every request, so only models that accept tool calls can run a Kilo session. Of ZeroGPU's unlisted chat models, that's GPT-6 Luna:
+
+| Model ID | Context | Max output | Input | Output | Cached input | Works in Kilo |
+|---|---:|---:|---:|---:|---:|---|
+| `gpt-6-luna` | 272,000 | 128,000 | \$0.10 | \$0.50 | \$0.01 | Yes. Text and image input, tool calling, adjustable reasoning. |
+| `gpt-oss-20b` | 131,072 | not listed | \$0.02 | \$0.10 | \$0.01 | No. ZeroGPU rejects tool calls for this model. |
+| `llama-3.2-3b-instruct-fast` | 131,072 | 8,192 | \$0.05 | \$0.30 | \$0.025 | No. ZeroGPU rejects tool calls for this model. |
+| `LFM2.5-1.2B-Instruct`, `LFM2.5-1.2B-Thinking` | 32,768 | 8,192 | \$0.02 | \$0.05 | n/a | No. ZeroGPU rejects tool calls for these models. |
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `models.<key>` | Yes | none | The ID you'll use in Kilo, as in `zerogpu/<key>`. |
+| `id` | No | the key | The ID sent to ZeroGPU, when it differs from the key (ZeroGPU IDs are case-sensitive). |
+| `name` | No | the key | Display name in `/models`. |
+| `tool_call` | No | `true` | Whether the model supports tool calling. Leave it on for models you'll use in Kilo sessions. |
+| `reasoning` | No | `false` | Whether the model reasons. `true` adds `low`, `medium`, and `high` variants. |
+| `attachment` | No | `false` | Whether the model accepts file attachments. |
+| `modalities.input`, `modalities.output` | No | text | Accepted and produced media types, such as `["text", "image"]`. |
+| `limit.context`, `limit.output` | No | none | Token limits. |
+| `cost.input`, `cost.output`, `cost.cache_read` | No | none | USD per 1M tokens, used for the sidebar cost and `kilo stats`. |
+| `variants` | No | generated | Your own variants, as in [Reasoning variants](#reasoning-variants). |
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "zerogpu": {
+      "models": {
+        "gpt-6-luna": {
+          "name": "GPT-6 Luna",
+          "tool_call": true,
+          "reasoning": true,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 272000, "output": 128000 },
+          "cost": { "input": 0.10, "output": 0.50, "cache_read": 0.01 },
+        },
+      },
+    },
+  },
+}
+```
+
+```bash
+kilo run --model zerogpu/gpt-6-luna "Reply with the word ok"
+```
+
+```
+> code · gpt-6-luna
+
+ok
+```
+
+Response: GPT-6 Luna shows up in `kilo models zerogpu` and `/models` under ZeroGPU and is billed at ZeroGPU's rates. Running Kilo on a model that doesn't accept tool calls fails on the first request with `Tool calling is not supported for model: <id>`; call those models directly through the [API](/api-reference/introduction) instead. Prices here are from the [model catalog](/docs/model-catalog) in November 2026; check it for current values. When models.dev adds GPT-6 Luna, delete its entry so the catalog's data takes over.
+
+### Patterns and recipes
+
+**Capable code agent, cheap explorer.** Keep `zerogpu/deepseek-v4.1-flash` on the `code` agent and send the `explore` subagent to `zerogpu/gpt-5.4-nano` with the `low` variant, as in [Agents](#agents). Searching and reading files are the bulk of an agent's tokens, and they don't need the bigger model.
+
+**Think on demand.** Leave DeepSeek V4.1 Flash on its fast default for everyday edits, and reach for the `think` variant from [Reasoning variants](#reasoning-variants) only on the hard bug: `kilo run --model zerogpu/deepseek-v4.1-flash --variant think "..."`. You pay for reasoning tokens only on the runs that need them.
+
+**Headless runs in CI.** Export the key from your secrets store, check the models with a roll call, then run with `--auto` so the agent never stops on a permission prompt and `--format json` for a parseable log:
+
+```bash
+export ZEROGPU_API_KEY="$ZEROGPU_API_KEY_FROM_SECRETS"
+kilo roll-call '^zerogpu/deepseek-v4.1-flash$' --quiet
+kilo run --auto --format json --title "ci: fix failing tests" \
+  --model zerogpu/deepseek-v4.1-flash \
+  "Run the test suite and fix any failing tests" > kilo-run.jsonl
+```
+
+**A ZeroGPU-only setup.** For a team config that should never reach another provider, combine `enabled_providers` with a `whitelist` of the models you've tested:
+
+```jsonc kilo.jsonc
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "enabled_providers": ["zerogpu"],
+  "model": "zerogpu/deepseek-v4.1-flash",
+  "provider": {
+    "zerogpu": { "whitelist": ["deepseek-v4.1-flash", "gpt-5.6-luna", "gpt-5.4-nano"] },
+  },
+}
+```
+
+**Price a task before you scale it.** Kilo resends its system prompt and the conversation on every step, so most input tokens are a cached prefix. Price them separately. The cookbook's recorded run sent 5,582 fresh input tokens, 175,232 cached input tokens, and got 2,849 output tokens back on DeepSeek V4.1 Flash: `5,582 x $0.30/1M + 175,232 x $0.003/1M + 2,849 x $1.20/1M = $0.0056`, exactly what Kilo reported.
+
+### At a glance
+
+| Surface | Where | Use it to |
+|---|---|---|
+| `/connect` | Interactive interface | Store your ZeroGPU key. |
+| `kilo auth` | CLI | Store a key with masked input, list key sources, or log out. |
+| `ZEROGPU_API_KEY` | Environment | Use a key without storing it, for example in CI. |
+| `/models` | Interactive interface | Pick a ZeroGPU model and variant for the current agent. |
+| `kilo models` | CLI | Copy exact `zerogpu/...` references, inspect metadata, refresh the catalog. |
+| `kilo run` | CLI | Run a prompt on ZeroGPU from scripts and CI. |
+| `kilo roll-call` | CLI | Check that ZeroGPU models answer, and how fast. |
+| `kilo stats` | CLI | See exact token counts and cost per model. |
+| `model`, `small_model` | `kilo.json(c)` | Default models for `kilo run`, new setups, and titles. |
+| `agent` | `kilo.json(c)` or `.kilo/agent/*.md` | Give agents and subagents their own ZeroGPU model and variant. |
+| Variants | `/models`, **Ctrl + T**, `--variant`, config | Choose reasoning effort, or turn thinking on. |
+| `provider.zerogpu` | `kilo.json(c)` | Add headers, proxy the endpoint, filter models, or add unlisted ones. |
+
+## Troubleshooting
+
+**ZeroGPU doesn't appear in `/connect` or `/models`.** Kilo's cached copy of the models.dev catalog predates ZeroGPU's listing. Run `kilo models --refresh` to update it (and `kilo upgrade` for an older Kilo), then start `kilo` again.
+
+**The key is readable on screen while you paste it into `/connect`.** Kilo doesn't mask that field. Store the key with `kilo auth login --provider zerogpu` instead, which shows it as ▪▪▪▪, or export `ZEROGPU_API_KEY`.
+
+**`kilo auth login` stops at "Add credential".** Without `--provider`, the command can wait for a keypress before showing the provider list, and that keypress is echoed on screen. Pass `--provider zerogpu` to go straight to the key prompt.
+
+**You exported `ZEROGPU_API_KEY` but ZeroGPU still isn't connected.** The Kilo window started before you exported the variable, or in a different shell. Quit it and run `kilo` from the shell that has the variable, then check that `kilo auth list` shows ZeroGPU under `Environment`.
+
+**Kilo starts on a different model than the `model` in your config.** In the interactive interface, your last `/models` pick for each agent wins over `model`. Pick the model once in `/models`, or start with `kilo -m zerogpu/<model-id>`. `kilo run` always follows `--model` or `model`.
+
+**`Model not found: zerogpu/<id>`.** The ID doesn't match the catalog. Catalog IDs are lowercase and exact, such as `zerogpu/qwen3.6-35b-a3b`, and Kilo suggests close matches in the error. For a model you added in config, the reference uses the `models` map key, not `id`. Run `kilo models zerogpu` for valid references.
+
+**`--variant` seems to have no effect.** A variant name the model doesn't have is ignored without an error, so `--variant medium` on DeepSeek V4.1 Flash runs with no reasoning setting. Check the [model table](#how-kilo-finds-zerogpu), and remember that a `variants` map in config replaces the generated variants rather than adding to them.
+
+**`Tool calling is not supported for model: <id>`.** You added an unlisted ZeroGPU model that doesn't accept tool calls, and Kilo sends tools with every request. Use one of the nine catalog models or `gpt-6-luna` for Kilo sessions.
+
+**`run ended with an auto-rejected permission; pass --auto for autonomous use`.** `kilo run` can't stop to ask, so any permission set to `ask`, such as reading files outside the project, ends the run. Pass `--auto`, or allow that permission in your config's `permission` block.
+
+**`401 Unauthorized` on the first message.** The key is wrong, revoked, or picked up a stray space when pasted. Create a fresh key in the [dashboard](https://platform.zerogpu.ai/dashboard), run `kilo auth logout zerogpu`, and connect again.
+
+**The sidebar with the session cost doesn't show, or reads \$0.01.** The sidebar needs a terminal about 125 columns wide or more; widen the terminal or press **Ctrl + X**, then **B** to toggle it. Kilo rounds the sidebar cost to the cent, and a feature on ZeroGPU often costs less than one; `kilo stats --models` shows the exact figure. The sidebar's **Balance** line is your Kilo account's credit, not ZeroGPU usage, which is billed to your ZeroGPU account.
+
+**No thinking blocks appear on a reasoning model.** ZeroGPU doesn't return reasoning text on the chat completions API, so there's nothing for Kilo to display. The reasoning still happens and is billed as output tokens.
+
+## Conclusion
+
+Kilo CLI reads ZeroGPU straight from models.dev, so going from install to a coding agent on ZeroGPU is one `/connect` and one `/models` pick. With per-agent models, reasoning variants, roll calls, and headless runs, you can put fast, cheap models on the routine work and keep deeper reasoning for the tasks that need it, at about a cent per feature.
+
+<CardGroup cols={2}>
+  <Card title="Model Catalog" icon="layer-group" href="/docs/model-catalog">
+    Browse every model available on ZeroGPU and pick the best fit.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/introduction">
+    Explore the full OpenAI-compatible API surface.
+  </Card>
+  <Card title="Cookbook" icon="book" href="/cookbook/kilo-movie-watchlist">
+    Build a movie watchlist in a React app with Kilo CLI on ZeroGPU.
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/Ad5KZvAyky">
+    Ask questions and share what you're building.
+  </Card>
+</CardGroup>

@@ -16,6 +16,8 @@ This guide covers ZeroGPU's listing on [models.dev](https://models.dev/providers
 
 For a runnable, real-world example, see [Add Search to a React Store with OpenCode and ZeroGPU](/cookbook/opencode-store-search). It connects ZeroGPU in OpenCode straight from its models.dev listing, picks DeepSeek V4.1 Flash, and has the agent add a working product search box to a small React store in about 20 seconds for under a cent. Check it out to see the listing put to work in a real agent run. For every OpenCode option, see the [OpenCode integration guide](/integrations/opencode).
 
+For a bigger, multi-file agent run, see [Build a Movie Watchlist with Kilo CLI and ZeroGPU](/cookbook/kilo-movie-watchlist). It connects ZeroGPU in Kilo CLI from the same listing, picks DeepSeek V4.1 Flash, and has the agent build a complete watchlist (save and remove, a live count, a saved view, and persistence) across four files of a React movie app in about 23 seconds for $0.0056. For every Kilo CLI option, see the [Kilo CLI integration guide](/integrations/kilo-cli).
+
 For a TypeScript agent built on the same listing, see [Build a Trail Gear Agent with Mastra and ZeroGPU](/cookbook/mastra-trail-guide). It gives a Mastra agent a live forecast tool and a store catalog, runs it on DeepSeek V4.1 Flash in Mastra Studio, and switches to GPT-5.6 Luna mid-chat, for well under a cent. For every Mastra option, see the [Mastra integration guide](/integrations/mastra).
 
 <Note>
@@ -29,6 +31,10 @@ For a TypeScript agent built on the same listing, see [Build a Trail Gear Agent 
 **OpenCode on ZeroGPU:**
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/OM9PR2yHqCU?si=KUHaEx63hr4oU38Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+**Kilo CLI on ZeroGPU:**
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mem6jezDdvg?si=4CvH-LrwKbFER2AF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 **Mastra on ZeroGPU:**
 
@@ -356,7 +362,7 @@ These tools read the models.dev catalog to decide which providers and models the
 |---|---|---|---|
 | [OpenCode](#opencode) | Coding agent CLI | Built on models.dev | Available. Full guide on the [OpenCode integration page](/integrations/opencode). |
 | [Mastra](#mastra) | TypeScript agent framework | Provider registry generated from models.dev | Available in `@mastra/core` 1.85.0 and later. Full guide on the [Mastra integration page](/integrations/mastra). |
-| [Kilo CLI](#kilo-cli) | Coding agent CLI (fork of OpenCode) | Bundled snapshot, refreshed hourly at runtime | Available after the first catalog refresh. |
+| [Kilo CLI](#kilo-cli) | Coding agent CLI (fork of OpenCode) | Cached copy, refreshed in the background or with `kilo models --refresh` | Available. Full guide on the [Kilo CLI integration page](/integrations/kilo-cli). |
 | [VoltAgent](#voltagent) | TypeScript agent framework | Bundled snapshot, refreshed every 30 minutes outside production | Works in development; production needs a release with a newer snapshot. |
 | [Kit](#kit) | Go coding agent CLI | Embedded snapshot, updated with `kit update-models` | Run `kit update-models` first. |
 | [Kimi Code CLI](#kimi-code-cli) | Coding agent CLI | Fetched at runtime, built-in snapshot as fallback | Available from the provider picker. |
@@ -418,22 +424,29 @@ Response: `result.text` holds the reply. Swap the model string to move the agent
 
 ### Kilo CLI
 
-[Kilo CLI](https://kilo.ai/docs/cli) is a fork of OpenCode from Kilo Code, and the Kilo VS Code extension shares its model catalog. It ships a snapshot of models.dev and refreshes it every hour, so ZeroGPU appears once that refresh has run.
+[Kilo CLI](https://kilo.ai/docs/cli) is the terminal edition of Kilo Code, an open-source coding agent forked from OpenCode. It builds its provider list from models.dev, keeps a cached copy of the catalog in `~/.cache/kilo/models.json`, and refreshes it in the background, so ZeroGPU appears in `/connect` and `/models` with no configuration. Kilo's reasoning variants come from the catalog too: DeepSeek V4.1 Flash and GLM-5.3-Flash get `low`, `high`, and `max`, and the GPT-5 models get `none` through `xhigh` or `max`.
 
 | Setting | Value |
 |---|---|
-| Model reference | `zerogpu/<model-id>` |
-| API key | `/connect`, `kilo auth login --provider zerogpu`, or `ZEROGPU_API_KEY` |
-| Pick a model | `/models` |
-| List models | `kilo models zerogpu` |
-| Catalog refresh | Hourly; `KILO_DISABLE_MODELS_FETCH` turns it off |
+| Model reference | `zerogpu/<model-id>`, with `--variant` for reasoning effort |
+| API key | `/connect`, `kilo auth login --provider zerogpu` (masked input), or `ZEROGPU_API_KEY` |
+| Pick a model | `/models` (type `zerogpu`), `kilo run --model`, or `model` in `kilo.json(c)` |
+| List models | `kilo models zerogpu`, with `--verbose` for prices, limits, and variants |
+| Check access | `kilo roll-call '^zerogpu/'` |
+| Catalog refresh | In the background, or on demand with `kilo models --refresh` |
 
 ```bash
 kilo auth login --provider zerogpu
-kilo models zerogpu
+kilo run --model zerogpu/deepseek-v4.1-flash "Reply with the word ok"
 ```
 
-Response: `kilo models zerogpu` lists the nine `zerogpu/...` references. Start `kilo`, run `/models`, and pick a model marked ZeroGPU. If ZeroGPU isn't listed yet, the catalog hasn't refreshed since your snapshot; leave Kilo running and check again later.
+```
+> code · deepseek-v4.1-flash
+
+ok
+```
+
+Response: the agent's reply streams to the terminal, and the session is billed at the catalog prices. If `/models` doesn't list ZeroGPU, Kilo's cached catalog predates the listing; run `kilo models --refresh`. For per-agent models, custom variants, provider overrides, `kilo stats`, and adding ZeroGPU models models.dev doesn't list yet, see the [Kilo CLI integration guide](/integrations/kilo-cli). For a full agent run, see the [Kilo CLI cookbook](/cookbook/kilo-movie-watchlist).
 
 ### VoltAgent
 
@@ -536,7 +549,7 @@ gpt-5.6-luna	$0.2 in / $1.2 out
 
 Cheapest isn't always best for agent work. In the [OpenCode cookbook](/cookbook/opencode-store-search) runs, DeepSeek V4.1 Flash edited files cleanly every time, while GPT-5.6 Luna's file-edit tool calls failed twice before the agent recovered. Shortlist by price, then pick by how the model behaves in your tool.
 
-**Estimate a run's cost before you start.** Multiply expected tokens by the catalog's per-1M prices. A coding task that sends about 15,000 input tokens and gets 1,000 output tokens back on DeepSeek V4.1 Flash costs about `15,000 x $0.30/1M + 1,000 x $1.20/1M = $0.0057`, in line with the $0.0047 to $0.0060 the cookbook's search-box feature cost. Cached prefixes on models with a cache-read price bring repeated turns down further.
+**Estimate a run's cost before you start.** Multiply expected tokens by the catalog's per-1M prices. A coding task that sends about 15,000 input tokens and gets 1,000 output tokens back on DeepSeek V4.1 Flash costs about `15,000 x $0.30/1M + 1,000 x $1.20/1M = $0.0057`, in line with the \$0.0047 to \$0.0060 the cookbook's search-box feature cost. Cached prefixes on models with a cache-read price bring repeated turns down further: in the [Kilo CLI cookbook](/cookbook/kilo-movie-watchlist), 175,232 of the run's input tokens were cached and cost \$0.0005 at DeepSeek V4.1 Flash's \$0.003 cache-read price, instead of \$0.0526 at the full input price.
 
 **Keep your own model list in sync.** If you maintain a gateway config or model picker, regenerate it from the catalog on a schedule instead of hand-editing it. Comparing `jq -r '.zerogpu.models | keys[]'` against the previous run tells you exactly which ZeroGPU models were added or removed.
 
@@ -553,7 +566,7 @@ Cheapest isn't always best for agent work. In the [OpenCode cookbook](/cookbook/
 | `@ai-sdk/openai-compatible` | Your TypeScript code | Call ZeroGPU with the catalog's settings and price each call. |
 | OpenCode | `/connect`, `/models` | Run a coding agent on ZeroGPU. See the [OpenCode guide](/integrations/opencode). |
 | Mastra | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU. See the [Mastra guide](/integrations/mastra). |
-| Kilo CLI | `/connect`, `/models` | Run Kilo's coding agent on ZeroGPU. |
+| Kilo CLI | `/connect`, `/models` | Run Kilo's coding agent on ZeroGPU. See the [Kilo CLI guide](/integrations/kilo-cli). |
 | VoltAgent | `model: 'zerogpu/...'` | Build TypeScript agents on ZeroGPU (development today). |
 | Kit | `kit update-models`, `--model` | Run Kit's coding agent on ZeroGPU. |
 | Kimi Code CLI | `/provider` | Add ZeroGPU as a third-party provider. |
@@ -561,7 +574,7 @@ Cheapest isn't always best for agent work. In the [OpenCode cookbook](/cookbook/
 
 ## Troubleshooting
 
-**ZeroGPU doesn't appear in a models.dev-based tool.** The tool is using a catalog snapshot from before ZeroGPU was listed on 2026-11-14. Upgrade Mastra to `@mastra/core` 1.85.0 or later, run `kit update-models` for Kit, run `/provider refresh` in Kimi Code CLI, and give Kilo CLI time for its hourly refresh. VoltAgent needs a newer release for production use.
+**ZeroGPU doesn't appear in a models.dev-based tool.** The tool is using a catalog snapshot from before ZeroGPU was listed on 2026-11-14. Upgrade Mastra to `@mastra/core` 1.85.0 or later, run `kit update-models` for Kit, run `/provider refresh` in Kimi Code CLI, and run `kilo models --refresh` in Kilo CLI. VoltAgent needs a newer release for production use.
 
 **The tool can't find your key.** Most models.dev-based tools read `ZEROGPU_API_KEY` from the environment of the process that makes the request. Export it before starting the tool, or store it with the tool's own login command (`/connect`, `kilo auth login --provider zerogpu`, `kit auth login zerogpu`). Kimi Code CLI doesn't read the variable; enter the key in `/provider`.
 
